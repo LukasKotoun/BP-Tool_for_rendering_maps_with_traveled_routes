@@ -1,0 +1,16 @@
+/.DS_Store
+/__pycache__
+/cache
+/czech-republic-latest.osm.pbf
+/czech_republic_map.html
+/forests.osm.pbf
+/hornivilemovice_map.pdf
+/hornivilemovice_map_with_landmarks.pdf
+/horní_vilemovice_multipolygons.geojson
+/map_export.pdf
+/map_export2.pdf
+/map_with_basemap.pdf
+/osmnx_test.py
+/output_trebic.osm.pbf
+/overpy_test.py
+/BPEnv
