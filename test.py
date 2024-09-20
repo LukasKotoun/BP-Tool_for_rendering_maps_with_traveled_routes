@@ -57,12 +57,8 @@
 import osmnx as ox
 import matplotlib.pyplot as plt
 
-# Define the city name
 city_name = "Czech Republic"
-
-# Get the boundary polygon of the city
 city_boundary = ox.geocode_to_gdf(city_name)
-
-# Plot the boundary
+print(city_boundary)
 city_boundary.plot(edgecolor='k', facecolor='none')
 plt.show()

@@ -76,19 +76,7 @@ attribute_mapping = {
         }
 
 
-# Create a new column for linewidth based on the road type
-# detailed_gdf['linewidth'] = detailed_gdf['highway'].map(road_width_mapping).fillna(0.5)  # Default width if not found in mapping
-
-
-
-# if 'water' in detailed_gdf.columns:
-#     detailed_gdf['color'] = detailed_gdf['water'].map(color_map_landuse)
-# if 'landuse' in detailed_gdf.columns:
-#     print(detailed_gdf.columns)
-#     detailed_gdf['color'] = detailed_gdf['landuse'].map(color_map_landuse)
-#     detailed_gdf['color'] = detailed_gdf['color'].fillna('blue')
-# else:
-#     detailed_gdf['color'] = 'grey' 
+# gdf[columns] = pd.DataFrame(gdf.apply(assign_attributes, axis=1).tolist())
 
 def assign_color(row):
     if isinstance(row, pd.Series):
