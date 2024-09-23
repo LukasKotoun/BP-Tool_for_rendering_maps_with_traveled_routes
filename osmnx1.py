@@ -2,6 +2,7 @@ import osmnx as ox
 import pandas as pd
 import geopandas as gpd
 import matplotlib.pyplot as plt
+import time
 
 place_name = "Třebíč, Czech Republic"
 
@@ -30,8 +31,14 @@ detailed_gdf = ox.features_from_bbox(north=bbox[3], south=bbox[1], east=bbox[2],
 #remove
 detailed_gdf = detailed_gdf[detailed_gdf.geometry.geom_type.isin(['LineString', 'MultiLineString', 'Polygon', 'MultiPolygon'])]
 
+
+start_time = time.time()  # Record start time
+
 roads = detailed_gdf[detailed_gdf.geometry.type.isin(['LineString','MultiLineString'])] # Filter for lines (roads/highways)
 landuse = detailed_gdf[detailed_gdf.geometry.type.isin(['Polygon', 'MultiPolygon'])]  # Filter for polygons (landuse areas)
+end_time = time.time()  # Record end time
+elapsed_time = end_time - start_time  # Calculate elapsed time
+print(f"Elapsed time: {elapsed_time * 1000:.5f} ms")
 
 color_map_landuse = {
     'forest': '#9FC98D',
@@ -90,27 +97,33 @@ def assign_way_width(row):
         if 'highway' in row and pd.notna(row['highway']):
             return road_width_mapping.get(row['highway'], 0.5)
     return 0.5
-gdf['color'] = gdf.apply(assign_color, axis=1)
+# gdf['color'] = gdf.apply(assign_color, axis=1)
+landuse['color'] = landuse.apply(assign_color, axis=1)
 landuse['linewidth'] = landuse.apply(assign_way_width, axis=1)
 
 roads['color'] = roads.apply(assign_color, axis=1)
 roads['linewidth'] = roads.apply(assign_way_width, axis=1)
-# highways_gdf['color'] = highways_gdf.apply(assign_color, axis=1)
 
-minx, miny, maxx, maxy = detailed_gdf.total_bounds
+# minx, miny, maxx, maxy = detailed_gdf.total_bounds
 
 fig, ax = plt.subplots(figsize=(10, 10))
-fig_width, fig_height = fig.get_size_inches()
+# fig_width, fig_height = fig.get_size_inches()
 
-#default bg color
+# #default bg color
 ax.set_facecolor('#EDEDE0')
 # paths = highways_gdf[highways_gdf['highway'].isin(s)]
 # ot = highways_gdf[~highways_gdf['highway'].isin(s)]
 extent_width = bbox[2] - bbox[0]
 extent_width2 = bbox[3] - bbox[1]
 extent_width = max(extent_width,extent_width2)
-print(extent_width)
-landuse.plot(ax=ax, alpha=1,linestyle='', linewidth = landuse['linewidth'], color=landuse['color'])
+# print(extent_width)
+
+merged_geometry = roads.unary_union
+
+merged_gdf = gpd.GeoDataFrame(geometry=[merged_geometry], crs="EPSG:4326")
+
+roads['geometry'] = roads['geometry'].buffer(0.0001) 
+landuse.plot(ax=ax, alpha=1, color=landuse['color'])
 roads.plot(ax=ax, alpha=1, linestyle='-' , linewidth = 0.05/(extent_width), color=roads['color'])
 
 
@@ -123,28 +136,34 @@ roads.plot(ax=ax, alpha=1, linestyle='-' , linewidth = 0.05/(extent_width), colo
 
 
 # mask specific area
-mask = gdf.unary_union
-maskgdf = gpd.GeoDataFrame(geometry=[mask], crs=gdf.crs)
 
+start_time = time.time()  # Record start time
+       
+mask = gdf.unary_union
+print(mask)
+maskgdf = gpd.GeoDataFrame(geometry=[mask], crs=gdf.crs)
+end_time = time.time()  # Record end time
+elapsed_time = end_time - start_time  # Calculate elapsed time
+print(f"Elapsed time gdf: {elapsed_time * 1000:.5f} ms")
 #defailt bg color
 #maskgdf.plot(ax=ax, color='#EDEDE0', edgecolor='none')
 
-#filtered_gdf = detailed_gdf.clip(mask)
-#filtered_gdf.plot(ax=ax, alpha=1, color=filtered_gdf['color'])
 
 
 #border around area
-maskgdf.boundary.plot(ax=ax, color='red', linewidth=2)
+# maskgdf.boundary.plot(ax=ax, color='red', linewidth=2)
+pdf_filename = 'trebic_map.pdf'
 
-# Optionally, set title and labels
-ax.set_title('Detailed Data for Horní Vilemovice')
-ax.set_xlabel('Longitude')
-ax.set_ylabel('Latitude')
-pdf_filename = 'map_export2.pdf'
-plt.savefig(pdf_filename, format='pdf', bbox_inches='tight')
+# # Optionally, set title and labels
+# ax.set_title('Detailed Data for Horní Vilemovice')
+plt.savefig(pdf_filename, format='pdf', bbox_inches='tight', transparent=None)
 
-# Show the plot
+# # Show the plot
 plt.show()
+
+
+
+
 
 #! pristup 2 - 0.93
 
