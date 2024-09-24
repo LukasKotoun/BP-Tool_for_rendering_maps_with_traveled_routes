@@ -22,15 +22,18 @@ city_name = "Brno, Czech Republic"
 #------------settings--------------
 
 way_filters = {
-    'waterway':True,
-    'highway':['highway','trunk','primary','secondary','tertiary'],
+    # 'waterway': True,
+    'waterway': ['river','riverbank'],
+    'highway':['highway','trunk','primary','secondary'],
     # 'highway':True
 }
 
 area_filters = {
-    'landuse': ['forest', 'residential', 'commercial', 'retail', 'industrial', 'farmland', 'meadow', 'grass'],
-    'leisure': ['park', 'pitch', 'garden', 'golf_course', 'nature_reserve', 'playground', 'stadium','swimming_pool', 'sports_centre'],
-    'water': True,
+    'landuse': ['forest', 'residential', 'farmland', 'meadow', 'grass'],
+    # 'landuse': ['forest', 'residential', 'commercial', 'retail', 'industrial', 'farmland', 'meadow', 'grass'],
+    # # 'leisure': ['park', 'pitch', 'garden', 'golf_course', 'nature_reserve', 'playground', 'stadium','swimming_pool', 'sports_centre'],
+    # # 'water': True,
+    'water': ['river','lake','reservoir'],
 }
 
 attribute_map_landuse = {
@@ -136,7 +139,7 @@ class Handler(osmium.SimpleHandler):
     def get_gdf(self):
      
         start_time = time.time()  # Record start time
-
+        # todo check if directly creating geo data frame will be better
         gdf =  gpd.GeoDataFrame(pd.DataFrame(self.tags).assign(geometry=self.polygons), crs="EPSG:4326")
         # gdf2 = gpd.GeoDataFrame(pd.DataFrame(self.tags2).assign(geometry=self.polygons2), crs="EPSG:4326")
 
@@ -214,8 +217,8 @@ def assign_attributes(row):
     return '#EDEDE0', 0 # todo 
 
 #todo argument parsin - jmena souboru + kombinace flagu podle složitosti zpracování (bud flag na vypnutí extractu nebo podle zadaného vystupního souboru)
+# osm_data_preprocessor = OsmDataPreprocessor('trebic.osm.pbf','Třebíč, Czech Republic')
 osm_data_preprocessor = OsmDataPreprocessor('trebic.osm.pbf','Třebíč, Czech Republic')
-# osm_data_preprocessor = OsmDataPreprocessor('czech-republic-latest.osm.pbf','Czech Republic')
 
 osm_file_name, reqired_map_area = osm_data_preprocessor.extract_area()
 print(reqired_map_area)
@@ -255,7 +258,7 @@ map_longest_side_lenght = get_map_size(gdf_total_bounds)
 
 
 # clipping_area_mask = polygon_gdf.unary_union
-reqired_map_area 
+ 
 clipping_helper_polygon = geometry.Polygon([
     (gdf_total_bounds['east'], gdf_total_bounds['south']),  # Bottom-left corner
     (gdf_total_bounds['east'], gdf_total_bounds['north']),  # Top-left corner
@@ -267,18 +270,20 @@ clipping_polygon = clipping_helper_polygon.difference(reqired_map_area)
 if isinstance(clipping_polygon, geometry.Polygon):
     clipping_polygon = geometry.MultiPolygon([clipping_polygon])
 clipping_polygon = gpd.GeoDataFrame(geometry=[clipping_polygon], crs="EPSG:4326")
+reqired_map_area_gdf = gpd.GeoDataFrame(geometry=[reqired_map_area], crs="EPSG:4326")
 
+fig, ax = plt.subplots(figsize=(10, 10))
+ax.axis('off')
+reqired_map_area_gdf.plot(ax=ax, color=DEFAULT_MAP_BG_COLOR, linewidth=1)
 
-ax = gdf.plot(figsize=(10, 10))
-ax.set_facecolor(DEFAULT_MAP_BG_COLOR)
 #plot all
 gdf.plot(ax=ax, color=gdf['color'],linewidth = WAYS_RATIO_TO_MAP_SIZE/map_longest_side_lenght, alpha=1)
 
 #clip
 clipping_polygon.plot(ax=ax, color='white', alpha=1)  # Fill the outer polygon
-clipping_polygon.boundary.plot(ax=ax, color='black', linewidth=1)
+reqired_map_area_gdf.boundary.plot(ax=ax, color='black', linewidth=1)
 
-#zoom
+# #zoom
 hole_bounds = reqired_map_area.bounds  # Get the bounds of the hole polygon
 x_buffer = (hole_bounds[2] - hole_bounds[0]) * 0.01  # 1% of width
 y_buffer = (hole_bounds[3] - hole_bounds[1]) * 0.01  # 1% of height
@@ -286,7 +291,7 @@ ax.set_xlim([hole_bounds[0] - x_buffer, hole_bounds[2] + x_buffer])  # Expand x 
 ax.set_ylim([hole_bounds[1] - y_buffer, hole_bounds[3] + y_buffer])  # Expand y limits
 
 
-pdf_filename = 'cz_map.pdf'
+pdf_filename = 'trebic.pdf'
 plt.savefig(pdf_filename, format='pdf')
 
 
