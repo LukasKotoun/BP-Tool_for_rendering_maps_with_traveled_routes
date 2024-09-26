@@ -24,10 +24,9 @@ city_name = "Brno, Czech Republic"
 #------------settings--------------
 
 way_filters = {
-    # 'waterway': True,
     'waterway': True,
-    # 'highway': ['highway','trunk','primary','secondary'],
-    'highway':True
+    'highway': ['highway','trunk','primary','secondary'],
+    # 'highway':True
 }
 # allowed_values_way = {}
 # for key, values in way_filters.items():
@@ -40,7 +39,7 @@ area_filters = {
     'water': True,
     # 'water': ['river','lake','reservoir'],
 }
-attribute_map_landuse = {
+landuse_styles = {
     'farmland': {'color': '#EDEDE0', 'zindex': None},
     'forest': {'color': '#9FC98D', 'zindex': None},
     'meadow': {'color': '#B7DEA6', 'zindex': None},
@@ -51,7 +50,7 @@ attribute_map_landuse = {
     'salt_pond': {'color': '#8FB8DB', 'zindex': 1},
 }
 
-attribute_map_leisure = {
+leisure_styles = {
     'swimming_pool': {'color': '#8FB8DB', 'zindex': 2},  
     'golf_curse': {'color': '#DCE9B9', 'zindex': 1},    
     'playground': {'color': '#DCE9B9', 'zindex': 1},  
@@ -59,7 +58,7 @@ attribute_map_leisure = {
     'sports_centre': {'color': '#9FC98D', 'zindex': 1},  
 }
 	
-attribute_map_highway = {
+highway_styles = {
     'highway': {'color': '#FDC364', 'zindex': 7}, 
     'trunk': {'color': '#FDC364', 'zindex': 6},
     'primary': {'color': '#FDC364', 'zindex': 5},
@@ -73,46 +72,46 @@ attribute_map_highway = {
     'residential': {'color': 'blue', 'zindex': None}
 }
 
-attribute_map_building = {
+building_styles = {
     'house': {'color': 'grey', 'zindex': 1},
 }
 
 
 # Define attribute mapping with default values
-attribute_mapping = {
-    'building': (attribute_map_building, {'color': '#B7DEA6', 'zindex': 1}),
+tag_styles = {
+    'building': (building_styles, {'color': '#B7DEA6', 'zindex': 1}),
     'water': ({}, {'color': '#8FB8DB', 'zindex': 1}),
     'waterway': ({}, {'color': '#8FB8DB', 'zindex': 1}),
-    'leisure': (attribute_map_leisure, {'color': '#EDEDE0', 'zindex': 0}),
-    'natural': (attribute_map_landuse, {'color': '#B7DEA6', 'zindex': 0}),
-    'landuse': (attribute_map_landuse, {'color': '#EDEDE0', 'zindex': 0}),
-    'highway': (attribute_map_highway, {'color': '#FFFFFF', 'zindex': 2})
+    'leisure': (leisure_styles, {'color': '#EDEDE0', 'zindex': 0}),
+    'natural': (landuse_styles, {'color': '#B7DEA6', 'zindex': 0}),
+    'landuse': (landuse_styles, {'color': '#EDEDE0', 'zindex': 0}),
+    'highway': (highway_styles, {'color': '#FFFFFF', 'zindex': 2})
 }
 
-road_width_mapping = {
-    'primary': 1.5,    # Primary roads
-    'secondary': 1.3,  # Secondary roads
-    'tertiary': 0.7,   # Tertiary roads
-    'residential': 0.5, # Residential roads
-    'service': 0.3     # Smallest for service roads
-}
+# road_width_mapping = {
+#     'primary': 1.5,    # Primary roads
+#     'secondary': 1.3,  # Secondary roads
+#     'tertiary': 0.7,   # Tertiary roads
+#     'residential': 0.5, # Residential roads
+#     'service': 0.3     # Smallest for service roads
+# }
 
 #------------settings end--------------
 
 class OsmDataParser(osmium.SimpleHandler):
     #todo add filters as arg
-    def __init__(self, way_filters, area_filters, way_additional_columns = ["apple", "banana", "cherry", "date", "elderberry", "fig", "grape", "honeydew", "kiwi", "lemon", "mango", "nectarine", "orange", "papaya", "quince", "raspberry", "strawberry", "tangerine", "ugli fruit", "watermelon"]
-, area_additional_columns = []):
+    def __init__(self, way_filters, area_filters, way_additional_columns = [], area_additional_columns = []):
         super().__init__()
         self.tags = []
         self.polygons = []
         self.way_filters = way_filters
         self.area_filters = area_filters
-        #convert to dict - using in to dict is quciker than to list
-        self.way_columns = dict.fromkeys(list(way_filters.keys()) + way_additional_columns)
-        self.area_columns = dict.fromkeys(list(area_filters.keys()) + area_additional_columns)
+        # merge always wanted columns (map objects) with additions wanted info columns
+        self.way_columns = way_filters.keys() | way_additional_columns
+        self.area_columns = area_filters.keys() | area_additional_columns
         
         self.geom_factory = osmium.geom.WKTFactory()  # Create WKT Factory for geometry conversion
+        #extract function from libraries - quicker than extracting every time 
         self.geom_factory_linestring = self.geom_factory.create_linestring
         self.geom_factory_polygon = self.geom_factory.create_multipolygon
         self.wkt_loads_func = wkt.loads
@@ -132,7 +131,7 @@ class OsmDataParser(osmium.SimpleHandler):
             wkt_geom = self.geom_factory_linestring(way) 
             shapely_geom = self.wkt_loads_func(wkt_geom)  
             self.polygons.append(shapely_geom)
-            filtered_tags = {tag.k: tag.v for tag in way.tags if tag.k in self.way_columns}
+            filtered_tags = {tag_key: tag_value for tag_key, tag_value in way.tags if tag_key in self.way_columns}
             self.tags.append(filtered_tags)
         
     
@@ -141,7 +140,7 @@ class OsmDataParser(osmium.SimpleHandler):
         if self.apply_filters(self.area_filters, area.tags):
             wkt_geom = self.geom_factory_polygon(area) 
             shapely_geom = self.wkt_loads_func (wkt_geom) 
-            filtered_tags = {tag.k: tag.v for tag in area.tags if tag.k in self.area_columns}
+            filtered_tags = {tag_key: tag_value for tag_key, tag_value in area.tags if tag_key in self.area_columns}
             self.tags.append(filtered_tags)
             self.polygons.append(shapely_geom)
         
@@ -226,32 +225,35 @@ class OsmDataPreprocessor:
         return None, polygon
 
 
-def assign_attributes(row):
-    if isinstance(row, pd.Series):
-        result = {}
-        for attr_key, (attribute_map, default_values) in attribute_mapping.items():
-            if attr_key in row and pd.notna(row[attr_key]):
-                item = attribute_map.get(row[attr_key], default_values) #retrieve record for a specific key (e.g. landues) and value (e.g. forest) combination in the map or retrieve the default value for that key.
-                for key, default_value in default_values.items(): # select individual values from the record or default values if there are none in the record
-                    value = item.get(key)
-                    result[key] = value if value is not None else default_value
-                return result
-    return {'color':'#EDEDE0','zindex': 0 }
+def assign_attributes(row, tag_styles):
+    assigned_styles = {}
+    for tag_key, (tag_map, default_values) in tag_styles.items():
+        if tag_key in row and pd.notna(row[tag_key]):
+            tag_styles = tag_map.get(row[tag_key], default_values) #retrieve record for a specific key (e.g. landues) and value (e.g. forest) combination in the map or retrieve the default value for that key.
+            for style_key, default_style in default_values.items(): # select individual values from the record or default values if there are none in the record
+                tag_style = tag_styles.get(style_key)
+                assigned_styles[style_key] = tag_style if tag_style is not None else default_style
+            return assigned_styles
+    return {'color':DEFAULT_MAP_BG_COLOR,'zindex': 0 }
 
 
-place_name = 'trebic'
+# if isinstance(row, pd.Series):
+place_name = 'brno'
 #todo argument parsin - jmena souboru + kombinace flagu podle složitosti zpracování (bud flag na vypnutí extractu nebo podle zadaného vystupního souboru)
 # osm_data_preprocessor = OsmDataPreprocessor('trebic.osm.pbf','Třebíč, Czech Republic')
-osm_data_preprocessor = OsmDataPreprocessor(f'{place_name}.osm.pbf','Třebíč, Czech Republic')
+osm_data_preprocessor = OsmDataPreprocessor(f'{place_name}.osm.pbf','Brno, Czech Republic')
 
 osm_file_name, reqired_map_area = osm_data_preprocessor.extract_area()
 osm_file_parser = OsmDataParser(way_filters,area_filters)
 
 osm_file_parser.apply_file(osm_file_name)
-start_time = time.time()  # Record start time
 gdf = osm_file_parser.create_gdf()
 
-attributes = gdf.apply(assign_attributes, axis=1).tolist()
+start_time = time.time()  # Record start time
+attributes = gdf.apply(lambda row: assign_attributes(row, tag_styles), axis=1).tolist()
+end_time = time.time()
+duration = end_time - start_time
+print("Time taken:", duration*10000, "ms")
 
 gdf = gdf.join(pd.DataFrame(attributes))
 
