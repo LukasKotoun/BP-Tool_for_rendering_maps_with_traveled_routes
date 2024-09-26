@@ -1,14 +1,17 @@
 import osmium
+import osmnx as ox
 import pandas as pd
-from shapely import wkt, geometry
 import geopandas as gpd
+from shapely import wkt, geometry
 import matplotlib.pyplot as plt
 import time
-import numpy as np
-import osmnx as ox
 from typing import Union, List, Tuple
 import subprocess
 import tempfile
+import sys
+from memory_profiler import profile
+import gc
+import timeit
 
 #------------cons--------------
 WAYS_RATIO_TO_MAP_SIZE = 0.1
@@ -18,24 +21,25 @@ DEFAULT_MAP_BG_COLOR = '#EDEDE0'
 city_name = "Brno, Czech Republic"
 
 
-
 #------------settings--------------
 
 way_filters = {
     # 'waterway': True,
-    'waterway': ['river','riverbank'],
-    'highway':['highway','trunk','primary','secondary'],
-    # 'highway':True
+    'waterway': True,
+    # 'highway': ['highway','trunk','primary','secondary'],
+    'highway':True
 }
-
+# allowed_values_way = {}
+# for key, values in way_filters.items():
+#     for value in values:
+#         allowed_values_way[value] = key
 area_filters = {
-    'landuse': ['forest', 'residential', 'farmland', 'meadow', 'grass'],
-    # 'landuse': ['forest', 'residential', 'commercial', 'retail', 'industrial', 'farmland', 'meadow', 'grass'],
-    # # 'leisure': ['park', 'pitch', 'garden', 'golf_course', 'nature_reserve', 'playground', 'stadium','swimming_pool', 'sports_centre'],
-    # # 'water': True,
-    'water': ['river','lake','reservoir'],
+    # 'landuse': ['forest', 'residential', 'farmland', 'meadow', 'grass'],
+    'landuse': ['forest', 'residential', 'commercial', 'retail', 'industrial', 'farmland', 'meadow', 'grass'],
+    'leisure': ['park', 'pitch', 'garden', 'golf_course', 'nature_reserve', 'playground', 'stadium','swimming_pool', 'sports_centre'],
+    'water': True,
+    # 'water': ['river','lake','reservoir'],
 }
-
 attribute_map_landuse = {
     'farmland': {'color': '#EDEDE0', 'zindex': None},
     'forest': {'color': '#9FC98D', 'zindex': None},
@@ -48,11 +52,11 @@ attribute_map_landuse = {
 }
 
 attribute_map_leisure = {
-    'swimming_pool': {'color': '#8FB8DB', 'zindex': 1},  
+    'swimming_pool': {'color': '#8FB8DB', 'zindex': 2},  
     'golf_curse': {'color': '#DCE9B9', 'zindex': 1},    
     'playground': {'color': '#DCE9B9', 'zindex': 1},  
     'pitch': {'color': '#DCE9B9', 'zindex': 2},  
-    'sports_centre': {'color': '#E2D4AF', 'zindex': 1},  
+    'sports_centre': {'color': '#9FC98D', 'zindex': 1},  
 }
 	
 attribute_map_highway = {
@@ -95,60 +99,78 @@ road_width_mapping = {
 
 #------------settings end--------------
 
-class Handler(osmium.SimpleHandler):
-    def __init__(self):
+class OsmDataParser(osmium.SimpleHandler):
+    #todo add filters as arg
+    def __init__(self, way_filters, area_filters, way_additional_columns = ["apple", "banana", "cherry", "date", "elderberry", "fig", "grape", "honeydew", "kiwi", "lemon", "mango", "nectarine", "orange", "papaya", "quince", "raspberry", "strawberry", "tangerine", "ugli fruit", "watermelon"]
+, area_additional_columns = []):
         super().__init__()
         self.tags = []
         self.polygons = []
+        self.way_filters = way_filters
+        self.area_filters = area_filters
+        #convert to dict - using in to dict is quciker than to list
+        self.way_columns = dict.fromkeys(list(way_filters.keys()) + way_additional_columns)
+        self.area_columns = dict.fromkeys(list(area_filters.keys()) + area_additional_columns)
+        
         self.geom_factory = osmium.geom.WKTFactory()  # Create WKT Factory for geometry conversion
         self.geom_factory_linestring = self.geom_factory.create_linestring
         self.geom_factory_polygon = self.geom_factory.create_multipolygon
         self.wkt_loads_func = wkt.loads
         
-        
-    def apply_filters(self,allowed_tags, tags):
-        for key, value in allowed_tags.items():
-            if key in tags:
-                if value is True:
+
+    def apply_filters(self, allowed_tags, tags):
+        for key, allowed_values in allowed_tags.items():
+            tag_value = tags.get(key)
+            if tag_value is not None:
+                if allowed_values is True or tag_value in allowed_values: 
                     return True
-                elif isinstance(value, list):
-                    return tags[key] in value
         return False
-    
-    
+        
     def way(self, way):
         # todo filter - bud rozdelit na area a way a nebo pro vsechny
-        if self.apply_filters(way_filters, way.tags) and len(way.nodes) >= 2:
+        if self.apply_filters(self.way_filters, way.tags):
             wkt_geom = self.geom_factory_linestring(way) 
-            shapely_geom = self.wkt_loads_func (wkt_geom)  
+            shapely_geom = self.wkt_loads_func(wkt_geom)  
             self.polygons.append(shapely_geom)
-            self.tags.append(dict(way.tags))  # make copy of tags 
-        pass
+            filtered_tags = {tag.k: tag.v for tag in way.tags if tag.k in self.way_columns}
+            self.tags.append(filtered_tags)
+        
     
     
     def area(self, area):
-            if self.apply_filters(area_filters, area.tags):
-                wkt_geom = self.geom_factory_polygon(area) 
-                shapely_geom = self.wkt_loads_func (wkt_geom) 
-
-                self.polygons.append(shapely_geom)
-                self.tags.append(dict(area.tags)) # make copy of tags  
-            pass
+        if self.apply_filters(self.area_filters, area.tags):
+            wkt_geom = self.geom_factory_polygon(area) 
+            shapely_geom = self.wkt_loads_func (wkt_geom) 
+            filtered_tags = {tag.k: tag.v for tag in area.tags if tag.k in self.area_columns}
+            self.tags.append(filtered_tags)
+            self.polygons.append(shapely_geom)
+        
     
     
-    def get_gdf(self):
-     
-        start_time = time.time()  # Record start time
+    def create_gdf(self):
         # todo check if directly creating geo data frame will be better
+        # start_time = time.time()  # Record start time
+        
+        print(f"polygons: {sys.getsizeof(self.polygons)}, tags: {sys.getsizeof(self.tags)}")
         gdf =  gpd.GeoDataFrame(pd.DataFrame(self.tags).assign(geometry=self.polygons), crs="EPSG:4326")
+
         # gdf2 = gpd.GeoDataFrame(pd.DataFrame(self.tags2).assign(geometry=self.polygons2), crs="EPSG:4326")
-
-        end_time = time.time()  # Record end time
-        elapsed_time = end_time - start_time  # Calculate elapsed time
-        print(f"Elapsed time gdf: {elapsed_time * 1000:.5f} ms")
-
+        print(f"gdf: {sys.getsizeof(gdf)}")
+        # print(f"polygons: {sys.getsizeof(self.polygons)}, tags: {sys.getsizeof(self.tags)}")
+        # end_time = time.time()  # Record end time
+        # elapsed_time = end_time - start_time  # Calculate elapsed time
+        # print(f"Elapsed time gdf: {elapsed_time * 1000:.5f} ms")
+        
         return gdf
-
+    
+    
+    def clear_gdf(self):
+        self.polygons.clear()
+        self.tags.clear()
+        # self.polygons2.clear()
+        # self.tags2.clear()
+        
+        
 class OsmDataPreprocessor:
     def __init__(self, osm_input_file: str, area: Union[str, List[Tuple[float, float]]], osm_output_file : str = None):
         self.osm_input_file = osm_input_file # Can be a string (place name) or a list of coordinates
@@ -214,35 +236,32 @@ def assign_attributes(row):
                     value = item.get(key)
                     result[key] = value if value is not None else default_value
                 return result
-    return '#EDEDE0', 0 # todo 
+    return {'color':'#EDEDE0','zindex': 0 }
 
+
+place_name = 'trebic'
 #todo argument parsin - jmena souboru + kombinace flagu podle složitosti zpracování (bud flag na vypnutí extractu nebo podle zadaného vystupního souboru)
 # osm_data_preprocessor = OsmDataPreprocessor('trebic.osm.pbf','Třebíč, Czech Republic')
-osm_data_preprocessor = OsmDataPreprocessor('trebic.osm.pbf','Třebíč, Czech Republic')
+osm_data_preprocessor = OsmDataPreprocessor(f'{place_name}.osm.pbf','Třebíč, Czech Republic')
 
 osm_file_name, reqired_map_area = osm_data_preprocessor.extract_area()
-print(reqired_map_area)
-osm_file_parser = Handler()
+osm_file_parser = OsmDataParser(way_filters,area_filters)
+
 osm_file_parser.apply_file(osm_file_name)
-
 start_time = time.time()  # Record start time
-gdf = osm_file_parser.get_gdf()
+gdf = osm_file_parser.create_gdf()
 
-#add attributes to gdf
-#todo asing attribut func
-# todo split to areas, ways and points
 attributes = gdf.apply(assign_attributes, axis=1).tolist()
+
 gdf = gdf.join(pd.DataFrame(attributes))
-# attributes = gdf2.apply(assign_attributes, axis=1).tolist()
-# gdf2 = gdf2.join(pd.DataFrame(attributes))
 
 
 #!for roads only
 gdf_projected = gdf.to_crs("Web Mercator") # web mercator
 gdf_projected['geometry'] = gdf_projected['geometry'].buffer(4) 
 gdf = gdf_projected.to_crs(gdf.crs)
-
-gdf = gdf.sort_values(by='zindex')
+if 'zindex' in gdf.columns:
+    gdf = gdf.sort_values(by='zindex')
 
 # todo to map plot class
 def get_map_size(gdf_total_bounds):
@@ -291,7 +310,7 @@ ax.set_xlim([hole_bounds[0] - x_buffer, hole_bounds[2] + x_buffer])  # Expand x 
 ax.set_ylim([hole_bounds[1] - y_buffer, hole_bounds[3] + y_buffer])  # Expand y limits
 
 
-pdf_filename = 'trebic.pdf'
+pdf_filename = f'{place_name}.pdf'
 plt.savefig(pdf_filename, format='pdf')
 
 
