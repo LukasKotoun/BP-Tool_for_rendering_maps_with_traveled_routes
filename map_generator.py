@@ -1,3 +1,4 @@
+from config import *
 import osmium
 import osmnx as ox
 import pandas as pd
@@ -9,101 +10,19 @@ from typing import Union, List, Tuple
 import subprocess
 import tempfile
 import sys
-from memory_profiler import profile
-import gc
 import timeit
 
-#------------cons--------------
-WAYS_RATIO_TO_MAP_SIZE = 0.1
-DEFAULT_MAP_BG_COLOR = '#EDEDE0'
 
 
-city_name = "Brno, Czech Republic"
-
-
-#------------settings--------------
-
-way_filters = {
-    'waterway': True,
-    'highway': ['highway','trunk','primary','secondary'],
-    # 'highway':True
-}
-# allowed_values_way = {}
-# for key, values in way_filters.items():
-#     for value in values:
-#         allowed_values_way[value] = key
-area_filters = {
-    # 'landuse': ['forest', 'residential', 'farmland', 'meadow', 'grass'],
-    'landuse': ['forest', 'residential', 'commercial', 'retail', 'industrial', 'farmland', 'meadow', 'grass'],
-    'leisure': ['park', 'pitch', 'garden', 'golf_course', 'nature_reserve', 'playground', 'stadium','swimming_pool', 'sports_centre'],
-    'water': True,
-    # 'water': ['river','lake','reservoir'],
-}
-landuse_styles = {
-    'farmland': {'color': '#EDEDE0', 'zindex': None},
-    'forest': {'color': '#9FC98D', 'zindex': None},
-    'meadow': {'color': '#B7DEA6', 'zindex': None},
-    'grass': {'color': '#B7DEA6', 'zindex': None},
-    'residential': {'color': '#E2D4AF', 'zindex': None},
-    'industrial': {'color': '#DFDBD1', 'zindex': None},
-    'basin': {'color': '#8FB8DB', 'zindex': 1},
-    'salt_pond': {'color': '#8FB8DB', 'zindex': 1},
-}
-
-leisure_styles = {
-    'swimming_pool': {'color': '#8FB8DB', 'zindex': 2},  
-    'golf_curse': {'color': '#DCE9B9', 'zindex': 1},    
-    'playground': {'color': '#DCE9B9', 'zindex': 1},  
-    'pitch': {'color': '#DCE9B9', 'zindex': 2},  
-    'sports_centre': {'color': '#9FC98D', 'zindex': 1},  
-}
-	
-highway_styles = {
-    'highway': {'color': '#FDC364', 'zindex': 7}, 
-    'trunk': {'color': '#FDC364', 'zindex': 6},
-    'primary': {'color': '#FDC364', 'zindex': 5},
-    'secondary': {'color': '#F7ED60', 'zindex': 4},
-    'tertiary': {'color': '#FFFFFF', 'zindex': 3},
-    'unclassified': {'color': '#FFFFFF', 'zindex': None},
-    'road': {'color': '#DAD6D2', 'zindex': None},
-    'footway': {'color': 'brown', 'zindex': None},
-    'steps': {'color': 'purple', 'zindex': None},
-    'path': {'color': 'red', 'zindex': None},
-    'residential': {'color': 'blue', 'zindex': None}
-}
-
-building_styles = {
-    'house': {'color': 'grey', 'zindex': 1},
-}
-
-
-# Define attribute mapping with default values
-categories_styles = {
-    'building': (building_styles, {'color': '#B7DEA6', 'zindex': 1}),
-    'water': ({}, {'color': '#8FB8DB', 'zindex': 1}),
-    'waterway': ({}, {'color': '#8FB8DB', 'zindex': 1}),
-    'leisure': (leisure_styles, {'color': '#EDEDE0', 'zindex': 0}),
-    'natural': (landuse_styles, {'color': '#B7DEA6', 'zindex': 0}),
-    'landuse': (landuse_styles, {'color': '#EDEDE0', 'zindex': 0}),
-    'highway': (highway_styles, {'color': '#FFFFFF', 'zindex': 2})
-}
-
-# road_width_mapping = {
-#     'primary': 1.5,    # Primary roads
-#     'secondary': 1.3,  # Secondary roads
-#     'tertiary': 0.7,   # Tertiary roads
-#     'residential': 0.5, # Residential roads
-#     'service': 0.3     # Smallest for service roads
-# }
-
-#------------settings end--------------
 
 class OsmDataParser(osmium.SimpleHandler):
     #todo add filters as arg
     def __init__(self, way_filters, area_filters, way_additional_columns = [], area_additional_columns = []):
         super().__init__()
-        self.tags = []
-        self.polygons = []
+        self.way_tags = []
+        self.way_geometry = []
+        self.area_tags = []
+        self.area_geometry = []
         self.way_filters = way_filters
         self.area_filters = area_filters
         # merge always wanted columns (map objects) with additions wanted info columns
@@ -126,48 +45,42 @@ class OsmDataParser(osmium.SimpleHandler):
         return False
         
     def way(self, way):
-        # todo filter - bud rozdelit na area a way a nebo pro vsechny
         if self.apply_filters(self.way_filters, way.tags):
-            wkt_geom = self.geom_factory_linestring(way) 
-            shapely_geom = self.wkt_loads_func(wkt_geom)  
+            shapely_geometry = self.wkt_loads_func(self.geom_factory_linestring(way)) #convert osmium way to wkt str format and than to shapely linestring geometry
             filtered_tags = {tag_key: tag_value for tag_key, tag_value in way.tags if tag_key in self.way_columns}
-            self.polygons.append(shapely_geom)
-            self.tags.append(filtered_tags)
+            self.way_geometry.append(shapely_geometry)
+            self.way_tags.append(filtered_tags)
         
-    
     
     def area(self, area):
         if self.apply_filters(self.area_filters, area.tags):
-            wkt_geom = self.geom_factory_polygon(area) 
-            shapely_geom = self.wkt_loads_func (wkt_geom) 
+            shapely_geometry = self.wkt_loads_func(self.geom_factory_polygon(area)) #convert osmium area to wkt str format and than to shapely polygon/multipolygon geometry 
             filtered_tags = {tag_key: tag_value for tag_key, tag_value in area.tags if tag_key in self.area_columns}
-            self.tags.append(filtered_tags)
-            self.polygons.append(shapely_geom)
+            self.area_geometry.append(shapely_geometry)
+            self.area_tags.append(filtered_tags)
         
     
     
     def create_gdf(self):
         # todo check if directly creating geo data frame will be better
-        # start_time = time.time()  # Record start time
+        start_time = time.time()  # Record start time
         
-        print(f"polygons: {sys.getsizeof(self.polygons)}, tags: {sys.getsizeof(self.tags)}")
-        gdf =  gpd.GeoDataFrame(pd.DataFrame(self.tags).assign(geometry=self.polygons), crs="EPSG:4326")
-
-        # gdf2 = gpd.GeoDataFrame(pd.DataFrame(self.tags2).assign(geometry=self.polygons2), crs="EPSG:4326")
-        print(f"gdf: {sys.getsizeof(gdf)}")
-        # print(f"polygons: {sys.getsizeof(self.polygons)}, tags: {sys.getsizeof(self.tags)}")
-        # end_time = time.time()  # Record end time
-        # elapsed_time = end_time - start_time  # Calculate elapsed time
-        # print(f"Elapsed time gdf: {elapsed_time * 1000:.5f} ms")
+        print(f"AREA polygons: {sys.getsizeof(self.area_geometry)}, tags: {sys.getsizeof(self.area_tags)}")
+        print(f"WAY polygons: {sys.getsizeof(self.way_geometry)}, tags: {sys.getsizeof(self.way_tags)}")
+        ways_gdf = gpd.GeoDataFrame(pd.DataFrame(self.way_tags).assign(geometry=self.way_geometry), crs="EPSG:4326")
+        areas_gdf = gpd.GeoDataFrame(pd.DataFrame(self.area_tags).assign(geometry=self.area_geometry), crs="EPSG:4326")
+        print(f"ways: {sys.getsizeof(ways_gdf)},  areas: {sys.getsizeof(areas_gdf)}, combined: {sys.getsizeof(ways_gdf) + sys.getsizeof(areas_gdf)}")
+        end_time = time.time()  # Record end time
+        elapsed_time = end_time - start_time  # Calculate elapsed time
+        print(f"Elapsed time gdf: {elapsed_time * 1000:.5f} ms")
         
-        return gdf
+        return ways_gdf, areas_gdf
     
     
     def clear_gdf(self):
-        self.polygons.clear()
-        self.tags.clear()
-        # self.polygons2.clear()
-        # self.tags2.clear()
+       pass
+        #self.polygons2.clear()
+        #self.tags2.clear()
         
         
 class OsmDataPreprocessor:
@@ -247,18 +160,28 @@ def filter_category_styles(categories_styles, wanted_styles, wanted_categories):
                                                         if style_key in category_default_styles}) #store filterd category with wanted default styles
     return filtered_categories_styles
 
+def get_total_bounds(gdfs = []):
+    west = float('inf')
+    south = float('inf')
+    east = float('-inf')
+    north = float('-inf')
+    
+    for gdf in gdfs:
+        bounds = gdf.total_bounds #['west', 'north', 'east', 'south']
+        west = min(west, bounds[0])
+        south = min(south, bounds[1])
+        east = max(east, bounds[2])
+        north = max(north, bounds[3])
+        
+    return {
+        'west': west,
+        'south': south,
+        'east': east,
+        'north': north
+        }
 
 
-def assign_attributes(row, categories_styles):
-    # assigned_styles = {}
-    # for tag_key, (tag_map, default_values) in tag_styles.items():
-    #     if tag_key in row and pd.notna(row[tag_key]):
-    #         tag_styles = tag_map.get(row[tag_key], default_values) #retrieve record for a specific key (e.g. landues) and value (e.g. forest) combination in the map or retrieve the default value for that key.
-    #         for style_key, default_style in default_values.items(): # select individual values from the tag styles or default values if there are none in the record
-    #             tag_style = tag_styles.get(style_key)
-    #             assigned_styles[style_key] = tag_style if tag_style is not None else default_style
-    #         return assigned_styles
-    # return {'color':DEFAULT_MAP_BG_COLOR,'zindex': 0 }
+def assign_styles(row, categories_styles):
     assigned_styles = {}
     for category_name, (category_map, category_default_styles) in categories_styles.items():
         if category_name in row and pd.notna(row[category_name]):
@@ -267,56 +190,76 @@ def assign_attributes(row, categories_styles):
                 category_style = category_styles.get(style_key)
                 assigned_styles[style_key] = category_style if category_style is not None else default_style
             return assigned_styles
-    return {'color':DEFAULT_MAP_BG_COLOR,'zindex': 0 }
+    return GENERAL_DEFAULT_STYLES
+
+start_time_whole = time.time()  # Record start time
 
 
 
-all_styles = filter_category_styles(categories_styles, ['color', 'zindex'], way_filters | area_filters) 
-# area_styles = filter_attributes(categories_styles, ['color', 'linewidth'], area_filters) 
-print(categories_styles)
-# if isinstance(row, pd.Series):
 place_name = 'trebic'
 #todo argument parsin - jmena souboru + kombinace flagu podle složitosti zpracování (bud flag na vypnutí extractu nebo podle zadaného vystupního souboru)
 # osm_data_preprocessor = OsmDataPreprocessor('trebic.osm.pbf','Třebíč, Czech Republic')
 osm_data_preprocessor = OsmDataPreprocessor(f'{place_name}.osm.pbf','Třebíč, Czech Republic')
 
 osm_file_name, reqired_map_area = osm_data_preprocessor.extract_area()
+reqired_map_area_gdf = gpd.GeoDataFrame(geometry=[reqired_map_area], crs="EPSG:4326")
 osm_file_parser = OsmDataParser(way_filters,area_filters)
 
 osm_file_parser.apply_file(osm_file_name)
-gdf = osm_file_parser.create_gdf()
+#todo 2 dif functions
+ways_gdf, areas_gdf = osm_file_parser.create_gdf()
+#todo add clearing
 
-start_time = time.time()  # Record start time
-attributes = gdf.apply(lambda row: assign_attributes(row, all_styles), axis=1).tolist()
-# attributes = gdf.apply(lambda row: assign_attributes(row, area_styles), axis=1).tolist()
-end_time = time.time()
-duration = end_time - start_time
-print("Time taken:", duration*10000, "ms")
+#todo data process class 
+def assign_styles_to_gdf(gdf, categories_styles, style_keys, filters):
+    styles = filter_category_styles(categories_styles, style_keys, filters)
+    styles_columns = gdf.apply(lambda row: assign_styles(row, styles), axis=1).tolist()
+    gdf = gdf.join(pd.DataFrame(styles_columns))
+    return gdf
 
-gdf = gdf.join(pd.DataFrame(attributes))
+ways_gdf = assign_styles_to_gdf(ways_gdf, categories_styles, ['color', 'zindex'], way_filters)
+areas_gdf = assign_styles_to_gdf(areas_gdf, categories_styles, ['color', 'zindex'], area_filters)
 
-#!for roads only
-gdf_projected = gdf.to_crs("Web Mercator") # web mercator
+#remove unwanted spaces between lines in corners - by converting to polygon and expanding 
+gdf_projected = ways_gdf.to_crs("Web Mercator") # web mercator
 gdf_projected['geometry'] = gdf_projected['geometry'].buffer(4) 
-gdf = gdf_projected.to_crs(gdf.crs)
-if 'zindex' in gdf.columns:
-    gdf = gdf.sort_values(by='zindex')
+ways_gdf = gdf_projected.to_crs(ways_gdf.crs)
+
+#!filering for diferent ways ploting
+# Define the condition for filtering
+# condition = ways_gdf['highway'].notnull()
+# filtered_gdf = ways_gdf[condition]
+# remaining_gdf = ways_gdf[~condition]
+
+def sort_gdf_by(gdf, column_name):
+    if column_name in gdf.columns:
+        return gdf.sort_values(by=column_name)
+    
+    
+ways_gdf = sort_gdf_by(ways_gdf, 'zindex')
+areas_gdf = sort_gdf_by(areas_gdf, 'zindex')
+
 
 # todo to map plot class
 def get_map_size(gdf_total_bounds):
     latitude = gdf_total_bounds['east'] - gdf_total_bounds['west']
     longitude = gdf_total_bounds['north'] - gdf_total_bounds['south']
     return max(latitude, longitude)
+start_time = time.time()
 
 #map bounds
-gdf_total_bounds = dict(zip(['west', 'north', 'east', 'south'], gdf.total_bounds))
+# gdf_total_bounds = dict(zip(['west', 'north', 'east', 'south'], gdf.total_bounds))
+#! change total bounds ploting
 
+# gdf_total_bounds = dict(zip(['west', 'north', 'east', 'south'], reqired_map_area_gdf.total_bounds))
+gdf_total_bounds = get_total_bounds([ways_gdf,areas_gdf])
 map_longest_side_lenght = get_map_size(gdf_total_bounds)
-#get cliping polygon
+end_time = time.time()
 
+# Measure time taken
+time_taken = end_time - start_time
+print(f"Time taken for filtering: {time_taken:.6f} seconds")
 
-# clipping_area_mask = polygon_gdf.unary_union
- 
 clipping_helper_polygon = geometry.Polygon([
     (gdf_total_bounds['east'], gdf_total_bounds['south']),  # Bottom-left corner
     (gdf_total_bounds['east'], gdf_total_bounds['north']),  # Top-left corner
@@ -328,20 +271,29 @@ clipping_polygon = clipping_helper_polygon.difference(reqired_map_area)
 if isinstance(clipping_polygon, geometry.Polygon):
     clipping_polygon = geometry.MultiPolygon([clipping_polygon])
 clipping_polygon = gpd.GeoDataFrame(geometry=[clipping_polygon], crs="EPSG:4326")
-reqired_map_area_gdf = gpd.GeoDataFrame(geometry=[reqired_map_area], crs="EPSG:4326")
 
 fig, ax = plt.subplots(figsize=(10, 10))
 ax.axis('off')
-reqired_map_area_gdf.plot(ax=ax, color=DEFAULT_MAP_BG_COLOR, linewidth=1)
+reqired_map_area_gdf.plot(ax=ax, color=GENERAL_DEFAULT_STYLES['color'], linewidth=1)
+
+
 
 #plot all
-gdf.plot(ax=ax, color=gdf['color'],linewidth = WAYS_RATIO_TO_MAP_SIZE/map_longest_side_lenght, alpha=1)
+areas_gdf.plot(ax=ax, color=areas_gdf['color'], alpha=1)
+ways_gdf.plot(ax=ax, color=ways_gdf['color'], alpha=1)
+
+# plot with linewidth
+#ways_gdf.plot(ax=ax, facecolor=ways_gdf['color'], edgecolor=ways_gdf['color'], linewidth= WAYS_RATIO_TO_MAP_SIZE/map_longest_side_lenght)
+
+# plot ways outlines
+# ways_gdf.plot(ax=ax, color='none', edgecolor='black', linewidth=0.1, zorder=2)
+
 
 #clip
-clipping_polygon.plot(ax=ax, color='white', alpha=1)  # Fill the outer polygon
-reqired_map_area_gdf.boundary.plot(ax=ax, color='black', linewidth=1)
+clipping_polygon.plot(ax=ax, color='white', alpha=1, zorder=3)  # Fill the outer polygon
+reqired_map_area_gdf.boundary.plot(ax=ax, color='black', linewidth=1, zorder=3)
 
-# #zoom
+#zoom
 hole_bounds = reqired_map_area.bounds  # Get the bounds of the hole polygon
 x_buffer = (hole_bounds[2] - hole_bounds[0]) * 0.01  # 1% of width
 y_buffer = (hole_bounds[3] - hole_bounds[1]) * 0.01  # 1% of height
@@ -352,5 +304,9 @@ ax.set_ylim([hole_bounds[1] - y_buffer, hole_bounds[3] + y_buffer])  # Expand y 
 pdf_filename = f'{place_name}.pdf'
 plt.savefig(pdf_filename, format='pdf')
 
+
+end_time_whole = time.time()
+duration = end_time_whole - start_time_whole
+print("Time whole taken:", duration*10000, "ms")
 
 plt.show()
