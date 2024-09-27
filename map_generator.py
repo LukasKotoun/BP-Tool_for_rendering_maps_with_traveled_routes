@@ -78,7 +78,7 @@ building_styles = {
 
 
 # Define attribute mapping with default values
-tag_styles = {
+categories_styles = {
     'building': (building_styles, {'color': '#B7DEA6', 'zindex': 1}),
     'water': ({}, {'color': '#8FB8DB', 'zindex': 1}),
     'waterway': ({}, {'color': '#8FB8DB', 'zindex': 1}),
@@ -130,8 +130,8 @@ class OsmDataParser(osmium.SimpleHandler):
         if self.apply_filters(self.way_filters, way.tags):
             wkt_geom = self.geom_factory_linestring(way) 
             shapely_geom = self.wkt_loads_func(wkt_geom)  
-            self.polygons.append(shapely_geom)
             filtered_tags = {tag_key: tag_value for tag_key, tag_value in way.tags if tag_key in self.way_columns}
+            self.polygons.append(shapely_geom)
             self.tags.append(filtered_tags)
         
     
@@ -225,23 +225,60 @@ class OsmDataPreprocessor:
         return None, polygon
 
 
-def assign_attributes(row, tag_styles):
+#categories in format 'category_item':{'style_key':'style_value'}
+def filter_category_styles(categories_styles, wanted_styles, wanted_categories):
+    filtered_categories_styles = {}
+    for category_name, (category_map, category_default_styles) in categories_styles.items():
+        if category_name in wanted_categories: #check if category can be in gdf
+            category_filter = wanted_categories[category_name]
+            if isinstance(category_filter, list): #get style for only some items in category
+                filtered_category_styles = {      
+                    category_item: {style_key: item_styles[style_key] for style_key in wanted_styles if style_key in item_styles} #filter only wanted styles for item in category (e.g. color)
+                    for category_item, item_styles in category_map.items()
+                    if category_item in category_filter     #filter wanted items
+                }
+            elif category_filter is True:  #get style for all items in category
+                filtered_category_styles = {
+                    category_item: {style_key: item_styles[style_key] for style_key in wanted_styles if style_key in item_styles} #filter only wanted styles for item in category (e.g. color)
+                    for category_item, item_styles in category_map.items()
+                }
+            filtered_categories_styles[category_name] = (filtered_category_styles, 
+                                                        {style_key: category_default_styles[style_key] for style_key in wanted_styles 
+                                                        if style_key in category_default_styles}) #store filterd category with wanted default styles
+    return filtered_categories_styles
+
+
+
+def assign_attributes(row, categories_styles):
+    # assigned_styles = {}
+    # for tag_key, (tag_map, default_values) in tag_styles.items():
+    #     if tag_key in row and pd.notna(row[tag_key]):
+    #         tag_styles = tag_map.get(row[tag_key], default_values) #retrieve record for a specific key (e.g. landues) and value (e.g. forest) combination in the map or retrieve the default value for that key.
+    #         for style_key, default_style in default_values.items(): # select individual values from the tag styles or default values if there are none in the record
+    #             tag_style = tag_styles.get(style_key)
+    #             assigned_styles[style_key] = tag_style if tag_style is not None else default_style
+    #         return assigned_styles
+    # return {'color':DEFAULT_MAP_BG_COLOR,'zindex': 0 }
     assigned_styles = {}
-    for tag_key, (tag_map, default_values) in tag_styles.items():
-        if tag_key in row and pd.notna(row[tag_key]):
-            tag_styles = tag_map.get(row[tag_key], default_values) #retrieve record for a specific key (e.g. landues) and value (e.g. forest) combination in the map or retrieve the default value for that key.
-            for style_key, default_style in default_values.items(): # select individual values from the record or default values if there are none in the record
-                tag_style = tag_styles.get(style_key)
-                assigned_styles[style_key] = tag_style if tag_style is not None else default_style
+    for category_name, (category_map, category_default_styles) in categories_styles.items():
+        if category_name in row and pd.notna(row[category_name]):
+            category_styles = category_map.get(row[category_name], category_default_styles) #retrieve record for a specific key (e.g. landues) and value (e.g. forest) combination in the map or retrieve the default value for that key.
+            for style_key, default_style in category_default_styles.items(): # select individual values from the category styles or use default values if there are none individual in the record
+                category_style = category_styles.get(style_key)
+                assigned_styles[style_key] = category_style if category_style is not None else default_style
             return assigned_styles
     return {'color':DEFAULT_MAP_BG_COLOR,'zindex': 0 }
 
 
+
+all_styles = filter_category_styles(categories_styles, ['color', 'zindex'], way_filters | area_filters) 
+# area_styles = filter_attributes(categories_styles, ['color', 'linewidth'], area_filters) 
+print(categories_styles)
 # if isinstance(row, pd.Series):
-place_name = 'brno'
+place_name = 'trebic'
 #todo argument parsin - jmena souboru + kombinace flagu podle složitosti zpracování (bud flag na vypnutí extractu nebo podle zadaného vystupního souboru)
 # osm_data_preprocessor = OsmDataPreprocessor('trebic.osm.pbf','Třebíč, Czech Republic')
-osm_data_preprocessor = OsmDataPreprocessor(f'{place_name}.osm.pbf','Brno, Czech Republic')
+osm_data_preprocessor = OsmDataPreprocessor(f'{place_name}.osm.pbf','Třebíč, Czech Republic')
 
 osm_file_name, reqired_map_area = osm_data_preprocessor.extract_area()
 osm_file_parser = OsmDataParser(way_filters,area_filters)
@@ -250,13 +287,13 @@ osm_file_parser.apply_file(osm_file_name)
 gdf = osm_file_parser.create_gdf()
 
 start_time = time.time()  # Record start time
-attributes = gdf.apply(lambda row: assign_attributes(row, tag_styles), axis=1).tolist()
+attributes = gdf.apply(lambda row: assign_attributes(row, all_styles), axis=1).tolist()
+# attributes = gdf.apply(lambda row: assign_attributes(row, area_styles), axis=1).tolist()
 end_time = time.time()
 duration = end_time - start_time
 print("Time taken:", duration*10000, "ms")
 
 gdf = gdf.join(pd.DataFrame(attributes))
-
 
 #!for roads only
 gdf_projected = gdf.to_crs("Web Mercator") # web mercator
