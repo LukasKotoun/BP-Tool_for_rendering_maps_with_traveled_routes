@@ -46,11 +46,11 @@ leisure_styles = {
 }
 	
 highway_styles = {
-    'highway': {'color': '#FDC364', 'zindex': 7}, 
-    'trunk': {'color': '#FDC364', 'zindex': 6},
-    'primary': {'color': '#FDC364', 'zindex': 5},
-    'secondary': {'color': '#F7ED60', 'zindex': 4},
-    'tertiary': {'color': '#FFFFFF', 'zindex': 3},
+    'highway': {'color': '#FDC364', 'zindex': 7, 'linewidth': 15}, 
+    'trunk': {'color': '#FDC364', 'zindex': 6, 'linewidth': 12},
+    'primary': {'color': '#FDC364', 'zindex': 5, 'linewidth': 9},
+    'secondary': {'color': '#F7ED60', 'zindex': 4, 'linewidth': 7},
+    'tertiary': {'color': '#FFFFFF', 'zindex': 3, 'linewidth': 6},
     'unclassified': {'color': '#FFFFFF', 'zindex': None},
     'road': {'color': '#DAD6D2', 'zindex': None},
     'footway': {'color': 'brown', 'zindex': None},
@@ -66,13 +66,13 @@ building_styles = {
 
 # Define attribute mapping with default values
 categories_styles = {
-    'building': (building_styles, {'color': '#B7DEA6', 'zindex': 1}),
-    'water': ({}, {'color': '#8FB8DB', 'zindex': 1}),
-    'waterway': ({}, {'color': '#8FB8DB', 'zindex': 1}),
-    'leisure': (leisure_styles, {'color': '#EDEDE0', 'zindex': 0}),
-    'natural': (landuse_styles, {'color': '#B7DEA6', 'zindex': 0}),
-    'landuse': (landuse_styles, {'color': '#EDEDE0', 'zindex': 0}),
-    'highway': (highway_styles, {'color': '#FFFFFF', 'zindex': 2})
+    'building': (building_styles, {'color': '#B7DEA6', 'zindex': 1, 'linewidth': 4}),
+    'water': ({}, {'color': '#8FB8DB', 'zindex': 1, 'linewidth': 4}),
+    'waterway': ({}, {'color': '#8FB8DB', 'zindex': 1, 'linewidth': 4}),
+    'leisure': (leisure_styles, {'color': '#EDEDE0', 'zindex': 0, 'linewidth': 4}),
+    'natural': (landuse_styles, {'color': '#B7DEA6', 'zindex': 0, 'linewidth': 4}),
+    'landuse': (landuse_styles, {'color': '#EDEDE0', 'zindex': 0, 'linewidth': 4}),
+    'highway': (highway_styles, {'color': '#FFFFFF', 'zindex': 2, 'linewidth': 4})
 }
 
 

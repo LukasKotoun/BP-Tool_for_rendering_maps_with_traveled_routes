@@ -217,13 +217,30 @@ def assign_styles_to_gdf(gdf, categories_styles, style_keys, filters):
     gdf = gdf.join(pd.DataFrame(styles_columns))
     return gdf
 
-ways_gdf = assign_styles_to_gdf(ways_gdf, categories_styles, ['color', 'zindex'], way_filters)
+ways_gdf = assign_styles_to_gdf(ways_gdf, categories_styles, ['color', 'zindex', 'linewidth'], way_filters)
 areas_gdf = assign_styles_to_gdf(areas_gdf, categories_styles, ['color', 'zindex'], area_filters)
+#todo measure time
+start_time = time.time()
 
 #remove unwanted spaces between lines in corners - by converting to polygon and expanding 
 gdf_projected = ways_gdf.to_crs("Web Mercator") # web mercator
-gdf_projected['geometry'] = gdf_projected['geometry'].buffer(4) 
+# gdf_projected['geometry'] = gdf_projected['geometry'].buffer(4) 
+gdf_projected['geometry'] = gdf_projected.apply(
+    lambda row: row['geometry'].buffer(row['linewidth']), axis=1
+)
 ways_gdf = gdf_projected.to_crs(ways_gdf.crs)
+#!edges
+# gdf_projected = ways_gdf.to_crs("Web Mercator") # web mercator
+# # gdf_projected['geometry'] = gdf_projected['geometry'].buffer(4) 
+# gdf_projected['geometry'] = gdf_projected.apply(
+#     lambda row: row['geometry'].buffer(0.0000000001), axis=1
+# )
+# edge_ways = gdf_projected.to_crs(ways_gdf.crs)
+end_time = time.time()
+
+# Measure time taken
+time_taken = end_time - start_time
+print(f"Time taken for buffer: {time_taken * 1000:.6f} ms")
 
 #!filering for diferent ways ploting
 # Define the condition for filtering
@@ -245,7 +262,6 @@ def get_map_size(gdf_total_bounds):
     latitude = gdf_total_bounds['east'] - gdf_total_bounds['west']
     longitude = gdf_total_bounds['north'] - gdf_total_bounds['south']
     return max(latitude, longitude)
-start_time = time.time()
 
 #map bounds
 # gdf_total_bounds = dict(zip(['west', 'north', 'east', 'south'], gdf.total_bounds))
@@ -254,11 +270,6 @@ start_time = time.time()
 # gdf_total_bounds = dict(zip(['west', 'north', 'east', 'south'], reqired_map_area_gdf.total_bounds))
 gdf_total_bounds = get_total_bounds([ways_gdf,areas_gdf])
 map_longest_side_lenght = get_map_size(gdf_total_bounds)
-end_time = time.time()
-
-# Measure time taken
-time_taken = end_time - start_time
-print(f"Time taken for filtering: {time_taken:.6f} seconds")
 
 clipping_helper_polygon = geometry.Polygon([
     (gdf_total_bounds['east'], gdf_total_bounds['south']),  # Bottom-left corner
@@ -274,8 +285,9 @@ clipping_polygon = gpd.GeoDataFrame(geometry=[clipping_polygon], crs="EPSG:4326"
 
 fig, ax = plt.subplots(figsize=(10, 10))
 ax.axis('off')
-reqired_map_area_gdf.plot(ax=ax, color=GENERAL_DEFAULT_STYLES['color'], linewidth=1)
+ax.set_aspect('equal')
 
+reqired_map_area_gdf.plot(ax=ax, color=GENERAL_DEFAULT_STYLES['color'], linewidth=1)
 
 
 #plot all
@@ -283,10 +295,15 @@ areas_gdf.plot(ax=ax, color=areas_gdf['color'], alpha=1)
 ways_gdf.plot(ax=ax, color=ways_gdf['color'], alpha=1)
 
 # plot with linewidth
-#ways_gdf.plot(ax=ax, facecolor=ways_gdf['color'], edgecolor=ways_gdf['color'], linewidth= WAYS_RATIO_TO_MAP_SIZE/map_longest_side_lenght)
+
 
 # plot ways outlines
 # ways_gdf.plot(ax=ax, color='none', edgecolor='black', linewidth=0.1, zorder=2)
+# Plot polygon edges (buffered geometries)
+
+# Overlay filled polygons (if you want to visualize the filled area as well)
+# ways_gdf.plot(ax=ax, color='lightgreen', alpha=0.5, edgecolor='black', linewidth = 0.1)
+# edge_ways.plot(ax=ax, color="gray", alpha=0.8)
 
 
 #clip
@@ -302,11 +319,11 @@ ax.set_ylim([hole_bounds[1] - y_buffer, hole_bounds[3] + y_buffer])  # Expand y 
 
 
 pdf_filename = f'{place_name}.pdf'
-plt.savefig(pdf_filename, format='pdf')
+plt.savefig(pdf_filename, format='pdf', transparent=True)
 
 
 end_time_whole = time.time()
 duration = end_time_whole - start_time_whole
-print("Time whole taken:", duration*10000, "ms")
+print("Time whole taken:", duration*1000, "ms")
 
 plt.show()
