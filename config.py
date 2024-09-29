@@ -65,7 +65,8 @@ building_styles = {
 
 
 # Define attribute mapping with default values
-categories_styles = {
+
+CATEGORIES_STYLES = {
     'building': (building_styles, {'color': '#B7DEA6', 'zindex': 1, 'linewidth': 4}),
     'water': ({}, {'color': '#8FB8DB', 'zindex': 1, 'linewidth': 4}),
     'waterway': ({}, {'color': '#8FB8DB', 'zindex': 1, 'linewidth': 4}),
