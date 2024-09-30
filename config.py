@@ -1,7 +1,7 @@
 #------------cons--------------
 
 WAYS_RATIO_TO_MAP_SIZE = 0.1
-GENERAL_DEFAULT_STYLES = {'color':'#EDEDE0', 'zindex':0}
+GENERAL_DEFAULT_STYLES = {'color':'#EDEDE0', 'zindex':0, 'linewidth':0 , 'bg_color': 'gray'}
 
 city_name = "Brno, Czech Republic"
 
@@ -11,7 +11,8 @@ city_name = "Brno, Czech Republic"
 way_filters = {
     'waterway': True,
     # 'highway': ['highway','trunk','primary','secondary'],
-    'highway':True
+    'highway':True,
+    'railway': ['rail']
 }
 
 area_filters = {
@@ -59,6 +60,11 @@ highway_styles = {
     'residential': {'color': 'blue', 'zindex': None}
 }
 
+railway_styles = {
+    'rail': {'color': '#FFFFFF', 'zindex': 1, 'linewidth': 4, 'bg_color': 'gray'}
+}
+
+
 building_styles = {
     'house': {'color': 'grey', 'zindex': 1},
 }
@@ -73,7 +79,8 @@ CATEGORIES_STYLES = {
     'leisure': (leisure_styles, {'color': '#EDEDE0', 'zindex': 0, 'linewidth': 4}),
     'natural': (landuse_styles, {'color': '#B7DEA6', 'zindex': 0, 'linewidth': 4}),
     'landuse': (landuse_styles, {'color': '#EDEDE0', 'zindex': 0, 'linewidth': 4}),
-    'highway': (highway_styles, {'color': '#FFFFFF', 'zindex': 2, 'linewidth': 4})
+    'highway': (highway_styles, {'color': '#FFFFFF', 'zindex': 2, 'linewidth': 4}),
+    'railway': (railway_styles, {'color': '#FFFFFF', 'zindex': 2, 'linewidth': 4, 'bg_color': 'gray'}),
 }
 
 
