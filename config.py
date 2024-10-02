@@ -53,15 +53,14 @@ highway_styles = {
     'secondary': {'color': '#F7ED60', 'zindex': 4, 'linewidth': 7},
     'tertiary': {'color': '#FFFFFF', 'zindex': 3, 'linewidth': 6},
     'unclassified': {'color': '#FFFFFF', 'zindex': None},
-    'road': {'color': '#DAD6D2', 'zindex': None},
-    'footway': {'color': 'brown', 'zindex': None},
-    'steps': {'color': 'purple', 'zindex': None},
-    'path': {'color': 'red', 'zindex': None},
-    'residential': {'color': 'blue', 'zindex': None}
+    'road': {'color': '#FFFFFF', 'zindex': None},
+    'footway': {'color': '#8f8364', 'zindex': None},
+    'steps': {'color': '#8f8364', 'zindex': None},
+    'path': {'color': '#8f8364', 'zindex': None},
+    'residential': {'color': '#8f8364', 'zindex': None}
 }
-
 railway_styles = {
-    'rail': {'color': '#FFFFFF', 'zindex': 1, 'linewidth': 4, 'bg_color': 'gray'}
+    'rail': {'color': '#FFFFFF', 'zindex': 1, 'linewidth': 8, 'bg_color': 'gray'}
 }
 
 

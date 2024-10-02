@@ -6,7 +6,6 @@ import geopandas as gpd
 from shapely import wkt, geometry
 from shapely.geometry import LineString, MultiLineString
 import numpy as np
-
 import matplotlib.pyplot as plt
 import time
 from typing import Union, List, Tuple
@@ -192,10 +191,19 @@ class GdfUtils:
     def sort_gdf_by_column(gdf, column_name, ascending = True):
         if(column_name in gdf):
             return gdf.sort_values(by=column_name, ascending = ascending)
-        print("cannot sort - unexisting column name")
+        print("cannot sort - unexisting column name") #todo error handling
         return gdf
-    # def expand_line_to_polygon(gdf_to_expand, )
-
+    @staticmethod
+    def is_polygon_inside_bounds(area_bounds, polygon):
+        polygon_from_bounds = geometry.Polygon([
+            (area_bounds['east'], area_bounds['south']),  
+            (area_bounds['east'], area_bounds['north']),  
+            (area_bounds['west'], area_bounds['north']),  
+            (area_bounds['west'], area_bounds['south']),  
+            (area_bounds['east'], area_bounds['south'])   # Closing the polygon
+        ])
+        return polygon_from_bounds.contains(polygon)
+    
     # @staticmethod
     # def filter_by(filter, gdf):
     #     pass
@@ -269,12 +277,6 @@ class GeoDataStyler:
             return gdf.join(pd.DataFrame(styles_columns))
         print("assign_styles_to_gdf: avilable styles are empty")
         return gdf
-
-    def style_striped_railway_background(self, railways_rail_gdf, aditional_styles_to_assign =[]):
-        if aditional_styles_to_assign:
-            railways_rail_gdf = self.assign_styles_to_gdf(railways_rail_gdf, {'railway': True}, aditional_styles_to_assign)
-        return self.gdf_utils.buffer_gdf_column_value_distance(railways_rail_gdf, "linewidth", 0.1)
-#    
     
 class MapPlotter:
     def __init__(self, gdf_utils, geo_data_styler, ways_gdf, areas_gdf, reqired_map_area, general_default_styles):
@@ -285,51 +287,47 @@ class MapPlotter:
         self.reqired_map_area = reqired_map_area
         self.reqired_map_area_gdf = gpd.GeoDataFrame(geometry=[self.reqired_map_area], crs="EPSG:4326")
 
-        self.fig, self.ax = plt.subplots(figsize=(10, 10))
+        # self.fig, self.ax = plt.subplots(figsize=(46.8,33.1)) A0
+        self.fig, self.ax = plt.subplots(figsize=(11.69,8.27))
+        self.fig.subplots_adjust(left=0, right=1, top=1, bottom=0)  # No margins
+
         self.ax.axis('off')
         self.ax.set_aspect('equal')
         self.reqired_map_area_gdf.plot(ax=self.ax, color=general_default_styles['color'], linewidth=1)
     
     def plot_ways(self):
-        
-        # map_longest_side_lenght = get_map_size(gdf_total_bounds)
+        #todo linewidht multiply with constat
         mapsize = self.gdf_utils.get_map_size_gdf(self.reqired_map_area_gdf)
-        # self.ways_gdf = split_lines_into_segments(self.ways_gdf,mapsize/150)
-       
-        
-        self.ways_gdf = self.gdf_utils.buffer_gdf_column_value_distance(self.ways_gdf,'linewidth', resolution=8)
-        condition = self.ways_gdf['railway'].isin(['rail', 'tram'])
-        rails = self.ways_gdf[condition].reset_index()
+        LINE_WIDTH_MUL_CONSTANT = 0.007
+        condition = self.ways_gdf['railway'].isin(['rail'])
+        rails_gdf = self.ways_gdf[condition].reset_index()
         self.ways_gdf = self.ways_gdf[~condition].reset_index()
-        self.ways_gdf.plot(ax=self.ax, color=self.ways_gdf['color'], alpha=1,edgecolor='None', antialiased=True,pickradius=0, snap = False)
         
+        #pro cesty ktery budou v kuse - filter podle line style
+        # self.ways_gdf = self.gdf_utils.buffer_gdf_column_value_distance(self.ways_gdf,'linewidth', resolution=8)
+        # self.ways_gdf.plot(ax=self.ax, linewidth = self.ways_gdf['linewidth']*LINE_WIDTH_MUL_CONSTANT/mapsize , color=self.ways_gdf['color'], alpha=1 ,edgecolor=self.ways_gdf['color'], )
+        #todo directly store linewidth
+        @time_measurement_decorator("for")
+        #todo try find better way
         
+        def test():
+        #todo to function
+            for line, color, linewidth in zip(self.ways_gdf.geometry, self.ways_gdf['color'], self.ways_gdf['linewidth']):
+                x, y = line.xy
+                self.ax.plot(x, y, color=color, linewidth= linewidth*LINE_WIDTH_MUL_CONSTANT/mapsize , solid_capstyle='round')
+
+
+        test()
+
         #highway
-        #waterway - nic
+        #waterway
         #railways
         
-        # areas_gdf = self.geo_data_styler.assign_styles_to_gdf(rails, area_filters, ['colors'])
-        # print(areas_gdf)
-
-        # rails_bg = self.geo_data_styler.style_striped_railway_background(rails,['bg_color'])
-        # rails_bg.plot(ax=self.ax, color=rails_bg['bg_color'], alpha=1)
-        rails.plot(ax=self.ax, color=rails['color'], linestyle=(0, (5, 5)) , alpha=1, hatch ="xxxx")
+        #rails_bg.plot(ax=self.ax, color=rails_bg['bg_color'], alpha=1)
+        rails_gdf = self.geo_data_styler.assign_styles_to_gdf(rails_gdf, { 'railway': ['rail']}, ['bg_color'])
+        rails_gdf.plot(ax=self.ax,  color='gray',alpha=1, linewidth = rails_gdf['linewidth'] * (LINE_WIDTH_MUL_CONSTANT + 0.0005)/mapsize)
+        rails_gdf.plot(ax=self.ax,  color=rails_gdf['color'], linestyle=(0,(5,5)),alpha=1, linewidth = rails_gdf['linewidth']*LINE_WIDTH_MUL_CONSTANT/mapsize)
         
-        
-        #prevest na polygon, přes polygon nakreslit čáru se stylem - -
-        #potrebuji vyfiltrovat, nechat polygon i linestring 
-        
-        
-        # plot with linewidth
-        
-
-        # plot ways outlines
-        # ways_gdf.plot(ax=ax, color='none', edgecolor='black', linewidth=0.1, zorder=2)
-        # Plot polygon edges (buffered geometries)
-
-        # Overlay filled polygons (if you want to visualize the filled area as well)
-        # ways_gdf.plot(ax=ax, color='lightgreen', alpha=0.5, edgecolor='black', linewidth = 0.1)
-        # edge_ways.plot(ax=ax, color="gray", alpha=0.8)
 
         # condition = ways_gdf['highway'].notnull()
         # filtered_gdf = ways_gdf[condition]
@@ -378,18 +376,28 @@ class MapPlotter:
 @time_measurement_decorator("main")
 def main():
     osm_dir = './osm_files/'
-    # place_osm = 'vys'
-    place_osm = 'brno'
-    # place_name = 'Vysočina, Czech Republic'
-    place_name = 'Brno, Czech Republic'
+    place_osm = 'trebic'
+    # place_osm = 'brno'
+    place_name = 'Třebíč, Czech Republic'
+    # place_name = 'brno, Czech Republic'
     osm_data_preprocessor = OsmDataPreprocessor(f'{osm_dir}{place_osm}.osm.pbf',f'{place_name}')
+    # osm_data_preprocessor = OsmDataPreprocessor(f'{osm_dir}{place_osm}.osm.pbf',f'{place_name}',"new osm name")
 
     osm_file_name, reqired_map_area = osm_data_preprocessor.extract_area()
+    
     osm_file_parser = OsmDataParser(way_filters,area_filters)
     osm_file_parser.apply_file(osm_file_name)
     ways_gdf, areas_gdf = osm_file_parser.create_gdf()
     osm_file_parser.clear_gdf()
-
+    
+    total_gdf_bounds = GdfUtils.get_total_bounds(ways_gdf,areas_gdf)
+    #check if area is inside osm file
+    if(not GdfUtils.is_polygon_inside_bounds(total_gdf_bounds, reqired_map_area)):
+        #todo error handle class
+        print("Selected area map must be inside given osm.pbf file")
+        sys.exit()  
+    
+    
     geo_data_styler = GeoDataStyler(GdfUtils, CATEGORIES_STYLES, GENERAL_DEFAULT_STYLES)
 
     #set default common styles
@@ -397,25 +405,11 @@ def main():
     areas_gdf = geo_data_styler.assign_styles_to_gdf(areas_gdf, area_filters, ['color', 'zindex'])
     ways_gdf = GdfUtils.sort_gdf_by_column(ways_gdf,'zindex')
     areas_gdf = GdfUtils.sort_gdf_by_column(areas_gdf,'zindex')
-
-
-    #!edges
-    # gdf_projected = ways_gdf.to_crs("Web Mercator") # web mercator
-    # # gdf_projected['geometry'] = gdf_projected['geometry'].buffer(4) 
-    # gdf_projected['geometry'] = gdf_projected.apply(
-    #     lambda row: row['geometry'].buffer(0.0000000001), axis=1
-    # )
-    # edge_ways = gdf_projected.to_crs(ways_gdf.crs)
-
-
     map_plotter = MapPlotter(GdfUtils, geo_data_styler, ways_gdf, areas_gdf, reqired_map_area, GENERAL_DEFAULT_STYLES)
     map_plotter.plot_areas()
     map_plotter.plot_ways()
-
-    total_gdf_bounds = GdfUtils.get_total_bounds(ways_gdf,areas_gdf)
     map_plotter.clip(total_gdf_bounds)
-    #GdfUtils.get_total_bounds_polygon(reqired_map_area)
-    map_plotter.zoom(reqired_map_area.bounds)
+    map_plotter.zoom(reqired_map_area.bounds,0.5)
     map_plotter.plot_map_boundary()
     map_plotter.generate_pdf(f'./pdfs/{place_osm}')
     map_plotter.show_plot()
