@@ -1,3 +1,5 @@
+from enum import Enum
+
 #------------cons--------------
 
 WAYS_RATIO_TO_MAP_SIZE = 0.1
@@ -82,12 +84,18 @@ CATEGORIES_STYLES = {
     'railway': (railway_styles, {'color': '#FFFFFF', 'zindex': 2, 'linewidth': 4, 'bg_color': 'gray'}),
 }
 
+MM_TO_INCH = 25.4
+PAPER_SIZES ={
+    'A0': (841, 1189),
+    'A1': (594, 841),
+    'A2': (420, 594),
+    'A3': (297, 420),
+    'A4': (210, 297),
+    'A5': (148, 210),
+    'A6': (105, 148)
+}
 
-# road_width_mapping = {
-#     'primary': 1.5,    # Primary roads
-#     'secondary': 1.3,  # Secondary roads
-#     'tertiary': 0.7,   # Tertiary roads
-#     'residential': 0.5, # Residential roads
-#     'service': 0.3     # Smallest for service roads
-# }
-
+class MapOrientation(Enum):
+    AUTOMATIC = 1
+    LANDSCAPE = 2
+    PORTRAIT = 3
