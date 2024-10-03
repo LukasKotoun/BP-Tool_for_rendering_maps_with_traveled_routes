@@ -13,6 +13,9 @@ import subprocess
 import tempfile
 import sys
 
+EPSG_DEGREE_NUMBER = 4326
+EPSG_METERS_NUMBER = 3857
+
 
 def time_measurement_decorator(timer_name):
     def inner(func):
@@ -71,7 +74,7 @@ class OsmDataPreprocessor:
                 
         elif isinstance(self.area, list): #get area from coordinates
             polygon = geometry.Polygon(self.area)
-            polygon_gdf = gpd.GeoDataFrame(geometry=[polygon], crs="EPSG:4326")
+            polygon_gdf = gpd.GeoDataFrame(geometry=[polygon], crs=f"EPSG:{EPSG_DEGREE_NUMBER}")
         else: #area cannot be created
             raise ValueError("Invalid area")
         
@@ -133,8 +136,8 @@ class OsmDataParser(osmium.SimpleHandler):
     def create_gdf(self):        
         print(f"AREA polygons: {sys.getsizeof(self.area_geometry)}, tags: {sys.getsizeof(self.area_tags)}")
         print(f"WAY polygons: {sys.getsizeof(self.way_geometry)}, tags: {sys.getsizeof(self.way_tags)}")
-        ways_gdf = gpd.GeoDataFrame(pd.DataFrame(self.way_tags).assign(geometry=self.way_geometry), crs="EPSG:4326")
-        areas_gdf = gpd.GeoDataFrame(pd.DataFrame(self.area_tags).assign(geometry=self.area_geometry), crs="EPSG:4326")
+        ways_gdf = gpd.GeoDataFrame(pd.DataFrame(self.way_tags).assign(geometry=self.way_geometry), crs=f"EPSG:{EPSG_DEGREE_NUMBER}")
+        areas_gdf = gpd.GeoDataFrame(pd.DataFrame(self.area_tags).assign(geometry=self.area_geometry), crs=f"EPSG:{EPSG_DEGREE_NUMBER}")
         print(f"ways: {sys.getsizeof(ways_gdf)},  areas: {sys.getsizeof(areas_gdf)}, combined: {sys.getsizeof(ways_gdf) + sys.getsizeof(areas_gdf)}")
         return ways_gdf, areas_gdf
     
@@ -191,7 +194,7 @@ class GdfUtils:
             return height
         
     def get_map_orientation(gdf):
-        gdf_meters = gdf.to_crs(epsg=3857)    
+        gdf_meters = gdf.to_crs(epsg=EPSG_METERS_NUMBER)    
         bounds = GdfUtils.get_gdf_bounds(gdf_meters)
         width = bounds['east'] - bounds['west']
         height = bounds['north'] - bounds['south']
@@ -211,6 +214,7 @@ class GdfUtils:
             return gdf.sort_values(by=column_name, ascending = ascending)
         print("cannot sort - unexisting column name") #todo error handling
         return gdf
+    
     @staticmethod
     def is_polygon_inside_bounds(area_bounds, polygon):
         polygon_from_bounds = geometry.Polygon([
@@ -222,13 +226,20 @@ class GdfUtils:
         ])
         return polygon_from_bounds.contains(polygon)
     
-    # @staticmethod
-    # def filter_by(filter, gdf):
-    #     pass
-    #todo def negativ
-    # def filter_by(filter, gdf):
-    #todo def both - return (pos,neg)
-    # def filter_by(filter, gdf):
+    @staticmethod
+    def filter_gdf_in(gdf, att_name, att_values = []):
+        if(att_values):
+            condition = gdf[att_name].isin(att_values)
+            return gdf[condition].reset_index(), gdf[~condition].reset_index()
+        condition = gdf[att_name].notna()
+        return gdf[condition].reset_index(), gdf[~condition].reset_index()
+    @staticmethod
+    def filter_gdf_not_in(gdf, att_name, att_values = []):
+        if(att_values):
+            condition = gdf[att_name].isin(att_values)
+            return gdf[~condition].reset_index(), gdf[condition].reset_index()
+        condition = gdf[att_name].notna()
+        return gdf[~condition].reset_index(), gdf[condition].reset_index()
     
     @staticmethod
     def buffer_gdf_same_distance(gdf, distance, resolution = 16, cap_style = 'round', join_style = 'round'):
@@ -317,15 +328,13 @@ class MapPlotter:
         mapsize = self.gdf_utils.get_map_size_from_gdf(self.reqired_map_area_gdf)
         LINE_WIDTH_TRANSFORM_CONSTANT = 0.007
         self.ways_gdf['linewidth'] = self.ways_gdf['linewidth'] * LINE_WIDTH_TRANSFORM_CONSTANT / mapsize
-
-        condition = self.ways_gdf['railway'].isin(['rail'])
-        rails_gdf = self.ways_gdf[condition].reset_index()
-        self.ways_gdf = self.ways_gdf[~condition].reset_index()
+        rails_gdf, ways_gdf = self.gdf_utils.filter_gdf_in(self.ways_gdf, 'railway',['rail'])
         
         # self.ways_gdf = self.gdf_utils.buffer_gdf_column_value_distance(self.ways_gdf,'linewidth', resolution=8)
         # self.ways_gdf.plot(ax=self.ax, linewidth = self.ways_gdf['linewidth']*LINE_WIDTH_MUL_CONSTANT/mapsize , color=self.ways_gdf['color'], alpha=1 ,edgecolor=self.ways_gdf['color'], )
         # plot lines round        
-        for line, color, linewidth in zip(self.ways_gdf.geometry, self.ways_gdf['color'], self.ways_gdf['linewidth']):
+        
+        for line, color, linewidth in zip(ways_gdf.geometry, ways_gdf['color'], ways_gdf['linewidth']):
             x, y = line.xy
             self.ax.plot(x, y, color=color, linewidth= linewidth, solid_capstyle='round')
 
@@ -336,7 +345,7 @@ class MapPlotter:
         self.areas_gdf.plot(ax=self.ax, color=self.areas_gdf['color'], alpha=1)
         pass
    
-    def clip(self, whole_area_bounds, reqired_area_polygon ,clipped_area_color = 'white'):
+    def clip(self, whole_area_bounds, reqired_area_polygon, clipped_area_color = 'white'):
         #clip
         whole_area_polygon = geometry.Polygon([
             (whole_area_bounds['east'], whole_area_bounds['south']),  
@@ -348,7 +357,7 @@ class MapPlotter:
 
         clipping_polygon = whole_area_polygon.difference(reqired_area_polygon)
         clipping_polygon = geometry.MultiPolygon([clipping_polygon])
-        clipping_polygon = gpd.GeoDataFrame(geometry=[clipping_polygon], crs="EPSG:4326")
+        clipping_polygon = gpd.GeoDataFrame(geometry=[clipping_polygon], crs=f"EPSG:{EPSG_DEGREE_NUMBER}")
         
         clipping_polygon.plot(ax=self.ax, color=clipped_area_color, alpha=1, zorder=3)
         
@@ -392,8 +401,6 @@ def get_paper_size_mm(paper_size_mapping, map_orientaion, paper_size='A4', wante
 
 @time_measurement_decorator("main")
 def main():
-    
-    
     osm_dir = './osm_files/'
     place_osm = 'trebic'
     # place_osm = 'brno'
@@ -407,7 +414,7 @@ def main():
     # osm_data_preprocessor = OsmDataPreprocessor(f'{osm_dir}{place_osm}.osm.pbf',f'{place_name}',"new osm name")
 
     osm_file_name, reqired_map_area_polygon = osm_data_preprocessor.extract_area()
-    reqired_map_area_gdf = gpd.GeoDataFrame(geometry=[reqired_map_area_polygon], crs="EPSG:4326")
+    reqired_map_area_gdf = gpd.GeoDataFrame(geometry=[reqired_map_area_polygon], crs=f"EPSG:{EPSG_DEGREE_NUMBER}")
     osm_file_parser = OsmDataParser(way_filters,area_filters)
     osm_file_parser.apply_file(osm_file_name)
     ways_gdf, areas_gdf = osm_file_parser.create_gdf()
