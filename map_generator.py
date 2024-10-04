@@ -11,23 +11,24 @@ import time
 from typing import Union, List, Tuple
 import subprocess
 import tempfile
-import sys
+from shapely.ops import unary_union
 
+import sys
+from matplotlib import patheffects
 EPSG_DEGREE_NUMBER = 4326
 EPSG_METERS_NUMBER = 3857
 
-
 def time_measurement_decorator(timer_name):
-    def inner(func):
-        def wrapper(*args,**kwargs):
+    def wrapper(func):
+        def inner(*args,**kwargs):
             start_time = time.time()
             result = func(*args, **kwargs)
             end_time= time.time()
             elapsed_time = end_time - start_time
             print(f"{timer_name} time: {elapsed_time*1000:.6f} ms")
             return result
-        return wrapper
-    return inner
+        return inner
+    return wrapper
 
 
 
@@ -37,7 +38,7 @@ class OsmDataPreprocessor:
         self.osm_input_file = osm_input_file # Can be a string (place name) or a list of coordinates
         self.area = area  # Can be a string (place name) or a list of coordinates
         self.osm_output_file = osm_output_file
-    
+    #todo
     def check_files_validity():
         pass
     
@@ -51,11 +52,11 @@ class OsmDataPreprocessor:
                 self.osm_input_file,
                 '-o', self.osm_output_file
             ]
-            #todo catch if file osm file exist
+            #todo catch if file osm file not exist
             subprocess.run(command, check=True)
             return self.osm_output_file, reqired_map_area
         else:
-            temp_geojson_path, reqired_map_area = self.create_geojson(False)
+            reqired_map_area = self.create_geojson(False)[1]
             return self.osm_input_file, reqired_map_area 
         
                 
@@ -74,6 +75,7 @@ class OsmDataPreprocessor:
                 
         elif isinstance(self.area, list): #get area from coordinates
             polygon = geometry.Polygon(self.area)
+            print(polygon)
             polygon_gdf = gpd.GeoDataFrame(geometry=[polygon], crs=f"EPSG:{EPSG_DEGREE_NUMBER}")
         else: #area cannot be created
             raise ValueError("Invalid area")
@@ -117,7 +119,7 @@ class OsmDataParser(osmium.SimpleHandler):
         return False
         
     def way(self, way):
-        if self.apply_filters(self.way_filters, way.tags):
+        if self.apply_filters(self.way_filters, way.tags) and not self.apply_filters(way_filters_dont_want, way.tags):
             shapely_geometry = self.wkt_loads_func(self.geom_factory_linestring(way)) #convert osmium way to wkt str format and than to shapely linestring geometry
             filtered_tags = {tag_key: tag_value for tag_key, tag_value in way.tags if tag_key in self.way_columns}
             self.way_geometry.append(shapely_geometry)
@@ -164,7 +166,7 @@ class GdfUtils:
         north = float('-inf')
         
         for gdf in gdfs:
-            bounds = gdf.total_bounds #['west', 'north', 'east', 'south']
+            bounds = gdf.total_bounds #['west', 'south', 'east', 'north']
             west = min(west, bounds[0])
             south = min(south, bounds[1])
             east = max(east, bounds[2])
@@ -178,7 +180,7 @@ class GdfUtils:
             }
     @staticmethod
     def get_polygon_bounds(polygon):
-        bounds = polygon.bounds
+        bounds = polygon.bounds #['west', 'south', 'east', 'north']
         return {'west': bounds[0],
                'south': bounds[1],
                'east': bounds[2],
@@ -192,7 +194,7 @@ class GdfUtils:
             return width
         else:
             return height
-        
+    @staticmethod
     def get_map_orientation(gdf):
         gdf_meters = gdf.to_crs(epsg=EPSG_METERS_NUMBER)    
         bounds = GdfUtils.get_gdf_bounds(gdf_meters)
@@ -228,19 +230,23 @@ class GdfUtils:
     
     @staticmethod
     def filter_gdf_in(gdf, att_name, att_values = []):
-        if(att_values):
+        if (att_values and att_name in gdf):
             condition = gdf[att_name].isin(att_values)
-            return gdf[condition].reset_index(), gdf[~condition].reset_index()
-        condition = gdf[att_name].notna()
-        return gdf[condition].reset_index(), gdf[~condition].reset_index()
+            return gdf[condition].reset_index(drop=True), gdf[~condition].reset_index(drop=True) 
+        elif(att_name in gdf):
+            condition = gdf[att_name].notna()
+            return gdf[condition].reset_index(drop=True), gdf[~condition].reset_index(drop=True)
+        return gpd.GeoDataFrame(geometry=[]), gdf
+    
     @staticmethod
     def filter_gdf_not_in(gdf, att_name, att_values = []):
-        if(att_values):
+        if(att_values and att_name in gdf):
             condition = gdf[att_name].isin(att_values)
-            return gdf[~condition].reset_index(), gdf[condition].reset_index()
-        condition = gdf[att_name].notna()
-        return gdf[~condition].reset_index(), gdf[condition].reset_index()
-    
+            return gdf[~condition].reset_index(drop=True), gdf[condition].reset_index(drop=True)
+        elif(att_name in gdf):
+            condition = gdf[att_name].notna()
+            return gdf[~condition].reset_index(drop=True), gdf[condition].reset_index(drop=True)
+        return gdf, gpd.GeoDataFrame(geometry=[])
     @staticmethod
     def buffer_gdf_same_distance(gdf, distance, resolution = 16, cap_style = 'round', join_style = 'round'):
         gdf_mercator_projected  = gdf.to_crs("Web Mercator") 
@@ -307,6 +313,28 @@ class GeoDataStyler:
         print("assign_styles_to_gdf: avilable styles are empty")
         return gdf
     
+import pygeoops
+ 
+    
+@time_measurement_decorator("aggregating")
+def aggregate_close_lines(gdf, buffer_distance = 5):
+    if(gdf.empty):
+        return gdf
+    gdf_mercator_projected  = gdf.to_crs("Web Mercator") 
+    gdf_mercator_projected['geometry'] = gdf_mercator_projected['geometry'].buffer(buffer_distance) 
+    
+    #https://stackoverflow.com/questions/73566774/group-by-and-combine-intersecting-overlapping-geometries-in-geopandas
+    gdf_merged = gdf_mercator_projected.sjoin(gdf_mercator_projected, how='left', predicate="intersects")
+    gdf_merged.columns = gdf_merged.columns.str.replace('_left', '',regex=False).str.replace('_right', '', regex=False)
+    gdf_merged = gdf_merged.loc[:, ~gdf_merged.columns.duplicated()]
+
+    gdf_merged_diss = gdf_merged.dissolve()
+    gdf_merged_diss = gdf_merged_diss.reset_index(drop=True).dissolve()
+    gdf_merged_diss['geometry'] = pygeoops.centerline(gdf_merged_diss['geometry'], min_branch_length=buffer_distance * 10)
+    gdf_merged_diss = gdf_merged_diss.explode(column='geometry', ignore_index=True)
+    gdf_merged_diss = gdf_merged_diss.to_crs(gdf.crs)
+    return gdf_merged_diss
+  
 
 class MapPlotter:
     def __init__(self, gdf_utils, geo_data_styler, ways_gdf, areas_gdf, requred_map_area_gdf, map_bg_color, paper_size_mm):
@@ -324,27 +352,77 @@ class MapPlotter:
         self.ax.set_aspect('equal')
         self.reqired_map_area_gdf.plot(ax=self.ax, color=map_bg_color, linewidth=1)
         
-    def plot_ways(self):
-        mapsize = self.gdf_utils.get_map_size_from_gdf(self.reqired_map_area_gdf)
-        LINE_WIDTH_TRANSFORM_CONSTANT = 0.007
-        self.ways_gdf['linewidth'] = self.ways_gdf['linewidth'] * LINE_WIDTH_TRANSFORM_CONSTANT / mapsize
-        rails_gdf, ways_gdf = self.gdf_utils.filter_gdf_in(self.ways_gdf, 'railway',['rail'])
         
-        # self.ways_gdf = self.gdf_utils.buffer_gdf_column_value_distance(self.ways_gdf,'linewidth', resolution=8)
-        # self.ways_gdf.plot(ax=self.ax, linewidth = self.ways_gdf['linewidth']*LINE_WIDTH_MUL_CONSTANT/mapsize , color=self.ways_gdf['color'], alpha=1 ,edgecolor=self.ways_gdf['color'], )
-        # plot lines round        
         
-        for line, color, linewidth in zip(ways_gdf.geometry, ways_gdf['color'], ways_gdf['linewidth']):
+    def __plot_highways(self,highways_gdf):
+        if('color' not in highways_gdf and 'linewidth' not in highways_gdf):
+            return
+        
+        for line, color, linewidth in zip(highways_gdf.geometry, highways_gdf['color'], highways_gdf['linewidth']):
             x, y = line.xy
-            self.ax.plot(x, y, color=color, linewidth= linewidth, solid_capstyle='round')
+            self.ax.plot(x, y, color=color, linewidth = linewidth, solid_capstyle='round')
+            
+    def __plot_waterways(self,waterways_gdf):
+        if('color' not in waterways_gdf and 'linewidth' not in waterways_gdf):
+            return
+        waterways_gdf.plot(ax = self.ax,color=waterways_gdf['color'], linewidth = waterways_gdf['linewidth'])
+        # for line, color, linewidth in zip(waterways_gdf.geometry, waterways_gdf['color'], waterways_gdf['linewidth']):
+        #     x, y = line.xy
+        #     self.ax.plot(x, y, color=color, linewidth = linewidth, solid_capstyle='round')
 
-        rails_gdf = self.geo_data_styler.assign_styles_to_gdf(rails_gdf, { 'railway': ['rail']}, ['bg_color'])
-        rails_gdf.plot(ax=self.ax,  color='gray',alpha=1, linewidth = rails_gdf['linewidth'] + LINE_WIDTH_TRANSFORM_CONSTANT*2/mapsize)
-        rails_gdf.plot(ax=self.ax,  color=rails_gdf['color'], linestyle=(0,(5,5)),alpha=1, linewidth = rails_gdf['linewidth'])
+                    
+            
+    def __plot_railways(self,railways_gdf, rail_bg_width_offset, tram_second_line_spacing):
+        #todo change ploting style
+        if(railways_gdf.empty or 'color' not in railways_gdf or 'linewidth' not in railways_gdf):
+            return
+        
+        tram_gdf, rails_gdf = self.gdf_utils.filter_gdf_in(railways_gdf,'railway',['tram'])
+        
+        tram_gdf = aggregate_close_lines(tram_gdf,5)
+        for line, color, linewidth in zip(tram_gdf.geometry, tram_gdf['color'], tram_gdf['linewidth']):
+            x, y = line.xy#todo len to config
+            self.ax.plot(x, y, color=color, linewidth = linewidth, solid_capstyle='round', alpha=0.6,path_effects=[
+            patheffects.withTickedStroke(angle=-90, spacing=tram_second_line_spacing, length=0.05),
+            patheffects.withTickedStroke(angle=90, spacing=tram_second_line_spacing, length=0.05)])
+        
+        if('bg_color' not in rails_gdf):
+            rails_gdf = self.geo_data_styler.assign_styles_to_gdf(rails_gdf, {'railway': True}, ['bg_color'])
+            # rails_gdf = self.geo_data_styler.assign_styles_to_gdf(rails_gdf, {'railway': ['rail']}, ['bg_color']) #todo solve double adding
+       
+        for line, color, bg_color,linewidth in zip(rails_gdf.geometry, rails_gdf['color'],rails_gdf['bg_color'], rails_gdf['linewidth']):
+            x, y = line.xy
+            self.ax.plot(x, y, color=bg_color, linewidth = linewidth + rail_bg_width_offset)
+            self.ax.plot(x, y, color=color, linewidth =  linewidth ,linestyle=(0,(5,5)))
+                
+    def plot_ways(self):
+        #todo count with pdf size
+        # mapsize = self.gdf_utils.get_map_size_from_gdf(self.reqired_map_area_gdf)
+        #todo to func - get width and length
+        bounds = self.reqired_map_area_gdf.total_bounds
+        x_range = bounds[2] - bounds[0]  # east - west
+        y_range = bounds[3] - bounds[1]  # north - south
+        scaling_factor = (x_range + y_range) / 2  # average extent
+        LINE_TRANSFORM_CONSTANT = 0.008
+        self.ways_gdf['linewidth'] = self.ways_gdf['linewidth'] * LINE_TRANSFORM_CONSTANT / scaling_factor
+        
+        
+        highways_gdf, rest_gdf = self.gdf_utils.filter_gdf_in(self.ways_gdf, 'highway')
+        self.__plot_highways(highways_gdf)
+        
+        railways_gdf, rest_gdf = self.gdf_utils.filter_gdf_in(rest_gdf, 'railway')
+        self.__plot_railways(railways_gdf, LINE_TRANSFORM_CONSTANT*2/scaling_factor,15*LINE_TRANSFORM_CONSTANT/scaling_factor)
+
+        waterways_gdf, rest_gdf = self.gdf_utils.filter_gdf_in(rest_gdf, 'waterway')
+        self.__plot_waterways(waterways_gdf)
+
+            
     def plot_areas(self):
-        self.areas_gdf.plot(ax=self.ax, color=self.areas_gdf['color'], alpha=1)
-        pass
-   
+        if('color' in self.areas_gdf):
+            self.areas_gdf.plot(ax=self.ax, color=self.areas_gdf['color'], alpha=1)
+        else:
+            #todo some error to frontend
+            pass
     def clip(self, whole_area_bounds, reqired_area_polygon, clipped_area_color = 'white'):
         #clip
         whole_area_polygon = geometry.Polygon([
@@ -364,7 +442,8 @@ class MapPlotter:
     
     def plot_map_boundary(self):
         self.reqired_map_area_gdf.boundary.plot(ax=self.ax, color='black', linewidth=1, zorder=3)
-
+        
+    #use function to get gdf sizes - same as in ways
     #todo change to names
     def zoom(self, zoom_bounds, zoom_percent_padding = 1):
         zoom_padding = zoom_percent_padding / 100 #convert from percent
@@ -402,16 +481,19 @@ def get_paper_size_mm(paper_size_mapping, map_orientaion, paper_size='A4', wante
 @time_measurement_decorator("main")
 def main():
     osm_dir = './osm_files/'
-    place_osm = 'trebic'
-    # place_osm = 'brno'
-    place_name = 'Třebíč, Czech Republic'
+    osm_file = 'jihmor'
+    place_name = 'Brno, Czech Republic'
+    # osm_file = 'brno'
+
     # place_name = 'brno, Czech Republic'
     # pdf_size = get_pdf_size()
     #todo arg parser/gui
     
     
-    osm_data_preprocessor = OsmDataPreprocessor(f'{osm_dir}{place_osm}.osm.pbf',f'{place_name}')
-    # osm_data_preprocessor = OsmDataPreprocessor(f'{osm_dir}{place_osm}.osm.pbf',f'{place_name}',"new osm name")
+    osm_data_preprocessor = OsmDataPreprocessor(f'{osm_dir}{osm_file}.osm.pbf',f'{place_name}')
+    # osm_data_preprocessor = OsmDataPreprocessor(f'{osm_dir}{osm_file}.osm',[(-18.14143,65.68868),(-18.08538,65.68868),(-18.08538,65.67783),(-18.14143,65.67783)])
+    # osm_data_preprocessor = OsmDataPreprocessor(f'{osm_dir}{osm_file}.osm',[(6.94872,4.84293),(6.99314,4.84293),(6.99314,4.81603),(6.94872,4.81603)])
+    # osm_data_preprocessor = OsmDataPreprocessor(f'{osm_dir}{osm_file}.osm.pbf',f'{place_name}',"new osm name")
 
     osm_file_name, reqired_map_area_polygon = osm_data_preprocessor.extract_area()
     reqired_map_area_gdf = gpd.GeoDataFrame(geometry=[reqired_map_area_polygon], crs=f"EPSG:{EPSG_DEGREE_NUMBER}")
@@ -447,7 +529,7 @@ def main():
     #change to map_orientation
     map_plotter.zoom(reqired_map_area_polygon.bounds)
     map_plotter.plot_map_boundary()
-    map_plotter.generate_pdf(f'./pdfs/{place_osm}')
+    map_plotter.generate_pdf(f'./pdfs/{osm_file}')
     map_plotter.show_plot()
 
 if __name__ == "__main__":

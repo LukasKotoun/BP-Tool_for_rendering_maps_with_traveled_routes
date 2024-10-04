@@ -3,7 +3,7 @@ from enum import Enum
 #------------cons--------------
 
 WAYS_RATIO_TO_MAP_SIZE = 0.1
-GENERAL_DEFAULT_STYLES = {'color':'#EDEDE0', 'zindex':0, 'linewidth':0 , 'bg_color': 'gray'}
+GENERAL_DEFAULT_STYLES = {'color':'#EDEDE0', 'zindex':0, 'linewidth':0 , 'bg_color': '#5d5d5d'}
 
 city_name = "Brno, Czech Republic"
 
@@ -14,8 +14,13 @@ way_filters = {
     'waterway': True,
     # 'highway': ['highway','trunk','primary','secondary'],
     'highway':True,
-    'railway': ['rail']
+    'railway': ['rail','tram']
 }
+
+way_filters_dont_want ={
+    'service':['spur']
+}
+
 
 area_filters = {
     # 'landuse': ['forest', 'residential', 'farmland', 'meadow', 'grass'],
@@ -33,7 +38,7 @@ landuse_styles = {
     'farmland': {'color': '#EDEDE0', 'zindex': None},
     'forest': {'color': '#9FC98D', 'zindex': None},
     'meadow': {'color': '#B7DEA6', 'zindex': None},
-    'grass': {'color': '#B7DEA6', 'zindex': None},
+    'grass': {'color': '#B7DEA6', 'zindex': 1},
     'residential': {'color': '#E2D4AF', 'zindex': None},
     'industrial': {'color': '#DFDBD1', 'zindex': None},
     'basin': {'color': '#8FB8DB', 'zindex': 1},
@@ -62,7 +67,9 @@ highway_styles = {
     'residential': {'color': '#8f8364', 'zindex': None}
 }
 railway_styles = {
-    'rail': {'color': '#FFFFFF', 'zindex': 1, 'linewidth': 8, 'bg_color': 'gray'}
+    'rail': {'color': '#FFFFFF', 'zindex': 1, 'linewidth': 4, 'bg_color': '#5d5d5d'},
+    'tram': {'color': '#404040', 'zindex': 1, 'linewidth': 1},
+    'tram_stop': {'color': '#404040', 'zindex': 1, 'linewidth': 1},
 }
 
 
@@ -81,7 +88,7 @@ CATEGORIES_STYLES = {
     'natural': (landuse_styles, {'color': '#B7DEA6', 'zindex': 0, 'linewidth': 4}),
     'landuse': (landuse_styles, {'color': '#EDEDE0', 'zindex': 0, 'linewidth': 4}),
     'highway': (highway_styles, {'color': '#FFFFFF', 'zindex': 2, 'linewidth': 4}),
-    'railway': (railway_styles, {'color': '#FFFFFF', 'zindex': 2, 'linewidth': 4, 'bg_color': 'gray'}),
+    'railway': (railway_styles, {'color': '#FFFFFF', 'zindex': 2, 'linewidth': 4, 'bg_color': '#5d5d5d'}),
 }
 
 MM_TO_INCH = 25.4
