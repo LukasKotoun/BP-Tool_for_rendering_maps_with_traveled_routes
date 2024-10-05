@@ -11,14 +11,21 @@ city_name = "Brno, Czech Republic"
 #------------filters--------------
 
 way_filters = {
-    'waterway': True,
+    'waterway': [],
     # 'highway': ['highway','trunk','primary','secondary'],
-    'highway':True,
+    'highway':[],
     'railway': ['rail','tram']
 }
 
+#todo edit for all or for concrete way filter (like rails, railway tram....)
 way_filters_dont_want ={
-    'service':['spur']
+    'railway': {
+        'service': ['spur','yard'],  
+        'tram': {  
+            # 'service': ['yard']
+            'tunnel': ['building_passage'],
+        }
+    }
 }
 
 
@@ -26,10 +33,12 @@ area_filters = {
     # 'landuse': ['forest', 'residential', 'farmland', 'meadow', 'grass'],
     'landuse': ['forest', 'residential', 'commercial', 'retail', 'industrial', 'farmland', 'meadow', 'grass'],
     'leisure': ['park', 'pitch', 'garden', 'golf_course', 'nature_reserve', 'playground', 'stadium','swimming_pool', 'sports_centre'],
-    'water': True,
+    'water': [],
     # 'water': ['river','lake','reservoir'],
 }
-
+area_filters_dont_want ={
+    
+}
 
 #------------styles--------------
 
@@ -65,6 +74,10 @@ highway_styles = {
     'steps': {'color': '#8f8364', 'zindex': None},
     'path': {'color': '#8f8364', 'zindex': None},
     'residential': {'color': '#8f8364', 'zindex': None}
+    # 'footway': {'color': 'red', 'zindex': None},
+    # 'steps': {'color': 'blue', 'zindex': None},
+    # 'path': {'color': 'red', 'zindex': None},
+    # 'residential': {'color': 'brown', 'zindex': None}
 }
 railway_styles = {
     'rail': {'color': '#FFFFFF', 'zindex': 1, 'linewidth': 4, 'bg_color': '#5d5d5d'},
