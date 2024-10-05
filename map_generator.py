@@ -89,7 +89,7 @@ class OsmDataPreprocessor:
 
 class OsmDataParser(osmium.SimpleHandler):
     #todo add filters as arg
-    def __init__(self, way_filters, area_filters, way_additional_columns = [], area_additional_columns = []):
+    def __init__(self, way_filters, area_filters, unwanted_ways_tags, unwanted_areas_tags, way_additional_columns = [], area_additional_columns = []):
         super().__init__()
         self.way_tags = []
         self.way_geometry = []
@@ -97,6 +97,8 @@ class OsmDataParser(osmium.SimpleHandler):
         self.area_geometry = []
         self.way_filters = way_filters
         self.area_filters = area_filters
+        self.unwanted_ways_tags = unwanted_ways_tags
+        self.unwanted_areas_tags = unwanted_areas_tags
         # merge always wanted columns (map objects) with additions wanted info columns
         self.way_columns = way_filters.keys() | way_additional_columns
         self.area_columns = area_filters.keys() | area_additional_columns
@@ -106,57 +108,69 @@ class OsmDataParser(osmium.SimpleHandler):
         self.geom_factory_linestring = self.geom_factory.create_linestring
         self.geom_factory_polygon = self.geom_factory.create_multipolygon
         self.wkt_loads_func = wkt.loads
-    #todo time measurment    
-    @staticmethod
-    def filter_not_allowed_tags(not_allowed_tags, tag_key, key_value, tags):  
-        tags_general_filter = not_allowed_tags.get(tag_key)
-        if(tags_general_filter is None): return True
-        for sub_tag_key, unwanted_values in tags_general_filter.items():
-            if(isinstance(unwanted_values, dict)):
-                # filter tags in row with only specific key_value
-                if(sub_tag_key != key_value): continue
-                for sub_tag_key, unwanted_values in unwanted_values.items():
-                    sub_key_value = tags.get(sub_tag_key)
-                    if(sub_key_value is not None):
-                        #list of unwanted tag values is empty (filter all with any on that tag) or value is in list 
-                        if not unwanted_values or sub_key_value in unwanted_values:
-
-                            return False
-            #sub_tag is unwanted tag and value is value of that tag in tags
-            sub_key_value = tags.get(sub_tag_key)
-            if(sub_key_value is not None):
-                #list of unwanted tag values is empty (filter all with any on that tag) or value is in list 
-                if not unwanted_values or sub_key_value in unwanted_values:
-                    return False        
-        return True            
-            
+    # #todo time measurment    
     # @staticmethod
-    # def filter_not_allowed_tags(not_allowed_tags, tag_key, key_value, tags):  
-    #     tags_general_filter = not_allowed_tags.get(tag_key)
-    #     if(tags_general_filter is None): return True
-        
-    #     for sub_tag_key, unwanted_values in tags_general_filter.items():
+    # def filter_not_allowed_tags(not_allowed_tags, tags):  
+    #     for sub_tag_key, unwanted_values in not_allowed_tags.items():
     #         if(isinstance(unwanted_values, dict)):
     #             # filter tags in row with only specific key_value
-    #             if(sub_tag_key != key_value): continue
-    #             return OsmDataParser.filter_not_allowed_tags()
-            
+    #             for sub_tag_key, unwanted_values in unwanted_values.items():
+    #                 if(isinstance(unwanted_values, dict)):
+    #                     # filter tags in row with only specific key_value
+    #                     for sub_tag_key, unwanted_values in unwanted_values.items():
+    #                         sub_key_value = tags.get(sub_tag_key)
+    #                         if(sub_key_value is not None):
+    #                             #list of unwanted tag values is empty (filter all with any on that tag) or value is in list 
+    #                             if not unwanted_values or sub_key_value in unwanted_values:
+    #                                 return False
+    #                 #sub_tag is unwanted tag and value is value of that tag in tags
+    #                 sub_key_value = tags.get(sub_tag_key)
+    #                 if(sub_key_value is not None):
+    #                     #list of unwanted tag values is empty (filter all with any on that tag) or value is in list 
+    #                     if not unwanted_values or sub_key_value in unwanted_values:
+    #                         return False   
     #         #sub_tag is unwanted tag and value is value of that tag in tags
     #         sub_key_value = tags.get(sub_tag_key)
     #         if(sub_key_value is not None):
     #             #list of unwanted tag values is empty (filter all with any on that tag) or value is in list 
     #             if not unwanted_values or sub_key_value in unwanted_values:
-    #                 return False
-    #     return True   
+    #                 return False        
+    #     return True 
+
+    #todo time measure
+    @staticmethod
+    def filter_not_allowed_tags(not_allowed_tags, tags, curr_tag_key=None):  
+        for dict_tag_key, unwanted_values in not_allowed_tags.items():
+            if(curr_tag_key is None and dict_tag_key not in tags): continue
+            if(isinstance(unwanted_values, dict)):
+                next_tag_key = None
+                if(dict_tag_key in tags): # two tag_keys after each other
+                    next_tag_key = dict_tag_key
+                elif (curr_tag_key is not None): # tag_key_value after tag_key
+                    curr_tag_key_value = tags.get(curr_tag_key)
+                    if(curr_tag_key_value != dict_tag_key): #key values are not coresponding (dict key value and key value in tags) => dont go in next level of immersion 
+                        continue
+                    
+                return_value = OsmDataParser.filter_not_allowed_tags(unwanted_values, tags, next_tag_key)
+                if(return_value): continue # try to find some unwanted tag
+                return False
+            # unwanted_values is list
+            #sub_tag is unwanted tag and value is value of that tag in tags
+            dict_key_value = tags.get(dict_tag_key)
+            if(dict_key_value is not None):
+                #list of unwanted tag values is empty (filter all with any on that tag) or value is in list 
+                if not unwanted_values or dict_key_value in unwanted_values:
+                    return False        
+        return True  
+            
             
     @staticmethod
-    def apply_filters(allowed_tags, not_allowed_tags, tags):
+    def apply_filters(allowed_tags, tags):
         for tag_key, allowed_values in allowed_tags.items():
             key_value = tags.get(tag_key)
             if key_value is not None:
                 if not allowed_values or key_value in allowed_values: 
-                    #check if there is non not allowed for current tag
-                    return OsmDataParser.filter_not_allowed_tags(not_allowed_tags, tag_key, key_value, tags)
+                    return True 
                     
                     
         return False
@@ -164,7 +178,7 @@ class OsmDataParser(osmium.SimpleHandler):
     
         
     def way(self, way):
-        if OsmDataParser.apply_filters(self.way_filters, way_filters_dont_want, way.tags):
+        if OsmDataParser.apply_filters(self.way_filters, way.tags) and OsmDataParser.filter_not_allowed_tags(self.unwanted_ways_tags, way.tags):
             shapely_geometry = self.wkt_loads_func(self.geom_factory_linestring(way)) #convert osmium way to wkt str format and than to shapely linestring geometry
             filtered_tags = {tag_key: tag_value for tag_key, tag_value in way.tags if tag_key in self.way_columns}
             self.way_geometry.append(shapely_geometry)
@@ -172,7 +186,7 @@ class OsmDataParser(osmium.SimpleHandler):
         
     
     def area(self, area):
-        if OsmDataParser.apply_filters(self.area_filters, area_filters_dont_want , area.tags):
+        if OsmDataParser.apply_filters(self.area_filters, area.tags) and OsmDataParser.filter_not_allowed_tags(self.unwanted_areas_tags, area.tags):
             shapely_geometry = self.wkt_loads_func(self.geom_factory_polygon(area)) #convert osmium area to wkt str format and than to shapely polygon/multipolygon geometry 
             filtered_tags = {tag_key: tag_value for tag_key, tag_value in area.tags if tag_key in self.area_columns}
             self.area_geometry.append(shapely_geometry)
@@ -275,6 +289,7 @@ class GdfUtils:
         ])
         return polygon_from_bounds.contains(polygon)
     
+    # todo to one filter creation
     @staticmethod
     def filter_gdf_in(gdf, att_name, att_values = []):
         if (att_values and att_name in gdf):
@@ -295,6 +310,7 @@ class GdfUtils:
             return gdf[~condition].reset_index(drop=True), gdf[condition].reset_index(drop=True)
         return gdf, gpd.GeoDataFrame(geometry=[])
     
+    #todo use one filter creation and than add with 'and' all ways that are longer, that will leave false with all that i want...
     @staticmethod
     @time_measurement_decorator("short ways filter")
     def filter_short_ways(gdf, min_lenght = 2):
@@ -388,10 +404,10 @@ class GeoDataStyler:
                                                             if style_key in category_default_styles}) #store filterd category with wanted default styles
         return filtered_categories_styles
     
-    def assign_styles_to_gdf(self, gdf, filters_for_gdf_categories, wanted_styles):
+    def assign_styles_to_gdf(self, gdf, wanted_categories, wanted_styles):
         if(gdf.empty):
             return gdf
-        gdf_available_styles = self.filter_category_styles(filters_for_gdf_categories, wanted_styles)
+        gdf_available_styles = self.filter_category_styles(wanted_categories, wanted_styles)
         if(gdf_available_styles):
             styles_columns = gdf.apply(lambda row: self.assign_styles_to_row(row, gdf_available_styles, wanted_styles), axis=1).tolist()
             return gdf.join(pd.DataFrame(styles_columns))
@@ -562,9 +578,11 @@ def main():
 
     osm_file_name, reqired_map_area_polygon = osm_data_preprocessor.extract_area()
     reqired_map_area_gdf = gpd.GeoDataFrame(geometry=[reqired_map_area_polygon], crs=f"EPSG:{EPSG_DEGREE_NUMBER}")
-    osm_file_parser = OsmDataParser(way_filters,area_filters)
-    osm_file_parser.apply_file(osm_file_name)
-    
+    osm_file_parser = OsmDataParser(wanted_ways,wanted_areas,unwanted_ways_tags, unwanted_areas_tags)
+    @time_measurement_decorator("apply file")
+    def t():
+        osm_file_parser.apply_file(osm_file_name)
+    t()
     ways_gdf, areas_gdf = osm_file_parser.create_gdf()
     osm_file_parser.clear_gdf()
     
@@ -582,8 +600,8 @@ def main():
     # ways_gdf = GdfUtils.filter_short_ways(ways_gdf, 10)
     # only for some ways categories
     
-    ways_gdf = geo_data_styler.assign_styles_to_gdf(ways_gdf, way_filters, ['color', 'zindex', 'linewidth'])
-    areas_gdf = geo_data_styler.assign_styles_to_gdf(areas_gdf, area_filters, ['color', 'zindex'])
+    ways_gdf = geo_data_styler.assign_styles_to_gdf(ways_gdf, wanted_ways, ['color', 'zindex', 'linewidth'])
+    areas_gdf = geo_data_styler.assign_styles_to_gdf(areas_gdf, wanted_areas, ['color', 'zindex'])
     ways_gdf = GdfUtils.sort_gdf_by_column(ways_gdf, 'zindex')
     areas_gdf = GdfUtils.sort_gdf_by_column(areas_gdf, 'zindex')
     #check for custom

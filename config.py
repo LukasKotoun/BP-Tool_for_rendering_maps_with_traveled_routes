@@ -10,7 +10,7 @@ city_name = "Brno, Czech Republic"
 
 #------------filters--------------
 
-way_filters = {
+wanted_ways = {
     'waterway': [],
     # 'highway': ['highway','trunk','primary','secondary'],
     'highway':[],
@@ -18,25 +18,26 @@ way_filters = {
 }
 
 #todo edit for all or for concrete way filter (like rails, railway tram....)
-way_filters_dont_want ={
+unwanted_ways_tags ={
     'railway': {
-        'service': ['spur','yard'],  
-        'tram': {  
-            # 'service': ['yard']
+        'rail':{
+            'service':['yard'],
+        },
+        'tram': {
             'tunnel': ['building_passage'],
         }
     }
 }
 
 
-area_filters = {
+wanted_areas = {
     # 'landuse': ['forest', 'residential', 'farmland', 'meadow', 'grass'],
     'landuse': ['forest', 'residential', 'commercial', 'retail', 'industrial', 'farmland', 'meadow', 'grass'],
     'leisure': ['park', 'pitch', 'garden', 'golf_course', 'nature_reserve', 'playground', 'stadium','swimming_pool', 'sports_centre'],
     'water': [],
     # 'water': ['river','lake','reservoir'],
 }
-area_filters_dont_want ={
+unwanted_areas_tags ={
     
 }
 
