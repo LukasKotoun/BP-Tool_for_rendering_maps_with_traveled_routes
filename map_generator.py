@@ -13,8 +13,7 @@ import subprocess
 import tempfile
 import sys
 
-EPSG_DEGREE_NUMBER = 4326
-EPSG_METERS_NUMBER = 3857
+
 
 def time_measurement_decorator(timer_name):
     def wrapper(func):
@@ -210,12 +209,6 @@ class OsmDataParser(osmium.SimpleHandler):
         self.area_tags.clear()
             
 
-#todo argument parsin - jmena souboru + kombinace flagu podle složitosti zpracování (bud flag na vypnutí extractu nebo podle zadaného vystupního souboru)
-class ArgumentParsing:
-    def __init__():
-        pass
-    
-
 class GdfUtils:
     @staticmethod
     def get_gdf_bounds(*gdfs):
@@ -225,30 +218,30 @@ class GdfUtils:
         north = float('-inf')
         
         for gdf in gdfs:
-            bounds = gdf.total_bounds #['west', 'south', 'east', 'north']
+            bounds = gdf.total_bounds #[WordSides.WEST, WordSides.SOUTH, WordSides.EAST, WordSides.NORTH]
             west = min(west, bounds[0])
             south = min(south, bounds[1])
             east = max(east, bounds[2])
             north = max(north, bounds[3])
             
         return {
-            'west': west,
-            'south': south,
-            'east': east,
-            'north': north
+            WordSides.WEST: west,
+            WordSides.SOUTH: south,
+            WordSides.EAST: east,
+            WordSides.NORTH: north
             }
     @staticmethod
     def get_polygon_bounds(polygon):
-        bounds = polygon.bounds #['west', 'south', 'east', 'north']
-        return {'west': bounds[0],
-               'south': bounds[1],
-               'east': bounds[2],
-               'north': bounds[3]}
+        bounds = polygon.bounds #[WordSides.WEST, WordSides.SOUTH, WordSides.EAST, WordSides.NORTH]
+        return {WordSides.WEST: bounds[0],
+               WordSides.SOUTH: bounds[1],
+               WordSides.EAST: bounds[2],
+               WordSides.NORTH: bounds[3]}
     
     @staticmethod
     def get_map_size(bounds):
-        width = bounds['east'] - bounds['west']
-        height = bounds['north'] - bounds['south']
+        width = bounds[WordSides.EAST] - bounds[WordSides.WEST]
+        height = bounds[WordSides.NORTH] - bounds[WordSides.SOUTH]
         if width > height:
             return width
         else:
@@ -257,8 +250,8 @@ class GdfUtils:
     def get_map_orientation(gdf):
         gdf_meters = gdf.to_crs(epsg=EPSG_METERS_NUMBER)    
         bounds = GdfUtils.get_gdf_bounds(gdf_meters)
-        width = bounds['east'] - bounds['west']
-        height = bounds['north'] - bounds['south']
+        width = bounds[WordSides.EAST] - bounds[WordSides.WEST]
+        height = bounds[WordSides.NORTH] - bounds[WordSides.SOUTH]
         if width > height:
             return MapOrientation.LANDSCAPE
         else:
@@ -281,11 +274,11 @@ class GdfUtils:
     @staticmethod
     def is_polygon_inside_bounds(area_bounds, polygon):
         polygon_from_bounds = geometry.Polygon([
-            (area_bounds['east'], area_bounds['south']),  
-            (area_bounds['east'], area_bounds['north']),  
-            (area_bounds['west'], area_bounds['north']),  
-            (area_bounds['west'], area_bounds['south']),  
-            (area_bounds['east'], area_bounds['south'])   # Closing the polygon
+            (area_bounds[WordSides.EAST], area_bounds[WordSides.SOUTH]),  
+            (area_bounds[WordSides.EAST], area_bounds[WordSides.NORTH]),  
+            (area_bounds[WordSides.WEST], area_bounds[WordSides.NORTH]),  
+            (area_bounds[WordSides.WEST], area_bounds[WordSides.SOUTH]),  
+            (area_bounds[WordSides.EAST], area_bounds[WordSides.SOUTH])   # Closing the polygon
         ])
         return polygon_from_bounds.contains(polygon)
     
@@ -318,14 +311,6 @@ class GdfUtils:
         condition = gdf_mercator_projected.geometry.length > min_lenght
         filtered_gdf_mercator_projected = gdf_mercator_projected[condition]
         return filtered_gdf_mercator_projected.to_crs(gdf.crs)
-    
-    # @staticmethod
-    # @time_measurement_decorator("short ways filter")
-    # def gdf_custom_filter_meter_projection(gdf, condition):
-    #     gdf_mercator_projected  = gdf.to_crs("Web Mercator") 
-    #     condition = gdf_mercator_projected.geometry.length > min_lenght
-    #     filtered_gdf_mercator_projected = gdf_mercator_projected[condition]
-    #     return filtered_gdf_mercator_projected.to_crs(gdf.crs)
     
     @staticmethod
     def buffer_gdf_same_distance(gdf, distance, resolution = 16, cap_style = 'round', join_style = 'round'):
@@ -436,18 +421,19 @@ class MapPlotter:
         
         
     def __plot_highways(self,highways_gdf):
-        if(highways_gdf.empty or 'color' not in highways_gdf and 'linewidth' not in highways_gdf):
+        if(highways_gdf.empty or StyleKey.COLOR not in highways_gdf and StyleKey.LINEWIDTH not in highways_gdf):
             return
         
-        for line, color, linewidth in zip(highways_gdf.geometry, highways_gdf['color'], highways_gdf['linewidth']):
+        for line, color, linewidth in zip(highways_gdf.geometry, highways_gdf[StyleKey.COLOR], highways_gdf[StyleKey.LINEWIDTH]):
             x, y = line.xy
-            self.ax.plot(x, y, color=color, linewidth = linewidth, solid_capstyle='round')
+            self.ax.plot(x, y, color=color, linewidth = linewidth, solid_capstyle = 'round')
             
     def __plot_waterways(self,waterways_gdf):
-        if(waterways_gdf.empty or 'color' not in waterways_gdf and 'linewidth' not in waterways_gdf):
+        if(waterways_gdf.empty or StyleKey.COLOR not in waterways_gdf and StyleKey.LINEWIDTH not in waterways_gdf):
             return
-        waterways_gdf.plot(ax = self.ax,color=waterways_gdf['color'], linewidth = waterways_gdf['linewidth'])
-        # for line, color, linewidth in zip(waterways_gdf.geometry, waterways_gdf['color'], waterways_gdf['linewidth']):
+        waterways_gdf.plot(ax = self.ax,color=waterways_gdf[StyleKey.COLOR], linewidth = waterways_gdf[StyleKey.LINEWIDTH])
+        
+        # for line, color, linewidth in zip(waterways_gdf.geometry, waterways_gdf[StyleKey.COLOR], waterways_gdf[StyleKey.LINEWIDTH]):
         #     x, y = line.xy
         #     self.ax.plot(x, y, color=color, linewidth = linewidth, solid_capstyle='round')
 
@@ -455,24 +441,24 @@ class MapPlotter:
             
     def __plot_railways(self,railways_gdf, rail_bg_width_offset, tram_second_line_spacing):
         #todo change ploting style
-        if(railways_gdf.empty or 'color' not in railways_gdf or 'linewidth' not in railways_gdf):
+        if(railways_gdf.empty or StyleKey.COLOR not in railways_gdf or StyleKey.LINEWIDTH not in railways_gdf):
             return
         
-        tram_gdf, rails_gdf = self.gdf_utils.filter_gdf_in(railways_gdf,'railway',['tram'])
+        tram_gdf, rails_gdf = self.gdf_utils.filter_gdf_in(railways_gdf, 'railway', ['tram'])
         
         # tram_gdf = self.gdf_utils.aggregate_close_lines(tram_gdf,5)
         # rails_gdf = self.gdf_utils.aggregate_close_lines(rails_gdf,5)
-        for line, color, linewidth in zip(tram_gdf.geometry, tram_gdf['color'], tram_gdf['linewidth']):
-            x, y = line.xy#todo len to config
+        for line, color, linewidth in zip(tram_gdf.geometry, tram_gdf[StyleKey.COLOR], tram_gdf[StyleKey.LINEWIDTH]):
+            x, y = line.xy #todo len to config
             self.ax.plot(x, y, color=color, linewidth = linewidth, solid_capstyle='round', alpha=0.6,path_effects=[
             patheffects.withTickedStroke(angle=-90, spacing=tram_second_line_spacing, length=0.05),
             patheffects.withTickedStroke(angle=90, spacing=tram_second_line_spacing, length=0.05)])
         
-        if('bg_color' not in rails_gdf):
-            rails_gdf = self.geo_data_styler.assign_styles_to_gdf(rails_gdf, {'railway': []}, ['bg_color'])
-            # rails_gdf = self.geo_data_styler.assign_styles_to_gdf(rails_gdf, {'railway': ['rail']}, ['bg_color']) #todo solve double adding
+        if(StyleKey.BGCOLOR not in rails_gdf):
+            rails_gdf = self.geo_data_styler.assign_styles_to_gdf(rails_gdf, {'railway': []}, [StyleKey.BGCOLOR])
+            # rails_gdf = self.geo_data_styler.assign_styles_to_gdf(rails_gdf, {'railway': ['rail']}, [StyleKey.BGCOLOR]) #todo solve double adding
        
-        for line, color, bg_color,linewidth in zip(rails_gdf.geometry, rails_gdf['color'],rails_gdf['bg_color'], rails_gdf['linewidth']):
+        for line, color, bg_color,linewidth in zip(rails_gdf.geometry, rails_gdf[StyleKey.COLOR],rails_gdf[StyleKey.BGCOLOR], rails_gdf[StyleKey.LINEWIDTH]):
             x, y = line.xy
             self.ax.plot(x, y, color=bg_color, linewidth = linewidth + rail_bg_width_offset)
             self.ax.plot(x, y, color=color, linewidth =  linewidth ,linestyle=(0,(5,5)))
@@ -486,7 +472,7 @@ class MapPlotter:
         y_range = bounds[3] - bounds[1]  # north - south
         scaling_factor = (x_range + y_range) / 2  # average extent
         LINE_TRANSFORM_CONSTANT = 0.008
-        self.ways_gdf['linewidth'] = self.ways_gdf['linewidth'] * LINE_TRANSFORM_CONSTANT / scaling_factor
+        self.ways_gdf[StyleKey.LINEWIDTH] = self.ways_gdf[StyleKey.LINEWIDTH] * LINE_TRANSFORM_CONSTANT / scaling_factor
         
         
         highways_gdf, rest_gdf = self.gdf_utils.filter_gdf_in(self.ways_gdf, 'highway')
@@ -500,19 +486,19 @@ class MapPlotter:
 
             
     def plot_areas(self):
-        if('color' in self.areas_gdf):
-            self.areas_gdf.plot(ax=self.ax, color=self.areas_gdf['color'], alpha=1)
+        if(StyleKey.COLOR in self.areas_gdf):
+            self.areas_gdf.plot(ax=self.ax, color=self.areas_gdf[StyleKey.COLOR], alpha=1)
         else:
             #todo some error to frontend
             pass
     def clip(self, whole_area_bounds, reqired_area_polygon, clipped_area_color = 'white'):
         #clip
         whole_area_polygon = geometry.Polygon([
-            (whole_area_bounds['east'], whole_area_bounds['south']),  
-            (whole_area_bounds['east'], whole_area_bounds['north']),  
-            (whole_area_bounds['west'], whole_area_bounds['north']),  
-            (whole_area_bounds['west'], whole_area_bounds['south']),  
-            (whole_area_bounds['east'], whole_area_bounds['south'])   # Closing the polygon
+            (whole_area_bounds[WordSides.EAST], whole_area_bounds[WordSides.SOUTH]),  
+            (whole_area_bounds[WordSides.EAST], whole_area_bounds[WordSides.NORTH]),  
+            (whole_area_bounds[WordSides.WEST], whole_area_bounds[WordSides.NORTH]),  
+            (whole_area_bounds[WordSides.WEST], whole_area_bounds[WordSides.SOUTH]),  
+            (whole_area_bounds[WordSides.EAST], whole_area_bounds[WordSides.SOUTH])   # Closing the polygon
         ])
 
         clipping_polygon = whole_area_polygon.difference(reqired_area_polygon)
@@ -549,9 +535,9 @@ def set_orientation(tuple:Tuple[float,float], wanted_orientation:MapOrientation)
     #portrait
     return tuple if tuple[0] < tuple[1] else tuple[::-1]
 #utils
-def get_paper_size_mm(paper_size_mapping, map_orientaion, paper_size='A4', wanted_orientation = MapOrientation.AUTOMATIC):
+def get_paper_size_mm( map_orientaion,paperSize :PaperSize = PaperSize.A4, wanted_orientation = MapOrientation.AUTOMATIC):
     
-    paper_size = paper_size_mapping.get(paper_size, (297, 420))
+    paper_size = paperSize.dimensions
     if(wanted_orientation == MapOrientation.AUTOMATIC):
         return set_orientation(paper_size,map_orientaion)
     elif(wanted_orientation in [MapOrientation.LANDSCAPE, MapOrientation.PORTRAIT]):
@@ -600,15 +586,16 @@ def main():
     # ways_gdf = GdfUtils.filter_short_ways(ways_gdf, 10)
     # only for some ways categories
     
-    ways_gdf = geo_data_styler.assign_styles_to_gdf(ways_gdf, wanted_ways, ['color', 'zindex', 'linewidth'])
-    areas_gdf = geo_data_styler.assign_styles_to_gdf(areas_gdf, wanted_areas, ['color', 'zindex'])
-    ways_gdf = GdfUtils.sort_gdf_by_column(ways_gdf, 'zindex')
-    areas_gdf = GdfUtils.sort_gdf_by_column(areas_gdf, 'zindex')
-    #check for custom
-    map_orientation = GdfUtils.get_map_orientation(reqired_map_area_gdf)
-    paper_size_mm = get_paper_size_mm(PAPER_SIZES, map_orientation, paper_size='A4')
+    ways_gdf = geo_data_styler.assign_styles_to_gdf(ways_gdf, wanted_ways, [StyleKey.COLOR, StyleKey.ZINDEX, StyleKey.LINEWIDTH])
+    areas_gdf = geo_data_styler.assign_styles_to_gdf(areas_gdf, wanted_areas, [StyleKey.COLOR, StyleKey.ZINDEX])
+    ways_gdf = GdfUtils.sort_gdf_by_column(ways_gdf, StyleKey.ZINDEX)
+    areas_gdf = GdfUtils.sort_gdf_by_column(areas_gdf, StyleKey.ZINDEX)
     
-    map_plotter = MapPlotter(GdfUtils, geo_data_styler, ways_gdf, areas_gdf, reqired_map_area_gdf,  GENERAL_DEFAULT_STYLES['color'], paper_size_mm)
+    map_orientation = GdfUtils.get_map_orientation(reqired_map_area_gdf)
+    #check for custom - without paper size
+    paper_size_mm = get_paper_size_mm(map_orientation, PaperSize.A4)
+    
+    map_plotter = MapPlotter(GdfUtils, geo_data_styler, ways_gdf, areas_gdf, reqired_map_area_gdf,  GENERAL_DEFAULT_STYLES[StyleKey.COLOR], paper_size_mm)
     map_plotter.plot_areas()
     map_plotter.plot_ways()
     map_plotter.clip(total_gdf_bounds, reqired_map_area_polygon)
