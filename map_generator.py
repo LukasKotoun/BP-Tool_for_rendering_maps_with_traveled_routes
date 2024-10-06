@@ -149,35 +149,44 @@ class OsmDataParser(osmium.SimpleHandler):
                 if not allowed_values or key_value in allowed_values: 
                     return True                     
         return False
-
+    
     def way(self, way):
         if OsmDataParser.apply_filters(self.way_filters, way.tags) and OsmDataParser.filter_not_allowed_tags(self.unwanted_ways_tags, way.tags):
-            shapely_geometry = self.wkt_loads_func(self.geom_factory_linestring(way)) #convert osmium way to wkt str format and than to shapely linestring geometry
-            filtered_tags = {tag_key: tag_value for tag_key, tag_value in way.tags if tag_key in self.way_columns}
-            self.way_geometry.append(shapely_geometry)
-            self.way_tags.append(filtered_tags)
-        
-    
+            try:
+                shapely_geometry = self.wkt_loads_func(self.geom_factory_linestring(way)) #convert osmium way to wkt str format and than to shapely linestring geometry
+                filtered_tags = {tag_key: tag_value for tag_key, tag_value in way.tags if tag_key in self.way_columns}
+                self.way_geometry.append(shapely_geometry)
+                self.way_tags.append(filtered_tags)
+            except RuntimeError as e:
+                print(f"Invalid way geometry: {e}")
+                return
+            except Exception as e:
+                print(f"Error in way function - osm file processing: {e}")
+                return
     def area(self, area):
         if (self.get_required_area_from_osm): #find area name in osm file
             if('name' in area.tags and area.tags['name'] == self.reqired_map_area_name):
                 self.reqired_area_polygon = self.geom_factory_polygon(area)
         if OsmDataParser.apply_filters(self.area_filters, area.tags) and OsmDataParser.filter_not_allowed_tags(self.unwanted_areas_tags, area.tags):
-            shapely_geometry = self.wkt_loads_func(self.geom_factory_polygon(area)) #convert osmium area to wkt str format and than to shapely polygon/multipolygon geometry 
-            filtered_tags = {tag_key: tag_value for tag_key, tag_value in area.tags if tag_key in self.area_columns}
-            self.area_geometry.append(shapely_geometry)
-            self.area_tags.append(filtered_tags)
+            try:
+                shapely_geometry = self.wkt_loads_func(self.geom_factory_polygon(area)) #convert osmium area to wkt str format and than to shapely polygon/multipolygon geometry 
+                filtered_tags = {tag_key: tag_value for tag_key, tag_value in area.tags if tag_key in self.area_columns}
+                self.area_geometry.append(shapely_geometry)
+                self.area_tags.append(filtered_tags)
+            except RuntimeError as e:
+                print(f"Invalid area geometry: {e}")
+                return
+            except Exception as e:
+                print(f"Error in area function - osm file processing: {e}")
+                return
         
     
     @time_measurement_decorator("gdf creating")
-    def create_gdf(self, reqired_area_polygon = None):        
+    def create_gdf(self):        
         print(f"AREA polygons: {sys.getsizeof(self.area_geometry)}, tags: {sys.getsizeof(self.area_tags)}")
         print(f"WAY polygons: {sys.getsizeof(self.way_geometry)}, tags: {sys.getsizeof(self.way_tags)}")
         ways_gdf = gpd.GeoDataFrame(pd.DataFrame(self.way_tags).assign(geometry=self.way_geometry), crs=f"EPSG:{EPSG_DEGREE_NUMBER}")
         areas_gdf = gpd.GeoDataFrame(pd.DataFrame(self.area_tags).assign(geometry=self.area_geometry), crs=f"EPSG:{EPSG_DEGREE_NUMBER}")
-        if(reqired_area_polygon is not None): # todo move to custom filter function
-            areas_gdf = areas_gdf[areas_gdf.geometry.intersects(reqired_area_polygon)].reset_index(drop=True)
-            ways_gdf = ways_gdf[ways_gdf.geometry.intersects(reqired_area_polygon)].reset_index(drop=True)
         print(f"ways: {sys.getsizeof(ways_gdf)},  areas: {sys.getsizeof(areas_gdf)}, combined: {sys.getsizeof(ways_gdf) + sys.getsizeof(areas_gdf)}")
         return ways_gdf, areas_gdf
     
@@ -456,8 +465,7 @@ class MapPlotter:
         
         LINE_TRANSFORM_CONSTANT = 0.008
         self.ways_gdf[StyleKey.LINEWIDTH] = self.ways_gdf[StyleKey.LINEWIDTH] * LINE_TRANSFORM_CONSTANT / scaling_factor
-        
-        
+
         highways_gdf, rest_gdf = self.gdf_utils.filter_gdf_in(self.ways_gdf, 'highway')
         self.__plot_highways(highways_gdf)
         
@@ -484,9 +492,8 @@ class MapPlotter:
             (whole_area_bounds[WordSides.WEST], whole_area_bounds[WordSides.SOUTH]),  
             (whole_area_bounds[WordSides.EAST], whole_area_bounds[WordSides.SOUTH])   # Closing the polygon
         ])
-
         clipping_polygon = whole_area_polygon.difference(reqired_area_polygon)
-        clipping_polygon = geometry.MultiPolygon([clipping_polygon])
+        # clipping_polygon = geometry.MultiPolygon([clipping_polygon])
         clipping_polygon = gpd.GeoDataFrame(geometry=[clipping_polygon], crs=f"EPSG:{EPSG_DEGREE_NUMBER}")
         
         clipping_polygon.plot(ax=self.ax, color=clipped_area_color, alpha=1, zorder=3)
@@ -536,8 +543,8 @@ def main():
     # osm_file = 'cz.osm.pbf'
     # place_name = 'Czech Republic'
     osm_dir = './osm_files/'
-    osm_file = 'cz'
-    place_name = 'Czech Republic'
+    osm_file = 'brno'
+    place_name = 'brno, Czech Republic'
     
     osm_data_preprocessor = OsmDataPreprocessor(f'{osm_dir}{osm_file}.osm.pbf',f'{place_name}')
     # osm_data_preprocessor = OsmDataPreprocessor(f'{osm_dir}{osm_file}.osm',[(-18.14143,65.68868),(-18.08538,65.68868),(-18.08538,65.67783),(-18.14143,65.67783)]) #island
@@ -554,7 +561,7 @@ def main():
     
     
     reqired_area_polygon = reqired_area_gdf.unary_union
-    ways_gdf, areas_gdf = osm_file_parser.create_gdf(reqired_area_polygon)
+    ways_gdf, areas_gdf = osm_file_parser.create_gdf()
     osm_file_parser.clear_gdf()
     
     total_gdf_bounds = GdfUtils.get_gdf_bounds(ways_gdf, areas_gdf)
