@@ -13,7 +13,7 @@ import subprocess
 import tempfile
 import sys
 
-
+#!!! todo separate to files
 
 def time_measurement_decorator(timer_name):
     def wrapper(func):
@@ -28,8 +28,6 @@ def time_measurement_decorator(timer_name):
     return wrapper
 
 
-
-
 class OsmDataPreprocessor:
     def __init__(self, osm_input_file: str, area: Union[str, List[Tuple[float, float]]], osm_output_file : str = None):
         self.osm_input_file = osm_input_file # Can be a string (place name) or a list of coordinates
@@ -42,7 +40,8 @@ class OsmDataPreprocessor:
     def extract_area(self):
         #todo check file validity - if file exists
         if self.osm_output_file:
-            temp_geojson_path, reqired_map_area = self.create_geojson(True)
+            reqired_area_gdf = self.get_area_gdf()
+            temp_geojson_path = self.create_tmp_geojson(reqired_area_gdf)
             command = [
                 'osmium', 'extract',
                 '-p', temp_geojson_path,
@@ -51,44 +50,49 @@ class OsmDataPreprocessor:
             ]
             #todo catch if file osm file not exist
             subprocess.run(command, check=True)
-            return self.osm_output_file, reqired_map_area
+            return self.osm_output_file, reqired_area_gdf
         else:
-            reqired_map_area = self.create_geojson(False)[1]
-            return self.osm_input_file, reqired_map_area 
+            reqired_area_gdf = self.get_area_gdf()
+            return self.osm_input_file, reqired_area_gdf 
         
-                
-    def create_geojson(self, want_geojson):
+    def get_area_gdf(self):
         if isinstance(self.area, str): 
             if self.area.endswith('.geojson'): 
-                polygon_gdf = gpd.read_file(self.area) # Get area from geojson file
-                if polygon_gdf.empty:
+                reqired_area_gdf = gpd.read_file(self.area) # Get area from geojson file
+                if reqired_area_gdf.empty:
                     raise ValueError("Given GeoJSON file is empty.")
-                polygon = polygon_gdf.unary_union
-                return self.area, polygon
+                return self.area, reqired_area_gdf
             else:
-                polygon_gdf = ox.geocode_to_gdf(self.area)  # Get from place name
-                if polygon_gdf.empty:
+                try:
+                    reqired_area_gdf = ox.geocode_to_gdf(self.area)  # Get from place name
+                except:
+                    #todo if not found error - exit program
+                    #if internet connection error - find in osm file
                     raise ValueError("The requested location has not been found.")
-                
+                if(reqired_area_gdf.empty):
+                    raise ValueError("The requested location has not been found.")
+
         elif isinstance(self.area, list): #get area from coordinates
-            polygon = geometry.Polygon(self.area)
-            print(polygon)
-            polygon_gdf = gpd.GeoDataFrame(geometry=[polygon], crs=f"EPSG:{EPSG_DEGREE_NUMBER}")
+            #todo try catch...
+            area_polygon = geometry.Polygon(self.area)
+            reqired_area_gdf = gpd.GeoDataFrame(geometry=[area_polygon], crs=f"EPSG:{EPSG_DEGREE_NUMBER}")
         else: #area cannot be created
             raise ValueError("Invalid area")
-        
-        polygon = polygon_gdf.unary_union
-        if(want_geojson):
+        return reqired_area_gdf
+    
+    def create_tmp_geojson(self, reqired_area_gdf):
         #create tmp file for osmium extraction
-            with tempfile.NamedTemporaryFile(delete=False, suffix=".geojson") as temp_geojson:
-                polygon_gdf.to_file(temp_geojson.name, driver="GeoJSON")
-                return temp_geojson.name, polygon
-        return None, polygon
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".geojson") as temp_geojson:
+            reqired_area_gdf.to_file(temp_geojson.name, driver="GeoJSON")
+            return temp_geojson.name
+        
 
 
 class OsmDataParser(osmium.SimpleHandler):
     #todo add filters as arg
-    def __init__(self, way_filters, area_filters, unwanted_ways_tags, unwanted_areas_tags, way_additional_columns = [], area_additional_columns = []):
+    def __init__(self, way_filters, area_filters, unwanted_ways_tags, unwanted_areas_tags,
+                 way_additional_columns = [], area_additional_columns = [], reqired_map_area_name = None,
+                 get_required_area_from_osm = False):
         super().__init__()
         self.way_tags = []
         self.way_geometry = []
@@ -101,42 +105,16 @@ class OsmDataParser(osmium.SimpleHandler):
         # merge always wanted columns (map objects) with additions wanted info columns
         self.way_columns = way_filters.keys() | way_additional_columns
         self.area_columns = area_filters.keys() | area_additional_columns
-
+        #area searching
+        self.reqired_area_polygon = None
+        self.get_required_area_from_osm = get_required_area_from_osm
+        self.reqired_map_area_name = reqired_map_area_name
         self.geom_factory = osmium.geom.WKTFactory()  # Create WKT Factory for geometry conversion
         #extract function from libraries - quicker than extracting every time 
         self.geom_factory_linestring = self.geom_factory.create_linestring
         self.geom_factory_polygon = self.geom_factory.create_multipolygon
         self.wkt_loads_func = wkt.loads
-    # #todo time measurment    
-    # @staticmethod
-    # def filter_not_allowed_tags(not_allowed_tags, tags):  
-    #     for sub_tag_key, unwanted_values in not_allowed_tags.items():
-    #         if(isinstance(unwanted_values, dict)):
-    #             # filter tags in row with only specific key_value
-    #             for sub_tag_key, unwanted_values in unwanted_values.items():
-    #                 if(isinstance(unwanted_values, dict)):
-    #                     # filter tags in row with only specific key_value
-    #                     for sub_tag_key, unwanted_values in unwanted_values.items():
-    #                         sub_key_value = tags.get(sub_tag_key)
-    #                         if(sub_key_value is not None):
-    #                             #list of unwanted tag values is empty (filter all with any on that tag) or value is in list 
-    #                             if not unwanted_values or sub_key_value in unwanted_values:
-    #                                 return False
-    #                 #sub_tag is unwanted tag and value is value of that tag in tags
-    #                 sub_key_value = tags.get(sub_tag_key)
-    #                 if(sub_key_value is not None):
-    #                     #list of unwanted tag values is empty (filter all with any on that tag) or value is in list 
-    #                     if not unwanted_values or sub_key_value in unwanted_values:
-    #                         return False   
-    #         #sub_tag is unwanted tag and value is value of that tag in tags
-    #         sub_key_value = tags.get(sub_tag_key)
-    #         if(sub_key_value is not None):
-    #             #list of unwanted tag values is empty (filter all with any on that tag) or value is in list 
-    #             if not unwanted_values or sub_key_value in unwanted_values:
-    #                 return False        
-    #     return True 
 
-    #todo time measure
     @staticmethod
     def filter_not_allowed_tags(not_allowed_tags, tags, curr_tag_key=None):  
         for dict_tag_key, unwanted_values in not_allowed_tags.items():
@@ -169,13 +147,9 @@ class OsmDataParser(osmium.SimpleHandler):
             key_value = tags.get(tag_key)
             if key_value is not None:
                 if not allowed_values or key_value in allowed_values: 
-                    return True 
-                    
-                    
+                    return True                     
         return False
-    
-    
-        
+
     def way(self, way):
         if OsmDataParser.apply_filters(self.way_filters, way.tags) and OsmDataParser.filter_not_allowed_tags(self.unwanted_ways_tags, way.tags):
             shapely_geometry = self.wkt_loads_func(self.geom_factory_linestring(way)) #convert osmium way to wkt str format and than to shapely linestring geometry
@@ -185,6 +159,9 @@ class OsmDataParser(osmium.SimpleHandler):
         
     
     def area(self, area):
+        if (self.get_required_area_from_osm): #find area name in osm file
+            if('name' in area.tags and area.tags['name'] == self.reqired_map_area_name):
+                self.reqired_area_polygon = self.geom_factory_polygon(area)
         if OsmDataParser.apply_filters(self.area_filters, area.tags) and OsmDataParser.filter_not_allowed_tags(self.unwanted_areas_tags, area.tags):
             shapely_geometry = self.wkt_loads_func(self.geom_factory_polygon(area)) #convert osmium area to wkt str format and than to shapely polygon/multipolygon geometry 
             filtered_tags = {tag_key: tag_value for tag_key, tag_value in area.tags if tag_key in self.area_columns}
@@ -193,14 +170,19 @@ class OsmDataParser(osmium.SimpleHandler):
         
     
     @time_measurement_decorator("gdf creating")
-    def create_gdf(self):        
+    def create_gdf(self, reqired_area_polygon = None):        
         print(f"AREA polygons: {sys.getsizeof(self.area_geometry)}, tags: {sys.getsizeof(self.area_tags)}")
         print(f"WAY polygons: {sys.getsizeof(self.way_geometry)}, tags: {sys.getsizeof(self.way_tags)}")
         ways_gdf = gpd.GeoDataFrame(pd.DataFrame(self.way_tags).assign(geometry=self.way_geometry), crs=f"EPSG:{EPSG_DEGREE_NUMBER}")
         areas_gdf = gpd.GeoDataFrame(pd.DataFrame(self.area_tags).assign(geometry=self.area_geometry), crs=f"EPSG:{EPSG_DEGREE_NUMBER}")
+        if(reqired_area_polygon is not None): # todo move to custom filter function
+            areas_gdf = areas_gdf[areas_gdf.geometry.intersects(reqired_area_polygon)].reset_index(drop=True)
+            ways_gdf = ways_gdf[ways_gdf.geometry.intersects(reqired_area_polygon)].reset_index(drop=True)
         print(f"ways: {sys.getsizeof(ways_gdf)},  areas: {sys.getsizeof(areas_gdf)}, combined: {sys.getsizeof(ways_gdf) + sys.getsizeof(areas_gdf)}")
         return ways_gdf, areas_gdf
     
+    def get_required_area_gdf(self):
+        return self.reqired_area_polygon
     
     def clear_gdf(self):
         self.way_geometry.clear()
@@ -409,14 +391,14 @@ class MapPlotter:
         self.geo_data_styler = geo_data_styler
         self.ways_gdf = ways_gdf
         self.areas_gdf = areas_gdf
-        self.reqired_map_area_gdf = requred_map_area_gdf 
+        self.reqired_area_gdf = requred_map_area_gdf 
         self.init_plot(map_bg_color,paper_size_mm)
     def init_plot(self, map_bg_color, paper_size_mm):
         self.fig, self.ax = plt.subplots(figsize=(paper_size_mm[0]/25.4,paper_size_mm[1]/25.4)) #convert mm to inch
         self.fig.subplots_adjust(left=0, right=1, top=1, bottom=0)  # No margins
         self.ax.axis('off')
         self.ax.set_aspect('equal')
-        self.reqired_map_area_gdf.plot(ax=self.ax, color=map_bg_color, linewidth=1)
+        self.reqired_area_gdf.plot(ax=self.ax, color=map_bg_color, linewidth=1)
         
         
         
@@ -465,12 +447,13 @@ class MapPlotter:
                 
     def plot_ways(self):
         #todo count with pdf size
-        # mapsize = self.gdf_utils.get_map_size_from_gdf(self.reqired_map_area_gdf)
         #todo to func - get width and length
-        bounds = self.reqired_map_area_gdf.total_bounds
+        bounds = self.reqired_area_gdf.total_bounds
         x_range = bounds[2] - bounds[0]  # east - west
         y_range = bounds[3] - bounds[1]  # north - south
         scaling_factor = (x_range + y_range) / 2  # average extent
+        
+        
         LINE_TRANSFORM_CONSTANT = 0.008
         self.ways_gdf[StyleKey.LINEWIDTH] = self.ways_gdf[StyleKey.LINEWIDTH] * LINE_TRANSFORM_CONSTANT / scaling_factor
         
@@ -489,8 +472,9 @@ class MapPlotter:
         if(StyleKey.COLOR in self.areas_gdf):
             self.areas_gdf.plot(ax=self.ax, color=self.areas_gdf[StyleKey.COLOR], alpha=1)
         else:
-            #todo some error to frontend
             pass
+        
+        
     def clip(self, whole_area_bounds, reqired_area_polygon, clipped_area_color = 'white'):
         #clip
         whole_area_polygon = geometry.Polygon([
@@ -508,8 +492,8 @@ class MapPlotter:
         clipping_polygon.plot(ax=self.ax, color=clipped_area_color, alpha=1, zorder=3)
         
     
-    def plot_map_boundary(self):
-        self.reqired_map_area_gdf.boundary.plot(ax=self.ax, color='black', linewidth=1, zorder=3)
+    def plot_map_boundary(self, color = 'black'):
+        self.reqired_area_gdf.boundary.plot(ax=self.ax, color='black', linewidth=1, zorder=3)
         
     #use function to get gdf sizes - same as in ways
     #todo change to names
@@ -527,7 +511,7 @@ class MapPlotter:
     def show_plot(self):
         plt.show()
 
-#utils
+#general utils
 #return (width, height)
 def set_orientation(tuple:Tuple[float,float], wanted_orientation:MapOrientation) -> Tuple[float,float]:
     if(wanted_orientation == MapOrientation.LANDSCAPE):
@@ -543,38 +527,39 @@ def get_paper_size_mm( map_orientaion,paperSize :PaperSize = PaperSize.A4, wante
     elif(wanted_orientation in [MapOrientation.LANDSCAPE, MapOrientation.PORTRAIT]):
         return set_orientation(paper_size,wanted_orientation)
     return paper_size
-#todo gdf utils
+
 
 
 @time_measurement_decorator("main")
 def main():
+    # osm_dir = '/zfs-pool/home/xkotou08/BP/'
+    # osm_file = 'cz.osm.pbf'
+    # place_name = 'Czech Republic'
     osm_dir = './osm_files/'
-    osm_file = 'brno'
-    place_name = 'Brno, Czech Republic'
-    # osm_file = 'brno'
-
-    # place_name = 'brno, Czech Republic'
-    # pdf_size = get_pdf_size()
-    #todo gui
+    osm_file = 'cz'
+    place_name = 'Czech Republic'
     
     osm_data_preprocessor = OsmDataPreprocessor(f'{osm_dir}{osm_file}.osm.pbf',f'{place_name}')
-    # osm_data_preprocessor = OsmDataPreprocessor(f'{osm_dir}{osm_file}.osm',[(-18.14143,65.68868),(-18.08538,65.68868),(-18.08538,65.67783),(-18.14143,65.67783)])
-    # osm_data_preprocessor = OsmDataPreprocessor(f'{osm_dir}{osm_file}.osm',[(6.94872,4.84293),(6.99314,4.84293),(6.99314,4.81603),(6.94872,4.81603)])
+    # osm_data_preprocessor = OsmDataPreprocessor(f'{osm_dir}{osm_file}.osm',[(-18.14143,65.68868),(-18.08538,65.68868),(-18.08538,65.67783),(-18.14143,65.67783)]) #island
+    # osm_data_preprocessor = OsmDataPreprocessor(f'{osm_dir}{osm_file}.osm',[(6.94872,4.84293),(6.99314,4.84293),(6.99314,4.81603),(6.94872,4.81603)]) #afrika
     # osm_data_preprocessor = OsmDataPreprocessor(f'{osm_dir}{osm_file}.osm.pbf',f'{place_name}',"new osm name")
-
-    osm_file_name, reqired_map_area_polygon = osm_data_preprocessor.extract_area()
-    reqired_map_area_gdf = gpd.GeoDataFrame(geometry=[reqired_map_area_polygon], crs=f"EPSG:{EPSG_DEGREE_NUMBER}")
-    osm_file_parser = OsmDataParser(wanted_ways,wanted_areas,unwanted_ways_tags, unwanted_areas_tags)
+    get_required_area_from_osm = False #from settings if true dont use reqired_area_gdf, need to send area name for osm cutting
+    osm_file_name, reqired_area_gdf = osm_data_preprocessor.extract_area()
+    osm_file_parser = OsmDataParser(wanted_ways,wanted_areas,unwanted_ways_tags, unwanted_areas_tags,
+                                    reqired_map_area_name=f'{place_name}', get_required_area_from_osm = get_required_area_from_osm)
     @time_measurement_decorator("apply file")
     def t():
         osm_file_parser.apply_file(osm_file_name)
     t()
-    ways_gdf, areas_gdf = osm_file_parser.create_gdf()
+    
+    
+    reqired_area_polygon = reqired_area_gdf.unary_union
+    ways_gdf, areas_gdf = osm_file_parser.create_gdf(reqired_area_polygon)
     osm_file_parser.clear_gdf()
     
     total_gdf_bounds = GdfUtils.get_gdf_bounds(ways_gdf, areas_gdf)
     #check if area is inside osm file
-    if(not GdfUtils.is_polygon_inside_bounds(total_gdf_bounds, reqired_map_area_polygon)):
+    if(not GdfUtils.is_polygon_inside_bounds(total_gdf_bounds, reqired_area_polygon)):
         #todo error handle class
         print("Selected area map must be inside given osm.pbf file")
         sys.exit()  
@@ -582,25 +567,24 @@ def main():
     
     geo_data_styler = GeoDataStyler(GdfUtils, CATEGORIES_STYLES, GENERAL_DEFAULT_STYLES)
 
-    # set default common styles
-    # ways_gdf = GdfUtils.filter_short_ways(ways_gdf, 10)
     # only for some ways categories
+    # ways_gdf = GdfUtils.filter_short_ways(ways_gdf, 10)
     
     ways_gdf = geo_data_styler.assign_styles_to_gdf(ways_gdf, wanted_ways, [StyleKey.COLOR, StyleKey.ZINDEX, StyleKey.LINEWIDTH])
     areas_gdf = geo_data_styler.assign_styles_to_gdf(areas_gdf, wanted_areas, [StyleKey.COLOR, StyleKey.ZINDEX])
     ways_gdf = GdfUtils.sort_gdf_by_column(ways_gdf, StyleKey.ZINDEX)
     areas_gdf = GdfUtils.sort_gdf_by_column(areas_gdf, StyleKey.ZINDEX)
     
-    map_orientation = GdfUtils.get_map_orientation(reqired_map_area_gdf)
-    #check for custom - without paper size
-    paper_size_mm = get_paper_size_mm(map_orientation, PaperSize.A4)
+    map_orientation = GdfUtils.get_map_orientation(reqired_area_gdf)
+    #todo check for custom - without paper size
+    paper_size_mm = get_paper_size_mm(map_orientation, PAPER_SIZE)
     
-    map_plotter = MapPlotter(GdfUtils, geo_data_styler, ways_gdf, areas_gdf, reqired_map_area_gdf,  GENERAL_DEFAULT_STYLES[StyleKey.COLOR], paper_size_mm)
+    map_plotter = MapPlotter(GdfUtils, geo_data_styler, ways_gdf, areas_gdf, reqired_area_gdf,  GENERAL_DEFAULT_STYLES[StyleKey.COLOR], paper_size_mm)
     map_plotter.plot_areas()
     map_plotter.plot_ways()
-    map_plotter.clip(total_gdf_bounds, reqired_map_area_polygon)
+    map_plotter.clip(total_gdf_bounds, reqired_area_polygon)
     #change to map_orientation
-    map_plotter.zoom(reqired_map_area_polygon.bounds)
+    map_plotter.zoom(reqired_area_polygon.bounds)
     map_plotter.plot_map_boundary()
     map_plotter.generate_pdf(f'./pdfs/{osm_file}')
     map_plotter.show_plot()

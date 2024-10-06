@@ -43,29 +43,25 @@ EPSG_DEGREE_NUMBER = 4326
 EPSG_METERS_NUMBER = 3857
 MM_TO_INCH = 25.4
 
-
-
-city_name = "Brno, Czech Republic"
+#--------
+PAPER_SIZE = PaperSize.A0
 
 
 #------------filters--------------
 
+
 wanted_ways = {
     'waterway': [],
-    # 'highway': ['highway','trunk','primary','secondary'],
-    'highway':[],
-    'railway': ['rail','tram']
+    'highway': ['highway','trunk','primary', 'secondary'],
+    # 'highway':[],
+    'railway': ['rail']
 }
 
 #todo edit for all or for concrete way filter (like rails, railway tram....)
 unwanted_ways_tags ={
     'railway': {
-        'rail':{
-            'service':['yard'],
-        },
-        'tram': {
-            'tunnel': ['building_passage'],
-        }
+        'service':['yard'],
+        'tunnel': ['building_passage'],
     }
 }
 
@@ -73,7 +69,8 @@ unwanted_ways_tags ={
 wanted_areas = {
     # 'landuse': ['forest', 'residential', 'farmland', 'meadow', 'grass'],
     'landuse': ['forest', 'residential', 'commercial', 'retail', 'industrial', 'farmland', 'meadow', 'grass'],
-    'leisure': ['park', 'pitch', 'garden', 'golf_course', 'nature_reserve', 'playground', 'stadium','swimming_pool', 'sports_centre'],
+    # 'leisure': ['park', 'pitch', 'garden', 'golf_course', 'nature_reserve', 'playground', 'stadium','swimming_pool', 'sports_centre'],
+    'leisure': ['park', 'pitch', 'garden', 'golf_course', 'nature_reserve'],
     'water': [],
     # 'water': ['river','lake','reservoir'],
 }
