@@ -53,31 +53,31 @@
 # plt.title("Geometries from OSM")
 # plt.show()
 
-# get polygon of city
-import osmnx as ox
-import osmium
-import subprocess
+# # get polygon of city
+# import osmnx as ox
+# import osmium
+# import subprocess
 
-# Step 1: Get the polygon of the city using osmnx
-polygon_gdf = ox.geocode_to_gdf('Třebíč, Czech Republic')
-# Save the polygon as a GeoJSON file (osmium accepts GeoJSON format)
-polygon_gdf.to_file("polygon.geojson", driver="GeoJSON")
+# # Step 1: Get the polygon of the city using osmnx
+# polygon_gdf = ox.geocode_to_gdf('Třebíč, Czech Republic')
+# # Save the polygon as a GeoJSON file (osmium accepts GeoJSON format)
+# polygon_gdf.to_file("polygon.geojson", driver="GeoJSON")
 
-# # Step 2: Use osmium to extract data inside the polygon from an OSM file
-# # Input OSM file (change this to the path of your OSM file)
-input_osm_file = "czech-republic-latest.osm.pbf"
-output_osm_file = "test.osm.pbf"
+# # # Step 2: Use osmium to extract data inside the polygon from an OSM file
+# # # Input OSM file (change this to the path of your OSM file)
+# input_osm_file = "czech-republic-latest.osm.pbf"
+# output_osm_file = "test.osm.pbf"
 
-# Osmium extract command to cut the polygon
-command = [
-    "osmium", "extract",
-    "-p", polygon_gdf,  # Polygon file in GeoJSON format
-    "-o", output_osm_file,    # Output file
-    input_osm_file            # Input OSM file
-]
+# # Osmium extract command to cut the polygon
+# command = [
+#     "osmium", "extract",
+#     "-p", polygon_gdf,  # Polygon file in GeoJSON format
+#     "-o", output_osm_file,    # Output file
+#     input_osm_file            # Input OSM file
+# ]
 
-# Execute the command
-subprocess.run(command)
+# # Execute the command
+# subprocess.run(command)
 # import time
 # import osmnx as ox
 # import geopandas as gpd
@@ -141,99 +141,6 @@ subprocess.run(command)
 # # clipped_gdf.to_file("clipped_output.geojson", driver="GeoJSON")
 
 
-
-
-# import matplotlib.pyplot as plt
-# import numpy as np
-# from matplotlib.patches import Polygon, PathPatch
-# from matplotlib.path import Path
-
-# # Define your polygons as numpy arrays
-# num1 = np.array([[1, 1], [1, 4], [4, 4], [4, 1]])  # Boundary polygon
-# num2 = np.array([[2, 2], [2, 5], [5, 5], [5, 2]])  # Object polygon
-
-# # Create a figure and axis
-# fig, ax = plt.subplots()
-
-# # Plot the boundary polygon (num1) with transparency
-# poly1 = Polygon(num1, closed=True, facecolor='none', edgecolor='black', linewidth=2, alpha=0.5)
-# ax.add_patch(poly1)
-
-# # Create a PathPatch for num2
-# path_num2 = Path(num2, closed=True)
-# patch_num2 = PathPatch(path_num2, facecolor='blue', edgecolor='blue', alpha=1)
-
-# # Set the clipping path to num1
-# patch_num2.set_clip_path(poly1)
-
-# # Add the clipped patch for num2
-# ax.add_patch(patch_num2)
-
-# # Set the limits and aspect
-# ax.set_xlim(0, 6)
-# ax.set_ylim(0, 6)
-# ax.set_aspect('equal', adjustable='box')
-
-# # Set the background color to white
-# fig.patch.set_facecolor('white')
-
-# # Show the plot
-# plt.show()
-
-
-
-# import matplotlib.pyplot as plt
-# from shapely.geometry import Polygon
-
-# # Define your boundary polygon (polygon1)
-# boundary_coords = [(1, 1), (5, 1), (5, 5), (1, 5)]
-# polygon1 = Polygon(boundary_coords)
-
-# # Define some red polygons
-# red_polygons_coords = [
-#     [(2, 2), (3, 2), (3, 3), (2, 3)],  # Inside
-#     [(4, 4), (6, 4), (6, 6), (4, 6)],  # Outside
-#     [(0, 0), (1, 0), (1, 1), (0, 1)],  # Outside
-# ]
-
-# # Create Shapely polygons for red polygons
-# red_polygons = [Polygon(coords) for coords in red_polygons_coords]
-
-# # Create a figure and axis
-# fig, ax = plt.subplots()
-
-# # Fill the entire plot with white
-# ax.set_xlim(0, 7)
-# ax.set_ylim(0, 7)
-# ax.set_facecolor('white')
-
-# # Create a larger polygon for the entire area
-# outer_polygon = Polygon([(0, 0), (7, 0), (7, 7), (0, 7)])
-# mask_area = outer_polygon.difference(polygon1)
-
-# if not mask_area.is_empty:
-#     x, y = mask_area.exterior.xy
-#     ax.fill(x, y, color='white')
-
-# # Overlay the red polygons that intersect with polygon1
-# for red_poly in red_polygons:
-#     if polygon1.intersects(red_poly):
-#         intersection = polygon1.intersection(red_poly)
-#         # Check if the intersection is a Polygon
-#         if intersection.is_empty:
-#             continue
-#         if intersection.geom_type == 'Polygon':
-#             x, y = intersection.exterior.xy
-#             ax.fill(x, y, color='red', alpha=0.5)  # Red with transparency
-#         elif intersection.geom_type == 'MultiPolygon':
-#             for poly in intersection:
-#                 x, y = poly.exterior.xy
-#                 ax.fill(x, y, color='red', alpha=0.5)  # Red with transparency
-
-# # Set aspect ratio
-# ax.set_aspect('equal')
-
-# plt.show()
 # import geopandas as gpd
 # from shapely.geometry import Polygon, MultiPolygon
 # import matplotlib.pyplot as plt
@@ -266,4 +173,152 @@ subprocess.run(command)
 # ax.set_ylim(0.2, 0.8)  # Adjust these values for zooming
 # ax.set_aspect('equal')
 
+# # plt.show()
+# import geopandas as gpd
+# import matplotlib.pyplot as plt
+# from shapely.geometry import LineString, Polygon
+
+# # Sample data: create a GeoDataFrame with polygons
+# data = {
+#     'geometry': [
+#         Polygon([(1, 1), (1, 2), (2, 2), (2, 1)]),  # Sample polygon 1
+#         Polygon([(2, 2), (2, 3), (3, 3), (3, 2)])   # Sample polygon 2
+#     ]
+# }
+# gdf_polygons = gpd.GeoDataFrame(data)
+
+# # Convert polygons to lines
+# def polygon_to_lines(geom):
+#     # Start with the exterior
+#     lines = [LineString(geom.exterior.coords)]
+#     # Add each interior ring (if needed)
+#     for interior in geom.interiors:
+#         lines.append(LineString(interior.coords))
+#     return lines
+
+# # Apply the function to convert polygons to lines
+# gdf_lines = gdf_polygons.copy()
+# gdf_lines['geometry'] = gdf_lines['geometry'].apply(polygon_to_lines)
+
+# # Flatten the GeoDataFrame to get one line per row
+# gdf_lines = gdf_lines.explode(column='geometry', ignore_index=True)
+
+# # Set up the plot
+# fig, ax = plt.subplots(figsize=(8, 6))
+
+# # Plot the original polygons
+# gdf_polygons.plot(ax=ax, color='lightblue', edgecolor='black', alpha=0.5, label='Polygons')
+
+# # Plot the converted lines
+# gdf_lines.plot(ax=ax, color='red', linewidth=2, label='Lines')
+
+# # Add titles and labels
+# ax.set_title('Polygons and Their Converted Lines')
+# ax.set_xlabel('X Coordinate')
+# ax.set_ylabel('Y Coordinate')
+# ax.legend()
+
+# # Set limits for better visibility
+# ax.set_xlim(0, 4)
+# ax.set_ylim(0, 4)
+# plt.grid()
+# plt.gca().set_aspect('equal', adjustable='box')  # Maintain aspect ratio
+# plt.show()
+
+#@time_measurement_decorator("spliting")
+# def split_lines_into_segments(gdf, segment_length):
+#     """
+#     Split each LineString in a GeoDataFrame into segments of a specified length.
+
+#     Parameters:
+#         gdf (GeoDataFrame): GeoDataFrame containing LineString geometries.
+#         segment_length (float): Desired length of each segment.
+
+#     Returns:
+#         GeoDataFrame: A GeoDataFrame containing the resulting segments.
+#     """
+#     line_segments = []
+#     for idx, row in gdf.iterrows():
+#         line = row.geometry  # Get the LineString geometry
+#         total_length = line.length
+
+#         # Calculate the number of segments
+#         num_segments = int(total_length // segment_length)
+
+#         # Generate equally spaced distances along the line
+#         distances = np.linspace(0, total_length, num_segments + 1)
+        
+#         # Create segments based on calculated distances
+#         segments = [line.interpolate(distance) for distance in distances]
+#         # Create LineString segments, skipping every second segment
+#         for i in range(0, num_segments, 2):
+
+#             segment = LineString([segments[i], segments[i + 1]])
+#             segment_attributes = row.drop(labels='geometry').to_dict()
+#             segment_attributes['geometry'] = segment
+#             line_segments.append(segment_attributes)
+#         # Timing end
+        
+
+#     # Create a GeoDataFrame from the list of line segments
+#     segments_gdf = gpd.GeoDataFrame(line_segments, crs="EPSG:4326")
+#     return segments_gdf     
+
+
+# from shapely.geometry import LineString
+# import numpy as np
+# import matplotlib.pyplot as plt
+# import time
+
+
+# def split_line_into_segments(line, segment_length):
+#     # Calculate total length of the line
+#     total_length = line.length
+#     # Calculate the number of segments
+#     num_segments = int(total_length // segment_length)
+#     # Generate equally spaced distances along the line
+#     distances = np.linspace(0, total_length, num_segments + 1)
+#     time_sd = time.time() 
+#     # Create segments based on calculated distances
+#     segments = [line.interpolate(distance) for distance in distances]
+    
+#     # Create LineString segments
+#     line_segments = []
+#     for i in range(0,num_segments,2):
+#         segment = LineString([segments[i], segments[i + 1]])
+#         line_segments.append(segment)
+
+#     return line_segments
+# time_sd = time.time() 
+
+# # Example usage
+# original_line = LineString([(0, 0), (0, 10), (3,6)])  # A vertical line from (0, 0) to (0, 10)
+# segment_length = 1 # Length of each segment
+# result_segments=split_line_into_segments(original_line, segment_length)
+# time_end = time.time()
+# print((time_end-time_sd)*1000)
+# # Output the resulting segments
+# # for segment in result_segments:
+# #     print(segment)
+
+# # Plotting
+# plt.figure(figsize=(6, 8))
+# # Plot the original line
+# x_original, y_original = original_line.xy
+# plt.plot(x_original, y_original, color='blue', linewidth=2, label='Original Line')
+
+# # Plot the segments
+# for segment in result_segments:
+#     x_segment, y_segment = segment.xy
+#     plt.plot(x_segment, y_segment, color='red', linewidth=1)
+
+# plt.title('Line Segmentation')
+# plt.xlabel('X-axis')
+# plt.ylabel('Y-axis')
+# plt.axhline(0, color='black',linewidth=0.5, ls='--')
+# plt.axvline(0, color='black',linewidth=0.5, ls='--')
+# plt.grid(color = 'gray', linestyle = '--', linewidth = 0.5)
+# plt.legend()
+# plt.axis('equal')  # Equal scaling
+# plt.savefig(f'test.pdf', format='pdf')
 # plt.show()
