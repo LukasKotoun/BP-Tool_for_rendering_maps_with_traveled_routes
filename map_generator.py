@@ -12,7 +12,7 @@ from typing import Union, List, Tuple
 import subprocess
 import tempfile
 import sys
-
+import os
 #!!! todo separate to files
 
 def time_measurement_decorator(timer_name):
@@ -394,14 +394,18 @@ class GeoDataStyler:
     
 
 
-class MapPlotter:
-    def __init__(self, gdf_utils, geo_data_styler, ways_gdf, areas_gdf, requred_map_area_gdf, map_bg_color, paper_size_mm):
+class Plotter:
+    def __init__(self, gdf_utils, geo_data_styler, ways_gdf, areas_gdf, gpxs_gdf,
+                 requred_area_gdf, map_bg_color, paper_size_mm):
         self.gdf_utils = gdf_utils
         self.geo_data_styler = geo_data_styler
         self.ways_gdf = ways_gdf
         self.areas_gdf = areas_gdf
-        self.reqired_area_gdf = requred_map_area_gdf 
+        self.gpxs_gdf = gpxs_gdf
+        self.reqired_area_gdf = requred_area_gdf 
         self.init_plot(map_bg_color,paper_size_mm)
+        
+        
     def init_plot(self, map_bg_color, paper_size_mm):
         self.fig, self.ax = plt.subplots(figsize=(paper_size_mm[0]/25.4,paper_size_mm[1]/25.4)) #convert mm to inch
         self.fig.subplots_adjust(left=0, right=1, top=1, bottom=0)  # No margins
@@ -440,7 +444,7 @@ class MapPlotter:
         # tram_gdf = self.gdf_utils.aggregate_close_lines(tram_gdf,5)
         # rails_gdf = self.gdf_utils.aggregate_close_lines(rails_gdf,5)
         for line, color, linewidth in zip(tram_gdf.geometry, tram_gdf[StyleKey.COLOR], tram_gdf[StyleKey.LINEWIDTH]):
-            x, y = line.xy #todo len to config
+            x, y = line.xy #todo len to config/style
             self.ax.plot(x, y, color=color, linewidth = linewidth, solid_capstyle='round', alpha=0.6,path_effects=[
             patheffects.withTickedStroke(angle=-90, spacing=tram_second_line_spacing, length=0.05),
             patheffects.withTickedStroke(angle=90, spacing=tram_second_line_spacing, length=0.05)])
@@ -481,8 +485,14 @@ class MapPlotter:
             self.areas_gdf.plot(ax=self.ax, color=self.areas_gdf[StyleKey.COLOR], alpha=1)
         else:
             pass
+    
+    def plot_gpxs(self):
+        self.gpxs_gdf.plot(ax = self.ax,color="red", linewidth = 1)
+
         
-        
+    
+    
+        #todo to self.reqired
     def clip(self, whole_area_bounds, reqired_area_polygon, clipped_area_color = 'white'):
         #clip
         whole_area_polygon = geometry.Polygon([
@@ -499,8 +509,8 @@ class MapPlotter:
         clipping_polygon.plot(ax=self.ax, color=clipped_area_color, alpha=1, zorder=3)
         
     
-    def plot_map_boundary(self, color = 'black'):
-        self.reqired_area_gdf.boundary.plot(ax=self.ax, color='black', linewidth=1, zorder=3)
+    def plot_map_boundary(self, color = 'black', linewidth = 1):
+        self.reqired_area_gdf.boundary.plot(ax=self.ax, color=color, linewidth=linewidth, zorder=3)
         
     #use function to get gdf sizes - same as in ways
     #todo change to names
@@ -535,12 +545,27 @@ def get_paper_size_mm( map_orientaion,paperSize :PaperSize = PaperSize.A4, wante
         return set_orientation(paper_size,wanted_orientation)
     return paper_size
 
+class GpxProcesser:
+    def __init__(self, gpx_folder):
+        self.gpx_folder = gpx_folder
+        
+        #todo add reqired att
+    def get_gpxs_gdf(self):
+        gpx_list = []
+        for file in os.listdir(self.gpx_folder):
+            if not file.endswith('.gpx'):
+                continue
+            gpx_gdf = gpd.read_file(os.path.join(self.gpx_folder,file), layer='tracks', crs=f"EPSG:{EPSG_DEGREE_NUMBER}")
+            gpx_gdf['name'] = file
+            gpx_list.append(gpx_gdf)
+        return gpd.GeoDataFrame(pd.concat(gpx_list, ignore_index=True), crs=f"EPSG:{EPSG_DEGREE_NUMBER}")
+
 
 
 @time_measurement_decorator("main")
 def main():
     # osm_dir = '/zfs-pool/home/xkotou08/BP/'
-    # osm_file = 'cz.osm.pbf'
+    # osm_file = 'cz'
     # place_name = 'Czech Republic'
     osm_dir = './osm_files/'
     osm_file = 'brno'
@@ -573,10 +598,13 @@ def main():
     
     
     geo_data_styler = GeoDataStyler(GdfUtils, CATEGORIES_STYLES, GENERAL_DEFAULT_STYLES)
-
+    gpx_processer =  GpxProcesser('./gpxs')
+    gpxs_gdf = gpx_processer.get_gpxs_gdf()
+    #todo check if gpx go somewhere outside reqired_area
+   
+        
     # only for some ways categories
     # ways_gdf = GdfUtils.filter_short_ways(ways_gdf, 10)
-    
     ways_gdf = geo_data_styler.assign_styles_to_gdf(ways_gdf, wanted_ways, [StyleKey.COLOR, StyleKey.ZINDEX, StyleKey.LINEWIDTH])
     areas_gdf = geo_data_styler.assign_styles_to_gdf(areas_gdf, wanted_areas, [StyleKey.COLOR, StyleKey.ZINDEX])
     ways_gdf = GdfUtils.sort_gdf_by_column(ways_gdf, StyleKey.ZINDEX)
@@ -586,15 +614,17 @@ def main():
     #todo check for custom - without paper size
     paper_size_mm = get_paper_size_mm(map_orientation, PAPER_SIZE)
     
-    map_plotter = MapPlotter(GdfUtils, geo_data_styler, ways_gdf, areas_gdf, reqired_area_gdf,  GENERAL_DEFAULT_STYLES[StyleKey.COLOR], paper_size_mm)
-    map_plotter.plot_areas()
-    map_plotter.plot_ways()
-    map_plotter.clip(total_gdf_bounds, reqired_area_polygon)
+    plotter = Plotter(GdfUtils, geo_data_styler, ways_gdf, areas_gdf, gpxs_gdf,
+                             reqired_area_gdf,  GENERAL_DEFAULT_STYLES[StyleKey.COLOR], paper_size_mm)
+    plotter.plot_areas()
+    plotter.plot_ways()
+    plotter.plot_gpxs()
+    plotter.clip(total_gdf_bounds, reqired_area_polygon)
     #change to map_orientation
-    map_plotter.zoom(reqired_area_polygon.bounds)
-    map_plotter.plot_map_boundary()
-    map_plotter.generate_pdf(f'./pdfs/{osm_file}')
-    map_plotter.show_plot()
+    plotter.zoom(reqired_area_polygon.bounds)
+    plotter.plot_map_boundary()
+    plotter.generate_pdf(f'./pdfs/{osm_file}')
+    # plotter.show_plot()
 if __name__ == "__main__":
     main()
     

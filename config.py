@@ -44,7 +44,7 @@ EPSG_METERS_NUMBER = 3857
 MM_TO_INCH = 25.4
 
 #--------
-PAPER_SIZE = PaperSize.A0
+PAPER_SIZE = PaperSize.A3
 
 
 #------------filters--------------
@@ -52,13 +52,15 @@ PAPER_SIZE = PaperSize.A0
 
 wanted_ways = {
     'waterway': [],
-    'highway': ['highway','trunk','primary', 'secondary'],
-    # 'highway':[],
+    # 'highway': ['trunk','primary', 'secondary',],
+    # 'highway': [ 'motorway', 'trunk','primary', 'secondary','tertiary','unclassified', 'residential' ],
+    'highway':[],
     'railway': ['rail']
 }
 
 #todo edit for all or for concrete way filter (like rails, railway tram....)
 unwanted_ways_tags ={
+    'highway':['coridor','via_ferrata','crossing','traffic_island','proposed','construction' ],
     'railway': {
         'service':['yard'],
         'tunnel': ['building_passage'],
@@ -74,6 +76,7 @@ wanted_areas = {
     'water': [],
     # 'water': ['river','lake','reservoir'],
 }
+
 unwanted_areas_tags ={
     
 }
@@ -100,7 +103,7 @@ leisure_styles = {
 }
 	
 highway_styles = {
-    'highway': {StyleKey.COLOR: '#FDC364', StyleKey.ZINDEX: 7, StyleKey.LINEWIDTH: 15}, 
+    'motorway': {StyleKey.COLOR: '#8cd25f', StyleKey.ZINDEX: 7, StyleKey.LINEWIDTH: 15}, 
     'trunk': {StyleKey.COLOR: '#FDC364', StyleKey.ZINDEX: 6, StyleKey.LINEWIDTH: 12},
     'primary': {StyleKey.COLOR: '#FDC364', StyleKey.ZINDEX: 5, StyleKey.LINEWIDTH: 9},
     'secondary': {StyleKey.COLOR: '#F7ED60', StyleKey.ZINDEX: 4, StyleKey.LINEWIDTH: 7},
@@ -140,4 +143,3 @@ CATEGORIES_STYLES = {
     'highway': (highway_styles, {StyleKey.COLOR: '#FFFFFF', StyleKey.ZINDEX: 2, StyleKey.LINEWIDTH: 4}),
     'railway': (railway_styles, {StyleKey.COLOR: '#FFFFFF', StyleKey.ZINDEX: 2, StyleKey.LINEWIDTH: 4, StyleKey.BGCOLOR: '#5d5d5d'}),
 }
-
