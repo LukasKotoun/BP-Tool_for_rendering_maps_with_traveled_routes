@@ -24,6 +24,8 @@ class PaperSize(Enum):
     A4 = (210, 297)
     A5 = (148, 210)
     A6 = (105, 148)
+    A7 = (74, 105)
+    A8 = (52, 74)
     
     @property
     def dimensions(self):
@@ -39,12 +41,12 @@ class MapOrientation(Enum):
 WAYS_RATIO_TO_MAP_SIZE = 0.007
 #there need to be every mentioned style
 GENERAL_DEFAULT_STYLES = {StyleKey.COLOR:'#EDEDE0',  StyleKey.ZINDEX :0, StyleKey.LINEWIDTH:0 , StyleKey.BGCOLOR: '#5d5d5d', StyleKey.LINESTYLE:'-'}
-EPSG_DEGREE_NUMBER = 4326
-EPSG_METERS_NUMBER = 3857
+EPSG_DEGREE_NUMBER = 4326 # world
+EPSG_METERS_NUMBER = 5514 # cz and sk - 5514, world 3857, europe 25833 
 MM_TO_INCH = 25.4
 
 #--------
-PAPER_SIZE = PaperSize.A3
+PAPER_SIZE = PaperSize.A0
 
 
 #------------filters--------------
@@ -52,15 +54,15 @@ PAPER_SIZE = PaperSize.A3
 
 wanted_ways = {
     'waterway': [],
-    # 'highway': ['trunk','primary', 'secondary',],
+    'highway': ['motorway', 'trunk','primary', 'secondary'],
     # 'highway': [ 'motorway', 'trunk','primary', 'secondary','tertiary','unclassified', 'residential' ],
-    'highway':[],
+    # 'highway':[],
     'railway': ['rail']
 }
 
 #todo edit for all or for concrete way filter (like rails, railway tram....)
 unwanted_ways_tags ={
-    'highway':['coridor','via_ferrata','crossing','traffic_island','proposed','construction' ],
+    # 'highway':['coridor','via_ferrata','crossing','traffic_island','proposed','construction' ],
     'railway': {
         'service':['yard'],
         'tunnel': ['building_passage'],
@@ -72,9 +74,10 @@ wanted_areas = {
     # 'landuse': ['forest', 'residential', 'farmland', 'meadow', 'grass'],
     'landuse': ['forest', 'residential', 'commercial', 'retail', 'industrial', 'farmland', 'meadow', 'grass'],
     # 'leisure': ['park', 'pitch', 'garden', 'golf_course', 'nature_reserve', 'playground', 'stadium','swimming_pool', 'sports_centre'],
+    #todo nature reserve to boundaries? 
     'leisure': ['park', 'pitch', 'garden', 'golf_course', 'nature_reserve'],
-    'water': [],
-    # 'water': ['river','lake','reservoir'],
+    # 'water': [],
+    'water': ['river','lake','reservoir'],
 }
 
 unwanted_areas_tags ={
@@ -103,11 +106,11 @@ leisure_styles = {
 }
 	
 highway_styles = {
-    'motorway': {StyleKey.COLOR: '#8cd25f', StyleKey.ZINDEX: 7, StyleKey.LINEWIDTH: 15}, 
-    'trunk': {StyleKey.COLOR: '#FDC364', StyleKey.ZINDEX: 6, StyleKey.LINEWIDTH: 12},
-    'primary': {StyleKey.COLOR: '#FDC364', StyleKey.ZINDEX: 5, StyleKey.LINEWIDTH: 9},
-    'secondary': {StyleKey.COLOR: '#F7ED60', StyleKey.ZINDEX: 4, StyleKey.LINEWIDTH: 7},
-    'tertiary': {StyleKey.COLOR: '#FFFFFF', StyleKey.ZINDEX: 3, StyleKey.LINEWIDTH: 6},
+   'motorway': {StyleKey.COLOR: '#8cd25f', StyleKey.ZINDEX: 7, StyleKey.LINEWIDTH: 16}, 
+    'trunk': {StyleKey.COLOR: '#FDC364', StyleKey.ZINDEX: 6, StyleKey.LINEWIDTH: 13},
+    'primary': {StyleKey.COLOR: '#FDC364', StyleKey.ZINDEX: 5, StyleKey.LINEWIDTH: 11},
+    'secondary': {StyleKey.COLOR: '#F7ED60', StyleKey.ZINDEX: 4, StyleKey.LINEWIDTH: 10},
+    'tertiary': {StyleKey.COLOR: '#FFFFFF', StyleKey.ZINDEX: 3, StyleKey.LINEWIDTH: 8},
     'unclassified': {StyleKey.COLOR: '#FFFFFF'},
     'road': {StyleKey.COLOR: '#FFFFFF'},
     'footway': {StyleKey.COLOR: '#8f8364'},
@@ -120,10 +123,11 @@ highway_styles = {
     # 'residential': {StyleKey.COLOR: 'brown'}
 }
 railway_styles = {
-    'rail': {StyleKey.COLOR: '#FFFFFF', StyleKey.ZINDEX: 1, StyleKey.LINEWIDTH: 4, StyleKey.BGCOLOR: '#5d5d5d'},
-    'tram': {StyleKey.COLOR: '#404040', StyleKey.ZINDEX: 1, StyleKey.LINEWIDTH: 1},
-    'tram_stop': {StyleKey.COLOR: '#404040', StyleKey.ZINDEX: 1, StyleKey.LINEWIDTH: 1},
+    'rail': {StyleKey.COLOR: '#FFFFFF', StyleKey.ZINDEX: 1, StyleKey.LINEWIDTH: 5, StyleKey.BGCOLOR: '#5d5d5d'},
+    'tram': {StyleKey.COLOR: '#404040', StyleKey.ZINDEX: 1, StyleKey.LINEWIDTH: 2},
+    'tram_stop': {StyleKey.COLOR: '#404040', StyleKey.ZINDEX: 1, StyleKey.LINEWIDTH: 2},
 }
+
 
 
 building_styles = {

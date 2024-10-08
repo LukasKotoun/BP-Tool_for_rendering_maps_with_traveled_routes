@@ -29,18 +29,18 @@ def time_measurement_decorator(timer_name):
 
 
 class OsmDataPreprocessor:
-    def __init__(self, osm_input_file: str, area: Union[str, List[Tuple[float, float]]], osm_output_file : str = None):
+    #, area: Union[str, List[Tuple[float, float]]]
+    def __init__(self, osm_input_file: str, osm_output_file : str = None):
         self.osm_input_file = osm_input_file # Can be a string (place name) or a list of coordinates
-        self.area = area  # Can be a string (place name) or a list of coordinates
         self.osm_output_file = osm_output_file
     #todo
     def check_files_validity():
         pass
 
-    def extract_area(self):
+    def extract_area(self, reqired_area_gdf):
         #todo check file validity - if file exists
         if self.osm_output_file:
-            reqired_area_gdf = self.get_area_gdf()
+            
             temp_geojson_path = self.create_tmp_geojson(reqired_area_gdf)
             command = [
                 'osmium', 'extract',
@@ -50,36 +50,10 @@ class OsmDataPreprocessor:
             ]
             #todo catch if file osm file not exist
             subprocess.run(command, check=True)
-            return self.osm_output_file, reqired_area_gdf
+            return self.osm_output_file
         else:
-            reqired_area_gdf = self.get_area_gdf()
-            return self.osm_input_file, reqired_area_gdf 
+            return self.osm_input_file
         
-    def get_area_gdf(self):
-        if isinstance(self.area, str): 
-            if self.area.endswith('.geojson'): 
-                reqired_area_gdf = gpd.read_file(self.area) # Get area from geojson file
-                if reqired_area_gdf.empty:
-                    raise ValueError("Given GeoJSON file is empty.")
-                return self.area, reqired_area_gdf
-            else:
-                try:
-                    reqired_area_gdf = ox.geocode_to_gdf(self.area)  # Get from place name
-                except:
-                    #todo if not found error - exit program
-                    #if internet connection error - find in osm file
-                    raise ValueError("The requested location has not been found.")
-                if(reqired_area_gdf.empty):
-                    raise ValueError("The requested location has not been found.")
-
-        elif isinstance(self.area, list): #get area from coordinates
-            #todo try catch...
-            area_polygon = geometry.Polygon(self.area)
-            reqired_area_gdf = gpd.GeoDataFrame(geometry=[area_polygon], crs=f"EPSG:{EPSG_DEGREE_NUMBER}")
-        else: #area cannot be created
-            raise ValueError("Invalid area")
-        return reqired_area_gdf
-    
     def create_tmp_geojson(self, reqired_area_gdf):
         #create tmp file for osmium extraction
         with tempfile.NamedTemporaryFile(delete=False, suffix=".geojson") as temp_geojson:
@@ -109,6 +83,7 @@ class OsmDataParser(osmium.SimpleHandler):
         self.reqired_area_polygon = None
         self.get_required_area_from_osm = get_required_area_from_osm
         self.reqired_map_area_name = reqired_map_area_name
+        
         self.geom_factory = osmium.geom.WKTFactory()  # Create WKT Factory for geometry conversion
         #extract function from libraries - quicker than extracting every time 
         self.geom_factory_linestring = self.geom_factory.create_linestring
@@ -154,6 +129,7 @@ class OsmDataParser(osmium.SimpleHandler):
         if OsmDataParser.apply_filters(self.way_filters, way.tags) and OsmDataParser.filter_not_allowed_tags(self.unwanted_ways_tags, way.tags):
             try:
                 shapely_geometry = self.wkt_loads_func(self.geom_factory_linestring(way)) #convert osmium way to wkt str format and than to shapely linestring geometry
+                #todo filtering ... tag z apply_filters + adition tags? - pokud bude kontrola ze nebude víckrát tak není potřeba - performace test 
                 filtered_tags = {tag_key: tag_value for tag_key, tag_value in way.tags if tag_key in self.way_columns}
                 self.way_geometry.append(shapely_geometry)
                 self.way_tags.append(filtered_tags)
@@ -221,6 +197,31 @@ class GdfUtils:
             WordSides.EAST: east,
             WordSides.NORTH: north
             }
+    @staticmethod
+    def get_area_gdf(area):
+        if isinstance(area, str): 
+            if area.endswith('.geojson'): 
+                reqired_area_gdf = gpd.read_file(area) # Get area from geojson file
+                if reqired_area_gdf.empty:
+                    raise ValueError("Given GeoJSON file is empty.")
+                return area, reqired_area_gdf
+            else:
+                try:
+                    reqired_area_gdf = ox.geocode_to_gdf(area)  # Get from place name
+                except:
+                    #todo if not found error - exit program
+                    #if internet connection error - find in osm file
+                    raise ValueError("The requested location has not been found.")
+                if(reqired_area_gdf.empty):
+                    raise ValueError("The requested location has not been found.")
+
+        elif isinstance(area, list): #get area from coordinates
+            #todo try catch...
+            area_polygon = geometry.Polygon(area)
+            reqired_area_gdf = gpd.GeoDataFrame(geometry=[area_polygon], crs=f"EPSG:{EPSG_DEGREE_NUMBER}")
+        else: #area cannot be created
+            raise ValueError("Invalid area")
+        return reqired_area_gdf
     @staticmethod
     def get_polygon_bounds(polygon):
         bounds = polygon.bounds #[WordSides.WEST, WordSides.SOUTH, WordSides.EAST, WordSides.NORTH]
@@ -298,31 +299,31 @@ class GdfUtils:
     @staticmethod
     @time_measurement_decorator("short ways filter")
     def filter_short_ways(gdf, min_lenght = 2):
-        gdf_mercator_projected  = gdf.to_crs("Web Mercator") 
+        gdf_mercator_projected  = gdf.to_crs(epsg=EPSG_METERS_NUMBER) 
         condition = gdf_mercator_projected.geometry.length > min_lenght
         filtered_gdf_mercator_projected = gdf_mercator_projected[condition]
-        return filtered_gdf_mercator_projected.to_crs(gdf.crs)
+        return filtered_gdf_mercator_projected.to_crs(epsg=gdf.crs)
     
     @staticmethod
     def buffer_gdf_same_distance(gdf, distance, resolution = 16, cap_style = 'round', join_style = 'round'):
-        gdf_mercator_projected  = gdf.to_crs("Web Mercator") 
+        gdf_mercator_projected  = gdf.to_crs(epsg=EPSG_METERS_NUMBER) 
         gdf_mercator_projected['geometry'] = gdf_mercator_projected['geometry'].buffer(distance,resolution = resolution, cap_style= cap_style, join_style = join_style) 
-        return gdf_mercator_projected.to_crs(gdf.crs)
+        return gdf_mercator_projected.to_crs(epsg=gdf.crs)
 
     @staticmethod
     def buffer_gdf_column_value_distance(gdf, column_key, additional_padding = 0, resolution = 16, cap_style = 'round', join_style = 'round'):
-        gdf_mercator_projected  = gdf.to_crs("Web Mercator") #! web mercator - 
+        gdf_mercator_projected  = gdf.to_crs(EPSG_METERS_NUMBER) #! web mercator - 
         gdf_mercator_projected['geometry'] = gdf_mercator_projected.apply(
             lambda row: row['geometry'].buffer(row[column_key] + additional_padding,resolution = resolution, cap_style= cap_style, join_style = join_style), axis=1
             ) 
-        return gdf_mercator_projected.to_crs(gdf.crs)
+        return gdf_mercator_projected.to_crs(epsg=gdf.crs)
     
     @staticmethod
     @time_measurement_decorator("aggregating")
     def aggregate_close_lines(gdf, buffer_distance = 5):
         if(gdf.empty):
             return gdf
-        gdf_mercator_projected  = gdf.to_crs("Web Mercator") 
+        gdf_mercator_projected  = gdf.to_crs(epsg=EPSG_METERS_NUMBER) 
         gdf_mercator_projected['geometry'] = gdf_mercator_projected['geometry'].buffer(buffer_distance) 
         
         #https://stackoverflow.com/questions/73566774/group-by-and-combine-intersecting-overlapping-geometries-in-geopandas
@@ -334,7 +335,7 @@ class GdfUtils:
         gdf_merged_diss = gdf_merged_diss.reset_index(drop=True).dissolve()
         gdf_merged_diss['geometry'] = pygeoops.centerline(gdf_merged_diss['geometry'], min_branch_length=buffer_distance * 10)
         gdf_merged_diss = gdf_merged_diss.explode(column='geometry', ignore_index=True)
-        gdf_merged_diss = gdf_merged_diss.to_crs(gdf.crs)
+        gdf_merged_diss = gdf_merged_diss.to_crs(epsg=gdf.crs)
         return gdf_merged_diss
     
 
@@ -403,16 +404,16 @@ class Plotter:
         self.areas_gdf = areas_gdf
         self.gpxs_gdf = gpxs_gdf
         self.reqired_area_gdf = requred_area_gdf 
-        self.init_plot(map_bg_color,paper_size_mm)
+        self.paper_size_mm = paper_size_mm
+        self.init_plot(map_bg_color)
         
         
-    def init_plot(self, map_bg_color, paper_size_mm):
-        self.fig, self.ax = plt.subplots(figsize=(paper_size_mm[0]/25.4,paper_size_mm[1]/25.4)) #convert mm to inch
-        self.fig.subplots_adjust(left=0, right=1, top=1, bottom=0)  # No margins
+    def init_plot(self, map_bg_color):
+        self.fig, self.ax = plt.subplots(figsize=(self.paper_size_mm[0]/25.4,self.paper_size_mm[1]/25.4)) #convert mm to inch
+        self.fig.subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.1)  # No margins
         self.ax.axis('off')
         self.ax.set_aspect('equal')
         self.reqired_area_gdf.plot(ax=self.ax, color=map_bg_color, linewidth=1)
-        
         
         
     def __plot_highways(self,highways_gdf):
@@ -457,37 +458,52 @@ class Plotter:
             x, y = line.xy
             self.ax.plot(x, y, color=bg_color, linewidth = linewidth + rail_bg_width_offset)
             self.ax.plot(x, y, color=color, linewidth =  linewidth ,linestyle=(0,(5,5)))
-                
-    def plot_ways(self):
+    @time_measurement_decorator("wayplot")            
+    def plot_ways(self, preview_area_gdf = None):
         #todo count with pdf size
         #todo to func - get width and length
-        bounds = self.reqired_area_gdf.total_bounds
+        gdf_mercator_projected  = preview_area_gdf.to_crs(epsg=EPSG_METERS_NUMBER)
+        bounds = gdf_mercator_projected.total_bounds
+        # bounds = gdf_mercator_projected.total_bounds / 1000
         x_range = bounds[2] - bounds[0]  # east - west
         y_range = bounds[3] - bounds[1]  # north - south
-        scaling_factor = (x_range + y_range) / 2  # average extent
+        map_scaling_factor = (x_range + y_range) / 2  # average extent
+        paper_scaling_factor = (self.paper_size_mm[0] + self.paper_size_mm[1])
         
         
-        LINE_TRANSFORM_CONSTANT = 0.008
-        self.ways_gdf[StyleKey.LINEWIDTH] = self.ways_gdf[StyleKey.LINEWIDTH] * LINE_TRANSFORM_CONSTANT / scaling_factor
-
-        highways_gdf, rest_gdf = self.gdf_utils.filter_gdf_in(self.ways_gdf, 'highway')
+        
+        # LINE_TRANSFORM_CONSTANT = 0.008
+        scaling_factor =  paper_scaling_factor / map_scaling_factor
+        self.ways_gdf[StyleKey.LINEWIDTH] = self.ways_gdf[StyleKey.LINEWIDTH] * scaling_factor
+        
+        # bounds = self.reqired_area_gdf.total_bounds
+        # x_range = bounds[2] - bounds[0]  # east - west
+        # y_range = bounds[3] - bounds[1]  # north - south
+        # scaling_factor = (x_range + y_range) / 2  # average extent
+        # self.ways_gdf[StyleKey.LINEWIDTH] = self.ways_gdf[StyleKey.LINEWIDTH]  / scaling_factor
+        
+        
+        
+        waterways_gdf, rest_gdf = self.gdf_utils.filter_gdf_in(self.ways_gdf, 'waterway')
+        self.__plot_waterways(waterways_gdf)
+        
+        highways_gdf, rest_gdf = self.gdf_utils.filter_gdf_in(rest_gdf, 'highway')
         self.__plot_highways(highways_gdf)
         
         railways_gdf, rest_gdf = self.gdf_utils.filter_gdf_in(rest_gdf, 'railway')
-        self.__plot_railways(railways_gdf, LINE_TRANSFORM_CONSTANT*2/scaling_factor,15*LINE_TRANSFORM_CONSTANT/scaling_factor)
+        self.__plot_railways(railways_gdf, 2*scaling_factor,15*scaling_factor)
 
-        waterways_gdf, rest_gdf = self.gdf_utils.filter_gdf_in(rest_gdf, 'waterway')
-        self.__plot_waterways(waterways_gdf)
 
             
     def plot_areas(self):
         if(StyleKey.COLOR in self.areas_gdf):
-            self.areas_gdf.plot(ax=self.ax, color=self.areas_gdf[StyleKey.COLOR], alpha=1)
+            #todo bounds filter
+            self.areas_gdf.plot(ax=self.ax, color = self.areas_gdf[StyleKey.COLOR] , alpha=1)
         else:
             pass
     
     def plot_gpxs(self):
-        self.gpxs_gdf.plot(ax = self.ax,color="red", linewidth = 1)
+        self.gpxs_gdf.plot(ax = self.ax,color="red", linewidth = 0.65)
 
         
     
@@ -568,15 +584,19 @@ def main():
     # osm_file = 'cz'
     # place_name = 'Czech Republic'
     osm_dir = './osm_files/'
-    osm_file = 'brno'
-    place_name = 'brno, Czech Republic'
+    osm_file = 'vys'
+    place_name = 'Vysočina, Czech Republic'
     
-    osm_data_preprocessor = OsmDataPreprocessor(f'{osm_dir}{osm_file}.osm.pbf',f'{place_name}')
+    osm_data_preprocessor = OsmDataPreprocessor(f'{osm_dir}{osm_file}.osm.pbf')
     # osm_data_preprocessor = OsmDataPreprocessor(f'{osm_dir}{osm_file}.osm',[(-18.14143,65.68868),(-18.08538,65.68868),(-18.08538,65.67783),(-18.14143,65.67783)]) #island
     # osm_data_preprocessor = OsmDataPreprocessor(f'{osm_dir}{osm_file}.osm',[(6.94872,4.84293),(6.99314,4.84293),(6.99314,4.81603),(6.94872,4.81603)]) #afrika
     # osm_data_preprocessor = OsmDataPreprocessor(f'{osm_dir}{osm_file}.osm.pbf',f'{place_name}',"new osm name")
     get_required_area_from_osm = False #from settings if true dont use reqired_area_gdf, need to send area name for osm cutting
-    osm_file_name, reqired_area_gdf = osm_data_preprocessor.extract_area()
+    reqired_area_gdf = GdfUtils.get_area_gdf(place_name)
+    preview_area_gdf = GdfUtils.get_area_gdf("Czech Republic")
+    
+
+    osm_file_name = osm_data_preprocessor.extract_area(reqired_area_gdf)
     osm_file_parser = OsmDataParser(wanted_ways,wanted_areas,unwanted_ways_tags, unwanted_areas_tags,
                                     reqired_map_area_name=f'{place_name}', get_required_area_from_osm = get_required_area_from_osm)
     @time_measurement_decorator("apply file")
@@ -605,6 +625,7 @@ def main():
         
     # only for some ways categories
     # ways_gdf = GdfUtils.filter_short_ways(ways_gdf, 10)
+    #todo styles for ways and areas separeated
     ways_gdf = geo_data_styler.assign_styles_to_gdf(ways_gdf, wanted_ways, [StyleKey.COLOR, StyleKey.ZINDEX, StyleKey.LINEWIDTH])
     areas_gdf = geo_data_styler.assign_styles_to_gdf(areas_gdf, wanted_areas, [StyleKey.COLOR, StyleKey.ZINDEX])
     ways_gdf = GdfUtils.sort_gdf_by_column(ways_gdf, StyleKey.ZINDEX)
@@ -617,13 +638,13 @@ def main():
     plotter = Plotter(GdfUtils, geo_data_styler, ways_gdf, areas_gdf, gpxs_gdf,
                              reqired_area_gdf,  GENERAL_DEFAULT_STYLES[StyleKey.COLOR], paper_size_mm)
     plotter.plot_areas()
-    plotter.plot_ways()
+    plotter.plot_ways(reqired_area_gdf)
     plotter.plot_gpxs()
     plotter.clip(total_gdf_bounds, reqired_area_polygon)
     #change to map_orientation
     plotter.zoom(reqired_area_polygon.bounds)
     plotter.plot_map_boundary()
-    plotter.generate_pdf(f'./pdfs/{osm_file}')
+    plotter.generate_pdf(f'./pdfs/{osm_file}a0')
     # plotter.show_plot()
 if __name__ == "__main__":
     main()
