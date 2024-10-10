@@ -10,12 +10,19 @@ class StyleKey(Enum):
     BGCOLOR = 'bg_color'
     LINESTYLE = 'linestyle'
 
-class WordSides(Enum):
+class WorldSides(Enum):
     WEST = 'west'
     EAST = 'east'
     NORTH = 'north'
     SOUTH = 'south'
     
+    
+    
+CUSTOM_PAPER_SIZE = (100,100)
+# CUSTOM_PAPER_SIZE = (None,100)
+
+
+
 class PaperSize(Enum):
     A0 = (841, 1189)
     A1 = (594, 841)
@@ -26,7 +33,7 @@ class PaperSize(Enum):
     A6 = (105, 148)
     A7 = (74, 105)
     A8 = (52, 74)
-    
+    CUSTOM = CUSTOM_PAPER_SIZE
     @property
     def dimensions(self):
         return self.value  # Returns the dimensions (width, height)
@@ -46,16 +53,24 @@ EPSG_METERS_NUMBER = 5514 # cz and sk - 5514, world 3857, europe 25833
 MM_TO_INCH = 25.4
 
 #--------
-PAPER_SIZE = PaperSize.A0
+OSM_FILE_NAME = 'jihmor'
+OSM_FILE_EXTENSION = '.osm.pbf'
 
+OUTPUT_PDF_NAME = 'brno'
+PAPER_SIZE = PaperSize.A6
+AREA  = 'Brno, Czech Republic'
+
+WANT_PREVIEW = True
+PREVIEW_PAPER_SIZE = PaperSize.A4 # real paper size (bigger one)
+PREVIEW_AREA= "Jihomoravský kraj, Czech Republic" # area that you are previewing (the bigger one) 
 
 #------------filters--------------
 
 
 wanted_ways = {
     'waterway': [],
-    'highway': ['motorway', 'trunk','primary', 'secondary'],
-    # 'highway': [ 'motorway', 'trunk','primary', 'secondary','tertiary','unclassified', 'residential' ],
+    # 'highway': ['motorway', 'trunk','primary', 'secondary'],
+    'highway': [ 'motorway', 'trunk','primary', 'secondary','tertiary','unclassified', 'residential','path', 'footway' ],
     # 'highway':[],
     'railway': ['rail']
 }
@@ -73,11 +88,11 @@ unwanted_ways_tags ={
 wanted_areas = {
     # 'landuse': ['forest', 'residential', 'farmland', 'meadow', 'grass'],
     'landuse': ['forest', 'residential', 'commercial', 'retail', 'industrial', 'farmland', 'meadow', 'grass'],
-    # 'leisure': ['park', 'pitch', 'garden', 'golf_course', 'nature_reserve', 'playground', 'stadium','swimming_pool', 'sports_centre'],
+    'leisure': ['park', 'pitch', 'garden', 'golf_course', 'nature_reserve', 'playground', 'stadium','swimming_pool', 'sports_centre'],
     #todo nature reserve to boundaries? 
-    'leisure': ['park', 'pitch', 'garden', 'golf_course', 'nature_reserve'],
-    # 'water': [],
-    'water': ['river','lake','reservoir'],
+    # 'leisure': ['park', 'pitch', 'garden', 'golf_course', 'nature_reserve'],
+    'water': [],
+    # 'water': ['river','lake','reservoir'],
 }
 
 unwanted_areas_tags ={

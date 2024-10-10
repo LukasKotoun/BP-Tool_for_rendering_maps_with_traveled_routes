@@ -178,24 +178,24 @@ class OsmDataParser(osmium.SimpleHandler):
 
 class GdfUtils:
     @staticmethod
-    def get_gdf_bounds(*gdfs):
+    def get_bounds_gdf(*gdfs):
         west = float('inf')
         south = float('inf')
         east = float('-inf')
         north = float('-inf')
         
         for gdf in gdfs:
-            bounds = gdf.total_bounds #[WordSides.WEST, WordSides.SOUTH, WordSides.EAST, WordSides.NORTH]
+            bounds = gdf.total_bounds #[WorldSides.WEST, WorldSides.SOUTH, WorldSides.EAST, WorldSides.NORTH]
             west = min(west, bounds[0])
             south = min(south, bounds[1])
             east = max(east, bounds[2])
             north = max(north, bounds[3])
             
         return {
-            WordSides.WEST: west,
-            WordSides.SOUTH: south,
-            WordSides.EAST: east,
-            WordSides.NORTH: north
+            WorldSides.WEST: west,
+            WorldSides.SOUTH: south,
+            WorldSides.EAST: east,
+            WorldSides.NORTH: north
             }
     @staticmethod
     def get_area_gdf(area):
@@ -224,16 +224,16 @@ class GdfUtils:
         return reqired_area_gdf
     @staticmethod
     def get_polygon_bounds(polygon):
-        bounds = polygon.bounds #[WordSides.WEST, WordSides.SOUTH, WordSides.EAST, WordSides.NORTH]
-        return {WordSides.WEST: bounds[0],
-               WordSides.SOUTH: bounds[1],
-               WordSides.EAST: bounds[2],
-               WordSides.NORTH: bounds[3]}
+        bounds = polygon.bounds #[WorldSides.WEST, WorldSides.SOUTH, WorldSides.EAST, WorldSides.NORTH]
+        return {WorldSides.WEST: bounds[0],
+               WorldSides.SOUTH: bounds[1],
+               WorldSides.EAST: bounds[2],
+               WorldSides.NORTH: bounds[3]}
     
     @staticmethod
     def get_map_size(bounds):
-        width = bounds[WordSides.EAST] - bounds[WordSides.WEST]
-        height = bounds[WordSides.NORTH] - bounds[WordSides.SOUTH]
+        width = bounds[WorldSides.EAST] - bounds[WorldSides.WEST]
+        height = bounds[WorldSides.NORTH] - bounds[WorldSides.SOUTH]
         if width > height:
             return width
         else:
@@ -241,9 +241,9 @@ class GdfUtils:
     @staticmethod
     def get_map_orientation(gdf):
         gdf_meters = gdf.to_crs(epsg=EPSG_METERS_NUMBER)    
-        bounds = GdfUtils.get_gdf_bounds(gdf_meters)
-        width = bounds[WordSides.EAST] - bounds[WordSides.WEST]
-        height = bounds[WordSides.NORTH] - bounds[WordSides.SOUTH]
+        bounds = GdfUtils.get_bounds_gdf(gdf_meters)
+        width = bounds[WorldSides.EAST] - bounds[WorldSides.WEST]
+        height = bounds[WorldSides.NORTH] - bounds[WorldSides.SOUTH]
         if width > height:
             return MapOrientation.LANDSCAPE
         else:
@@ -251,7 +251,7 @@ class GdfUtils:
         
     @staticmethod
     def get_map_size_from_gdf(*gdfs): 
-        bounds = GdfUtils.get_gdf_bounds(*gdfs)
+        bounds = GdfUtils.get_bounds_gdf(*gdfs)
         return GdfUtils.get_map_size(bounds)
  
     @staticmethod
@@ -266,11 +266,11 @@ class GdfUtils:
     @staticmethod
     def is_polygon_inside_bounds(area_bounds, polygon):
         polygon_from_bounds = geometry.Polygon([
-            (area_bounds[WordSides.EAST], area_bounds[WordSides.SOUTH]),  
-            (area_bounds[WordSides.EAST], area_bounds[WordSides.NORTH]),  
-            (area_bounds[WordSides.WEST], area_bounds[WordSides.NORTH]),  
-            (area_bounds[WordSides.WEST], area_bounds[WordSides.SOUTH]),  
-            (area_bounds[WordSides.EAST], area_bounds[WordSides.SOUTH])   # Closing the polygon
+            (area_bounds[WorldSides.EAST], area_bounds[WorldSides.SOUTH]),  
+            (area_bounds[WorldSides.EAST], area_bounds[WorldSides.NORTH]),  
+            (area_bounds[WorldSides.WEST], area_bounds[WorldSides.NORTH]),  
+            (area_bounds[WorldSides.WEST], area_bounds[WorldSides.SOUTH]),  
+            (area_bounds[WorldSides.EAST], area_bounds[WorldSides.SOUTH])   # Closing the polygon
         ])
         return polygon_from_bounds.contains(polygon)
     
@@ -317,6 +317,12 @@ class GdfUtils:
             lambda row: row['geometry'].buffer(row[column_key] + additional_padding,resolution = resolution, cap_style= cap_style, join_style = join_style), axis=1
             ) 
         return gdf_mercator_projected.to_crs(epsg=gdf.crs)
+    
+    @staticmethod
+    def calc_dimensions(bounds):
+        width = bounds[WorldSides.EAST] - bounds[WorldSides.WEST]  # east - west
+        length = bounds[WorldSides.NORTH] - bounds[WorldSides.SOUTH]  # north - south
+        return width, length
     
     @staticmethod
     @time_measurement_decorator("aggregating")
@@ -397,7 +403,7 @@ class GeoDataStyler:
 
 class Plotter:
     def __init__(self, gdf_utils, geo_data_styler, ways_gdf, areas_gdf, gpxs_gdf,
-                 requred_area_gdf, map_bg_color, paper_size_mm):
+                 requred_area_gdf, paper_size_mm, area_ratios):
         self.gdf_utils = gdf_utils
         self.geo_data_styler = geo_data_styler
         self.ways_gdf = ways_gdf
@@ -405,16 +411,35 @@ class Plotter:
         self.gpxs_gdf = gpxs_gdf
         self.reqired_area_gdf = requred_area_gdf 
         self.paper_size_mm = paper_size_mm
-        self.init_plot(map_bg_color)
+        self.scaling_factor = self.calc_map_scaling_factor(area_ratios if area_ratios is not None else (1,1))
+        
+    
+    def calc_map_scaling_factor(self , plot_margins):
+
+        horizontal_margin_factor = plot_margins[0]
+        vertical_margin_factor = plot_margins[1]
+        margin = (horizontal_margin_factor+vertical_margin_factor) /2
+        gdf_mercator_projected  = self.reqired_area_gdf.to_crs(epsg=EPSG_METERS_NUMBER)
+        width, length = GdfUtils.calc_dimensions(GdfUtils.get_bounds_gdf(gdf_mercator_projected))
+        map_scaling_factor = (width + length) / 2  
+        paper_scaling_factor = (self.paper_size_mm[0] + self.paper_size_mm[1])
+
+        return paper_scaling_factor / map_scaling_factor * margin
         
         
-    def init_plot(self, map_bg_color):
+    def init_plot(self, map_bg_color, plot_margins = None):
         self.fig, self.ax = plt.subplots(figsize=(self.paper_size_mm[0]/25.4,self.paper_size_mm[1]/25.4)) #convert mm to inch
-        self.fig.subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.1)  # No margins
+        if(plot_margins is None):
+            self.fig.subplots_adjust(left=0, right=1, top=1, bottom=0)  # No margins
+        else:
+            left_margin = (1-plot_margins[0])/ 2
+            right_margin = 1- left_margin
+            bottom_margin = (1-plot_margins[1])/2
+            top_margin = 1-bottom_margin
+            self.fig.subplots_adjust(left=left_margin, right=right_margin, top=top_margin, bottom=bottom_margin) 
         self.ax.axis('off')
         self.ax.set_aspect('equal')
         self.reqired_area_gdf.plot(ax=self.ax, color=map_bg_color, linewidth=1)
-        
         
     def __plot_highways(self,highways_gdf):
         if(highways_gdf.empty or StyleKey.COLOR not in highways_gdf and StyleKey.LINEWIDTH not in highways_gdf):
@@ -458,31 +483,13 @@ class Plotter:
             x, y = line.xy
             self.ax.plot(x, y, color=bg_color, linewidth = linewidth + rail_bg_width_offset)
             self.ax.plot(x, y, color=color, linewidth =  linewidth ,linestyle=(0,(5,5)))
+    
+   
     @time_measurement_decorator("wayplot")            
-    def plot_ways(self, preview_area_gdf = None):
-        #todo count with pdf size
-        #todo to func - get width and length
-        gdf_mercator_projected  = preview_area_gdf.to_crs(epsg=EPSG_METERS_NUMBER)
-        bounds = gdf_mercator_projected.total_bounds
-        # bounds = gdf_mercator_projected.total_bounds / 1000
-        x_range = bounds[2] - bounds[0]  # east - west
-        y_range = bounds[3] - bounds[1]  # north - south
-        map_scaling_factor = (x_range + y_range) / 2  # average extent
-        paper_scaling_factor = (self.paper_size_mm[0] + self.paper_size_mm[1])
+    def plot_ways(self):
         
-        
-        
-        # LINE_TRANSFORM_CONSTANT = 0.008
-        scaling_factor =  paper_scaling_factor / map_scaling_factor
-        self.ways_gdf[StyleKey.LINEWIDTH] = self.ways_gdf[StyleKey.LINEWIDTH] * scaling_factor
-        
-        # bounds = self.reqired_area_gdf.total_bounds
-        # x_range = bounds[2] - bounds[0]  # east - west
-        # y_range = bounds[3] - bounds[1]  # north - south
-        # scaling_factor = (x_range + y_range) / 2  # average extent
-        # self.ways_gdf[StyleKey.LINEWIDTH] = self.ways_gdf[StyleKey.LINEWIDTH]  / scaling_factor
-        
-        
+       
+        self.ways_gdf[StyleKey.LINEWIDTH] = self.ways_gdf[StyleKey.LINEWIDTH] * self.scaling_factor
         
         waterways_gdf, rest_gdf = self.gdf_utils.filter_gdf_in(self.ways_gdf, 'waterway')
         self.__plot_waterways(waterways_gdf)
@@ -491,34 +498,32 @@ class Plotter:
         self.__plot_highways(highways_gdf)
         
         railways_gdf, rest_gdf = self.gdf_utils.filter_gdf_in(rest_gdf, 'railway')
-        self.__plot_railways(railways_gdf, 2*scaling_factor,15*scaling_factor)
+        self.__plot_railways(railways_gdf, 2*self.scaling_factor,15*self.scaling_factor)
 
 
             
     def plot_areas(self):
         if(StyleKey.COLOR in self.areas_gdf):
-            #todo bounds filter
+            #todo bounds tag filter
             self.areas_gdf.plot(ax=self.ax, color = self.areas_gdf[StyleKey.COLOR] , alpha=1)
         else:
             pass
     
     def plot_gpxs(self):
-        self.gpxs_gdf.plot(ax = self.ax,color="red", linewidth = 0.65)
+        self.gpxs_gdf.plot(ax = self.ax,color="red", linewidth = 20*self.scaling_factor)
 
         
-    
-    
-        #todo to self.reqired
-    def clip(self, whole_area_bounds, reqired_area_polygon, clipped_area_color = 'white'):
+    def clip(self, whole_area_bounds, clipped_area_color = 'white'):
         #clip
+        #todo function 
         whole_area_polygon = geometry.Polygon([
-            (whole_area_bounds[WordSides.EAST], whole_area_bounds[WordSides.SOUTH]),  
-            (whole_area_bounds[WordSides.EAST], whole_area_bounds[WordSides.NORTH]),  
-            (whole_area_bounds[WordSides.WEST], whole_area_bounds[WordSides.NORTH]),  
-            (whole_area_bounds[WordSides.WEST], whole_area_bounds[WordSides.SOUTH]),  
-            (whole_area_bounds[WordSides.EAST], whole_area_bounds[WordSides.SOUTH])   # Closing the polygon
+            (whole_area_bounds[WorldSides.EAST], whole_area_bounds[WorldSides.SOUTH]),  
+            (whole_area_bounds[WorldSides.EAST], whole_area_bounds[WorldSides.NORTH]),  
+            (whole_area_bounds[WorldSides.WEST], whole_area_bounds[WorldSides.NORTH]),  
+            (whole_area_bounds[WorldSides.WEST], whole_area_bounds[WorldSides.SOUTH]),  
+            (whole_area_bounds[WorldSides.EAST], whole_area_bounds[WorldSides.SOUTH])   # Closing the polygon
         ])
-        clipping_polygon = whole_area_polygon.difference(reqired_area_polygon)
+        clipping_polygon = whole_area_polygon.difference(self.reqired_area_gdf.unary_union)
         # clipping_polygon = geometry.MultiPolygon([clipping_polygon])
         clipping_polygon = gpd.GeoDataFrame(geometry=[clipping_polygon], crs=f"EPSG:{EPSG_DEGREE_NUMBER}")
         
@@ -530,12 +535,20 @@ class Plotter:
         
     #use function to get gdf sizes - same as in ways
     #todo change to names
-    def zoom(self, zoom_bounds, zoom_percent_padding = 1):
+    def zoom(self, area_for_padding_count = None, zoom_percent_padding = 1):
         zoom_padding = zoom_percent_padding / 100 #convert from percent
-        x_buffer = (zoom_bounds[2] - zoom_bounds[0]) * zoom_padding  # 1% of width
-        y_buffer = (zoom_bounds[3] - zoom_bounds[1]) * zoom_padding  # 1% of height
-        self.ax.set_xlim([zoom_bounds[0] - x_buffer, zoom_bounds[2] + x_buffer])  # Expand x limits
-        self.ax.set_ylim([zoom_bounds[1] - y_buffer, zoom_bounds[3] + y_buffer])  # Expand y limits
+        zoom_bounds = GdfUtils.get_bounds_gdf(self.reqired_area_gdf)
+        # for preview page
+        if(area_for_padding_count is not None):
+            width, height = GdfUtils.calc_dimensions(GdfUtils.get_bounds_gdf(area_for_padding_count))
+        else:
+            width, height = GdfUtils.calc_dimensions(zoom_bounds)
+        
+        width_buffer = width * zoom_padding  # 1% of width
+        height_buffer = height * zoom_padding  # 1% of height
+        
+        self.ax.set_xlim([zoom_bounds[WorldSides.WEST] - width_buffer, zoom_bounds[WorldSides.EAST] + width_buffer])  # Expand x limits
+        self.ax.set_ylim([zoom_bounds[WorldSides.SOUTH] - height_buffer, zoom_bounds[WorldSides.NORTH] + height_buffer])  # Expand y limits
         
         
     def generate_pdf(self, pdf_name):
@@ -556,10 +569,23 @@ def get_paper_size_mm( map_orientaion,paperSize :PaperSize = PaperSize.A4, wante
     
     paper_size = paperSize.dimensions
     if(wanted_orientation == MapOrientation.AUTOMATIC):
-        return set_orientation(paper_size,map_orientaion)
+        return set_orientation(paper_size, map_orientaion)
     elif(wanted_orientation in [MapOrientation.LANDSCAPE, MapOrientation.PORTRAIT]):
         return set_orientation(paper_size,wanted_orientation)
     return paper_size
+
+def get_areas_ratio(bigger_area_dim, bigger_pdf_dim, smaller_area_dim, smaller_pdf_dim):
+    bigger_width_ratio = bigger_area_dim[0] / bigger_pdf_dim[0]
+    bigger_length_ratio = bigger_area_dim[1] / bigger_pdf_dim[1]
+    smaller_width_ratio = smaller_area_dim[0] / smaller_pdf_dim[0]
+    smaller_length_ratio = smaller_area_dim[1] / smaller_pdf_dim[1]
+   
+    width_ratio = smaller_width_ratio/bigger_width_ratio
+    length_ratio = smaller_length_ratio/bigger_length_ratio
+    
+    return width_ratio, length_ratio 
+
+
 
 class GpxProcesser:
     def __init__(self, gpx_folder):
@@ -584,34 +610,31 @@ def main():
     # osm_file = 'cz'
     # place_name = 'Czech Republic'
     osm_dir = './osm_files/'
-    osm_file = 'vys'
-    place_name = 'Vysočina, Czech Republic'
     
-    osm_data_preprocessor = OsmDataPreprocessor(f'{osm_dir}{osm_file}.osm.pbf')
+    osm_data_preprocessor = OsmDataPreprocessor(f'{osm_dir}{OSM_FILE_NAME}{OSM_FILE_EXTENSION}')
     # osm_data_preprocessor = OsmDataPreprocessor(f'{osm_dir}{osm_file}.osm',[(-18.14143,65.68868),(-18.08538,65.68868),(-18.08538,65.67783),(-18.14143,65.67783)]) #island
     # osm_data_preprocessor = OsmDataPreprocessor(f'{osm_dir}{osm_file}.osm',[(6.94872,4.84293),(6.99314,4.84293),(6.99314,4.81603),(6.94872,4.81603)]) #afrika
     # osm_data_preprocessor = OsmDataPreprocessor(f'{osm_dir}{osm_file}.osm.pbf',f'{place_name}',"new osm name")
     get_required_area_from_osm = False #from settings if true dont use reqired_area_gdf, need to send area name for osm cutting
-    reqired_area_gdf = GdfUtils.get_area_gdf(place_name)
-    preview_area_gdf = GdfUtils.get_area_gdf("Czech Republic")
+    reqired_area_gdf = GdfUtils.get_area_gdf(AREA)
     
 
     osm_file_name = osm_data_preprocessor.extract_area(reqired_area_gdf)
     osm_file_parser = OsmDataParser(wanted_ways,wanted_areas,unwanted_ways_tags, unwanted_areas_tags,
-                                    reqired_map_area_name=f'{place_name}', get_required_area_from_osm = get_required_area_from_osm)
+                                    reqired_map_area_name=f'{AREA}', get_required_area_from_osm = get_required_area_from_osm)
     @time_measurement_decorator("apply file")
     def t():
         osm_file_parser.apply_file(osm_file_name)
     t()
-    
+    #todo try to make all in meters and than convert for ploting only
     
     reqired_area_polygon = reqired_area_gdf.unary_union
     ways_gdf, areas_gdf = osm_file_parser.create_gdf()
     osm_file_parser.clear_gdf()
     
-    total_gdf_bounds = GdfUtils.get_gdf_bounds(ways_gdf, areas_gdf)
+    total_map_bounds = GdfUtils.get_bounds_gdf(ways_gdf, areas_gdf)
     #check if area is inside osm file
-    if(not GdfUtils.is_polygon_inside_bounds(total_gdf_bounds, reqired_area_polygon)):
+    if(not GdfUtils.is_polygon_inside_bounds(total_map_bounds, reqired_area_polygon)):
         #todo error handle class
         print("Selected area map must be inside given osm.pbf file")
         sys.exit()  
@@ -632,20 +655,35 @@ def main():
     areas_gdf = GdfUtils.sort_gdf_by_column(areas_gdf, StyleKey.ZINDEX)
     
     map_orientation = GdfUtils.get_map_orientation(reqired_area_gdf)
-    #todo check for custom - without paper size
-    paper_size_mm = get_paper_size_mm(map_orientation, PAPER_SIZE)
     
+    #todo check for custom - without paper size 
+    #also paper size custom, where to calc own side - always set 
+    paper_size_mm = get_paper_size_mm(map_orientation, PAPER_SIZE)
+    #want preview....
+    #paper or custom or custom with only one
+    if(WANT_PREVIEW):
+        bigger_area_gdf = GdfUtils.get_area_gdf(PREVIEW_AREA)
+        bigger_map_orientation = GdfUtils.get_map_orientation(bigger_area_gdf)
+        bigger_paper_size_mm = get_paper_size_mm(bigger_map_orientation, PREVIEW_PAPER_SIZE)
+        reqired_area_bounds  = GdfUtils.get_bounds_gdf(reqired_area_gdf) 
+        bigger_area_bounds = GdfUtils.get_bounds_gdf(bigger_area_gdf) 
+        area_ratios = get_areas_ratio(GdfUtils.calc_dimensions(bigger_area_bounds) , bigger_paper_size_mm, GdfUtils.calc_dimensions(reqired_area_bounds), paper_size_mm)
+       
+    else:
+        area_ratios = None
+        bigger_area_gdf = None
+    print(area_ratios)
     plotter = Plotter(GdfUtils, geo_data_styler, ways_gdf, areas_gdf, gpxs_gdf,
-                             reqired_area_gdf,  GENERAL_DEFAULT_STYLES[StyleKey.COLOR], paper_size_mm)
+                             reqired_area_gdf, paper_size_mm, area_ratios)
+    plotter.init_plot(GENERAL_DEFAULT_STYLES[StyleKey.COLOR], area_ratios)
     plotter.plot_areas()
-    plotter.plot_ways(reqired_area_gdf)
+    plotter.plot_ways()
     plotter.plot_gpxs()
-    plotter.clip(total_gdf_bounds, reqired_area_polygon)
-    #change to map_orientation
-    plotter.zoom(reqired_area_polygon.bounds)
+    plotter.clip(total_map_bounds)
+    plotter.zoom(bigger_area_gdf)
     plotter.plot_map_boundary()
-    plotter.generate_pdf(f'./pdfs/{osm_file}a0')
-    # plotter.show_plot()
+    plotter.generate_pdf(f'./pdfs/{OUTPUT_PDF_NAME}2')
+    plotter.show_plot()
 if __name__ == "__main__":
     main()
     
