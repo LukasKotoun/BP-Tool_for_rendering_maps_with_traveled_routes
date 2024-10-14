@@ -47,22 +47,22 @@ class MapOrientation(Enum):
 
 WAYS_RATIO_TO_MAP_SIZE = 0.007
 #there need to be every mentioned style
+MM_TO_INCH = 25.4
 GENERAL_DEFAULT_STYLES = {StyleKey.COLOR:'#EDEDE0',  StyleKey.ZINDEX :0, StyleKey.LINEWIDTH:0 , StyleKey.BGCOLOR: '#5d5d5d', StyleKey.LINESTYLE:'-'}
 EPSG_DEGREE_NUMBER = 4326 # world
 EPSG_METERS_NUMBER = 5514 # cz and sk - 5514, world 3857, europe 25833 
-MM_TO_INCH = 25.4
 
 #--------
-OSM_FILE_NAME = 'jihmor'
+OSM_FILE_NAME = 'brno'
 OSM_FILE_EXTENSION = '.osm.pbf'
 
 OUTPUT_PDF_NAME = 'brno'
-PAPER_SIZE = PaperSize.A6
+PAPER_SIZE = PaperSize.A4
 AREA  = 'Brno, Czech Republic'
 
-WANT_PREVIEW = True
+WANT_PREVIEW = False
 PREVIEW_PAPER_SIZE = PaperSize.A4 # real paper size (bigger one)
-PREVIEW_AREA= "Jihomoravský kraj, Czech Republic" # area that you are previewing (the bigger one) 
+PREVIEW_AREA = "Jihomoravský kraj, Czech Republic" # area that you are previewing (the bigger one) 
 
 #------------filters--------------
 
