@@ -1,4 +1,5 @@
 from enum import Enum
+from typing import Tuple
 
 
 #-----------------Enums--------------
@@ -16,9 +17,6 @@ class WorldSides(Enum):
     NORTH = 'north'
     SOUTH = 'south'
     
-    
-    
-CUSTOM_PAPER_SIZE = (100,100)
 # CUSTOM_PAPER_SIZE = (None,100)
 
 
@@ -33,9 +31,9 @@ class PaperSize(Enum):
     A6 = (105, 148)
     A7 = (74, 105)
     A8 = (52, 74)
-    CUSTOM = CUSTOM_PAPER_SIZE
+        
     @property
-    def dimensions(self):
+    def dimensions(self) -> Tuple[float, float]:
         return self.value  # Returns the dimensions (width, height)
     
 class MapOrientation(Enum):
@@ -53,17 +51,40 @@ EPSG_DEGREE_NUMBER = 4326 # world
 EPSG_METERS_NUMBER = 5514 # cz and sk - 5514, world 3857, europe 25833 
 
 #--------
-OSM_FILE_NAME = 'brno'
+
+
+
 OSM_FILE_EXTENSION = '.osm.pbf'
+OSM_FILE_NAME = 'olomkraj'
+OSM_WANT_EXTRACT_AREA = False
+OSM_OUTPUT_FILE_NAME = None # set if want osm file cutting using osmium command line tool (need to be uinstalled), If not set to None
 
-OUTPUT_PDF_NAME = 'brno'
-PAPER_SIZE = PaperSize.A4
-AREA  = 'Brno, Czech Republic'
 
+OUTPUT_PDF_NAME = 'olomkraj'
+
+AREA  = "Olomoucký kraj, Czech Republic"
+# PAPER_DIMENSIONS = PaperSize.A4.dimensions
+PAPER_DIMENSIONS = (1200, None) # set own dimensions. If one is left as 'None' it will be automaticaly calculated using area size
+# PAPER_DIMENSIONS = (1500, None)
+GIVEN_SMALLER_PAPER_DIMENSION = True # what side of paper was set (smaller true bigger false)(only if only one side in custom dimension was set)
+
+# set how will resulted paper be oriented
+# can be set to AUTOMATIC (Recommended), LANDSCAPE, PORTRAIT
+WANTED_ORIENTATION = MapOrientation.AUTOMATIC
+
+
+# NOTE: must have same settings as the resulting one when generating for large format printing
 WANT_PREVIEW = False
-PREVIEW_PAPER_SIZE = PaperSize.A4 # real paper size (bigger one)
-PREVIEW_AREA = "Jihomoravský kraj, Czech Republic" # area that you are previewing (the bigger one) 
+PREVIEW_AREA = "Vysočina, Czech Republic" # area that you are previewing (the bigger one) 
 
+# PREVIEW_PAPER_DIMENSIONS= PaperSize.A4.dimensions # real paper size (bigger one)
+PREVIEW_PAPER_DIMENSIONS = (1500, None) # or set own #if one is left none if will be automaticaly calculated by area size
+
+PREVIEW_GIVEN_SMALLER_PAPER_DIMENSION = True # what side of paper was set (smaller true bigger false)(only if only one side in custom dimension was set)
+# set how will resulted paper be oriented
+# can be set to AUTOMATIC (Recommended), LANDSCAPE, PORTRAIT
+
+PREVIEW_WANTED_ORIENTATION = MapOrientation.AUTOMATIC
 #------------filters--------------
 
 

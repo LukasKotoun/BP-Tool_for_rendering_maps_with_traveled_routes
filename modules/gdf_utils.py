@@ -62,18 +62,17 @@ class GdfUtils:
     
     @staticmethod
     def get_map_size(bounds):
-        width = bounds[WorldSides.EAST] - bounds[WorldSides.WEST]
-        height = bounds[WorldSides.NORTH] - bounds[WorldSides.SOUTH]
+        width, height = GdfUtils.calc_dimensions(bounds)
         if width > height:
             return width
         else:
             return height
+        
     @staticmethod
     def get_map_orientation(gdf):
         gdf_meters = gdf.to_crs(epsg=EPSG_METERS_NUMBER)    
         bounds = GdfUtils.get_bounds_gdf(gdf_meters)
-        width = bounds[WorldSides.EAST] - bounds[WorldSides.WEST]
-        height = bounds[WorldSides.NORTH] - bounds[WorldSides.SOUTH]
+        width, height = GdfUtils.calc_dimensions(bounds)
         if width > height:
             return MapOrientation.LANDSCAPE
         else:
@@ -139,7 +138,6 @@ class GdfUtils:
         gdf_mercator_projected  = gdf.to_crs(epsg=EPSG_METERS_NUMBER) 
         gdf_mercator_projected['geometry'] = gdf_mercator_projected['geometry'].buffer(distance,resolution = resolution, cap_style= cap_style, join_style = join_style) 
         return gdf_mercator_projected.to_crs(epsg=gdf.crs)
-
     @staticmethod
     def buffer_gdf_column_value_distance(gdf, column_key, additional_padding = 0, resolution = 16, cap_style = 'round', join_style = 'round'):
         gdf_mercator_projected  = gdf.to_crs(EPSG_METERS_NUMBER) #! web mercator - 
@@ -151,8 +149,18 @@ class GdfUtils:
     @staticmethod
     def calc_dimensions(bounds):
         width = bounds[WorldSides.EAST] - bounds[WorldSides.WEST]  # east - west
-        length = bounds[WorldSides.NORTH] - bounds[WorldSides.SOUTH]  # north - south
-        return width, length
+        height = bounds[WorldSides.NORTH] - bounds[WorldSides.SOUTH]  # north - south
+        return width, height
+    
+    @staticmethod
+    def calc_dimensions_gdf(gdf, epgs = None):
+        if(epgs is not None):
+            gdf = gdf.to_crs(epsg=epgs)    
+        bounds = GdfUtils.get_bounds_gdf(gdf)
+        width = bounds[WorldSides.EAST] - bounds[WorldSides.WEST]  # east - west
+        height = bounds[WorldSides.NORTH] - bounds[WorldSides.SOUTH]  # north - south
+        return width, height
+    
     
     @staticmethod
     @time_measurement_decorator("aggregating")

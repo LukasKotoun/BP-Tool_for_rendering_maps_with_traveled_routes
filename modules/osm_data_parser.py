@@ -8,6 +8,7 @@ import geopandas as gpd
 from modules.common_helpers import time_measurement_decorator
 
 class OsmDataParser(osmium.SimpleHandler):
+    
     def __init__(self, way_filters, area_filters, unwanted_ways_tags, unwanted_areas_tags,
                  way_additional_columns = [], area_additional_columns = [], 
                  reqired_map_area_name = None, get_required_area_from_osm = False):
@@ -59,7 +60,6 @@ class OsmDataParser(osmium.SimpleHandler):
                     return False        
         return True  
             
-            
     @staticmethod
     def apply_filters(allowed_tags, tags):
         for tag_key, allowed_values in allowed_tags.items():
@@ -73,6 +73,7 @@ class OsmDataParser(osmium.SimpleHandler):
         if OsmDataParser.apply_filters(self.way_filters, way.tags) and OsmDataParser.filter_not_allowed_tags(self.unwanted_ways_tags, way.tags):
             try:
                 shapely_geometry = self.wkt_loads_func(self.geom_factory_linestring(way)) #convert osmium way to wkt str format and than to shapely linestring geometry
+                #! možná přidání které chci tagy pokud obsahuje ještě další tagy?, nebo udělat prostě 3 urovně měst
                 filtered_tags = {tag_key: tag_value for tag_key, tag_value in way.tags if tag_key in self.way_columns}
                 self.way_geometry.append(shapely_geometry)
                 self.way_tags.append(filtered_tags)
@@ -82,6 +83,7 @@ class OsmDataParser(osmium.SimpleHandler):
             except Exception as e:
                 print(f"Error in way function - osm file processing: {e}")
                 return
+            
     def area(self, area):
         if (self.get_required_area_from_osm): #find area name in osm file
             if('name' in area.tags and area.tags['name'] == self.reqired_map_area_name):
@@ -98,6 +100,7 @@ class OsmDataParser(osmium.SimpleHandler):
             except Exception as e:
                 print(f"Error in area function - osm file processing: {e}")
                 return
+            
     @time_measurement_decorator("gdf creating")
     def create_gdf(self, epgs_number):
         print(f"AREA polygons: {sys.getsizeof(self.area_geometry)}, tags: {sys.getsizeof(self.area_tags)}")

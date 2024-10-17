@@ -21,7 +21,7 @@ class Plotter:
         self.scaling_factor = self.calc_map_scaling_factor(area_ratios if area_ratios is not None else (1,1))
         
     
-    def calc_map_scaling_factor(self , plot_margins):
+    def calc_map_scaling_factor(self, plot_margins):
 
         horizontal_margin_factor = plot_margins[0]
         vertical_margin_factor = plot_margins[1]
