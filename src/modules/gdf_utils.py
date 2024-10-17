@@ -5,9 +5,9 @@ import geopandas as gpd
 import pandas as pd
 import osmnx as ox
 import pygeoops
-from common.map_enums import WorldSides, MapOrientation
+from common.map_enums import WorldSides, MapOrientation, StyleKey
 from config import EPSG_DEGREE_NUMBER
-from common.custom_types import BoundsDict
+from common.custom_types import BoundsDict, DimensionsTuple
 from common.common_helpers import time_measurement_decorator
 
 class GdfUtils:
@@ -68,13 +68,13 @@ class GdfUtils:
                WorldSides.NORTH: bounds[3]}
     
     @staticmethod
-    def calc_dimensions(bounds: BoundsDict) -> tuple[float, float]:
+    def calc_dimensions(bounds: BoundsDict) -> DimensionsTuple:
         width = bounds[WorldSides.EAST] - bounds[WorldSides.WEST]  # east - west
         height = bounds[WorldSides.NORTH] - bounds[WorldSides.SOUTH]  # north - south
         return width, height
     
     @staticmethod
-    def calc_dimensions_gdf(gdf: gpd.GeoDataFrame, epgs: float | None = None) -> tuple[float, float]:
+    def calc_dimensions_gdf(gdf: gpd.GeoDataFrame, epgs: float | None = None) -> DimensionsTuple:
         if(epgs is not None):
             gdf = gdf.to_crs(epsg=epgs)    
         bounds = GdfUtils.get_bounds_gdf(gdf)
@@ -102,9 +102,8 @@ class GdfUtils:
         else:
             return MapOrientation.PORTRAIT
         
- 
     @staticmethod
-    def sort_gdf_by_column(gdf: gpd.GeoDataFrame, column_name: str, ascending: bool = True) -> gpd.GeoDataFrame:
+    def sort_gdf_by_column(gdf: gpd.GeoDataFrame, column_name: StyleKey, ascending: bool = True) -> gpd.GeoDataFrame:
         if(gdf.empty):
             return gdf
         if(column_name in gdf):
@@ -170,8 +169,6 @@ class GdfUtils:
                                                cap_style = cap_style, join_style = join_style), axis=1
             ) 
         return gdf_mercator_projected.to_crs(epsg=gdf.crs)
-    
-
     
     @staticmethod
     def aggregate_close_lines(gdf: gpd.GeoDataFrame, epsg: int, aggreagate_distance: float = 5) -> gpd.GeoDataFrame:

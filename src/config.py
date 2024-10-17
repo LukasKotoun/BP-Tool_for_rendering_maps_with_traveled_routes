@@ -1,7 +1,5 @@
 from common.custom_types import *
 from common.map_enums import *
-#-----------------Enums--------------
-
 
 #------------cons--------------
 
@@ -11,9 +9,6 @@ MM_TO_INCH = 25.4
 GENERAL_DEFAULT_STYLES: dict[StyleKey, str | int | float] = {StyleKey.COLOR:'#EDEDE0',  StyleKey.ZINDEX :0, StyleKey.LINEWIDTH:0 , StyleKey.BGCOLOR: '#5d5d5d', StyleKey.LINESTYLE:'-'}
 EPSG_DEGREE_NUMBER = 4326 # world
 EPSG_METERS_NUMBER = 5514 # cz and sk - 5514, world 3857, europe 25833 
-
-#--------
-
 
 
 OSM_FILE_NAME: str = '../osm_files/trebic.osm.pbf'
@@ -66,7 +61,6 @@ unwanted_ways_tags: UnwantedCategories  ={
         'tunnel': ['building_passage'],
     }
 }
-
 
 wanted_areas: WantedCategories = {
     # 'landuse': ['forest', 'residential', 'farmland', 'meadow', 'grass'],
