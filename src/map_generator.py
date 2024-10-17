@@ -8,14 +8,13 @@ from modules.osm_data_parser import OsmDataParser
 from modules.styles_assigner import StyleAssigner
 from modules.plotter import Plotter
 from modules.gpx_processer import GpxProcesser
-from modules.common_helpers import time_measurement_decorator
+from common.common_helpers import time_measurement_decorator
 
 
 @time_measurement_decorator("main")
 def main():
     
-    osm_dir = './osm_files/'
-    osm_data_preprocessor = OsmDataPreprocessor(f'{osm_dir}{OSM_FILE_NAME}{OSM_FILE_EXTENSION}',f'{osm_dir}{OSM_OUTPUT_FILE_NAME}{OSM_FILE_EXTENSION}', OSM_WANT_EXTRACT_AREA)
+    osm_data_preprocessor = OsmDataPreprocessor(OSM_FILE_NAME,OSM_OUTPUT_FILE_NAME, OSM_WANT_EXTRACT_AREA)
 
     # osm_data_preprocessor = OsmDataPreprocessor(f'{osm_dir}{osm_file}.osm',[(-18.14143,65.68868),(-18.08538,65.68868),(-18.08538,65.67783),(-18.14143,65.67783)]) #island
     # osm_data_preprocessor = OsmDataPreprocessor(f'{osm_dir}{osm_file}.osm',[(6.94872,4.84293),(6.99314,4.84293),(6.99314,4.81603),(6.94872,4.81603)]) #afrika
@@ -42,8 +41,8 @@ def main():
         sys.exit()  
     
     
-    geo_data_styler = StyleAssigner(GdfUtils, CATEGORIES_STYLES, GENERAL_DEFAULT_STYLES)
-    gpx_processer =  GpxProcesser('./gpxs')
+    geo_data_styler = StyleAssigner(CATEGORIES_STYLES, GENERAL_DEFAULT_STYLES)
+    gpx_processer =  GpxProcesser('../gpxs')
     gpxs_gdf = gpx_processer.get_gpxs_gdf(EPSG_DEGREE_NUMBER)
     #todo check if gpx go somewhere outside reqired_area
    
@@ -91,7 +90,7 @@ def main():
     plotter.zoom(zoom_percent_padding=1)
     plotter.plot_map_boundary()
 
-    plotter.generate_pdf(f'./pdfs/{OUTPUT_PDF_NAME}')
+    plotter.generate_pdf(OUTPUT_PDF_NAME)
     # plotter.show_plot()
 if __name__ == "__main__":
     main()

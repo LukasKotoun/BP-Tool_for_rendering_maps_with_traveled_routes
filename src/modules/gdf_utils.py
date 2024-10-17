@@ -1,0 +1,194 @@
+import warnings
+
+from shapely import geometry
+import geopandas as gpd
+import pandas as pd
+import osmnx as ox
+import pygeoops
+from common.map_enums import WorldSides, MapOrientation
+from config import EPSG_DEGREE_NUMBER
+from common.custom_types import BoundsDict
+from common.common_helpers import time_measurement_decorator
+
+class GdfUtils:
+    
+    @staticmethod
+    def get_area_gdf(area: str | list[float]) -> gpd.GeoDataFrame:
+        if isinstance(area, str): 
+            if area.endswith('.geojson'): 
+                reqired_area_gdf: gpd.GeoDataFrame = gpd.read_file(area) # Get area from geojson file
+                if reqired_area_gdf.empty:
+                    raise ValueError("Given GeoJSON file is empty.")
+                return reqired_area_gdf
+            else:
+                try:
+                    reqired_area_gdf: gpd.GeoDataFrame = ox.geocode_to_gdf(area)  # Get from place name
+                except:
+                    #todo if not found error - exit program
+                    #if internet connection error - find in osm file
+                    raise ValueError("The requested location has not been found.")
+                if(reqired_area_gdf.empty):
+                    raise ValueError("The requested location has not been found.")
+
+        elif isinstance(area, list): #get area from coordinates
+            #todo try catch...
+            area_polygon = geometry.Polygon(area)
+            reqired_area_gdf = gpd.GeoDataFrame(geometry=[area_polygon], crs=f"EPSG:{EPSG_DEGREE_NUMBER}")
+        else: #area cannot be created
+            raise ValueError("Invalid area")
+        return reqired_area_gdf
+    
+    @staticmethod
+    def get_bounds_gdf(*gdfs: gpd.GeoDataFrame) -> BoundsDict:
+        west = float('inf')
+        south = float('inf')
+        east = float('-inf')
+        north = float('-inf')
+        
+        for gdf in gdfs:
+            bounds: tuple[float] = gdf.total_bounds #[WorldSides.WEST, WorldSides.SOUTH, WorldSides.EAST, WorldSides.NORTH]
+            west = min(west, bounds[0])
+            south = min(south, bounds[1])
+            east = max(east, bounds[2])
+            north = max(north, bounds[3])
+            
+        return {
+            WorldSides.WEST: west,
+            WorldSides.SOUTH: south,
+            WorldSides.EAST: east,
+            WorldSides.NORTH: north
+            }
+        
+    @staticmethod
+    def get_polygon_bounds(polygon: geometry.polygon) -> BoundsDict:
+        bounds: tuple[float] = polygon.bounds #[WorldSides.WEST, WorldSides.SOUTH, WorldSides.EAST, WorldSides.NORTH]
+        return {WorldSides.WEST: bounds[0],
+               WorldSides.SOUTH: bounds[1],
+               WorldSides.EAST: bounds[2],
+               WorldSides.NORTH: bounds[3]}
+    
+    @staticmethod
+    def calc_dimensions(bounds: BoundsDict) -> tuple[float, float]:
+        width = bounds[WorldSides.EAST] - bounds[WorldSides.WEST]  # east - west
+        height = bounds[WorldSides.NORTH] - bounds[WorldSides.SOUTH]  # north - south
+        return width, height
+    
+    @staticmethod
+    def calc_dimensions_gdf(gdf: gpd.GeoDataFrame, epgs: float | None = None) -> tuple[float, float]:
+        if(epgs is not None):
+            gdf = gdf.to_crs(epsg=epgs)    
+        bounds = GdfUtils.get_bounds_gdf(gdf)
+        return GdfUtils.calc_dimensions(bounds)
+    
+    @staticmethod
+    def get_map_size(bounds: BoundsDict) -> float:
+        width, height = GdfUtils.calc_dimensions(bounds)
+        if width > height:
+            return width
+        else:
+            return height
+        
+    @staticmethod
+    def get_map_size_from_gdf(*gdfs: gpd.GeoDataFrame) -> float: 
+        bounds = GdfUtils.get_bounds_gdf(*gdfs)
+        return GdfUtils.get_map_size(bounds)
+   
+    @staticmethod
+    def get_map_orientation(gdf: gpd.GeoDataFrame, epgs: int) -> MapOrientation:
+        gdf_meters = gdf.to_crs(epsg=epgs)    
+        width, height = GdfUtils.calc_dimensions_gdf(gdf_meters)
+        if width > height:
+            return MapOrientation.LANDSCAPE
+        else:
+            return MapOrientation.PORTRAIT
+        
+ 
+    @staticmethod
+    def sort_gdf_by_column(gdf: gpd.GeoDataFrame, column_name: str, ascending: bool = True) -> gpd.GeoDataFrame:
+        if(gdf.empty):
+            return gdf
+        if(column_name in gdf):
+            return gdf.sort_values(by=column_name, ascending = ascending)
+        warnings.warn("Cannot sort - unexisting column name") 
+        return gdf
+    
+    @staticmethod
+    def is_polygon_inside_bounds(area_bounds: BoundsDict, polygon: geometry.polygon) -> bool:
+        polygon_from_bounds = geometry.Polygon([
+            (area_bounds[WorldSides.EAST], area_bounds[WorldSides.SOUTH]),  
+            (area_bounds[WorldSides.EAST], area_bounds[WorldSides.NORTH]),  
+            (area_bounds[WorldSides.WEST], area_bounds[WorldSides.NORTH]),  
+            (area_bounds[WorldSides.WEST], area_bounds[WorldSides.SOUTH]),  
+            (area_bounds[WorldSides.EAST], area_bounds[WorldSides.SOUTH])   # Closing the polygon
+        ])
+        return polygon_from_bounds.contains(polygon)
+    
+    # todo to one filter creation
+    @staticmethod
+    def filter_gdf_in(gdf: gpd.GeoDataFrame, att_name: str, att_values: list[str] = []) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]:
+        if (att_values and att_name in gdf):
+            condition: pd.Series[bool] = gdf[att_name].isin(att_values)
+            return gdf[condition].reset_index(drop=True), gdf[~condition].reset_index(drop=True) 
+        elif(att_name in gdf):
+            condition: pd.Series[bool] = gdf[att_name].notna()
+            return gdf[condition].reset_index(drop=True), gdf[~condition].reset_index(drop=True)
+        return gpd.GeoDataFrame(geometry=[]), gdf
+    
+    @staticmethod
+    def filter_gdf_not_in(gdf: gpd.GeoDataFrame, att_name: str, att_values: list[str] = []) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]:
+        if(att_values and att_name in gdf):
+            condition: pd.Series[bool] = gdf[att_name].isin(att_values)
+            return gdf[~condition].reset_index(drop=True), gdf[condition].reset_index(drop=True)
+        elif(att_name in gdf):
+            condition: pd.Series[bool] = gdf[att_name].notna()
+            return gdf[~condition].reset_index(drop=True), gdf[condition].reset_index(drop=True)
+        return gdf, gpd.GeoDataFrame(geometry=[])
+    
+    #todo use one filter creation and than add with 'and' all ways that are longer, that will leave false with all that i want...
+    @staticmethod
+    @time_measurement_decorator("short ways filter")
+    def filter_short_ways(gdf: gpd.GeoDataFrame, epsg: int, min_lenght: float = 2) -> gpd.GeoDataFrame:
+        gdf_mercator_projected = gdf.to_crs(epsg=epsg) 
+        condition: pd.Series[bool]  = gdf_mercator_projected.geometry.length > min_lenght
+        filtered_gdf_mercator_projected = gdf_mercator_projected[condition]
+        return filtered_gdf_mercator_projected.to_crs(epsg=gdf.crs)
+    
+    @staticmethod
+    def buffer_gdf_same_distance(gdf: gpd.GeoDataFrame, distance: float, epsg: int, resolution: int = 16,
+                                 cap_style: str = 'round', join_style: str = 'round') -> gpd.GeoDataFrame:
+        gdf_mercator_projected = gdf.to_crs(epsg=epsg) 
+        gdf_mercator_projected['geometry'] = gdf_mercator_projected['geometry'].buffer(distance,resolution = resolution, cap_style= cap_style, join_style = join_style) 
+        return gdf_mercator_projected.to_crs(epsg=gdf.crs)
+    
+    @staticmethod
+    def buffer_gdf_column_value_distance(gdf: gpd.GeoDataFrame, column_key: str, epsg : int, 
+                                         additional_padding: float = 0, resolution: int = 16,
+                                         cap_style: str = 'round', join_style: str = 'round') -> gpd.GeoDataFrame:
+        gdf_mercator_projected = gdf.to_crs(epsg) 
+        gdf_mercator_projected['geometry'] = gdf_mercator_projected.apply(
+            lambda row: row['geometry'].buffer(row[column_key] + additional_padding,resolution = resolution,
+                                               cap_style = cap_style, join_style = join_style), axis=1
+            ) 
+        return gdf_mercator_projected.to_crs(epsg=gdf.crs)
+    
+
+    
+    @staticmethod
+    def aggregate_close_lines(gdf: gpd.GeoDataFrame, epsg: int, aggreagate_distance: float = 5) -> gpd.GeoDataFrame:
+        if(gdf.empty):
+            return gdf
+        gdf_mercator_projected = gdf.to_crs(epsg=epsg) 
+        gdf_mercator_projected['geometry'] = gdf_mercator_projected['geometry'].buffer(aggreagate_distance) 
+        
+        #https://stackoverflow.com/questions/73566774/group-by-and-combine-intersecting-overlapping-geometries-in-geopandas
+        gdf_merged: gpd.GeoDataFrame = gdf_mercator_projected.sjoin(gdf_mercator_projected, how='left', predicate="intersects")
+        gdf_merged.columns = gdf_merged.columns.str.replace('_left', '',regex=False).str.replace('_right', '', regex=False)
+        gdf_merged = gdf_merged.loc[:, ~gdf_merged.columns.duplicated()]
+
+        gdf_merged_diss: gpd.GeoDataFrame = gdf_merged.dissolve()
+        gdf_merged_diss = gdf_merged_diss.reset_index(drop=True).dissolve()
+        gdf_merged_diss['geometry'] = pygeoops.centerline(gdf_merged_diss['geometry'], min_branch_length=aggreagate_distance * 10)
+        gdf_merged_diss = gdf_merged_diss.explode(column='geometry', ignore_index=True)
+        gdf_merged_diss = gdf_merged_diss.to_crs(epsg=gdf.crs)
+        return gdf_merged_diss
+    

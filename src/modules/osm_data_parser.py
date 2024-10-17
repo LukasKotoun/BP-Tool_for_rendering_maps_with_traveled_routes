@@ -5,7 +5,7 @@ from shapely import wkt
 import pandas as pd
 import geopandas as gpd
 
-from modules.common_helpers import time_measurement_decorator
+from common.common_helpers import time_measurement_decorator
 
 class OsmDataParser(osmium.SimpleHandler):
     
