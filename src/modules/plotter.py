@@ -77,20 +77,22 @@ class Plotter:
         
         # tram_gdf = self.gdf_utils.aggregate_close_lines(tram_gdf,5)
         # rails_gdf = self.gdf_utils.aggregate_close_lines(rails_gdf,5)
-        for line, color, linewidth in zip(tram_gdf.geometry, tram_gdf[StyleKey.COLOR], tram_gdf[StyleKey.LINEWIDTH]):
-            x, y = line.xy #todo len to config/style
-            self.ax.plot(x, y, color=color, linewidth = linewidth, solid_capstyle='round', alpha=0.6,path_effects=[
-            patheffects.withTickedStroke(angle=-90, spacing=tram_second_line_spacing, length=0.05),
-            patheffects.withTickedStroke(angle=90, spacing=tram_second_line_spacing, length=0.05)])
-        
-        if(StyleKey.BGCOLOR not in rails_gdf):
-            rails_gdf = self.geo_data_styler.assign_styles_to_gdf(rails_gdf, {'railway': []}, [StyleKey.BGCOLOR])
-            # rails_gdf = self.geo_data_styler.assign_styles_to_gdf(rails_gdf, {'railway': ['rail']}, [StyleKey.BGCOLOR]) #todo solve double adding
-       
-        for line, color, bg_color,linewidth in zip(rails_gdf.geometry, rails_gdf[StyleKey.COLOR],rails_gdf[StyleKey.BGCOLOR], rails_gdf[StyleKey.LINEWIDTH]):
-            x, y = line.xy
-            self.ax.plot(x, y, color=bg_color, linewidth = linewidth + rail_bg_width_offset)
-            self.ax.plot(x, y, color=color, linewidth =  linewidth ,linestyle=(0,(5,5)))
+        if(not tram_gdf.empty):
+            for line, color, linewidth in zip(tram_gdf.geometry, tram_gdf[StyleKey.COLOR], tram_gdf[StyleKey.LINEWIDTH]):
+                x, y = line.xy 
+                self.ax.plot(x, y, color=color, linewidth = linewidth, solid_capstyle='round', alpha=0.6,path_effects=[
+                patheffects.withTickedStroke(angle=-90, spacing=tram_second_line_spacing, length=0.05),
+                patheffects.withTickedStroke(angle=90, spacing=tram_second_line_spacing, length=0.05)])
+                
+        if(not rails_gdf.empty):
+            if(StyleKey.BGCOLOR not in rails_gdf):
+                rails_gdf = self.geo_data_styler.assign_styles_to_gdf(rails_gdf, {'railway': []}, [StyleKey.BGCOLOR])
+                # rails_gdf = self.geo_data_styler.assign_styles_to_gdf(rails_gdf, {'railway': ['rail']}, [StyleKey.BGCOLOR]) #todo solve double adding
+            
+            for line, color, bg_color,linewidth in zip(rails_gdf.geometry, rails_gdf[StyleKey.COLOR], rails_gdf[StyleKey.BGCOLOR], rails_gdf[StyleKey.LINEWIDTH]):
+                x, y = line.xy
+                self.ax.plot(x, y, color=bg_color, linewidth = linewidth + rail_bg_width_offset)
+                self.ax.plot(x, y, color=color, linewidth =  linewidth ,linestyle=(0,(5,5)))
     
    
     @time_measurement_decorator("wayplot")            

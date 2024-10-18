@@ -122,26 +122,35 @@ class GdfUtils:
         ])
         return polygon_from_bounds.contains(polygon)
     
-    # todo to one filter creation
     @staticmethod
-    def filter_gdf_in(gdf: gpd.GeoDataFrame, att_name: str, att_values: list[str] = []) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]:
+    def createCondition(gdf: gpd.GeoDataFrame, att_name: str, att_values: list[str] = []) -> pd.Series:
+        """Create condition for given gdf, return true for every row that have att_name with att_value (if given,
+        if not it check for any value (not nan)).
+        If att_name is not in gdf it return condition with all false.
+
+        Args:
+            gdf (gpd.GeoDataFrame): Gdf to create condition for.
+            att_name (str): Name of atribute to condition (will leave true for rows with value on this att column).
+            att_values (list[str], optional): Values of att_name (will leave true for rows with this values in att_name column) Defaults to [].
+
+        Returns:
+            pd.Series[bool]: condition for given gdf.
+        """
         if (att_values and att_name in gdf):
-            condition: pd.Series[bool] = gdf[att_name].isin(att_values)
-            return gdf[condition].reset_index(drop=True), gdf[~condition].reset_index(drop=True) 
+            return gdf[att_name].isin(att_values)
         elif(att_name in gdf):
-            condition: pd.Series[bool] = gdf[att_name].notna()
-            return gdf[condition].reset_index(drop=True), gdf[~condition].reset_index(drop=True)
-        return gpd.GeoDataFrame(geometry=[]), gdf
+            return gdf[att_name].notna()
+        return gdf.index < 0 #set all to false
     
     @staticmethod
+    def filter_gdf_in(gdf: gpd.GeoDataFrame, att_name: str, att_values: list[str] = []) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]:
+        condition = GdfUtils.createCondition(gdf, att_name, att_values)
+        return gdf[condition].reset_index(drop=True), gdf[~condition].reset_index(drop=True)
+       
+    @staticmethod
     def filter_gdf_not_in(gdf: gpd.GeoDataFrame, att_name: str, att_values: list[str] = []) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]:
-        if(att_values and att_name in gdf):
-            condition: pd.Series[bool] = gdf[att_name].isin(att_values)
+            condition = GdfUtils.createCondition(gdf, att_name, att_values)
             return gdf[~condition].reset_index(drop=True), gdf[condition].reset_index(drop=True)
-        elif(att_name in gdf):
-            condition: pd.Series[bool] = gdf[att_name].notna()
-            return gdf[~condition].reset_index(drop=True), gdf[condition].reset_index(drop=True)
-        return gdf, gpd.GeoDataFrame(geometry=[])
     
     #todo use one filter creation and than add with 'and' all ways that are longer, that will leave false with all that i want...
     @staticmethod
