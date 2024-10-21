@@ -39,14 +39,17 @@ class GdfUtils:
         return reqired_area_gdf
     
     @staticmethod
-    def get_bounds_gdf(*gdfs: gpd.GeoDataFrame) -> BoundsDict:
+    def get_bounds_gdf(*gdfs: gpd.GeoDataFrame, epgs: int | None = None) -> BoundsDict:
         west = float('inf')
         south = float('inf')
         east = float('-inf')
         north = float('-inf')
         
         for gdf in gdfs:
-            bounds: tuple[float] = gdf.total_bounds #[WorldSides.WEST, WorldSides.SOUTH, WorldSides.EAST, WorldSides.NORTH]
+            gdf_edit = gdf
+            if(epgs is not None):
+                gdf_edit = gdf.to_crs(epsg=epgs)    
+            bounds: tuple[float] = gdf_edit.total_bounds #[WorldSides.WEST, WorldSides.SOUTH, WorldSides.EAST, WorldSides.NORTH]
             west = min(west, bounds[0])
             south = min(south, bounds[1])
             east = max(east, bounds[2])
@@ -74,10 +77,8 @@ class GdfUtils:
         return width, height
     
     @staticmethod
-    def calc_dimensions_gdf(gdf: gpd.GeoDataFrame, epgs: float | None = None) -> DimensionsTuple:
-        if(epgs is not None):
-            gdf = gdf.to_crs(epsg=epgs)    
-        bounds = GdfUtils.get_bounds_gdf(gdf)
+    def calc_dimensions_gdf(gdf: gpd.GeoDataFrame, epgs: int | None = None) -> DimensionsTuple:
+        bounds = GdfUtils.get_bounds_gdf(gdf, epgs=epgs)
         return GdfUtils.calc_dimensions(bounds)
     
     @staticmethod
@@ -94,9 +95,8 @@ class GdfUtils:
         return GdfUtils.get_map_size(bounds)
    
     @staticmethod
-    def get_map_orientation(gdf: gpd.GeoDataFrame, epgs: int) -> MapOrientation:
-        gdf_meters = gdf.to_crs(epsg=epgs)    
-        width, height = GdfUtils.calc_dimensions_gdf(gdf_meters)
+    def get_map_orientation(gdf: gpd.GeoDataFrame, epgs: int | None = None) -> MapOrientation:
+        width, height = GdfUtils.calc_dimensions_gdf(gdf, epgs)
         if width > height:
             return MapOrientation.LANDSCAPE
         else:
@@ -156,6 +156,7 @@ class GdfUtils:
     @staticmethod
     @time_measurement_decorator("short ways filter")
     def filter_short_ways(gdf: gpd.GeoDataFrame, epsg: int, min_lenght: float = 2) -> gpd.GeoDataFrame:
+        
         gdf_mercator_projected = gdf.to_crs(epsg=epsg) 
         condition: pd.Series[bool]  = gdf_mercator_projected.geometry.length > min_lenght
         filtered_gdf_mercator_projected = gdf_mercator_projected[condition]

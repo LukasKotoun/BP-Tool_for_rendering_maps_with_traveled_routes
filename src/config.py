@@ -3,22 +3,20 @@ from common.map_enums import *
 
 #------------cons--------------
 
-WAYS_RATIO_TO_MAP_SIZE = 0.007
 #there need to be every mentioned style
-MM_TO_INCH = 25.4
-GENERAL_DEFAULT_STYLES: dict[StyleKey, str | int | float] = {StyleKey.COLOR:'#EDEDE0',  StyleKey.ZINDEX :0, StyleKey.LINEWIDTH:0 , StyleKey.BGCOLOR: '#5d5d5d', StyleKey.LINESTYLE:'-'}
 EPSG_DEGREE_NUMBER = 4326 # world
 EPSG_METERS_NUMBER = 5514 # cz and sk - 5514, world 3857, europe 25833 
 
 
-OSM_FILE_NAME: str = '../osm_files/trebic.osm.pbf'
+OSM_FILE_NAME: str = '../osm_files/brno.osm.pbf'
 OSM_WANT_EXTRACT_AREA: bool = False
 OSM_OUTPUT_FILE_NAME: None | str = None # set if want osm file cutting using osmium command line tool (need to be uinstalled), If not set to None
 
 
-OUTPUT_PDF_NAME: str = '../pdfs/trebic'
 
-AREA: str  = "Třebíč, Czech Republic"
+OUTPUT_PDF_NAME: str = '../pdfs/brno'
+
+AREA: str  = "Brno, Czech Republic"
 PAPER_DIMENSIONS: PaperSize | tuple[float | None, float | None] = PaperSize.A4.dimensions
 # PAPER_DIMENSIONS = (1200, None) # set own dimensions. If one is left as 'None' it will be automaticaly calculated using area size
 # PAPER_DIMENSIONS = (1500, None)
@@ -31,9 +29,9 @@ WANTED_ORIENTATION: MapOrientation = MapOrientation.AUTOMATIC
 
 # NOTE: must have same settings as the resulting one when generating for large format printing
 WANT_PREVIEW: bool = False
-PREVIEW_AREA = "Vysočina, Czech Republic" # area that you are previewing (the bigger one) 
+PREVIEW_AREA = "Jihomoravský kraj, Czech Republic" # area that you are previewing (the bigger one) 
 
-PREVIEW_PAPER_DIMENSIONS= PaperSize.A4.dimensions # real paper size (bigger one)
+PREVIEW_PAPER_DIMENSIONS= PaperSize.A0.dimensions # real paper size (bigger one)
 # PREVIEW_PAPER_DIMENSIONS = (1500, None) # or set own #if one is left none if will be automaticaly calculated by area size
 
 PREVIEW_GIVEN_SMALLER_PAPER_DIMENSION = True # what side of paper was set (smaller true bigger false)(only if only one side in custom dimension was set)
@@ -45,15 +43,21 @@ PREVIEW_WANTED_ORIENTATION = MapOrientation.AUTOMATIC
 
 
 
+#todo here automatic wanted objects setup using map and pdf ratio - own class ()
+
+
+
+
+GENERAL_DEFAULT_STYLES: dict[StyleKey, str | int | float] = {StyleKey.COLOR:'#EDEDE0',  StyleKey.ZINDEX :0, StyleKey.LINEWIDTH:0 , StyleKey.BGCOLOR: '#5d5d5d', StyleKey.LINESTYLE:'-'}
+
 wanted_ways: WantedCategories = {
     'waterway': [],
     # 'highway': ['motorway', 'trunk','primary', 'secondary'],
     'highway': [ 'motorway', 'trunk','primary', 'secondary','tertiary','unclassified', 'residential','path', 'footway' ],
     # 'highway':[],
-    'railway': ['rail']
+    'railway': ['rail', 'tram']
 }
 
-#todo edit for all or for concrete way filter (like rails, railway tram....)
 unwanted_ways_tags: UnwantedCategories  ={
     # 'highway':['coridor','via_ferrata','crossing','traffic_island','proposed','construction' ],
     'railway': {
@@ -109,10 +113,6 @@ highway_styles: CategoryStyle = {
     'steps': {StyleKey.COLOR: '#8f8364'},
     'path': {StyleKey.COLOR: '#8f8364'},
     'residential': {StyleKey.COLOR: '#8f8364'}
-    # 'footway': {StyleKey.COLOR: 'red'},
-    # 'steps': {StyleKey.COLOR: 'blue'},
-    # 'path': {StyleKey.COLOR: 'red'},
-    # 'residential': {StyleKey.COLOR: 'brown'}
 }
 railway_styles: CategoryStyle = {
     'rail': {StyleKey.COLOR: '#FFFFFF', StyleKey.ZINDEX: 1, StyleKey.LINEWIDTH: 5, StyleKey.BGCOLOR: '#5d5d5d'},

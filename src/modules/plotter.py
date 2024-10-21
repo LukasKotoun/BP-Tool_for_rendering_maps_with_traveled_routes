@@ -6,42 +6,30 @@ from shapely import geometry
 from config import * 
 from modules.gdf_utils import GdfUtils
 from common.common_helpers import time_measurement_decorator
+from modules.utils import Utils
 
-
-class Plotter:
+class Plotter:    
+    
+    MM_TO_INCH = 25.4
     def __init__(self, gdf_utils, geo_data_styler, ways_gdf, areas_gdf, gpxs_gdf,
-                 requred_area_gdf, paper_size_mm, area_ratios):
+                 requred_area_gdf, paper_dimensions_mm, areas_preview_ratios, map_dimensions_m):
         self.gdf_utils = gdf_utils
         self.geo_data_styler = geo_data_styler
         self.ways_gdf = ways_gdf
         self.areas_gdf = areas_gdf
         self.gpxs_gdf = gpxs_gdf
-        self.reqired_area_gdf = requred_area_gdf 
-        self.paper_size_mm = paper_size_mm
-        self.scaling_factor = self.calc_map_scaling_factor(area_ratios if area_ratios is not None else (1,1))
-        
-    
-    def calc_map_scaling_factor(self, plot_margins):
+        self.reqired_area_gdf = requred_area_gdf
+        self.paper_dimensions_mm = paper_dimensions_mm
+        self.map_object_scaling_factor = Utils.calc_map_object_scaling_factor(map_dimensions_m, paper_dimensions_mm, areas_preview_ratios)
 
-        horizontal_margin_factor = plot_margins[0]
-        vertical_margin_factor = plot_margins[1]
-        margin = (horizontal_margin_factor+vertical_margin_factor) /2
-        gdf_mercator_projected  = self.reqired_area_gdf.to_crs(epsg=EPSG_METERS_NUMBER)
-        width, length = GdfUtils.calc_dimensions(GdfUtils.get_bounds_gdf(gdf_mercator_projected))
-        map_scaling_factor = (width + length) / 2  
-        paper_scaling_factor = (self.paper_size_mm[0] + self.paper_size_mm[1])
-
-        return paper_scaling_factor / map_scaling_factor * margin
-        
-        
-    def init_plot(self, map_bg_color, plot_margins = None):
-        self.fig, self.ax = plt.subplots(figsize=(self.paper_size_mm[0]/25.4,self.paper_size_mm[1]/25.4)) #convert mm to inch
-        if(plot_margins is None):
+    def init_plot(self, map_bg_color, pdf_to_area_ratios = None):
+        self.fig, self.ax = plt.subplots(figsize=(self.paper_dimensions_mm[0]/self.MM_TO_INCH,self.paper_dimensions_mm[1]/self.MM_TO_INCH)) #convert mm to inch
+        if(pdf_to_area_ratios is None):
             self.fig.subplots_adjust(left=0, right=1, top=1, bottom=0)  # No margins
         else:
-            left_margin = (1-plot_margins[0])/ 2
+            left_margin = (1-pdf_to_area_ratios[0])/ 2
             right_margin = 1 - left_margin
-            bottom_margin = (1-plot_margins[1])/2
+            bottom_margin = (1-pdf_to_area_ratios[1])/2
             top_margin = 1 -bottom_margin
 
             self.fig.subplots_adjust(left=left_margin, right=right_margin, top=top_margin, bottom=bottom_margin) 
@@ -98,8 +86,9 @@ class Plotter:
     @time_measurement_decorator("wayplot")            
     def plot_ways(self):
         
-       
-        self.ways_gdf[StyleKey.LINEWIDTH] = self.ways_gdf[StyleKey.LINEWIDTH] * self.scaling_factor
+        if(self.ways_gdf.empty):
+            return
+        self.ways_gdf[StyleKey.LINEWIDTH] = self.ways_gdf[StyleKey.LINEWIDTH] * self.map_object_scaling_factor
         
         waterways_gdf, rest_gdf = self.gdf_utils.filter_gdf_in(self.ways_gdf, 'waterway')
         self.__plot_waterways(waterways_gdf)
@@ -108,7 +97,7 @@ class Plotter:
         self.__plot_highways(highways_gdf)
         
         railways_gdf, rest_gdf = self.gdf_utils.filter_gdf_in(rest_gdf, 'railway')
-        self.__plot_railways(railways_gdf, 2*self.scaling_factor,15*self.scaling_factor)
+        self.__plot_railways(railways_gdf, 2*self.map_object_scaling_factor,15*self.map_object_scaling_factor)
 
 
             
@@ -120,11 +109,13 @@ class Plotter:
             pass
     
     def plot_gpxs(self):
-        self.gpxs_gdf.plot(ax = self.ax,color="red", linewidth = 20*self.scaling_factor)
+        self.gpxs_gdf.plot(ax = self.ax,color="red", linewidth = 20*self.map_object_scaling_factor)
 
         
     def clip(self, whole_area_bounds, clipped_area_color = 'white'):
         #clip
+        if(self.areas_gdf.empty):
+            return
         #todo function 
         whole_area_polygon = geometry.Polygon([
             (whole_area_bounds[WorldSides.EAST], whole_area_bounds[WorldSides.SOUTH]),  
@@ -133,6 +124,7 @@ class Plotter:
             (whole_area_bounds[WorldSides.WEST], whole_area_bounds[WorldSides.SOUTH]),  
             (whole_area_bounds[WorldSides.EAST], whole_area_bounds[WorldSides.SOUTH])   # Closing the polygon
         ])
+      
         clipping_polygon = whole_area_polygon.difference(self.reqired_area_gdf.unary_union)
         # clipping_polygon = geometry.MultiPolygon([clipping_polygon])
         clipping_polygon = gpd.GeoDataFrame(geometry=[clipping_polygon], crs=f"EPSG:{EPSG_DEGREE_NUMBER}")

@@ -55,16 +55,59 @@ class Utils:
             paper_dimensions = Utils.set_orientation(paper_dimensions, map_orientaion)
         return paper_dimensions
     
-    @staticmethod
-    def get_areas_ratio(bigger_area_dim: DimensionsTuple, bigger_pdf_dim: DimensionsTuple,
-                        smaller_area_dim: DimensionsTuple,
-                        smaller_pdf_dim: DimensionsTuple) -> DimensionsTuple:
-        bigger_width_ratio = bigger_area_dim[0] / bigger_pdf_dim[0]
-        bigger_length_ratio = bigger_area_dim[1] / bigger_pdf_dim[1]
-        smaller_width_ratio = smaller_area_dim[0] / smaller_pdf_dim[0]
-        smaller_length_ratio = smaller_area_dim[1] / smaller_pdf_dim[1]
     
-        width_ratio = smaller_width_ratio/bigger_width_ratio
-        length_ratio = smaller_length_ratio/bigger_length_ratio
+    #function for zoom on preview 
+    @staticmethod
+    def get_relative_areas_ratio(bigger_area_dim: DimensionsTuple, bigger_area_pdf_dim: DimensionsTuple,
+                        smaller_area_dim: DimensionsTuple,
+                        smaller_area_pdf_dim: DimensionsTuple) -> DimensionsTuple:
+        """Calculate ares ratio relative to pdf size coresponding to areas.
+            
+            Calculate the ratio of width and length between the smaller and larger area
+            based on their ratio to the corresponding dimensions of the PDF to which they are to be rendered.
+            Useful for calculcating how should be smaller area in preview zoomed 
+
+        Args:
+            bigger_area_dim (DimensionsTuple): (width, height)
+            bigger_area_pdf_dim (DimensionsTuple): (width, height)
+            smaller_area_dim (DimensionsTuple): (width, height)
+            smaller_area_pdf_dim (DimensionsTuple): (width, height)
+
+        Returns:
+            DimensionsTuple: relative area dimension (width, height)
+        """
+        #calculate the ratio of bigger area dimensions to coresponding PDF dimensions (pdf for bigger area) 
+        bigger_width_ratio = bigger_area_dim[0] / bigger_area_pdf_dim[0]
+        bigger_length_ratio = bigger_area_dim[1] / bigger_area_pdf_dim[1]
+        #calculate the ratio of smaller area dimensions to coresponding PDF dimensions (pdf for smaller area) 
+        smaller_width_ratio = smaller_area_dim[0] / smaller_area_pdf_dim[0]
+        smaller_height_ratio = smaller_area_dim[1] / smaller_area_pdf_dim[1]
+        #calculate the ratio of width and length between the smaller and larger area
+        #based on their ratio to the corresponding dimensions of the PDF to which they are to be rendered
+        width_ratio = smaller_width_ratio / bigger_width_ratio
+        height_ratio = smaller_height_ratio / bigger_length_ratio
         
-        return width_ratio, length_ratio 
+        return width_ratio, height_ratio 
+    
+    @staticmethod
+    def calc_map_object_scaling_factor(map_dimensions_m, paper_dimensions_mm, areas_preview_ratios = None):
+        """_summary_
+
+        Args:
+            map_dimensions_m (_type_): _description_
+            paper_dimensions_mm (_type_): _description_
+            areas_preview_ratios (_type_, optional): Only if user want preview. Defaults to None.
+
+        Returns:
+            _type_: _description_
+        """
+        area_preview_scaling = 1
+        #if want to preview map can be zoomed or unzoomed -> need to adjust map objects to it (e.g. road width)
+        if(areas_preview_ratios is not None):
+            area_preview_scaling = (areas_preview_ratios[0] + areas_preview_ratios[1])/2
+        
+        map_scaling_factor = (map_dimensions_m[0] + map_dimensions_m[1]) / 2  
+        paper_scaling_factor = (paper_dimensions_mm[0] + paper_dimensions_mm[1])
+
+        return paper_scaling_factor / map_scaling_factor * area_preview_scaling
+        
