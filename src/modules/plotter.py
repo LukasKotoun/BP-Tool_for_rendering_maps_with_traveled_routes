@@ -11,25 +11,25 @@ from modules.utils import Utils
 class Plotter:    
     
     MM_TO_INCH = 25.4
-    def __init__(self, gdf_utils, geo_data_styler, ways_gdf, areas_gdf, gpxs_gdf,
-                 requred_area_gdf, paper_dimensions_mm, areas_preview_ratios, map_dimensions_m):
+    def __init__(self, gdf_utils, geo_data_styler, ways_element_gdf, areas_element_gdf, gpxs_gdf,
+                 requred_area_gdf, paper_dimensions_mm, map_object_scaling_factor):
         self.gdf_utils = gdf_utils
         self.geo_data_styler = geo_data_styler
-        self.ways_gdf = ways_gdf
-        self.areas_gdf = areas_gdf
+        self.ways_element_gdf = ways_element_gdf
+        self.areas_element_gdf = areas_element_gdf
         self.gpxs_gdf = gpxs_gdf
         self.reqired_area_gdf = requred_area_gdf
         self.paper_dimensions_mm = paper_dimensions_mm
-        self.map_object_scaling_factor = Utils.calc_map_object_scaling_factor(map_dimensions_m, paper_dimensions_mm, areas_preview_ratios)
+        self.map_object_scaling_factor = map_object_scaling_factor
 
-    def init_plot(self, map_bg_color, pdf_to_area_ratios = None):
+    def init_plot(self, map_bg_color, areas_ratios_preview = None):
         self.fig, self.ax = plt.subplots(figsize=(self.paper_dimensions_mm[0]/self.MM_TO_INCH,self.paper_dimensions_mm[1]/self.MM_TO_INCH)) #convert mm to inch
-        if(pdf_to_area_ratios is None):
+        if(areas_ratios_preview is None):
             self.fig.subplots_adjust(left=0, right=1, top=1, bottom=0)  # No margins
         else:
-            left_margin = (1-pdf_to_area_ratios[0])/ 2
+            left_margin = (1-areas_ratios_preview[0])/ 2
             right_margin = 1 - left_margin
-            bottom_margin = (1-pdf_to_area_ratios[1])/2
+            bottom_margin = (1-areas_ratios_preview[1])/2
             top_margin = 1 -bottom_margin
 
             self.fig.subplots_adjust(left=left_margin, right=right_margin, top=top_margin, bottom=bottom_margin) 
@@ -86,11 +86,11 @@ class Plotter:
     @time_measurement_decorator("wayplot")            
     def plot_ways(self):
         
-        if(self.ways_gdf.empty):
+        if(self.ways_element_gdf.empty):
             return
-        self.ways_gdf[StyleKey.LINEWIDTH] = self.ways_gdf[StyleKey.LINEWIDTH] * self.map_object_scaling_factor
+        self.ways_element_gdf[StyleKey.LINEWIDTH] = self.ways_element_gdf[StyleKey.LINEWIDTH] * self.map_object_scaling_factor
         
-        waterways_gdf, rest_gdf = self.gdf_utils.filter_gdf_in(self.ways_gdf, 'waterway')
+        waterways_gdf, rest_gdf = self.gdf_utils.filter_gdf_in(self.ways_element_gdf, 'waterway')
         self.__plot_waterways(waterways_gdf)
         
         highways_gdf, rest_gdf = self.gdf_utils.filter_gdf_in(rest_gdf, 'highway')
@@ -102,9 +102,9 @@ class Plotter:
 
             
     def plot_areas(self):
-        if(StyleKey.COLOR in self.areas_gdf):
+        if(StyleKey.COLOR in self.areas_element_gdf):
             #todo bounds tag filter
-            self.areas_gdf.plot(ax=self.ax, color = self.areas_gdf[StyleKey.COLOR] , alpha=1)
+            self.areas_element_gdf.plot(ax=self.ax, color = self.areas_element_gdf[StyleKey.COLOR] , alpha=1)
         else:
             pass
     
@@ -114,7 +114,7 @@ class Plotter:
         
     def clip(self, whole_area_bounds, clipped_area_color = 'white'):
         #clip
-        if(self.areas_gdf.empty):
+        if(self.areas_element_gdf.empty):
             return
         #todo function 
         whole_area_polygon = geometry.Polygon([
@@ -142,9 +142,9 @@ class Plotter:
         zoom_bounds = GdfUtils.get_bounds_gdf(self.reqired_area_gdf)
         # for preview page
         if(area_for_padding is not None):
-            width, height = GdfUtils.calc_dimensions(GdfUtils.get_bounds_gdf(area_for_padding))
+            width, height = GdfUtils.get_dimensions(GdfUtils.get_bounds_gdf(area_for_padding))
         else:
-            width, height = GdfUtils.calc_dimensions(zoom_bounds)
+            width, height = GdfUtils.get_dimensions(zoom_bounds)
         
         width_buffer = width * zoom_padding  # 1% of width
         height_buffer = height * zoom_padding  # 1% of height

@@ -1,22 +1,15 @@
 from common.custom_types import *
 from common.map_enums import *
 
-#------------cons--------------
 
-#there need to be every mentioned style
-EPSG_DEGREE_NUMBER = 4326 # world
-EPSG_METERS_NUMBER = 5514 # cz and sk - 5514, world 3857, europe 25833 
-
-
-OSM_FILE_NAME: str = '../osm_files/brno.osm.pbf'
+#--------------normal map area--------------
+OSM_FILE_NAME: str = '../osm_files/brno.osm.pbf' #todo need fix - cut bigger area than needed
 OSM_WANT_EXTRACT_AREA: bool = False
 OSM_OUTPUT_FILE_NAME: None | str = None # set if want osm file cutting using osmium command line tool (need to be uinstalled), If not set to None
-
-
-
 OUTPUT_PDF_NAME: str = '../pdfs/brno'
-
-AREA: str  = "Brno, Czech Republic"
+# AREA: str | list[Point] = [(-18.14143,65.68868),(-18.08538,65.68868),(-18.08538,65.67783),(-18.14143,65.67783)] #island
+# AREA: str | list[Point] = [(6.94872,4.84293),(6.99314,4.84293),(6.99314,4.81603),(6.94872,4.81603)] #afrika
+AREA: str | list[Point] = "Brno, Czech Republic"
 PAPER_DIMENSIONS: PaperSize | tuple[float | None, float | None] = PaperSize.A4.dimensions
 # PAPER_DIMENSIONS = (1200, None) # set own dimensions. If one is left as 'None' it will be automaticaly calculated using area size
 # PAPER_DIMENSIONS = (1500, None)
@@ -27,28 +20,33 @@ GIVEN_SMALLER_PAPER_DIMENSION: bool = True # what side of paper was set (smaller
 WANTED_ORIENTATION: MapOrientation = MapOrientation.AUTOMATIC
 
 
+#--------------preview--------------
 # NOTE: must have same settings as the resulting one when generating for large format printing
-WANT_PREVIEW: bool = False
-PREVIEW_AREA = "Jihomoravský kraj, Czech Republic" # area that you are previewing (the bigger one) 
+WANT_PREVIEW: bool = True
+OUTER_AREA = "Czech Republic" # area for that you are creating smaller preview (bigger than normal area) 
 
-PREVIEW_PAPER_DIMENSIONS= PaperSize.A0.dimensions # real paper size (bigger one)
-# PREVIEW_PAPER_DIMENSIONS = (1500, None) # or set own #if one is left none if will be automaticaly calculated by area size
+# OUTER_PAPER_DIMENSIONS= PaperSize.A0.dimensions # real paper size 
+OUTER_PAPER_DIMENSIONS = (1500, None) # or set own #if one is left none if will be automaticaly calculated by area size
 
-PREVIEW_GIVEN_SMALLER_PAPER_DIMENSION = True # what side of paper was set (smaller true bigger false)(only if only one side in custom dimension was set)
+OUTER_GIVEN_SMALLER_PAPER_DIMENSION = True # what side of paper was set (smaller true bigger false)(only if only one side in custom dimension was set)
 # set how will resulted paper be oriented
 # can be set to AUTOMATIC (Recommended), LANDSCAPE, PORTRAIT
 
-PREVIEW_WANTED_ORIENTATION = MapOrientation.AUTOMATIC
-#------------filters--------------
+OUTER_WANTED_ORIENTATION = MapOrientation.AUTOMATIC
 
 
 
-#todo here automatic wanted objects setup using map and pdf ratio - own class ()
+#todo here automatic wanted objects setup using map and pdf ratio automatic_filters_creating_factor - own class ()
 
 
+#------------cons--------------
 
+#there need to be every mentioned style
+EPSG_DEGREE_NUMBER = 4326 # world
+EPSG_METERS_NUMBER = 5514 # cz and sk - 5514, world 3857, europe 25833 
 
 GENERAL_DEFAULT_STYLES: dict[StyleKey, str | int | float] = {StyleKey.COLOR:'#EDEDE0',  StyleKey.ZINDEX :0, StyleKey.LINEWIDTH:0 , StyleKey.BGCOLOR: '#5d5d5d', StyleKey.LINESTYLE:'-'}
+#--------------filters--------------
 
 wanted_ways: WantedCategories = {
     'waterway': [],

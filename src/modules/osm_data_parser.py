@@ -13,10 +13,10 @@ class OsmDataParser(osmium.SimpleHandler):
                  way_additional_columns = [], area_additional_columns = [], 
                  reqired_map_area_name = None, get_required_area_from_osm = False):
         super().__init__()
-        self.way_tags = []
-        self.way_geometry = []
-        self.area_tags = []
-        self.area_geometry = []
+        self.ways_element_tags = []
+        self.ways_element_geometry = []
+        self.areas_element_tags = []
+        self.areas_element_geometry = []
         self.way_filters = way_filters
         self.area_filters = area_filters
         self.unwanted_ways_tags = unwanted_ways_tags
@@ -75,8 +75,8 @@ class OsmDataParser(osmium.SimpleHandler):
                 shapely_geometry = self.wkt_loads_func(self.geom_factory_linestring(way)) #convert osmium way to wkt str format and than to shapely linestring geometry
                 #! možná přidání které chci tagy pokud obsahuje ještě další tagy?, nebo udělat prostě 3 urovně měst
                 filtered_tags = {tag_key: tag_value for tag_key, tag_value in way.tags if tag_key in self.way_columns}
-                self.way_geometry.append(shapely_geometry)
-                self.way_tags.append(filtered_tags)
+                self.ways_element_geometry.append(shapely_geometry)
+                self.ways_element_tags.append(filtered_tags)
             except RuntimeError as e:
                 print(f"Invalid way geometry: {e}")
                 return
@@ -92,8 +92,8 @@ class OsmDataParser(osmium.SimpleHandler):
             try:
                 shapely_geometry = self.wkt_loads_func(self.geom_factory_polygon(area)) #convert osmium area to wkt str format and than to shapely polygon/multipolygon geometry 
                 filtered_tags = {tag_key: tag_value for tag_key, tag_value in area.tags if tag_key in self.area_columns}
-                self.area_geometry.append(shapely_geometry)
-                self.area_tags.append(filtered_tags)
+                self.areas_element_geometry.append(shapely_geometry)
+                self.areas_element_tags.append(filtered_tags)
             except RuntimeError as e:
                 print(f"Invalid area geometry: {e}")
                 return
@@ -103,10 +103,10 @@ class OsmDataParser(osmium.SimpleHandler):
             
     @time_measurement_decorator("gdf creating")
     def create_gdf(self, epgs_number):
-        print(f"AREA polygons: {sys.getsizeof(self.area_geometry)}, tags: {sys.getsizeof(self.area_tags)}")
-        print(f"WAY polygons: {sys.getsizeof(self.way_geometry)}, tags: {sys.getsizeof(self.way_tags)}")
-        ways_gdf = gpd.GeoDataFrame(pd.DataFrame(self.way_tags).assign(geometry=self.way_geometry), crs=f"EPSG:{epgs_number}")
-        areas_gdf = gpd.GeoDataFrame(pd.DataFrame(self.area_tags).assign(geometry=self.area_geometry), crs=f"EPSG:{epgs_number}")
+        print(f"AREA polygons: {sys.getsizeof(self.areas_element_geometry)}, tags: {sys.getsizeof(self.areas_element_tags)}")
+        print(f"WAY polygons: {sys.getsizeof(self.ways_element_geometry)}, tags: {sys.getsizeof(self.ways_element_tags)}")
+        ways_gdf = gpd.GeoDataFrame(pd.DataFrame(self.ways_element_tags).assign(geometry=self.ways_element_geometry), crs=f"EPSG:{epgs_number}")
+        areas_gdf = gpd.GeoDataFrame(pd.DataFrame(self.areas_element_tags).assign(geometry=self.areas_element_geometry), crs=f"EPSG:{epgs_number}")
         print(f"ways: {sys.getsizeof(ways_gdf)},  areas: {sys.getsizeof(areas_gdf)}, combined: {sys.getsizeof(ways_gdf) + sys.getsizeof(areas_gdf)}")
         return ways_gdf, areas_gdf
     
@@ -114,7 +114,7 @@ class OsmDataParser(osmium.SimpleHandler):
         return self.reqired_area_polygon
     
     def clear_gdf(self):
-        self.way_geometry.clear()
-        self.way_tags.clear()
-        self.area_geometry.clear()
-        self.area_tags.clear()
+        self.ways_element_geometry.clear()
+        self.ways_element_tags.clear()
+        self.areas_element_geometry.clear()
+        self.areas_element_tags.clear()

@@ -7,13 +7,13 @@ import osmnx as ox
 import pygeoops
 from common.map_enums import WorldSides, MapOrientation, StyleKey
 from config import EPSG_DEGREE_NUMBER
-from common.custom_types import BoundsDict, DimensionsTuple
+from common.custom_types import BoundsDict, DimensionsTuple, Point
 from common.common_helpers import time_measurement_decorator
 
 class GdfUtils:
     
     @staticmethod
-    def get_area_gdf(area: str | list[float]) -> gpd.GeoDataFrame:
+    def get_area_gdf(area: str | list[Point]) -> gpd.GeoDataFrame:
         if isinstance(area, str): 
             if area.endswith('.geojson'): 
                 reqired_area_gdf: gpd.GeoDataFrame = gpd.read_file(area) # Get area from geojson file
@@ -71,26 +71,26 @@ class GdfUtils:
                WorldSides.NORTH: bounds[3]}
     
     @staticmethod
-    def calc_dimensions(bounds: BoundsDict) -> DimensionsTuple:
+    def get_dimensions(bounds: BoundsDict) -> DimensionsTuple:
         width = bounds[WorldSides.EAST] - bounds[WorldSides.WEST]  # east - west
         height = bounds[WorldSides.NORTH] - bounds[WorldSides.SOUTH]  # north - south
         return width, height
     
     @staticmethod
-    def calc_dimensions_gdf(gdf: gpd.GeoDataFrame, epgs: int | None = None) -> DimensionsTuple:
+    def get_dimensions_gdf(gdf: gpd.GeoDataFrame, epgs: int | None = None) -> DimensionsTuple:
         bounds = GdfUtils.get_bounds_gdf(gdf, epgs=epgs)
-        return GdfUtils.calc_dimensions(bounds)
+        return GdfUtils.get_dimensions(bounds)
     
     @staticmethod
     def get_map_size(bounds: BoundsDict) -> float:
-        width, height = GdfUtils.calc_dimensions(bounds)
+        width, height = GdfUtils.get_dimensions(bounds)
         if width > height:
             return width
         else:
             return height
         
     @staticmethod
-    def get_map_size_from_gdf(*gdfs: gpd.GeoDataFrame) -> float: 
+    def get_map_size_gdf(*gdfs: gpd.GeoDataFrame) -> float: 
         bounds = GdfUtils.get_bounds_gdf(*gdfs)
         return GdfUtils.get_map_size(bounds)
    
