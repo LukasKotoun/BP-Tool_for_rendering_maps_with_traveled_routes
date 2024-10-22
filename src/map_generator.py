@@ -49,8 +49,7 @@ def main():
     if(OSM_WANT_EXTRACT_AREA):
         osm_data_preprocessor = OsmDataPreprocessor(OSM_FILE_NAME, OSM_OUTPUT_FILE_NAME, OSM_WANT_EXTRACT_AREA)
         osm_file_name = osm_data_preprocessor.extract_area(map_area_gdf)
-    osm_file_parser = OsmDataParser(wanted_ways, wanted_areas, unwanted_ways_tags, unwanted_areas_tags,
-                                    reqired_map_area_name=f'{AREA}', get_required_area_from_osm = False)
+    osm_file_parser = OsmDataParser(wanted_ways, wanted_areas, unwanted_ways_tags, unwanted_areas_tags)
     
     @time_measurement_decorator("apply file")
     def apply_file():

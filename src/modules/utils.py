@@ -31,9 +31,7 @@ class Utils:
         side_ratio: float = coresponding_map_side/given_paper_side
         resolved_pdf_side: float = other_map_side/side_ratio   
         return (given_paper_side, resolved_pdf_side)
-    
-        
-        
+      
     @staticmethod
     def adjust_paper_dimensions(map_dimensions: DimensionsTuple,
                           paper_dimensions: OptDimensionsTuple = PaperSize.A4.dimensions,
@@ -55,8 +53,6 @@ class Utils:
             paper_dimensions = Utils.set_orientation(paper_dimensions, map_orientaion)
         return paper_dimensions
     
-    
-    #function for zoom on preview 
     @staticmethod
     def get_relative_areas_ratio(bigger_area_dim: DimensionsTuple, bigger_area_pdf_dim: DimensionsTuple,
                         smaller_area_dim: DimensionsTuple,
