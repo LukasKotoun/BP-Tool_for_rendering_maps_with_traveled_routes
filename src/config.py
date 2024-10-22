@@ -53,6 +53,7 @@ EPSG_METERS_NUMBER = 5514 # cz and sk - 5514, world 3857, europe 25833
 GENERAL_DEFAULT_STYLES: dict[StyleKey, str | int | float] = {StyleKey.COLOR:'#EDEDE0',  StyleKey.ZINDEX :0, StyleKey.LINEWIDTH:0 , StyleKey.BGCOLOR: '#5d5d5d', StyleKey.LINESTYLE:'-'}
 #--------------filters--------------
 
+#wanted_ways: WantedFeatures
 wanted_ways: WantedCategories = {
     'waterway': [],
     # 'highway': ['motorway', 'trunk','primary', 'secondary'],
@@ -60,7 +61,7 @@ wanted_ways: WantedCategories = {
     # 'highway':[],
     'railway': ['rail']
 }
-
+# UnwantedFeaturesTags
 unwanted_ways_tags: UnwantedCategories  ={
     # 'highway':['coridor','via_ferrata','crossing','traffic_island','proposed','construction' ],
     'railway': {
@@ -84,7 +85,7 @@ unwanted_areas_tags: UnwantedCategories ={
 }
 
 #------------styles--------------
-
+#landuse_styles: FeaturesCategoryStyle
 landuse_styles: CategoryStyle = {
     'farmland': {StyleKey.COLOR: '#EDEDE0'},
     'forest': {StyleKey.COLOR: '#9FC98D'},
@@ -117,13 +118,12 @@ highway_styles: CategoryStyle = {
     'path': {StyleKey.COLOR: '#8f8364'},
     'residential': {StyleKey.COLOR: '#8f8364'}
 }
+
 railway_styles: CategoryStyle = {
     'rail': {StyleKey.COLOR: '#FFFFFF', StyleKey.ZINDEX: 1, StyleKey.LINEWIDTH: 5, StyleKey.BGCOLOR: '#5d5d5d'},
     'tram': {StyleKey.COLOR: '#404040', StyleKey.ZINDEX: 1, StyleKey.LINEWIDTH: 2},
     'tram_stop': {StyleKey.COLOR: '#404040', StyleKey.ZINDEX: 1, StyleKey.LINEWIDTH: 2},
 }
-
-
 
 building_styles: CategoryStyle = {
     'house': {StyleKey.COLOR: 'grey', StyleKey.ZINDEX: 1},
@@ -131,7 +131,7 @@ building_styles: CategoryStyle = {
 
 
 # Define attribute mapping with default values
-
+#CATEGORIES_STYLES : FeaturesCategoriesStyles
 CATEGORIES_STYLES: CategoriesStyles = {
     'building': (building_styles, {StyleKey.COLOR: '#B7DEA6', StyleKey.ZINDEX: 1, StyleKey.LINEWIDTH: 4}),
     'water': ({}, {StyleKey.COLOR: '#8FB8DB', StyleKey.ZINDEX: 1, StyleKey.LINEWIDTH: 4}),
