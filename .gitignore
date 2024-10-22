@@ -17,7 +17,7 @@
 /*.pbf
 /*.pdf
 /*.geojson
-/*.sh
+**/*.sh
 /exports
 /osm_files
 /pdfs

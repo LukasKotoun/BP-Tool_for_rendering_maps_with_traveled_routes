@@ -13,7 +13,8 @@ AREA: str | list[Point] = "Brno, Czech Republic"
 PAPER_DIMENSIONS: PaperSize | tuple[float | None, float | None] = PaperSize.A4.dimensions
 # PAPER_DIMENSIONS = (1200, None) # set own dimensions. If one is left as 'None' it will be automaticaly calculated using area size
 # PAPER_DIMENSIONS = (1500, None)
-GIVEN_SMALLER_PAPER_DIMENSION: bool = True # what side of paper was set (smaller true bigger false)(only if only one side in custom dimension was set)
+# only if only one side in custom dimension was set to None
+GIVEN_SMALLER_PAPER_DIMENSION: bool = True # what side of paper was set (smaller true bigger false)
 
 # set how will resulted paper be oriented
 # can be set to AUTOMATIC (Recommended), LANDSCAPE, PORTRAIT
@@ -22,7 +23,7 @@ WANTED_ORIENTATION: MapOrientation = MapOrientation.AUTOMATIC
 
 #--------------preview--------------
 # NOTE: must have same settings as the resulting one when generating for large format printing
-WANT_PREVIEW: bool = True
+WANT_PREVIEW: bool = False
 OUTER_AREA = "Czech Republic" # area for that you are creating smaller preview (bigger than normal area) 
 
 # OUTER_PAPER_DIMENSIONS= PaperSize.A0.dimensions # real paper size 
@@ -100,7 +101,7 @@ leisure_styles: CategoryStyle = {
 }
 	
 highway_styles: CategoryStyle = {
-   'motorway': {StyleKey.COLOR: '#8cd25f', StyleKey.ZINDEX: 7, StyleKey.LINEWIDTH: 16}, 
+    'motorway': {StyleKey.COLOR: '#8cd25f', StyleKey.ZINDEX: 7, StyleKey.LINEWIDTH: 16}, 
     'trunk': {StyleKey.COLOR: '#FDC364', StyleKey.ZINDEX: 6, StyleKey.LINEWIDTH: 13},
     'primary': {StyleKey.COLOR: '#FDC364', StyleKey.ZINDEX: 5, StyleKey.LINEWIDTH: 11},
     'secondary': {StyleKey.COLOR: '#F7ED60', StyleKey.ZINDEX: 4, StyleKey.LINEWIDTH: 10},

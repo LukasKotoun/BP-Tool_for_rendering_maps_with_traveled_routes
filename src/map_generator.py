@@ -57,9 +57,9 @@ def main():
         osm_file_parser.apply_file(osm_file_name)
     apply_file()
     
-    ways_element_gdf, areas_element_gdf = osm_file_parser.create_gdf(EPSG_DEGREE_NUMBER)
+    ways_gdf, areas_gdf = osm_file_parser.create_gdf(EPSG_DEGREE_NUMBER)
     osm_file_parser.clear_gdf()
-    total_map_bounds = GdfUtils.get_bounds_gdf(ways_element_gdf, areas_element_gdf)
+    total_map_bounds = GdfUtils.get_bounds_gdf(ways_gdf, areas_gdf)
     reqired_area_polygon = map_area_gdf.unary_union
     #check if area is inside osm file
     if(not GdfUtils.is_polygon_inside_bounds(total_map_bounds, reqired_area_polygon)):
@@ -67,22 +67,23 @@ def main():
         
     #------------filter some elements out------------
     # only for some ways categories
-    # ways_element_gdf = GdfUtils.filter_short_ways(ways_element_gdf, 10)
+    # ways_gdf = GdfUtils.filter_short_ways(ways_gdf, 10)
 
     #------------style elements------------
     #todo styles for ways and areas separeated - 2 geodata stylers
     geo_data_styler = StyleAssigner(CATEGORIES_STYLES, GENERAL_DEFAULT_STYLES)
-    ways_element_gdf = geo_data_styler.assign_styles_to_gdf(ways_element_gdf, wanted_ways, [StyleKey.COLOR, StyleKey.ZINDEX, StyleKey.LINEWIDTH])
-    areas_element_gdf = geo_data_styler.assign_styles_to_gdf(areas_element_gdf, wanted_areas, [StyleKey.COLOR, StyleKey.ZINDEX])
-    ways_element_gdf = GdfUtils.sort_gdf_by_column(ways_element_gdf, StyleKey.ZINDEX)
-    areas_element_gdf = GdfUtils.sort_gdf_by_column(areas_element_gdf, StyleKey.ZINDEX)
+
+    ways_gdf = geo_data_styler.assign_styles_to_gdf(ways_gdf, wanted_ways, [StyleKey.COLOR, StyleKey.ZINDEX, StyleKey.LINEWIDTH])
+    areas_gdf = geo_data_styler.assign_styles_to_gdf(areas_gdf, wanted_areas, [StyleKey.COLOR, StyleKey.ZINDEX])
+    ways_gdf = GdfUtils.sort_gdf_by_column(ways_gdf, StyleKey.ZINDEX)
+    areas_gdf = GdfUtils.sort_gdf_by_column(areas_gdf, StyleKey.ZINDEX)
     
     #todo check if gpx go somewhere outside reqired_area - add warning 
     gpx_processer =  GpxProcesser('../gpxs')
     gpxs_gdf = gpx_processer.get_gpxs_gdf(EPSG_DEGREE_NUMBER)
     
     
-    plotter = Plotter(GdfUtils, geo_data_styler, ways_element_gdf, areas_element_gdf, gpxs_gdf,
+    plotter = Plotter(GdfUtils, geo_data_styler, ways_gdf, areas_gdf, gpxs_gdf,
                              map_area_gdf, paper_dimensions_mm, map_object_scaling_factor)
     plotter.init_plot(GENERAL_DEFAULT_STYLES[StyleKey.COLOR], areas_ratios_preview)
     plotter.plot_areas()

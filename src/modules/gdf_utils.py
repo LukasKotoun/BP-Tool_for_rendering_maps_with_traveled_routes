@@ -107,7 +107,7 @@ class GdfUtils:
         if(gdf.empty):
             return gdf
         if(column_name in gdf):
-            return gdf.sort_values(by=column_name, ascending = ascending)
+           return gdf.sort_values(by=column_name, ascending = ascending).reset_index(drop=True)
         warnings.warn("Cannot sort - unexisting column name") 
         return gdf
     

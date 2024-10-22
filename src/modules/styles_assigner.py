@@ -1,7 +1,10 @@
+import warnings
+
 import pandas as pd
 from geopandas import GeoDataFrame
-from common.map_enums import StyleKey, MapOrientation
-from common.custom_types import  CategoriesStyles, WantedCategories, ItemStyles
+
+from common.map_enums import StyleKey
+from common.custom_types import  CategoriesStyles, WantedCategories, ItemStyles, CategoryStyle
 
 class StyleAssigner:
     def __init__(self, categories_styles: CategoriesStyles,
@@ -14,8 +17,10 @@ class StyleAssigner:
         assigned_styles: ItemStyles = {}
         for category_name, (category_map, category_default_styles) in available_styles.items():
             if category_name in row and pd.notna(row[category_name]):
-                category_styles = category_map.get(row[category_name], category_default_styles) #retrieve record for a specific key (e.g. landues) and value (e.g. forest) combination in the map or retrieve the default value for that key.
-                for style_key, default_style in category_default_styles.items(): # select individual values from the category styles or use default values if there are none individual in the record
+                #retrieve record for a specific key (e.g. landues) and value (e.g. forest) combination in the map or retrieve the default value for that key.
+                category_styles = category_map.get(row[category_name], category_default_styles) 
+                # select individual values from the category styles or use default values if there are none individual in the record
+                for style_key, default_style in category_default_styles.items():
                     category_style = category_styles.get(style_key)
                     assigned_styles[style_key] = category_style if category_style is not None else default_style 
                 # one category was found - row can be in one category only 
@@ -32,21 +37,24 @@ class StyleAssigner:
             if category_name in wanted_categories: #check if category can be in gdf
                 category_filter: list[str] = wanted_categories[category_name]
                 if category_filter: #get style for only some items in category
-                    filtered_category_styles: MapOrientation = {      
-                        category_item: {style_key: item_styles[style_key] for style_key in wanted_styles if style_key in item_styles} #filter only wanted styles for item in category (e.g. color)
+                    category_styles_filtered: CategoryStyle = {      
+                        #filter only wanted styles for item in category (e.g. color)
+                        category_item: {style_key: item_styles[style_key] for style_key in wanted_styles if style_key in item_styles} 
                         for category_item, item_styles in category_style.items()
                         if category_item in category_filter     #filter wanted items
                     }
                 else:  #get style for all items in category
-                    filtered_category_styles: MapOrientation = {
-                        category_item: {style_key: item_styles[style_key] for style_key in wanted_styles if style_key in item_styles} #filter only wanted styles for item in category (e.g. color)
+                    category_styles_filtered: CategoryStyle = {
+                        # filter only wanted styles for item in category (e.g. color)
+                        category_item: {style_key: item_styles[style_key] for style_key in wanted_styles if style_key in item_styles} 
                         for category_item, item_styles in category_style.items()
                     }
-                filtered_categories_styles[category_name] = (filtered_category_styles, 
+                #store filtered category styles with category default styles
+                filtered_categories_styles[category_name] = (category_styles_filtered, 
                                                             {style_key: category_default_styles[style_key] for style_key in wanted_styles 
-                                                            if style_key in category_default_styles}) #store filterd category with wanted default styles
+                                                            if style_key in category_default_styles})
         return filtered_categories_styles 
-    
+
     def assign_styles_to_gdf(self, gdf: GeoDataFrame, wanted_categories: WantedCategories,
                             wanted_styles: list[StyleKey]) -> GeoDataFrame:
         if(gdf.empty):
@@ -54,6 +62,10 @@ class StyleAssigner:
         gdf_available_styles = self._filter_category_styles(wanted_categories, wanted_styles)
         if(gdf_available_styles):
             styles_columns = gdf.apply(lambda row: self._assign_styles_to_row(row, gdf_available_styles, wanted_styles), axis=1).tolist()
-            return gdf.join(pd.DataFrame(styles_columns))
-        print("assign_styles_to_gdf: avilable styles are empty")
+            styled_gdf = gdf.join(pd.DataFrame(styles_columns))     
+            for style_column in wanted_styles:
+                if(style_column in styled_gdf and styled_gdf[style_column].dtype == object):
+                    styled_gdf[style_column] = styled_gdf[style_column].astype("category")            
+            return styled_gdf
+        warnings.warn("assign_styles_to_gdf: avilable styles are empty")
         return gdf
