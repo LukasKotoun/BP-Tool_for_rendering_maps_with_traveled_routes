@@ -90,7 +90,7 @@ def main():
     plotter.plot_ways()
     plotter.plot_gpxs()
     plotter.clip(total_map_bounds)
-    plotter.zoom(zoom_percent_padding=1)
+    plotter.zoom(zoom_percent_padding=PERCENTAGE_PADDING)
     plotter.plot_map_boundary()
     plotter.generate_pdf(OUTPUT_PDF_NAME)
     # plotter.show_plot()

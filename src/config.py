@@ -12,7 +12,7 @@ OUTPUT_PDF_NAME: str = '../pdfs/brno'
 AREA: str | list[Point] = "Brno, Czech Republic"
 PAPER_DIMENSIONS: PaperSize | tuple[float | None, float | None] = PaperSize.A4.dimensions
 # PAPER_DIMENSIONS = (1200, None) # set own dimensions. If one is left as 'None' it will be automaticaly calculated using area size
-# PAPER_DIMENSIONS = (1500, None)
+# PAPER_DIMENSIONS = (1100, None)
 # only if only one side in custom dimension was set to None
 GIVEN_SMALLER_PAPER_DIMENSION: bool = True # what side of paper was set (smaller true bigger false)
 
@@ -20,6 +20,9 @@ GIVEN_SMALLER_PAPER_DIMENSION: bool = True # what side of paper was set (smaller
 # can be set to AUTOMATIC (Recommended), LANDSCAPE, PORTRAIT
 WANTED_ORIENTATION: MapOrientation = MapOrientation.AUTOMATIC
 
+# NOTE: must have same settings as the resulting one when generating for large format printing
+# padding from page borders
+PERCENTAGE_PADDING = 1
 
 #--------------preview--------------
 # NOTE: must have same settings as the resulting one when generating for large format printing
@@ -27,7 +30,8 @@ WANT_PREVIEW: bool = False
 OUTER_AREA = "Czech Republic" # area for that you are creating smaller preview (bigger than normal area) 
 
 # OUTER_PAPER_DIMENSIONS= PaperSize.A0.dimensions # real paper size 
-OUTER_PAPER_DIMENSIONS = (1500, None) # or set own #if one is left none if will be automaticaly calculated by area size
+OUTER_PAPER_DIMENSIONS = (1100, None) # or set own #if one is left none if will be automaticaly calculated by area size
+
 
 OUTER_GIVEN_SMALLER_PAPER_DIMENSION = True # what side of paper was set (smaller true bigger false)(only if only one side in custom dimension was set)
 # set how will resulted paper be oriented
@@ -54,7 +58,7 @@ wanted_ways: WantedCategories = {
     # 'highway': ['motorway', 'trunk','primary', 'secondary'],
     'highway': [ 'motorway', 'trunk','primary', 'secondary','tertiary','unclassified', 'residential','path', 'footway' ],
     # 'highway':[],
-    'railway': ['rail', 'tram']
+    'railway': ['rail']
 }
 
 unwanted_ways_tags: UnwantedCategories  ={
