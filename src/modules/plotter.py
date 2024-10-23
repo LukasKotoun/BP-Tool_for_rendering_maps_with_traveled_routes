@@ -117,8 +117,12 @@ class Plotter:
         if(self.areas_element_gdf.empty):
             return
         whole_area_polygon = GdfUtils.create_polygon_from_bounds(whole_area_bounds)
-      
+       
         clipping_polygon = whole_area_polygon.difference(self.reqired_area_gdf.unary_union)
+        if(not GdfUtils.is_polygon_inside_polygon(whole_area_polygon, clipping_polygon)):
+            return
+            
+        
         # clipping_polygon = geometry.MultiPolygon([clipping_polygon]) - epsg in constructor
         clipping_polygon = gpd.GeoDataFrame(geometry=[clipping_polygon], crs=f"EPSG:{EPSG_DEGREE_NUMBER}")
         

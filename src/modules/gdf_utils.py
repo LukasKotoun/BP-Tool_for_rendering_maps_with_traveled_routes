@@ -122,8 +122,12 @@ class GdfUtils:
     
     @staticmethod
     def is_polygon_inside_bounds(area_bounds: BoundsDict, polygon: geometry.polygon) -> bool:
-        polygon_from_bounds =GdfUtils.create_polygon_from_bounds(area_bounds)
-        return polygon_from_bounds.contains(polygon)
+        return GdfUtils.is_polygon_inside_polygon(GdfUtils.create_polygon_from_bounds(area_bounds), polygon)
+
+    
+    @staticmethod
+    def is_polygon_inside_polygon(outer: geometry.polygon, inner: geometry.polygon) -> bool:
+        return outer.contains(inner)
     
     @staticmethod
     def sort_gdf_by_column(gdf: gpd.GeoDataFrame, column_name: StyleKey, ascending: bool = True) -> gpd.GeoDataFrame:
