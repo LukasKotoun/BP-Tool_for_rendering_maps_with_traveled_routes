@@ -1,4 +1,5 @@
 import math
+from shapely.geometry import Point
 
 from config import * 
 from common.custom_types import DimensionsTuple, OptDimensionsTuple
@@ -54,7 +55,7 @@ class Utils:
         return paper_dimensions
     
     @staticmethod
-    def get_relative_areas_ratio(bigger_area_dim: DimensionsTuple, bigger_area_pdf_dim: DimensionsTuple,
+    def calc_zoom_for_smaller_area(bigger_area_dim: DimensionsTuple, bigger_area_pdf_dim: DimensionsTuple,
                         smaller_area_dim: DimensionsTuple,
                         smaller_area_pdf_dim: DimensionsTuple) -> DimensionsTuple:
         """Calculate ares ratio relative to pdf size coresponding to areas.
@@ -70,40 +71,61 @@ class Utils:
             smaller_area_pdf_dim (DimensionsTuple): (width, height)
 
         Returns:
-            DimensionsTuple: relative area dimension (width, height)
+            DimensionsTuple: relative ratio area dimension (width, height) 
+            if is <1 bigger area will have smaller detail - need unzoom in smaler area
+            if is >1 bigger area will have bigger detail - need zoom in smaler area
         """
-        #calculate the ratio of bigger area dimensions to coresponding PDF dimensions (pdf for bigger area) 
-        bigger_width_ratio = bigger_area_dim[0] / bigger_area_pdf_dim[0]
-        bigger_length_ratio = bigger_area_dim[1] / bigger_area_pdf_dim[1]
-        #calculate the ratio of smaller area dimensions to coresponding PDF dimensions (pdf for smaller area) 
-        smaller_width_ratio = smaller_area_dim[0] / smaller_area_pdf_dim[0]
-        smaller_height_ratio = smaller_area_dim[1] / smaller_area_pdf_dim[1]
-        #calculate the ratio of width and length between the smaller and larger area
-        #based on their ratio to the corresponding dimensions of the PDF to which they are to be rendered
-        width_ratio = smaller_width_ratio / bigger_width_ratio
-        height_ratio = smaller_height_ratio / bigger_length_ratio
+
+        # calc level of detail - bigger number => can have more details
+        bigger_area_detail_level = Utils.calc_ratios(bigger_area_pdf_dim, bigger_area_dim)
+        # calc level of detail - bigger number => can have more details
+        smaller_area_detail_level = Utils.calc_ratios(smaller_area_pdf_dim, smaller_area_dim)
         
-        return width_ratio, height_ratio 
-    
+        # if bigger area have bigger detail level than smaller area => need zoom (to increase detail for preview)  on smaller area
+        # if smaller area have bigger detail level than bigger area => need unzoom (to decrease detail for preview) on smaller area
+        width_zoom = bigger_area_detail_level[0] / smaller_area_detail_level[0]
+        height_zoom = bigger_area_detail_level[1] / smaller_area_detail_level[1] 
+        
+        return width_zoom, height_zoom 
     @staticmethod
-    def calc_map_object_scaling_factor(map_dimensions_m, paper_dimensions_mm, areas_preview_ratios = None):
+    def calc_ratios(area1: DimensionsTuple, area2: DimensionsTuple) -> DimensionsTuple:
+        #calculate the ratio area1 to area2 
+        width_ratio = area1[0] / area2[0]
+        height_ratio = area1[1] / area2[1]
+        return width_ratio, height_ratio
+       
+    #funkce která na zakladě střed, a pomeru velikosti vetší oblasti a papíru zjistí potřebnou velikost oblasti a vrátí ji jako polygon 
+
+    @staticmethod
+    def calc_bounds_to_fill_paper(center_point: Point, pdf_dim: DimensionsTuple,
+                                  bigger_area_dim: DimensionsTuple, bigger_pdf_dim: DimensionsTuple) -> BoundsDict:
+        area_to_pdf_ratio = Utils.calc_ratios(bigger_pdf_dim, bigger_area_dim)
+         
+        # expressed coefficient from the equation center_point * (1+coefficient) - center_point * (1-coefficient) = area_to_pdf_ratio
+        width_coefficient = pdf_dim[0] / (2 * center_point.x * area_to_pdf_ratio[0])
+        height_coefficient = pdf_dim[1] / (2 * center_point.y * area_to_pdf_ratio[1])
+
+        return{
+            WorldSides.WEST: center_point.x * (1 - width_coefficient),
+            WorldSides.SOUTH: center_point.y * (1 - height_coefficient),
+            WorldSides.EAST:  center_point.x * (1 + width_coefficient),
+            WorldSides.NORTH: center_point.y * (1 + height_coefficient)
+        }
+     
+    @staticmethod
+    def calc_map_object_scaling_factor(map_dimensions_m, paper_dimensions_mm):
         """_summary_
 
         Args:
             map_dimensions_m (_type_): _description_
             paper_dimensions_mm (_type_): _description_
-            areas_preview_ratios (_type_, optional): Only if user want preview. Defaults to None.
 
         Returns:
             _type_: _description_
         """
-        area_preview_scaling = 1
-        #if want to preview map can be zoomed or unzoomed -> need to adjust map objects to it (e.g. road width)
-        if(areas_preview_ratios is not None):
-            area_preview_scaling = (areas_preview_ratios[0] + areas_preview_ratios[1])/2
-        
-        map_scaling_factor = (map_dimensions_m[0] + map_dimensions_m[1]) / 2  
+
+        map_scaling_factor = (map_dimensions_m[0] + map_dimensions_m[1]) 
         paper_scaling_factor = (paper_dimensions_mm[0] + paper_dimensions_mm[1])
 
-        return paper_scaling_factor / map_scaling_factor * area_preview_scaling
+        return paper_scaling_factor / map_scaling_factor
         

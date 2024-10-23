@@ -27,12 +27,12 @@ class Plotter:
         if(areas_ratios_preview is None):
             self.fig.subplots_adjust(left=0, right=1, top=1, bottom=0)  # No margins
         else:
-            left_margin = (1-areas_ratios_preview[0])/ 2
+            left_margin = (1-areas_ratios_preview[0])/2
             right_margin = 1 - left_margin
             bottom_margin = (1-areas_ratios_preview[1])/2
             top_margin = 1 -bottom_margin
-
             self.fig.subplots_adjust(left=left_margin, right=right_margin, top=top_margin, bottom=bottom_margin) 
+            
         self.ax.axis('off')
         self.ax.set_aspect('equal')
         self.reqired_area_gdf.plot(ax=self.ax, color=map_bg_color, linewidth=1)
@@ -116,39 +116,32 @@ class Plotter:
         #clip
         if(self.areas_element_gdf.empty):
             return
-        #todo function 
-        whole_area_polygon = geometry.Polygon([
-            (whole_area_bounds[WorldSides.EAST], whole_area_bounds[WorldSides.SOUTH]),  
-            (whole_area_bounds[WorldSides.EAST], whole_area_bounds[WorldSides.NORTH]),  
-            (whole_area_bounds[WorldSides.WEST], whole_area_bounds[WorldSides.NORTH]),  
-            (whole_area_bounds[WorldSides.WEST], whole_area_bounds[WorldSides.SOUTH]),  
-            (whole_area_bounds[WorldSides.EAST], whole_area_bounds[WorldSides.SOUTH])   # Closing the polygon
-        ])
+        whole_area_polygon = GdfUtils.create_polygon_from_bounds(whole_area_bounds)
       
         clipping_polygon = whole_area_polygon.difference(self.reqired_area_gdf.unary_union)
-        # clipping_polygon = geometry.MultiPolygon([clipping_polygon])
+        # clipping_polygon = geometry.MultiPolygon([clipping_polygon]) - epsg in constructor
         clipping_polygon = gpd.GeoDataFrame(geometry=[clipping_polygon], crs=f"EPSG:{EPSG_DEGREE_NUMBER}")
         
         clipping_polygon.plot(ax=self.ax, color=clipped_area_color, alpha=1, zorder=3)
         
     
-    def plot_map_boundary(self, color = 'black', linewidth = 1):
-        self.reqired_area_gdf.boundary.plot(ax=self.ax, color=color, linewidth=linewidth, zorder=3)
- 
+    def plot_area_boundary(self, area_gdf = None, color = 'black', linewidth = 1):
+        if(area_gdf is None):
+            self.reqired_area_gdf.boundary.plot(ax=self.ax, color=color, linewidth=linewidth, zorder=3)
+        else:
+            area_gdf.boundary.plot(ax=self.ax, color=color, linewidth=linewidth, zorder=3)
+            
     #use function to get gdf sizes - same as in ways
     #todo change to names
-    def zoom(self, area_for_padding = None, zoom_percent_padding = 1):
+    def zoom(self, zoom_percent_padding = 1):
         zoom_padding = zoom_percent_padding / 100 #convert from percent
-        zoom_bounds = GdfUtils.get_bounds_gdf(self.reqired_area_gdf)
-        # for preview page
-        if(area_for_padding is not None):
-            width, height = GdfUtils.get_dimensions(GdfUtils.get_bounds_gdf(area_for_padding))
-        else:
-            width, height = GdfUtils.get_dimensions(zoom_bounds)
         
+        zoom_bounds = GdfUtils.get_bounds_gdf(self.reqired_area_gdf)
+        width, height = GdfUtils.get_dimensions(zoom_bounds)
+
         width_buffer = width * zoom_padding  # 1% of width
         height_buffer = height * zoom_padding  # 1% of height
-
+     
         self.ax.set_xlim([zoom_bounds[WorldSides.WEST] - width_buffer, zoom_bounds[WorldSides.EAST] + width_buffer])  # Expand x limits
         self.ax.set_ylim([zoom_bounds[WorldSides.SOUTH] - height_buffer, zoom_bounds[WorldSides.NORTH] + height_buffer])  # Expand y limits
         
