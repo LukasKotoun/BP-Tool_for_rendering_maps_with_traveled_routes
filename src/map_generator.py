@@ -34,9 +34,6 @@ def main():
                                            outer_map_area_dimensions, outer_paper_dimensions_mm)
             original_map_area_gdf = map_area_gdf
             map_area_gdf = GdfUtils.create_gdf_from_bounds(paper_fill_bounds, EPSG_DEGREE_NUMBER)
-            map_area_dimensions_m = GdfUtils.get_dimensions_gdf(map_area_gdf, EPSG_METERS_NUMBER)
-            paper_dimensions_mm = Utils.adjust_paper_dimensions(map_area_dimensions_m, PAPER_DIMENSIONS,
-                                                  GIVEN_SMALLER_PAPER_DIMENSION, WANTED_ORIENTATION)
             #no need to calc area_zoom_preview - will be 1 
         else:
             map_area_dimensions = GdfUtils.get_dimensions_gdf(map_area_gdf)
@@ -105,10 +102,10 @@ def main():
     plotter.clip(total_map_bounds)
         
     if(PLOT_AREA_BOUNDARY and original_map_area_gdf is not None):
-        plotter.plot_area_boundary(area_gdf = original_map_area_gdf)
+        plotter.plot_area_boundary(area_gdf = original_map_area_gdf, linewidth=AREA_BOUNDARY_LINEWIDTH)
     elif(PLOT_AREA_BOUNDARY):
         # will use defailt (wanted)
-        plotter.plot_area_boundary()
+        plotter.plot_area_boundary(linewidth=AREA_BOUNDARY_LINEWIDTH)
         
     plotter.zoom(zoom_percent_padding=PERCENTAGE_PADDING)
     plotter.generate_pdf(OUTPUT_PDF_NAME)

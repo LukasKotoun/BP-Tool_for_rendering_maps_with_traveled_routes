@@ -131,9 +131,9 @@ class Plotter:
     
     def plot_area_boundary(self, area_gdf = None, color = 'black', linewidth = 1):
         if(area_gdf is None):
-            self.reqired_area_gdf.boundary.plot(ax=self.ax, color=color, linewidth=linewidth, zorder=3)
+            self.reqired_area_gdf.boundary.plot(ax=self.ax, color=color, linewidth=linewidth*self.map_object_scaling_factor, zorder=3)
         else:
-            area_gdf.boundary.plot(ax=self.ax, color=color, linewidth=linewidth, zorder=3)
+            area_gdf.boundary.plot(ax=self.ax, color=color, linewidth=linewidth*self.map_object_scaling_factor, zorder=3)
             
     #use function to get gdf sizes - same as in ways
     #todo change to names

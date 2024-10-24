@@ -12,7 +12,7 @@ OUTPUT_PDF_NAME: str = '../pdfs/brno_center_JihMorOsm'
 AREA: str | list[Point] = "Brno, Czech Republic"
 PAPER_DIMENSIONS: PaperSize | tuple[float | None, float | None] = PaperSize.A4.dimensions
 # PAPER_DIMENSIONS = (1200, None) # set own dimensions. If one is left as 'None' it will be automaticaly calculated using area size
-# PAPER_DIMENSIONS = (1500, None)
+# PAPER_DIMENSIONS = (400, None)
 # only if only one side in custom dimension was set to None
 GIVEN_SMALLER_PAPER_DIMENSION: bool = True # what side of paper was set (smaller true bigger false)
 
@@ -23,6 +23,8 @@ WANTED_ORIENTATION: MapOrientation = MapOrientation.AUTOMATIC
 # NOTE: must have same settings as the resulting one when generating for large format printing
 # padding from page borders
 PERCENTAGE_PADDING = 1
+PLOT_AREA_BOUNDARY = False
+AREA_BOUNDARY_LINEWIDTH = 200
 
 #--------------preview--------------
 # NOTE: must have same settings as the resulting one when generating for large format printing
@@ -48,8 +50,7 @@ OUTER_WANTED_ORIENTATION = MapOrientation.AUTOMATIC
 
 
 #------------cons--------------
-PLOT_AREA_BOUNDARY = False
-AREA_BOUNDARY_LINEWIDTH = 40
+
 #there need to be every mentioned style
 EPSG_DEGREE_NUMBER = 4326 # world
 EPSG_METERS_NUMBER = 5514 # cz and sk - 5514, world 3857, europe 25833 
