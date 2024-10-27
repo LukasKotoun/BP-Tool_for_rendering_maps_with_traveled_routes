@@ -3,10 +3,10 @@ from common.map_enums import *
 
 
 #--------------normal map area--------------
-OSM_FILE_NAME: str = '../osm_files/jihmor.osm.pbf' #todo need fix - cut bigger area than needed
+OSM_FILE_NAME: str = '../osm_files/brno.osm.pbf' #todo need fix - cut bigger area than needed
 OSM_WANT_EXTRACT_AREA: bool = False
 OSM_OUTPUT_FILE_NAME: None | str = None # set if want osm file cutting using osmium command line tool (need to be uinstalled), If not set to None
-OUTPUT_PDF_NAME: str = '../pdfs/brno_center_JihMorOsm'
+OUTPUT_PDF_NAME: str = '../pdfs/brno'
 # AREA: str | list[Point] = [(-18.14143,65.68868),(-18.08538,65.68868),(-18.08538,65.67783),(-18.14143,65.67783)] #island
 # AREA: str | list[Point] = [(6.94872,4.84293),(6.99314,4.84293),(6.99314,4.81603),(6.94872,4.81603)] #afrika
 AREA: str | list[Point] = "Brno, Czech Republic"
@@ -23,7 +23,7 @@ WANTED_ORIENTATION: MapOrientation = MapOrientation.AUTOMATIC
 # NOTE: must have same settings as the resulting one when generating for large format printing
 # padding from page borders
 PERCENTAGE_PADDING = 1
-PLOT_AREA_BOUNDARY = False
+PLOT_AREA_BOUNDARY = True
 AREA_BOUNDARY_LINEWIDTH = 200
 
 #--------------preview--------------

@@ -101,7 +101,8 @@ class Utils:
                                   bigger_area_dim: DimensionsTuple, bigger_pdf_dim: DimensionsTuple) -> BoundsDict:
         area_to_pdf_ratio = Utils.calc_ratios(bigger_pdf_dim, bigger_area_dim)
          
-        # expressed coefficient from the equation center_point * (1+coefficient) - center_point * (1-coefficient) = area_to_pdf_ratio
+        # expressed coefficient from the equation pdf_dim / (center_point * (1+coefficient) - center_point * (1-coefficient)) = bigger_pdf_dim / bigger_area_dim
+        # where bigger_pdf_dim / bigger_area_dim is area_to_pdf_ratio, (center_point * (1+coefficient) - center_point * (1-coefficient)) is area_dim (length of height or width)
         width_coefficient = pdf_dim[0] / (2 * center_point.x * area_to_pdf_ratio[0])
         height_coefficient = pdf_dim[1] / (2 * center_point.y * area_to_pdf_ratio[1])
 
