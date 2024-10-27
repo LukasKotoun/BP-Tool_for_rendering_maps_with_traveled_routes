@@ -12,6 +12,15 @@ from modules.gpx_processer import GpxProcesser
 from common.common_helpers import time_measurement_decorator
 
 def calc_preview(map_area_gdf, paper_dimensions_mm):
+    """
+        NOTE: using constants from config file
+    Args:
+        map_area_gdf (_type_): _description_
+        paper_dimensions_mm (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
     outer_area_gdf = GdfUtils.get_area_gdf(OUTER_AREA, EPSG_DEGREE_NUMBER)
     outer_map_area_dimensions = GdfUtils.get_dimensions_gdf(outer_area_gdf)
     outer_map_area_dimensions_m = GdfUtils.get_dimensions_gdf(outer_area_gdf, EPSG_METERS_NUMBER)
@@ -19,18 +28,23 @@ def calc_preview(map_area_gdf, paper_dimensions_mm):
     outer_paper_dimensions_mm = Utils.adjust_paper_dimensions(outer_map_area_dimensions_m, OUTER_PAPER_DIMENSIONS,
                                                             OUTER_GIVEN_SMALLER_PAPER_DIMENSION,
                                                             OUTER_WANTED_ORIENTATION)
+    #in meteres for same proportion keeping
+    map_object_scaling_factor = (Utils.calc_map_object_scaling_factor(outer_map_area_dimensions_m,
+                                                                     outer_paper_dimensions_mm)
+                                * LINEWIDTH_MULTIPLIER)
+    # calc map factor for creating automatic array with wanted elements - for preview area (without area_zoom_preview)
+    # map_object_scaling_automatic_filters_creating = Utils.calc_map_object_scaling_factor(outer_map_area_dimensions_m, outer_paper_dimensions_mm)
+    # map_pdf_ratio_auto_filter = sum(Utils.calc_ratios(outer_paper_dimensions_mm, outer_map_area_dimensions_m))/2
+   
     if(TURN_OFF_AREA_CLIPPING):
         area_zoom_preview = None
-        #calc bounds so area_zoom_preview will be 1 -  paper in mm and areas in degrees (meters are not precies)
+        #calc bounds so area_zoom_preview will be 1 - paper in mm and areas in degrees (meters are not precies)
         paper_fill_bounds = Utils.calc_bounds_to_fill_paper(map_area_gdf.unary_union.centroid,
                                                             paper_dimensions_mm, outer_map_area_dimensions,
                                                             outer_paper_dimensions_mm)
         # area will be changing -> create copy for bounds ploting
         map_area_gdf = GdfUtils.create_gdf_from_bounds(paper_fill_bounds, EPSG_DEGREE_NUMBER)
-
-        #no need to calc area_zoom_preview - will be 1 
     else:
-        # area will not be changin, dont need copy
         map_area_dimensions = GdfUtils.get_dimensions_gdf(map_area_gdf)
         # calc zoom - paper in mm and areas in degrees (meters are not precies)
         # if want clipping instead of bounds calculation calculate need zoom/unzoom 
@@ -38,25 +52,18 @@ def calc_preview(map_area_gdf, paper_dimensions_mm):
             outer_map_area_dimensions, outer_paper_dimensions_mm,
             map_area_dimensions, paper_dimensions_mm,
         )
-        # calc map factor for creating automatic array with wanted elements - for preview area (without area_zoom_preview)
-        # map_object_scaling_automatic_filters_creating = Utils.calc_map_object_scaling_factor(outer_map_area_dimensions_m, outer_paper_dimensions_mm)
-        # map_pdf_ratio_auto_filter = sum(Utils.calc_ratios(outer_paper_dimensions_mm, outer_map_area_dimensions_m))/2
-    #in meteres for same proportion keeping
-    map_object_scaling_factor = (Utils.calc_map_object_scaling_factor(outer_map_area_dimensions_m,
-                                                                     outer_paper_dimensions_mm)
-                                * LINEWIDTH_MULTIPLIER)
+    
     return area_zoom_preview, map_object_scaling_factor, map_area_gdf 
 
 
 @time_measurement_decorator("main")
 def main():
-    #------------get map area and calc paper sizes, (for preview calc ratios between plotting area and bigger area (preview)
+    #------------get map area and calc paper sizes, and calc preview
     map_area_gdf = GdfUtils.get_area_gdf(AREA, EPSG_DEGREE_NUMBER)
     boundary_map_area_gdf = map_area_gdf.copy()
     map_area_dimensions_m = GdfUtils.get_dimensions_gdf(map_area_gdf, EPSG_METERS_NUMBER)
     paper_dimensions_mm = Utils.adjust_paper_dimensions(map_area_dimensions_m, PAPER_DIMENSIONS,
                                                   GIVEN_SMALLER_PAPER_DIMENSION, WANTED_ORIENTATION)
-
     if(WANT_PREVIEW):
         (area_zoom_preview, map_object_scaling_factor,
          map_area_gdf) = calc_preview(map_area_gdf, paper_dimensions_mm)
