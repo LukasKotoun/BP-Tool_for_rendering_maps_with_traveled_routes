@@ -61,7 +61,8 @@ class GdfUtils:
             WorldSides.EAST: east,
             WorldSides.NORTH: north
             }
-        
+    
+    
     @staticmethod
     def get_polygon_bounds(polygon: geometry.polygon) -> BoundsDict:
         bounds: tuple[float] = polygon.bounds #[WorldSides.WEST, WorldSides.SOUTH, WorldSides.EAST, WorldSides.NORTH]
@@ -124,9 +125,28 @@ class GdfUtils:
     def is_polygon_inside_bounds(area_bounds: BoundsDict, polygon: geometry.polygon) -> bool:
         return GdfUtils.is_polygon_inside_polygon(GdfUtils.create_polygon_from_bounds(area_bounds), polygon)
 
+    @staticmethod 
+    def create_polygon_from_gdf_bounds(*gdfs: gpd.GeoDataFrame, epgs: int | None = None) -> geometry.polygon:
+        bounds = GdfUtils.get_bounds_gdf(*gdfs, epgs=epgs)
+        return GdfUtils.create_polygon_from_bounds(bounds)
     
+    @staticmethod 
+    def create_polygon_from_gdf(*gdfs: gpd.GeoDataFrame, epgs: int | None = None) -> geometry.polygon:
+        if(len(gdfs) == 1):
+            if(epgs is None):
+                return gdfs[0].unary_union
+            gdf_edit = gdfs[0].to_crs(epsg=epgs)    
+            return gdf_edit.unary_union
+        else:
+            if(epgs is None):
+                combined_gdf = gpd.GeoDataFrame(pd.concat(gdfs, ignore_index=True), crs=gdfs[0].crs)
+            else:
+                combined_gdf = gpd.GeoDataFrame(pd.concat(gdfs, ignore_index=True), crs=gdfs[0].crs, epgs = epgs)
+            return combined_gdf.unary_union
+    
+
     @staticmethod
-    def is_polygon_inside_polygon(outer: geometry.polygon, inner: geometry.polygon) -> bool:
+    def is_polygon_inside_polygon(inner: geometry.polygon, outer: geometry.polygon) -> bool:
         return outer.contains(inner)
     
     @staticmethod

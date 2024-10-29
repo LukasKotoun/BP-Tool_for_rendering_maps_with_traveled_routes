@@ -112,16 +112,22 @@ class Plotter:
         self.gpxs_gdf.plot(ax = self.ax,color="red", linewidth = 20*self.map_object_scaling_factor)
 
         
-    def clip(self, whole_area_bounds, clipped_area_color = 'white'):
-        #clip
-        if(self.areas_element_gdf.empty):
+    def clip(self, whole_map_gdf = None , reqired_area_gdf = None, clipped_area_color = 'white'):
+        if(self.areas_element_gdf.empty and self.ways_element_gdf.empty):
             return
-        whole_area_polygon = GdfUtils.create_polygon_from_bounds(whole_area_bounds)
-       
-        clipping_polygon = whole_area_polygon.difference(self.reqired_area_gdf.unary_union)
-        if(not GdfUtils.is_polygon_inside_polygon(whole_area_polygon, clipping_polygon)):
-            return
+        if(whole_map_gdf is not None):
+            whole_area_polygon = GdfUtils.create_polygon_from_gdf(whole_map_gdf)
+        else:
+            whole_area_polygon = GdfUtils.create_polygon_from_gdf_bounds(self.ways_element_gdf, self.areas_element_gdf)
             
+        if(reqired_area_gdf is not None):
+            reqired_area_polygon = GdfUtils.create_polygon_from_gdf(reqired_area_gdf)
+        else:
+            reqired_area_polygon = GdfUtils.create_polygon_from_gdf(self.reqired_area_gdf)
+            
+        clipping_polygon = whole_area_polygon.difference(reqired_area_polygon)
+        if(not GdfUtils.is_polygon_inside_polygon(clipping_polygon, whole_area_polygon)):
+            return
         
         # clipping_polygon = geometry.MultiPolygon([clipping_polygon]) - epsg in constructor
         clipping_polygon = gpd.GeoDataFrame(geometry=[clipping_polygon], crs=f"EPSG:{EPSG_DEGREE_NUMBER}")

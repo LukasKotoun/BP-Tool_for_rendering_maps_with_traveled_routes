@@ -5,7 +5,7 @@ from common.map_enums import *
 #--------------normal map area--------------
 OSM_FILE_NAME: str = '../osm_files/brno.osm.pbf' #todo need fix - cut bigger area than needed
 OSM_WANT_EXTRACT_AREA: bool = False
-OSM_OUTPUT_FILE_NAME: None | str = None # set if want osm file cutting using osmium command line tool (need to be uinstalled), If not set to None
+OSM_OUTPUT_FILE_NAME: None | str = '../osm_files/brno.osm.pbf' # set if want osm file cutting using osmium command line tool (need to be uinstalled), If not set to None
 OUTPUT_PDF_NAME: str = '../pdfs/brno'
 # AREA: str | list[Point] = [(-18.14143,65.68868),(-18.08538,65.68868),(-18.08538,65.67783),(-18.14143,65.67783)] #island
 # AREA: str | list[Point] = [(6.94872,4.84293),(6.99314,4.84293),(6.99314,4.81603),(6.94872,4.81603)] #afrika
@@ -16,21 +16,23 @@ PAPER_DIMENSIONS: PaperSize | tuple[float | None, float | None] = PaperSize.A4.d
 # only if only one side in custom dimension was set to None
 GIVEN_SMALLER_PAPER_DIMENSION: bool = True # what side of paper was set (smaller true bigger false)
 
+# is False it will plot only given AREA (recomended) if True it will plot whole osm file AREA in center 
+TURN_OFF_AREA_CLIPPING = False
+
+
+
+# padding from page borders
+PERCENTAGE_PADDING = 1 # NOTE: must have same settings as the resulting one when generating for large format printing
+PLOT_AREA_BOUNDARY = True
+AREA_BOUNDARY_LINEWIDTH = 200
 # set how will resulted paper be oriented
 # can be set to AUTOMATIC (Recommended), LANDSCAPE, PORTRAIT
 WANTED_ORIENTATION: MapOrientation = MapOrientation.AUTOMATIC
 
+#--------------------------------------------------------------preview--------------------------------------------------------------
 # NOTE: must have same settings as the resulting one when generating for large format printing
-# padding from page borders
-PERCENTAGE_PADDING = 1
-PLOT_AREA_BOUNDARY = True
-AREA_BOUNDARY_LINEWIDTH = 200
+WANT_PREVIEW: bool = False
 
-#--------------preview--------------
-# NOTE: must have same settings as the resulting one when generating for large format printing
-WANT_PREVIEW: bool = True
-# is False it will plot only given AREA (recomended) if True it will plot whole osm file with AREA in center 
-TURN_OFF_AREA_CLIPPING = True
 
 OUTER_AREA = "Czech Republic" # area for that you are creating smaller preview (bigger than normal area) 
 

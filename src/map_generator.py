@@ -58,6 +58,8 @@ def calc_preview(map_area_gdf, paper_dimensions_mm):
 
 @time_measurement_decorator("main")
 def main():
+    #todo check some reqired constants
+    #todo check file validity - if osm file exits
     #------------get map area and calc paper sizes, and calc preview
     map_area_gdf = GdfUtils.get_area_gdf(AREA, EPSG_DEGREE_NUMBER)
     boundary_map_area_gdf = map_area_gdf.copy()
@@ -80,7 +82,11 @@ def main():
     #------------get elements from osm file------------
     osm_file_name = OSM_FILE_NAME
     if(OSM_WANT_EXTRACT_AREA):
-        osm_data_preprocessor = OsmDataPreprocessor(OSM_FILE_NAME, OSM_OUTPUT_FILE_NAME, OSM_WANT_EXTRACT_AREA)
+        if(OSM_OUTPUT_FILE_NAME is None): #todo function extractioin checks, output file cant exists or try catch
+            print("output file is none, cant extract")
+            return
+        #check if osmium is instaled
+        osm_data_preprocessor = OsmDataPreprocessor(OSM_FILE_NAME, OSM_OUTPUT_FILE_NAME)
         osm_file_name = osm_data_preprocessor.extract_area(map_area_gdf)
     osm_file_parser = OsmDataParser(wanted_ways, wanted_areas, unwanted_ways_tags, unwanted_areas_tags)
     
@@ -93,10 +99,10 @@ def main():
     osm_file_parser.clear_gdf()
     
     # todo to function
-    total_map_bounds = GdfUtils.get_bounds_gdf(ways_gdf, areas_gdf)
-    reqired_area_polygon = map_area_gdf.unary_union
+    whole_map_gdf = GdfUtils.create_polygon_from_gdf_bounds(ways_gdf, areas_gdf)
+    reqired_area_polygon = GdfUtils.create_polygon_from_gdf(map_area_gdf)
     #check if area is inside osm file
-    if(not GdfUtils.is_polygon_inside_bounds(total_map_bounds, reqired_area_polygon)):
+    if(not GdfUtils.is_polygon_inside_polygon(reqired_area_polygon, whole_map_gdf)):
         warnings.warn("Selected area map is not whole inside given osm.pbf file. Posible problems")
         
     #------------filter some elements out------------
@@ -125,7 +131,8 @@ def main():
     plotter.plot_areas()
     plotter.plot_ways()
     plotter.plot_gpxs()
-    plotter.clip(total_map_bounds)
+    if(not TURN_OFF_AREA_CLIPPING):
+        plotter.clip()
         
     if(PLOT_AREA_BOUNDARY):
         plotter.plot_area_boundary(area_gdf = boundary_map_area_gdf, linewidth=AREA_BOUNDARY_LINEWIDTH)
