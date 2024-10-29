@@ -57,7 +57,6 @@ OUTER_WANTED_ORIENTATION = MapOrientation.AUTOMATIC
 EPSG_DEGREE_NUMBER = 4326 # world
 EPSG_METERS_NUMBER = 5514 # cz and sk - 5514, world 3857, europe 25833 
 LINEWIDTH_MULTIPLIER = 1
-GENERAL_DEFAULT_STYLES: dict[StyleKey, str | int | float] = {StyleKey.COLOR:'#EDEDE0',  StyleKey.ZINDEX :0, StyleKey.LINEWIDTH:0 , StyleKey.BGCOLOR: '#5d5d5d', StyleKey.LINESTYLE:'-'}
 #--------------filters--------------
 
 #wanted_ways: WantedFeatures
@@ -92,27 +91,11 @@ unwanted_areas_tags: UnwantedCategories ={
 }
 
 #------------styles--------------
-#landuse_styles: FeaturesCategoryStyle
-landuse_styles: CategoryStyle = {
-    'farmland': {StyleKey.COLOR: '#EDEDE0'},
-    'forest': {StyleKey.COLOR: '#9FC98D'},
-    'meadow': {StyleKey.COLOR: '#B7DEA6'},
-    'grass': {StyleKey.COLOR: '#B7DEA6', StyleKey.ZINDEX: 1},
-    'residential': {StyleKey.COLOR: '#E2D4AF'},
-    'industrial': {StyleKey.COLOR: '#DFDBD1'},
-    'basin': {StyleKey.COLOR: '#8FB8DB', StyleKey.ZINDEX: 1},
-    'salt_pond': {StyleKey.COLOR: '#8FB8DB', StyleKey.ZINDEX: 1},
-}
+# there must be all styles, if not program can crash, Mandatory styles are: StyleKey.COLOR, StyleKey.ZINDEX, StyleKey.LINEWIDTH > 0, StyleKey.BGCOLOR, StyleKey.LINESTYLE
+GENERAL_DEFAULT_STYLES: FeatureStyles = {StyleKey.COLOR: '#EDEDE0',  StyleKey.ZINDEX: 0, StyleKey.LINEWIDTH: 1, StyleKey.BGCOLOR: '#5D5D5D', StyleKey.LINESTYLE: '-'}
 
-leisure_styles: CategoryStyle = {
-    'swimming_pool': {StyleKey.COLOR: '#8FB8DB', StyleKey.ZINDEX: 2},  
-    'golf_curse': {StyleKey.COLOR: '#DCE9B9', StyleKey.ZINDEX: 1},    
-    'playground': {StyleKey.COLOR: '#DCE9B9', StyleKey.ZINDEX: 1},  
-    'pitch': {StyleKey.COLOR: '#DCE9B9', StyleKey.ZINDEX: 2},  
-    'sports_centre': {StyleKey.COLOR: '#9FC98D', StyleKey.ZINDEX: 1},  
-}
 	
-highway_styles: CategoryStyle = {
+highway_styles: FeaturesCategoryStyle = {
     'motorway': {StyleKey.COLOR: '#8cd25f', StyleKey.ZINDEX: 7, StyleKey.LINEWIDTH: 32}, 
     'trunk': {StyleKey.COLOR: '#FDC364', StyleKey.ZINDEX: 6, StyleKey.LINEWIDTH: 26},
     'primary': {StyleKey.COLOR: '#FDC364', StyleKey.ZINDEX: 5, StyleKey.LINEWIDTH: 22},
@@ -126,26 +109,50 @@ highway_styles: CategoryStyle = {
     'residential': {StyleKey.COLOR: '#8f8364'}
 }
 
-railway_styles: CategoryStyle = {
+railway_styles: FeaturesCategoryStyle = {
     'rail': {StyleKey.COLOR: '#FFFFFF', StyleKey.ZINDEX: 1, StyleKey.LINEWIDTH: 10, StyleKey.BGCOLOR: '#5d5d5d'},
     'tram': {StyleKey.COLOR: '#404040', StyleKey.ZINDEX: 1, StyleKey.LINEWIDTH: 4},
     'tram_stop': {StyleKey.COLOR: '#404040', StyleKey.ZINDEX: 1, StyleKey.LINEWIDTH: 4},
 }
 
-building_styles: CategoryStyle = {
-    'house': {StyleKey.COLOR: 'grey', StyleKey.ZINDEX: 1},
-}
 
 
 # Define attribute mapping with default values
-#CATEGORIES_STYLES : FeaturesCategoriesStyles
-CATEGORIES_STYLES: CategoriesStyles = {
+WAYS_STYLES: FeaturesCategoriesStyles = {
+    'waterway': ({}, {StyleKey.COLOR: '#8FB8DB', StyleKey.ZINDEX: 1, StyleKey.LINEWIDTH: 8}),
+    'highway': (highway_styles, {StyleKey.COLOR: '#FFFFFF', StyleKey.ZINDEX: 2, StyleKey.LINEWIDTH: 8}),
+    'railway': (railway_styles, {StyleKey.COLOR: '#FFFFFF', StyleKey.ZINDEX: 2, StyleKey.LINEWIDTH: 8, StyleKey.BGCOLOR: '#5d5d5d'}),
+}
+
+
+landuse_styles: FeaturesCategoryStyle = {
+    'farmland': {StyleKey.COLOR: '#EDEDE0'},
+    'forest': {StyleKey.COLOR: '#9FC98D'},
+    'meadow': {StyleKey.COLOR: '#B7DEA6'},
+    'grass': {StyleKey.COLOR: '#B7DEA6', StyleKey.ZINDEX: 1},
+    'residential': {StyleKey.COLOR: '#E2D4AF'},
+    'industrial': {StyleKey.COLOR: '#DFDBD1'},
+    'basin': {StyleKey.COLOR: '#8FB8DB', StyleKey.ZINDEX: 1},
+    'salt_pond': {StyleKey.COLOR: '#8FB8DB', StyleKey.ZINDEX: 1},
+}
+
+leisure_styles: FeaturesCategoryStyle = {
+    'swimming_pool': {StyleKey.COLOR: '#8FB8DB', StyleKey.ZINDEX: 2},  
+    'golf_curse': {StyleKey.COLOR: '#DCE9B9', StyleKey.ZINDEX: 1},    
+    'playground': {StyleKey.COLOR: '#DCE9B9', StyleKey.ZINDEX: 1},  
+    'pitch': {StyleKey.COLOR: '#DCE9B9', StyleKey.ZINDEX: 2},  
+    'sports_centre': {StyleKey.COLOR: '#9FC98D', StyleKey.ZINDEX: 1},  
+}
+
+building_styles: FeaturesCategoryStyle = {
+    'house': {StyleKey.COLOR: 'grey', StyleKey.ZINDEX: 1},
+}
+
+AREAS_STYLES: FeaturesCategoriesStyles = {
     'building': (building_styles, {StyleKey.COLOR: '#B7DEA6', StyleKey.ZINDEX: 1, StyleKey.LINEWIDTH: 8}),
     'water': ({}, {StyleKey.COLOR: '#8FB8DB', StyleKey.ZINDEX: 1, StyleKey.LINEWIDTH: 8}),
-    'waterway': ({}, {StyleKey.COLOR: '#8FB8DB', StyleKey.ZINDEX: 1, StyleKey.LINEWIDTH: 8}),
     'leisure': (leisure_styles, {StyleKey.COLOR: '#EDEDE0', StyleKey.ZINDEX: 0, StyleKey.LINEWIDTH: 8}),
     'natural': (landuse_styles, {StyleKey.COLOR: '#B7DEA6', StyleKey.ZINDEX: 0, StyleKey.LINEWIDTH: 8}),
     'landuse': (landuse_styles, {StyleKey.COLOR: '#EDEDE0', StyleKey.ZINDEX: 0, StyleKey.LINEWIDTH: 8}),
-    'highway': (highway_styles, {StyleKey.COLOR: '#FFFFFF', StyleKey.ZINDEX: 2, StyleKey.LINEWIDTH: 8}),
-    'railway': (railway_styles, {StyleKey.COLOR: '#FFFFFF', StyleKey.ZINDEX: 2, StyleKey.LINEWIDTH: 8, StyleKey.BGCOLOR: '#5d5d5d'}),
+
 }

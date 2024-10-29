@@ -1,7 +1,10 @@
 from matplotlib import patheffects
+import warnings
 import matplotlib.pyplot as plt
 import geopandas as gpd
+import pandas as pd
 from shapely import geometry
+
 
 from config import * 
 from modules.gdf_utils import GdfUtils
@@ -11,10 +14,9 @@ from modules.utils import Utils
 class Plotter:    
     
     MM_TO_INCH = 25.4
-    def __init__(self, gdf_utils, geo_data_styler, ways_element_gdf, areas_element_gdf, gpxs_gdf,
+    def __init__(self, general_styles: FeatureStyles, ways_element_gdf, areas_element_gdf, gpxs_gdf,
                  requred_area_gdf, paper_dimensions_mm, map_object_scaling_factor):
-        self.gdf_utils = gdf_utils
-        self.geo_data_styler = geo_data_styler
+        self.general_styles = general_styles
         self.ways_element_gdf = ways_element_gdf
         self.areas_element_gdf = areas_element_gdf
         self.gpxs_gdf = gpxs_gdf
@@ -38,17 +40,24 @@ class Plotter:
         self.reqired_area_gdf.plot(ax=self.ax, color=map_bg_color, linewidth=1)
         
     def __plot_highways(self,highways_gdf):
-        if(highways_gdf.empty or StyleKey.COLOR not in highways_gdf and StyleKey.LINEWIDTH not in highways_gdf):
+        if(highways_gdf.empty):
             return
         
-        for line, color, linewidth in zip(highways_gdf.geometry, highways_gdf[StyleKey.COLOR], highways_gdf[StyleKey.LINEWIDTH]):
+        # for line, color, linewidth in zip(highways_gdf.geometry, highways_gdf[StyleKey.COLOR], highways_gdf[StyleKey.LINEWIDTH]):
+        for line, color, linewidth in zip(
+            highways_gdf.geometry, 
+            highways_gdf.get(StyleKey.COLOR, [self.general_styles[StyleKey.COLOR]] * len(highways_gdf)),
+            highways_gdf[StyleKey.LINEWIDTH]):
+            color = color if pd.notna(color) else self.general_styles[StyleKey.COLOR]
             x, y = line.xy
             self.ax.plot(x, y, color=color, linewidth = linewidth, solid_capstyle = 'round')
             
     def __plot_waterways(self,waterways_gdf):
-        if(waterways_gdf.empty or StyleKey.COLOR not in waterways_gdf and StyleKey.LINEWIDTH not in waterways_gdf):
+        if(waterways_gdf.empty):
             return
-        waterways_gdf.plot(ax = self.ax,color=waterways_gdf[StyleKey.COLOR], linewidth = waterways_gdf[StyleKey.LINEWIDTH])
+        # waterways_gdf.plot(ax = self.ax,color=waterways_gdf[StyleKey.COLOR], linewidth = waterways_gdf[StyleKey.LINEWIDTH])
+        waterways_gdf.plot(ax = self.ax,color=waterways_gdf.get(StyleKey.COLOR, self.general_styles[StyleKey.COLOR]),
+                           linewidth = waterways_gdf.get(StyleKey.LINEWIDTH, self.general_styles[StyleKey.LINEWIDTH]))
         
         # for line, color, linewidth in zip(waterways_gdf.geometry, waterways_gdf[StyleKey.COLOR], waterways_gdf[StyleKey.LINEWIDTH]):
         #     x, y = line.xy
@@ -58,61 +67,67 @@ class Plotter:
             
     def __plot_railways(self,railways_gdf, rail_bg_width_offset, tram_second_line_spacing):
         #todo change ploting style
-        if(railways_gdf.empty or StyleKey.COLOR not in railways_gdf or StyleKey.LINEWIDTH not in railways_gdf):
+        if(railways_gdf.empty):
             return
         
-        tram_gdf, rails_gdf = self.gdf_utils.filter_gdf_in(railways_gdf, 'railway', ['tram'])
-        
-        # tram_gdf = self.gdf_utils.aggregate_close_lines(tram_gdf,5)
-        # rails_gdf = self.gdf_utils.aggregate_close_lines(rails_gdf,5)
+        tram_gdf, rails_gdf = GdfUtils.filter_gdf_in(railways_gdf, 'railway', ['tram'])
         if(not tram_gdf.empty):
-            for line, color, linewidth in zip(tram_gdf.geometry, tram_gdf[StyleKey.COLOR], tram_gdf[StyleKey.LINEWIDTH]):
+            # for line, color, linewidth in zip(tram_gdf.geometry, tram_gdf[StyleKey.COLOR], tram_gdf[StyleKey.LINEWIDTH]):
+            for line, color, linewidth in zip(tram_gdf.geometry,
+                                              tram_gdf.get(StyleKey.COLOR, [self.general_styles[StyleKey.COLOR]] * len(tram_gdf)),
+                                              tram_gdf[StyleKey.LINEWIDTH]):
                 x, y = line.xy 
+                color = color if pd.notna(color) else self.general_styles[StyleKey.COLOR]
+
                 self.ax.plot(x, y, color=color, linewidth = linewidth, solid_capstyle='round', alpha=0.6,path_effects=[
                 patheffects.withTickedStroke(angle=-90, spacing=tram_second_line_spacing, length=0.05),
                 patheffects.withTickedStroke(angle=90, spacing=tram_second_line_spacing, length=0.05)])
                 
         if(not rails_gdf.empty):
-            if(StyleKey.BGCOLOR not in rails_gdf):
-                rails_gdf = self.geo_data_styler.assign_styles_to_gdf(rails_gdf, {'railway': []}, [StyleKey.BGCOLOR])
-                # rails_gdf = self.geo_data_styler.assign_styles_to_gdf(rails_gdf, {'railway': ['rail']}, [StyleKey.BGCOLOR]) #todo solve double adding
-            
-            for line, color, bg_color,linewidth in zip(rails_gdf.geometry, rails_gdf[StyleKey.COLOR], rails_gdf[StyleKey.BGCOLOR], rails_gdf[StyleKey.LINEWIDTH]):
+            for line, color, bg_color, linewidth in zip(
+            rails_gdf.geometry,
+            rails_gdf.get(StyleKey.COLOR, [self.general_styles[StyleKey.COLOR]] * len(rails_gdf)),
+            rails_gdf.get(StyleKey.BGCOLOR, [self.general_styles[StyleKey.BGCOLOR]] * len(rails_gdf)),
+            rails_gdf[StyleKey.LINEWIDTH]
+            ):
+                color = color if pd.notna(color) else self.general_styles[StyleKey.COLOR]
+                bg_color = bg_color if pd.notna(bg_color) else self.general_styles[StyleKey.BGCOLOR]
                 x, y = line.xy
-                self.ax.plot(x, y, color=bg_color, linewidth = linewidth + rail_bg_width_offset)
-                self.ax.plot(x, y, color=color, linewidth =  linewidth ,linestyle=(0,(5,5)))
+                self.ax.plot(x, y, color = bg_color, linewidth = linewidth + rail_bg_width_offset)
+                self.ax.plot(x, y, color = color, linewidth = linewidth, linestyle=(0, (5, 5)))
     
    
     @time_measurement_decorator("wayplot")            
     def plot_ways(self):
-        
         if(self.ways_element_gdf.empty):
             return
-        self.ways_element_gdf[StyleKey.LINEWIDTH] = self.ways_element_gdf[StyleKey.LINEWIDTH] * self.map_object_scaling_factor
+        # add linewidth if not in exist
+        self.ways_element_gdf[StyleKey.LINEWIDTH] = self.ways_element_gdf.get(
+            StyleKey.LINEWIDTH, self.general_styles[StyleKey.LINEWIDTH]) * self.map_object_scaling_factor
+        #replace linewidth nan values
+        self.ways_element_gdf[StyleKey.LINEWIDTH] = self.ways_element_gdf[StyleKey.LINEWIDTH].fillna(
+            self.general_styles[StyleKey.LINEWIDTH]) * self.map_object_scaling_factor
         
-        waterways_gdf, rest_gdf = self.gdf_utils.filter_gdf_in(self.ways_element_gdf, 'waterway')
+        waterways_gdf, rest_gdf = GdfUtils.filter_gdf_in(self.ways_element_gdf, 'waterway')
         self.__plot_waterways(waterways_gdf)
         
-        highways_gdf, rest_gdf = self.gdf_utils.filter_gdf_in(rest_gdf, 'highway')
+        highways_gdf, rest_gdf = GdfUtils.filter_gdf_in(rest_gdf, 'highway')
         self.__plot_highways(highways_gdf)
         
-        railways_gdf, rest_gdf = self.gdf_utils.filter_gdf_in(rest_gdf, 'railway')
+        railways_gdf, rest_gdf = GdfUtils.filter_gdf_in(rest_gdf, 'railway')
         self.__plot_railways(railways_gdf, 2*self.map_object_scaling_factor,15*self.map_object_scaling_factor)
 
 
-            
+    @time_measurement_decorator("areaPlot")            
     def plot_areas(self):
-        if(StyleKey.COLOR in self.areas_element_gdf):
-            #todo bounds tag filter
-            self.areas_element_gdf.plot(ax=self.ax, color = self.areas_element_gdf[StyleKey.COLOR] , alpha=1)
-        else:
-            pass
-    
+        self.areas_element_gdf.plot(ax=self.ax, color = self.areas_element_gdf.get(StyleKey.COLOR, self.general_styles[StyleKey.COLOR]), alpha=1)
+        
+    @time_measurement_decorator("gpxsPlot")            
     def plot_gpxs(self):
-        self.gpxs_gdf.plot(ax = self.ax,color="red", linewidth = 20*self.map_object_scaling_factor)
+        self.gpxs_gdf.plot(ax = self.ax, color="red", linewidth = 20 * self.map_object_scaling_factor)
 
         
-    def clip(self, whole_map_gdf = None , reqired_area_gdf = None, clipped_area_color = 'white'):
+    def clip(self, whole_map_gdf = None, reqired_area_gdf = None, clipped_area_color = 'white'):
         if(self.areas_element_gdf.empty and self.ways_element_gdf.empty):
             return
         if(whole_map_gdf is not None):

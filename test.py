@@ -322,3 +322,9 @@
 # plt.axis('equal')  # Equal scaling
 # plt.savefig(f'test.pdf', format='pdf')
 # plt.show()
+                
+                # for style_key in wanted_feature_styles:
+                #     feature_style = features_category_styles.get(style_key)
+                #     # assign style of concrete feature or default if is not specified for this feature
+                #     assigned_styles[style_key] = feature_style if feature_style is not None else features_category_default_styles.get(style_key, self.general_default_styles[style_key]) 
+                    

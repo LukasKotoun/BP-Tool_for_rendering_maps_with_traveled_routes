@@ -111,12 +111,14 @@ def main():
 
     #------------style elements------------
     #todo styles for ways and areas separeated - 2 geodata stylers
-    geo_data_styler = StyleAssigner(CATEGORIES_STYLES, GENERAL_DEFAULT_STYLES)
 
-    ways_gdf = geo_data_styler.assign_styles_to_gdf(ways_gdf, wanted_ways,
-                                                    [StyleKey.COLOR, StyleKey.ZINDEX, StyleKey.LINEWIDTH])
-    areas_gdf = geo_data_styler.assign_styles_to_gdf(areas_gdf, wanted_areas,
+    ways_style_assigner = StyleAssigner(WAYS_STYLES, GENERAL_DEFAULT_STYLES)
+    ways_gdf = ways_style_assigner.assign_styles_to_gdf(ways_gdf, wanted_ways,
+                                                    [StyleKey.COLOR, StyleKey.ZINDEX, StyleKey.LINEWIDTH, StyleKey.BGCOLOR])
+    areas_style_assigner = StyleAssigner(AREAS_STYLES, GENERAL_DEFAULT_STYLES)
+    areas_gdf = areas_style_assigner.assign_styles_to_gdf(areas_gdf, wanted_areas,
                                                      [StyleKey.COLOR, StyleKey.ZINDEX])
+
     ways_gdf = GdfUtils.sort_gdf_by_column(ways_gdf, StyleKey.ZINDEX)
     areas_gdf = GdfUtils.sort_gdf_by_column(areas_gdf, StyleKey.ZINDEX)
     
@@ -125,7 +127,7 @@ def main():
     gpxs_gdf = gpx_processer.get_gpxs_gdf(EPSG_DEGREE_NUMBER)
     
     
-    plotter = Plotter(GdfUtils, geo_data_styler, ways_gdf, areas_gdf, gpxs_gdf,
+    plotter = Plotter(GENERAL_DEFAULT_STYLES, ways_gdf, areas_gdf, gpxs_gdf,
                              map_area_gdf, paper_dimensions_mm, map_object_scaling_factor)
     plotter.init_plot(GENERAL_DEFAULT_STYLES[StyleKey.COLOR], area_zoom_preview)
     plotter.plot_areas()
