@@ -127,13 +127,21 @@ class StyleAssigner:
 
         # get styles to every map feature in gdf
         styles_columns = gdf.apply(lambda map_feature: self._get_styles_for_map_feature(map_feature, available_styles, wanted_styles), axis=1).tolist()
+        styles_columns_df = pd.DataFrame(styles_columns)
+        # fill missing values 
+        for style_key in wanted_styles:
+            if style_key not in styles_columns_df:
+                styles_columns_df[style_key] = self.general_default_styles[style_key]
+            else:
+                styles_columns_df[style_key] = styles_columns_df[style_key].fillna(self.general_default_styles[style_key])
+
         #drop columns that will be assigned twice - assign new
         duplicated_columns = [col for col in wanted_styles if col in gdf.columns]
         if (duplicated_columns):
             gdf = gdf.drop(columns=duplicated_columns)
             warnings.warn(f"Reassigning once assigned styles (the new one were used): {', '.join([str(col) for col in duplicated_columns])}")
             
-        styled_gdf = gdf.join(pd.DataFrame(styles_columns))     
+        styled_gdf = gdf.join(styles_columns_df)     
         # convert object columns to pandas category - for memory optimalization
         for style_column in wanted_styles:
             if(style_column in styled_gdf and styled_gdf[style_column].dtype == object):

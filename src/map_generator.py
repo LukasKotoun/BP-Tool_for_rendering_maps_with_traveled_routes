@@ -85,7 +85,7 @@ def main():
         if(OSM_OUTPUT_FILE_NAME is None): #todo function extractioin checks, output file cant exists or try catch
             print("output file is none, cant extract")
             return
-        #check if osmium is instaled
+        #todo check if osmium is instaled
         osm_data_preprocessor = OsmDataPreprocessor(OSM_FILE_NAME, OSM_OUTPUT_FILE_NAME)
         osm_file_name = osm_data_preprocessor.extract_area(map_area_gdf)
     osm_file_parser = OsmDataParser(wanted_ways, wanted_areas, unwanted_ways_tags, unwanted_areas_tags)
