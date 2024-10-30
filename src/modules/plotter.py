@@ -44,11 +44,6 @@ class Plotter:
             return
         
         for line, color, linewidth in zip(highways_gdf.geometry, highways_gdf[StyleKey.COLOR], highways_gdf[StyleKey.LINEWIDTH]):
-        # for line, color, linewidth in zip(
-        #     highways_gdf.geometry, 
-        #     highways_gdf.get(StyleKey.COLOR, [self.general_styles[StyleKey.COLOR]] * len(highways_gdf)),
-        #     highways_gdf[StyleKey.LINEWIDTH]):
-            # color = color if pd.notna(color) else self.general_styles[StyleKey.COLOR]
 
             x, y = line.xy
             self.ax.plot(x, y, color=color, linewidth = linewidth, solid_capstyle = 'round')
@@ -72,30 +67,17 @@ class Plotter:
         tram_gdf, rails_gdf = GdfUtils.filter_gdf_in(railways_gdf, 'railway', ['tram'])
         if(not tram_gdf.empty):
             for line, color, linewidth in zip(tram_gdf.geometry, tram_gdf[StyleKey.COLOR], tram_gdf[StyleKey.LINEWIDTH]):
-            # for line, color, linewidth in zip(tram_gdf.geometry,
-            #                                   tram_gdf.get(StyleKey.COLOR, [self.general_styles[StyleKey.COLOR]] * len(tram_gdf)),
-            #                                   tram_gdf[StyleKey.LINEWIDTH]):
-                # color = color if pd.notna(color) else self.general_styles[StyleKey.COLOR]
                 x, y = line.xy 
-
                 self.ax.plot(x, y, color=color, linewidth = linewidth, solid_capstyle='round', alpha=0.6,path_effects=[
                 patheffects.withTickedStroke(angle=-90, spacing=tram_second_line_spacing, length=0.05),
                 patheffects.withTickedStroke(angle=90, spacing=tram_second_line_spacing, length=0.05)])
                 
         if(not rails_gdf.empty and StyleKey.BGCOLOR in rails_gdf):
-            # for line, color, bg_color, linewidth in zip(
-            # rails_gdf.geometry,
-            # rails_gdf.get(StyleKey.COLOR, [self.general_styles[StyleKey.COLOR]] * len(rails_gdf)),
-            # rails_gdf.get(StyleKey.BGCOLOR, [self.general_styles[StyleKey.BGCOLOR]] * len(rails_gdf)),
-            # rails_gdf[StyleKey.LINEWIDTH]
-            # ):
+
             for line, color, bg_color, linewidth in zip(
             rails_gdf.geometry, rails_gdf[StyleKey.COLOR],
             rails_gdf[StyleKey.BGCOLOR], rails_gdf[StyleKey.LINEWIDTH]
             ):
-                                # color = color if pd.notna(color) else self.general_styles[StyleKey.COLOR]
-                # bg_color = bg_color if pd.notna(bg_color) else self.general_styles[StyleKey.BGCOLOR]
-
                 x, y = line.xy
                 self.ax.plot(x, y, color = bg_color, linewidth = linewidth + rail_bg_width_offset)
                 self.ax.plot(x, y, color = color, linewidth = linewidth, linestyle=(0, (5, 5)))
@@ -107,13 +89,7 @@ class Plotter:
            or StyleKey.COLOR not in self.ways_element_gdf):
             return
       
-        self.ways_element_gdf[StyleKey.LINEWIDTH] =  self.ways_element_gdf[StyleKey.LINEWIDTH] * self.map_object_scaling_factor
-        # add linewidth if not in exist
-        # self.ways_element_gdf[StyleKey.LINEWIDTH] = self.ways_element_gdf.get(
-        #     StyleKey.LINEWIDTH, self.general_styles[StyleKey.LINEWIDTH]) * self.map_object_scaling_factor
-        # #replace linewidth nan values
-        # self.ways_element_gdf[StyleKey.LINEWIDTH] = self.ways_element_gdf[StyleKey.LINEWIDTH].fillna(
-        #     self.general_styles[StyleKey.LINEWIDTH]* self.map_object_scaling_factor) 
+        self.ways_element_gdf[StyleKey.LINEWIDTH] = self.ways_element_gdf[StyleKey.LINEWIDTH] * self.map_object_scaling_factor
         waterways_gdf, rest_gdf = GdfUtils.filter_gdf_in(self.ways_element_gdf, 'waterway')
         self.__plot_waterways(waterways_gdf)
         
@@ -126,8 +102,21 @@ class Plotter:
 
     @time_measurement_decorator("areaPlot")            
     def plot_areas(self):
-        self.areas_element_gdf.plot(ax=self.ax, color = self.areas_element_gdf[StyleKey.COLOR], alpha=1)
-        
+        # [pd.NA, 'none'] - get all that dont have nan or 'none'
+        # plot face
+        face_areas_gdf= GdfUtils.filter_gdf_not_in(self.areas_element_gdf, StyleKey.COLOR, [pd.NA, 'none'])[0]
+        if(not face_areas_gdf.empty and StyleKey.COLOR in face_areas_gdf):
+            face_areas_gdf.plot(ax=self.ax, color = face_areas_gdf[StyleKey.COLOR], alpha=face_areas_gdf[StyleKey.ALPHA])
+        # plot bounds
+        edge_areas_gdf = GdfUtils.filter_gdf_not_in(self.areas_element_gdf, StyleKey.EDGE_COLOR, [pd.NA, 'none'])[0]
+        if(not edge_areas_gdf.empty and StyleKey.EDGE_COLOR in edge_areas_gdf and 
+           StyleKey.LINEWIDTH in edge_areas_gdf):
+            #todo to for with round cupstyles
+            edge_areas_gdf[StyleKey.LINEWIDTH] = edge_areas_gdf[StyleKey.LINEWIDTH] * self.map_object_scaling_factor
+            edge_areas_gdf.plot(ax=self.ax, facecolor = 'none', edgecolor = edge_areas_gdf[StyleKey.EDGE_COLOR],
+                                         linewidth = edge_areas_gdf[StyleKey.LINEWIDTH], alpha=edge_areas_gdf[StyleKey.ALPHA])
+
+    
     @time_measurement_decorator("gpxsPlot")            
     def plot_gpxs(self):
         self.gpxs_gdf.plot(ax = self.ax, color="red", linewidth = 20 * self.map_object_scaling_factor)

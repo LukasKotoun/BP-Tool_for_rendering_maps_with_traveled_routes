@@ -9,10 +9,11 @@ from common.custom_types import  FeaturesCategoriesStyles, WantedCategories, Fea
 
 class StyleAssigner:
     def __init__(self, categories_styles: FeaturesCategoriesStyles,
-                 general_default_styles: dict[StyleKey, str | int | float]):  
+                 general_default_styles: FeatureStyles, general_mandatory_styles: FeatureStyles):  
         self.categories_styles = categories_styles
         self.general_default_styles = general_default_styles
-    
+        self.general_mandatory_styles = general_mandatory_styles
+
     def _get_styles_for_map_feature(self, map_feature: pd.DataFrame, available_styles: FeaturesCategoriesStyles,
                               wanted_feature_styles: list[StyleKey]) -> FeatureStyles:
         """Find and return styles for concrete map feature.
@@ -34,12 +35,20 @@ class StyleAssigner:
                 # get styles for concrete feature in this category of features or get default styles for this category of features
                 features_category_styles: FeatureStyles = features_category_map.get(map_feature[features_category], features_category_default_styles) 
                 
-                # iterate through all available styles for this features category (will be already filtered to contains only wanted)
-                for style_key, default_style in features_category_default_styles.items():
-                    feature_style = features_category_styles.get(style_key)
-                    # assign style of concrete feature or default if is not specified for this feature
-                    assigned_styles[style_key] = feature_style if feature_style is not None else default_style 
-
+                # iterate through all available styles for this feature (will be already filtered to contains only wanted)
+                for style_key, style in features_category_styles.items():
+                    assigned_styles[style_key] = style 
+                
+                # assign rest of missing styles from default 
+                # (if the category should have some common styles that are not specified for a particular feature)
+                if(features_category_styles is not features_category_default_styles):
+                    for style_key, default_style in features_category_default_styles.items():
+                        if style_key not in assigned_styles:
+                            assigned_styles[style_key] = default_style 
+                # assign styles that all feature must have
+                for style_key, default_style in self.general_mandatory_styles.items():
+                    if style_key not in assigned_styles:
+                        assigned_styles[style_key] = default_style         
                 # map_feature category was found (map_feature can be in one category only) and styles are assigned 
                 return assigned_styles
         warnings.warn("_get_styles_for_map_feature: some map FeaturesCategory does not have any style in some FeaturesCategoriesStyles")
@@ -129,19 +138,20 @@ class StyleAssigner:
         styles_columns = gdf.apply(lambda map_feature: self._get_styles_for_map_feature(map_feature, available_styles, wanted_styles), axis=1).tolist()
         styles_columns_df = pd.DataFrame(styles_columns)
         # fill missing values 
-        for style_key in wanted_styles:
-            if style_key not in styles_columns_df:
-                styles_columns_df[style_key] = self.general_default_styles[style_key]
-            else:
-                styles_columns_df[style_key] = styles_columns_df[style_key].fillna(self.general_default_styles[style_key])
-
+        # for style_key in wanted_styles:
+        #     if style_key not in styles_columns_df:
+        #         styles_columns_df[style_key] = self.general_default_styles[style_key]
+        #     else:
+        #         styles_columns_df[style_key] = styles_columns_df[style_key].fillna(self.general_default_styles[style_key])
+        
         #drop columns that will be assigned twice - assign new
         duplicated_columns = [col for col in wanted_styles if col in gdf.columns]
         if (duplicated_columns):
             gdf = gdf.drop(columns=duplicated_columns)
             warnings.warn(f"Reassigning once assigned styles (the new one were used): {', '.join([str(col) for col in duplicated_columns])}")
-            
+        
         styled_gdf = gdf.join(styles_columns_df)     
+    
         # convert object columns to pandas category - for memory optimalization
         for style_column in wanted_styles:
             if(style_column in styled_gdf and styled_gdf[style_column].dtype == object):

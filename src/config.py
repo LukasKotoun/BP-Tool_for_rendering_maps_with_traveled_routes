@@ -24,7 +24,7 @@ TURN_OFF_AREA_CLIPPING = False
 # padding from page borders
 PERCENTAGE_PADDING = 1 # NOTE: must have same settings as the resulting one when generating for large format printing
 PLOT_AREA_BOUNDARY = True
-AREA_BOUNDARY_LINEWIDTH = 200
+AREA_BOUNDARY_LINEWIDTH = 30
 # set how will resulted paper be oriented
 # can be set to AUTOMATIC (Recommended), LANDSCAPE, PORTRAIT
 WANTED_ORIENTATION: MapOrientation = MapOrientation.AUTOMATIC
@@ -63,7 +63,7 @@ LINEWIDTH_MULTIPLIER = 1
 wanted_ways: WantedCategories = {
     'waterway': [],
     # 'highway': ['motorway', 'trunk','primary', 'secondary'],
-    'highway': [ 'motorway', 'trunk','primary', 'secondary','tertiary','unclassified', 'residential','path', 'footway' ],
+    'highway': [ 'motorway', 'trunk','primary', 'secondary', 'tertiary','unclassified', 'residential','path', 'footway' ],
     # 'highway':[],
     'railway': ['rail']
 }
@@ -79,10 +79,10 @@ unwanted_ways_tags: UnwantedCategories  ={
 wanted_areas: WantedCategories = {
     # # 'landuse': ['forest', 'residential', 'farmland', 'meadow', 'grass'],
     'landuse': ['forest', 'residential', 'commercial', 'retail', 'industrial', 'farmland', 'meadow', 'grass'],
-    'leisure': ['park', 'pitch', 'garden', 'golf_course', 'nature_reserve', 'playground', 'stadium','swimming_pool', 'sports_centre'],
-    # #todo nature reserve to boundaries? 
+    'leisure': ['park', 'pitch', 'garden', 'golf_course', 'playground', 'stadium','swimming_pool', 'sports_centre'],
     # # 'leisure': ['park', 'pitch', 'garden', 'golf_course', 'nature_reserve'],
     'water': [],
+    'boundary': ['national_park', 'protected_area'] # todo in automatic this should be to turnoff/on
     # 'water': ['river','lake','reservoir'],
 }
 
@@ -91,9 +91,15 @@ unwanted_areas_tags: UnwantedCategories ={
 }
 
 #------------styles--------------
-# there must be all styles, if not program can crash, Mandatory styles are: StyleKey.COLOR, StyleKey.ZINDEX, StyleKey.LINEWIDTH > 0, StyleKey.BGCOLOR, StyleKey.LINESTYLE
-GENERAL_DEFAULT_STYLES: FeatureStyles = {StyleKey.COLOR: '#EDEDE0',  StyleKey.ZINDEX: 0, StyleKey.LINEWIDTH: 1, StyleKey.BGCOLOR: '#5D5D5D', StyleKey.LINESTYLE: '-'}
+# there must be all somewhere used styles, if not program can crash
+GENERAL_DEFAULT_STYLES: FeatureStyles = {StyleKey.COLOR: '#EDEDE0',  StyleKey.ZINDEX: 0,
+                                         StyleKey.LINEWIDTH: 1, StyleKey.BGCOLOR: '#5D5D5D', StyleKey.LINESTYLE: '-',
+                                         StyleKey.EDGE_COLOR: 'none', StyleKey.ALPHA: 1}
 
+#styles that must be assigned to all features
+GENERAL_MANDATORY_STYLES: FeatureStyles = {
+    StyleKey.COLOR: '#EDEDE0', StyleKey.ALPHA: 1
+}
 	
 highway_styles: FeaturesCategoryStyle = {
     'motorway': {StyleKey.COLOR: '#8cd25f', StyleKey.ZINDEX: 7, StyleKey.LINEWIDTH: 32}, 
@@ -117,13 +123,12 @@ railway_styles: FeaturesCategoryStyle = {
 
 
 
-# Define attribute mapping with default values
 WAYS_STYLES: FeaturesCategoriesStyles = {
-    'waterway': ({}, {StyleKey.COLOR: '#8FB8DB', StyleKey.ZINDEX: 1, StyleKey.LINEWIDTH: 8}),
+    'waterway': ({}, {StyleKey.COLOR: '#8FB8DB', StyleKey.LINEWIDTH: 8}),
     'highway': (highway_styles, {StyleKey.COLOR: '#FFFFFF', StyleKey.ZINDEX: 2, StyleKey.LINEWIDTH: 8}),
     'railway': (railway_styles, {StyleKey.COLOR: '#FFFFFF', StyleKey.ZINDEX: 2, StyleKey.LINEWIDTH: 8, StyleKey.BGCOLOR: '#5d5d5d'}),
 }
-
+#areas
 
 landuse_styles: FeaturesCategoryStyle = {
     'farmland': {StyleKey.COLOR: '#EDEDE0'},
@@ -137,11 +142,12 @@ landuse_styles: FeaturesCategoryStyle = {
 }
 
 leisure_styles: FeaturesCategoryStyle = {
-    'swimming_pool': {StyleKey.COLOR: '#8FB8DB', StyleKey.ZINDEX: 2},  
-    'golf_curse': {StyleKey.COLOR: '#DCE9B9', StyleKey.ZINDEX: 1},    
-    'playground': {StyleKey.COLOR: '#DCE9B9', StyleKey.ZINDEX: 1},  
-    'pitch': {StyleKey.COLOR: '#DCE9B9', StyleKey.ZINDEX: 2},  
-    'sports_centre': {StyleKey.COLOR: '#9FC98D', StyleKey.ZINDEX: 1},  
+    'swimming_pool': {StyleKey.COLOR: '#8FB8DB', StyleKey.ZINDEX: 1},  
+    'golf_curse': {StyleKey.COLOR: '#DCE9B9'},    
+    'playground': {StyleKey.COLOR: '#DCE9B9'},  
+    'pitch': {StyleKey.COLOR: '#DCE9B9', StyleKey.ZINDEX: 1},  
+    'sports_centre': {StyleKey.COLOR: '#9FC98D'}, 
+    'nature_reserve':{StyleKey.COLOR: 'none', StyleKey.EDGE_COLOR: "red", StyleKey.LINEWIDTH: 80, StyleKey.ZINDEX: 1, StyleKey.ALPHA: 0.35}
 }
 
 building_styles: FeaturesCategoryStyle = {
@@ -149,10 +155,10 @@ building_styles: FeaturesCategoryStyle = {
 }
 
 AREAS_STYLES: FeaturesCategoriesStyles = {
-    'building': (building_styles, {StyleKey.COLOR: '#B7DEA6', StyleKey.ZINDEX: 1, StyleKey.LINEWIDTH: 8}),
-    'water': ({}, {StyleKey.COLOR: '#8FB8DB', StyleKey.ZINDEX: 1, StyleKey.LINEWIDTH: 8}),
-    'leisure': (leisure_styles, {StyleKey.COLOR: '#EDEDE0', StyleKey.ZINDEX: 0, StyleKey.LINEWIDTH: 8}),
-    'natural': (landuse_styles, {StyleKey.COLOR: '#B7DEA6', StyleKey.ZINDEX: 0, StyleKey.LINEWIDTH: 8}),
-    'landuse': (landuse_styles, {StyleKey.COLOR: '#EDEDE0', StyleKey.ZINDEX: 0, StyleKey.LINEWIDTH: 8}),
-
+    'building': (building_styles, {StyleKey.COLOR: '#B7DEA6', StyleKey.ZINDEX: 1}),
+    'leisure': (leisure_styles, {StyleKey.COLOR: '#EDEDE0', StyleKey.LINEWIDTH: 8}),
+    'natural': (landuse_styles, {StyleKey.COLOR: '#B7DEA6'}),
+    'landuse': (landuse_styles, {StyleKey.COLOR: '#EDEDE0'}),
+    'water': ({}, {StyleKey.COLOR: '#8FB8DB', StyleKey.ZINDEX: 1}),
+    'boundary':({},{StyleKey.EDGE_COLOR: "red", StyleKey.LINEWIDTH: 80, StyleKey.ZINDEX: 1, StyleKey.ALPHA: 0.35})
 }

@@ -60,6 +60,7 @@ def calc_preview(map_area_gdf, paper_dimensions_mm):
 def main():
     #todo check some reqired constants
     #todo check file validity - if osm file exits
+    #todo check missing styles (create array of reqired styles for every category), and by wanted categories (landues, water) check if have all required styles (check only for default category styles) (in instance of style assigner)
     #------------get map area and calc paper sizes, and calc preview
     map_area_gdf = GdfUtils.get_area_gdf(AREA, EPSG_DEGREE_NUMBER)
     boundary_map_area_gdf = map_area_gdf.copy()
@@ -112,16 +113,16 @@ def main():
     #------------style elements------------
     #todo styles for ways and areas separeated - 2 geodata stylers
 
-    ways_style_assigner = StyleAssigner(WAYS_STYLES, GENERAL_DEFAULT_STYLES)
+    ways_style_assigner = StyleAssigner(WAYS_STYLES, GENERAL_DEFAULT_STYLES, GENERAL_MANDATORY_STYLES)
     ways_gdf = ways_style_assigner.assign_styles_to_gdf(ways_gdf, wanted_ways,
                                                     [StyleKey.COLOR, StyleKey.ZINDEX, StyleKey.LINEWIDTH, StyleKey.BGCOLOR])
-    areas_style_assigner = StyleAssigner(AREAS_STYLES, GENERAL_DEFAULT_STYLES)
+    areas_style_assigner = StyleAssigner(AREAS_STYLES, GENERAL_DEFAULT_STYLES, GENERAL_MANDATORY_STYLES)
     areas_gdf = areas_style_assigner.assign_styles_to_gdf(areas_gdf, wanted_areas,
-                                                     [StyleKey.COLOR, StyleKey.ZINDEX])
+                                                     [StyleKey.COLOR, StyleKey.EDGE_COLOR, StyleKey.ZINDEX,
+                                                      StyleKey.LINEWIDTH, StyleKey.ALPHA])
 
     ways_gdf = GdfUtils.sort_gdf_by_column(ways_gdf, StyleKey.ZINDEX)
     areas_gdf = GdfUtils.sort_gdf_by_column(areas_gdf, StyleKey.ZINDEX)
-    
     #todo check if gpx go somewhere outside reqired_area - add warning 
     gpx_processer =  GpxProcesser('../gpxs')
     gpxs_gdf = gpx_processer.get_gpxs_gdf(EPSG_DEGREE_NUMBER)
