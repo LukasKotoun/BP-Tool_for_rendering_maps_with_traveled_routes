@@ -112,14 +112,15 @@ def main():
 
     #------------style elements------------
     #todo styles for ways and areas separeated - 2 geodata stylers
-
-    ways_style_assigner = StyleAssigner(WAYS_STYLES, GENERAL_DEFAULT_STYLES, GENERAL_MANDATORY_STYLES)
+    ways_style_assigner = StyleAssigner(WAYS_STYLES, GENERAL_DEFAULT_STYLES, WAY_MANDATORY_STYLES)
     ways_gdf = ways_style_assigner.assign_styles_to_gdf(ways_gdf, wanted_ways,
-                                                    [StyleKey.COLOR, StyleKey.ZINDEX, StyleKey.LINEWIDTH, StyleKey.BGCOLOR])
-    areas_style_assigner = StyleAssigner(AREAS_STYLES, GENERAL_DEFAULT_STYLES, GENERAL_MANDATORY_STYLES)
+                                                    [StyleKey.COLOR, StyleKey.ZINDEX, StyleKey.LINEWIDTH,
+                                                     StyleKey.BGCOLOR, StyleKey.LINESTYLE])
+    areas_style_assigner = StyleAssigner(AREAS_STYLES, GENERAL_DEFAULT_STYLES, AREA_MANDATORY_STYLES)
     areas_gdf = areas_style_assigner.assign_styles_to_gdf(areas_gdf, wanted_areas,
                                                      [StyleKey.COLOR, StyleKey.EDGE_COLOR, StyleKey.ZINDEX,
-                                                      StyleKey.LINEWIDTH, StyleKey.ALPHA])
+                                                      StyleKey.LINEWIDTH, StyleKey.ALPHA, StyleKey.LINESTYLE])
+
 
     ways_gdf = GdfUtils.sort_gdf_by_column(ways_gdf, StyleKey.ZINDEX)
     areas_gdf = GdfUtils.sort_gdf_by_column(areas_gdf, StyleKey.ZINDEX)

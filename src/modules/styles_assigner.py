@@ -9,18 +9,19 @@ from common.custom_types import  FeaturesCategoriesStyles, WantedCategories, Fea
 
 class StyleAssigner:
     def __init__(self, categories_styles: FeaturesCategoriesStyles,
-                 general_default_styles: FeatureStyles, general_mandatory_styles: FeatureStyles):  
+                 general_default_styles: FeatureStyles, mandatory_styles: FeatureStyles):  
         self.categories_styles = categories_styles
         self.general_default_styles = general_default_styles
-        self.general_mandatory_styles = general_mandatory_styles
+        self.mandatory_styles = mandatory_styles
 
     def _get_styles_for_map_feature(self, map_feature: pd.DataFrame, available_styles: FeaturesCategoriesStyles,
                               wanted_feature_styles: list[StyleKey]) -> FeatureStyles:
-        """Find and return styles for concrete map feature.
+        """Find and return styles for concrete map feature. Assign concrete styles for feature,
+        than add mandatory for feature category and then mandatory for all features.
 
         Args:
             map_feature (pd.DataFrame): Element to find styles for
-            available_styles (FeaturesCategoriesStyles): Dict where to find styles for that element - all finded styles will be assigned 
+            available_styles (FeaturesCategoriesStyles): dict with default styles for category of features. All finded styles will be assigned 
             wanted_feature_styles (list[str]): Used only in combination with general styles if map element category is not found in available_styles
 
         Returns:
@@ -33,23 +34,9 @@ class StyleAssigner:
             # osm data feature is in this features category
             if features_category in map_feature and pd.notna(map_feature[features_category]):
                 # get styles for concrete feature in this category of features or get default styles for this category of features
-                features_category_styles: FeatureStyles = features_category_map.get(map_feature[features_category], features_category_default_styles) 
-                
-                # iterate through all available styles for this feature (will be already filtered to contains only wanted)
-                for style_key, style in features_category_styles.items():
-                    assigned_styles[style_key] = style 
-                
-                # assign rest of missing styles from default 
-                # (if the category should have some common styles that are not specified for a particular feature)
-                if(features_category_styles is not features_category_default_styles):
-                    for style_key, default_style in features_category_default_styles.items():
-                        if style_key not in assigned_styles:
-                            assigned_styles[style_key] = default_style 
-                # assign styles that all feature must have
-                for style_key, default_style in self.general_mandatory_styles.items():
-                    if style_key not in assigned_styles:
-                        assigned_styles[style_key] = default_style         
-                # map_feature category was found (map_feature can be in one category only) and styles are assigned 
+                features_category_styles = features_category_map.get(map_feature[features_category], features_category_default_styles)
+                #assignd general styles, add new and overwrite by features_category_default_styles and again get new and overwrite by features_category_styles
+                assigned_styles = {**self.mandatory_styles, **features_category_default_styles, **features_category_styles}
                 return assigned_styles
         warnings.warn("_get_styles_for_map_feature: some map FeaturesCategory does not have any style in some FeaturesCategoriesStyles")
         # osm data feature is not in any features category avilable in avilable_styles
@@ -151,7 +138,7 @@ class StyleAssigner:
             warnings.warn(f"Reassigning once assigned styles (the new one were used): {', '.join([str(col) for col in duplicated_columns])}")
         
         styled_gdf = gdf.join(styles_columns_df)     
-    
+
         # convert object columns to pandas category - for memory optimalization
         for style_column in wanted_styles:
             if(style_column in styled_gdf and styled_gdf[style_column].dtype == object):

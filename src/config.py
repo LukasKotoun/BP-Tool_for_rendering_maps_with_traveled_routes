@@ -9,7 +9,7 @@ OSM_OUTPUT_FILE_NAME: None | str = '../osm_files/jihmor.osm.pbf' # set if want o
 # AREA: str | list[Point] = [(-18.14143,65.68868),(-18.08538,65.68868),(-18.08538,65.67783),(-18.14143,65.67783)] #island
 # AREA: str | list[Point] = [(6.94872,4.84293),(6.99314,4.84293),(6.99314,4.81603),(6.94872,4.81603)] #afrika
 AREA: str | list[Point] = "Brno, Czech Republic"
-OUTPUT_PDF_NAME: str = '../pdfs/Brno'
+OUTPUT_PDF_NAME: str = '../pdfs/brno'
 PAPER_DIMENSIONS: PaperSize | tuple[float | None, float | None] = PaperSize.A4.dimensions
 # PAPER_DIMENSIONS = (1200, None) # set own dimensions. If one is left as 'None' it will be automaticaly calculated using area size
 # PAPER_DIMENSIONS = (400, None)
@@ -63,7 +63,7 @@ LINEWIDTH_MULTIPLIER = 1
 wanted_ways: WantedCategories = {
     'waterway': [],
     # 'highway': ['motorway', 'trunk','primary', 'secondary'],
-    'highway': [ 'motorway', 'trunk','primary', 'secondary', 'tertiary','unclassified', 'residential','path', 'footway' ],
+    'highway': [ 'motorway', 'trunk','primary', 'secondary', 'tertiary', 'unclassified', 'residential', 'path', 'footway' ],
     # 'highway':[],
     'railway': ['rail']
 }
@@ -79,7 +79,7 @@ unwanted_ways_tags: UnwantedCategories  ={
 wanted_areas: WantedCategories = {
     # # 'landuse': ['forest', 'residential', 'farmland', 'meadow', 'grass'],
     'landuse': ['forest', 'residential', 'commercial', 'retail', 'industrial', 'farmland', 'meadow', 'grass'],
-    'leisure': ['park', 'pitch', 'garden', 'golf_course', 'nature_reserve', 'playground', 'stadium','swimming_pool', 'sports_centre'],
+    'leisure': ['park', 'pitch', 'garden', 'golf_course', 'nature_reserve', 'playground', 'stadium', 'swimming_pool', 'sports_centre'],
     # # 'leisure': ['park', 'pitch', 'garden', 'golf_course', 'nature_reserve'],
     'water': [],
     'boundary': ['national_park'] # todo in automatic this should be to turnoff/on
@@ -97,11 +97,14 @@ GENERAL_DEFAULT_STYLES: FeatureStyles = {StyleKey.COLOR: '#EDEDE0',  StyleKey.ZI
                                          StyleKey.LINEWIDTH: 1, StyleKey.BGCOLOR: '#5D5D5D', StyleKey.LINESTYLE: '-',
                                          StyleKey.EDGE_COLOR: 'none', StyleKey.ALPHA: 1}
 
-#styles that must be assigned to all features
-GENERAL_MANDATORY_STYLES: FeatureStyles = {
+#styles that must be assigned to all area features
+AREA_MANDATORY_STYLES: FeatureStyles = {
     StyleKey.COLOR: '#EDEDE0', StyleKey.ALPHA: 1
 }
-	
+#styles that must be assigned to all way features
+WAY_MANDATORY_STYLES: FeatureStyles = {
+    StyleKey.COLOR: '#EDEDE0', StyleKey.ALPHA: 1, StyleKey.LINEWIDTH: 1, StyleKey.LINESTYLE: '-'
+}
 highway_styles: FeaturesCategoryStyle = {
     'motorway': {StyleKey.COLOR: '#8cd25f', StyleKey.ZINDEX: 7, StyleKey.LINEWIDTH: 32}, 
     'trunk': {StyleKey.COLOR: '#FDC364', StyleKey.ZINDEX: 6, StyleKey.LINEWIDTH: 26},
@@ -117,8 +120,8 @@ highway_styles: FeaturesCategoryStyle = {
 }
 
 railway_styles: FeaturesCategoryStyle = {
-    'rail': {StyleKey.COLOR: '#FFFFFF', StyleKey.ZINDEX: 1, StyleKey.LINEWIDTH: 10, StyleKey.BGCOLOR: '#5d5d5d'},
-    'tram': {StyleKey.COLOR: '#404040', StyleKey.ZINDEX: 1, StyleKey.LINEWIDTH: 4},
+    'rail': {StyleKey.COLOR: '#FFFFFF', StyleKey.ZINDEX: 1, StyleKey.LINEWIDTH: 10, StyleKey.BGCOLOR: '#5d5d5d', StyleKey.LINESTYLE: (0, (5, 5))},
+    'tram': {StyleKey.COLOR: '#404040', StyleKey.ZINDEX: 1, StyleKey.LINEWIDTH: 4, StyleKey.ALPHA: 0.6},
     'tram_stop': {StyleKey.COLOR: '#404040', StyleKey.ZINDEX: 1, StyleKey.LINEWIDTH: 4},
 }
 
@@ -127,7 +130,7 @@ railway_styles: FeaturesCategoryStyle = {
 WAYS_STYLES: FeaturesCategoriesStyles = {
     'waterway': ({}, {StyleKey.COLOR: '#8FB8DB', StyleKey.LINEWIDTH: 8}),
     'highway': (highway_styles, {StyleKey.COLOR: '#FFFFFF', StyleKey.ZINDEX: 2, StyleKey.LINEWIDTH: 8}),
-    'railway': (railway_styles, {StyleKey.COLOR: '#FFFFFF', StyleKey.ZINDEX: 2, StyleKey.LINEWIDTH: 8, StyleKey.BGCOLOR: '#5d5d5d'}),
+    'railway': (railway_styles, {StyleKey.COLOR: '#FFFFFF', StyleKey.ZINDEX: 2, StyleKey.LINEWIDTH: 8}),
 }
 #areas
 
@@ -148,7 +151,8 @@ leisure_styles: FeaturesCategoryStyle = {
     'playground': {StyleKey.COLOR: '#DCE9B9'},  
     'pitch': {StyleKey.COLOR: '#DCE9B9', StyleKey.ZINDEX: 1},  
     'sports_centre': {StyleKey.COLOR: '#9FC98D'}, 
-    'nature_reserve':{StyleKey.COLOR: 'none', StyleKey.EDGE_COLOR: '#97BB72', StyleKey.LINEWIDTH: 80, StyleKey.ZINDEX: 1, StyleKey.ALPHA: 0.85}
+    'nature_reserve':{StyleKey.COLOR: 'none', StyleKey.EDGE_COLOR: '#97BB72', StyleKey.LINEWIDTH: 80,
+                      StyleKey.ZINDEX: 1, StyleKey.ALPHA: 0.85, StyleKey.LINESTYLE:'-'}
 }
 
 building_styles: FeaturesCategoryStyle = {
@@ -161,5 +165,5 @@ AREAS_STYLES: FeaturesCategoriesStyles = {
     'natural': (landuse_styles, {StyleKey.COLOR: '#B7DEA6'}),
     'landuse': (landuse_styles, {StyleKey.COLOR: '#EDEDE0'}),
     'water': ({}, {StyleKey.COLOR: '#8FB8DB', StyleKey.ZINDEX: 1}),
-    'boundary':({}, {StyleKey.EDGE_COLOR: '#97BB72', StyleKey.LINEWIDTH: 80, StyleKey.ZINDEX: 1, StyleKey.ALPHA: 0.85})
+    'boundary':({}, {StyleKey.EDGE_COLOR: '#97BB72', StyleKey.LINEWIDTH: 80, StyleKey.LINESTYLE:'-', StyleKey.ZINDEX: 1, StyleKey.ALPHA: 0.85})
 }

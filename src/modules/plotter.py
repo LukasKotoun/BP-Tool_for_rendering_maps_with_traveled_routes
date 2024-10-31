@@ -1,9 +1,7 @@
 from matplotlib import patheffects
-import warnings
 import matplotlib.pyplot as plt
 import geopandas as gpd
 import pandas as pd
-from shapely import geometry
 
 
 from config import * 
@@ -25,7 +23,8 @@ class Plotter:
         self.map_object_scaling_factor = map_object_scaling_factor
 
     def init_plot(self, map_bg_color, areas_ratios_preview = None):
-        self.fig, self.ax = plt.subplots(figsize=(self.paper_dimensions_mm[0]/self.MM_TO_INCH,self.paper_dimensions_mm[1]/self.MM_TO_INCH)) #convert mm to inch
+        self.fig, self.ax = plt.subplots(figsize=(self.paper_dimensions_mm[0]/self.MM_TO_INCH,
+                                                  self.paper_dimensions_mm[1]/self.MM_TO_INCH)) #convert mm to inch
         if(areas_ratios_preview is None):
             self.fig.subplots_adjust(left=0, right=1, top=1, bottom=0)  # No margins
         else:
@@ -42,23 +41,17 @@ class Plotter:
     def __plot_highways(self,highways_gdf):
         if(highways_gdf.empty):
             return
-        
-        for line, color, linewidth in zip(highways_gdf.geometry, highways_gdf[StyleKey.COLOR], highways_gdf[StyleKey.LINEWIDTH]):
-
-            x, y = line.xy
-            self.ax.plot(x, y, color=color, linewidth = linewidth, solid_capstyle = 'round')
+        highways_gdf.plot(ax = self.ax,color=highways_gdf[StyleKey.COLOR], linewidth = highways_gdf[StyleKey.LINEWIDTH],
+                           linestyle = highways_gdf[StyleKey.LINESTYLE], path_effects=[patheffects.Stroke(capstyle="round")])
             
     def __plot_waterways(self, waterways_gdf):
         if(waterways_gdf.empty):
             return
-        waterways_gdf.plot(ax = self.ax,color=waterways_gdf[StyleKey.COLOR], linewidth = waterways_gdf[StyleKey.LINEWIDTH])
+        waterways_gdf.plot(ax = self.ax,color=waterways_gdf[StyleKey.COLOR], linewidth = waterways_gdf[StyleKey.LINEWIDTH],
+                           linestyle = waterways_gdf[StyleKey.LINESTYLE], path_effects=[patheffects.Stroke(capstyle="round")])
    
-        # for line, color, linewidth in zip(waterways_gdf.geometry, waterways_gdf[StyleKey.COLOR], waterways_gdf[StyleKey.LINEWIDTH]):
-        #     x, y = line.xy
-        #     self.ax.plot(x, y, color=color, linewidth = linewidth, solid_capstyle='round')
 
                     
-            
     def __plot_railways(self,railways_gdf, rail_bg_width_offset, tram_second_line_spacing):
         #todo change ploting style
         if(railways_gdf.empty):
@@ -66,23 +59,21 @@ class Plotter:
         
         tram_gdf, rails_gdf = GdfUtils.filter_gdf_in(railways_gdf, 'railway', ['tram'])
         if(not tram_gdf.empty):
-            for line, color, linewidth in zip(tram_gdf.geometry, tram_gdf[StyleKey.COLOR], tram_gdf[StyleKey.LINEWIDTH]):
-                x, y = line.xy 
-                self.ax.plot(x, y, color=color, linewidth = linewidth, solid_capstyle='round', alpha=0.6,path_effects=[
-                patheffects.withTickedStroke(angle=-90, spacing=tram_second_line_spacing, length=0.05),
-                patheffects.withTickedStroke(angle=90, spacing=tram_second_line_spacing, length=0.05)])
-                
+            tram_gdf.plot(ax = self.ax, color=tram_gdf[StyleKey.COLOR], linewidth = tram_gdf[StyleKey.LINEWIDTH],
+                          alpha=tram_gdf[StyleKey.ALPHA], linestyle = tram_gdf[StyleKey.LINESTYLE], path_effects=[
+                    patheffects.Stroke(capstyle="round"),
+                    patheffects.withTickedStroke(angle=-90, spacing=tram_second_line_spacing, length=0.05),
+                    patheffects.withTickedStroke(angle=90, spacing=tram_second_line_spacing, length=0.05)])
+                    
         if(not rails_gdf.empty and StyleKey.BGCOLOR in rails_gdf):
-
-            for line, color, bg_color, linewidth in zip(
-            rails_gdf.geometry, rails_gdf[StyleKey.COLOR],
-            rails_gdf[StyleKey.BGCOLOR], rails_gdf[StyleKey.LINEWIDTH]
-            ):
-                x, y = line.xy
-                self.ax.plot(x, y, color = bg_color, linewidth = linewidth + rail_bg_width_offset)
-                self.ax.plot(x, y, color = color, linewidth = linewidth, linestyle=(0, (5, 5)))
-    
-   
+             rails_gdf.plot(ax = self.ax, color=rails_gdf[StyleKey.BGCOLOR],
+                            linewidth = rails_gdf[StyleKey.LINEWIDTH] + rail_bg_width_offset,
+                            alpha=rails_gdf[StyleKey.ALPHA], linestyle = rails_gdf[StyleKey.LINESTYLE], path_effects=[
+                    patheffects.Stroke(capstyle="round")])
+             
+             rails_gdf.plot(ax = self.ax, color=rails_gdf[StyleKey.COLOR], linewidth = rails_gdf[StyleKey.LINEWIDTH],
+                            alpha=rails_gdf[StyleKey.ALPHA], linestyle = rails_gdf[StyleKey.LINESTYLE])        
+                    
     @time_measurement_decorator("wayplot")            
     def plot_ways(self):
         if(self.ways_element_gdf.empty or StyleKey.LINEWIDTH not in self.ways_element_gdf 
@@ -97,7 +88,7 @@ class Plotter:
         self.__plot_highways(highways_gdf)
         
         railways_gdf, rest_gdf = GdfUtils.filter_gdf_in(rest_gdf, 'railway')
-        self.__plot_railways(railways_gdf, 2*self.map_object_scaling_factor,15*self.map_object_scaling_factor)
+        self.__plot_railways(railways_gdf, 2*self.map_object_scaling_factor, 15*self.map_object_scaling_factor)
 
 
     @time_measurement_decorator("areaPlot")            
@@ -115,8 +106,10 @@ class Plotter:
             StyleKey.LINEWIDTH in edge_areas_gdf):
                 #todo to for with round cupstyles
                 edge_areas_gdf[StyleKey.LINEWIDTH] = edge_areas_gdf[StyleKey.LINEWIDTH] * self.map_object_scaling_factor
-                edge_areas_gdf.plot(ax=self.ax, facecolor = 'none', edgecolor = edge_areas_gdf[StyleKey.EDGE_COLOR],
-                                            linewidth = edge_areas_gdf[StyleKey.LINEWIDTH], alpha=edge_areas_gdf[StyleKey.ALPHA])
+                edge_areas_gdf.plot(
+                    ax=self.ax, facecolor = 'none', edgecolor = edge_areas_gdf[StyleKey.EDGE_COLOR],
+                    linewidth = edge_areas_gdf[StyleKey.LINEWIDTH], alpha=edge_areas_gdf[StyleKey.ALPHA],
+                    linestyle = edge_areas_gdf[StyleKey.LINESTYLE], path_effects=[patheffects.Stroke(capstyle="round")])
 
     
     @time_measurement_decorator("gpxsPlot")            
