@@ -3,13 +3,13 @@ from common.map_enums import *
 
 
 #--------------normal map area--------------
-OSM_FILE_NAME: str = '../osm_files/jihmor.osm.pbf' #todo need fix - cut bigger area than needed
+OSM_FILE_NAME: str = '../osm_files/brno.osm.pbf' #todo need fix - cut bigger area than needed
 OSM_WANT_EXTRACT_AREA: bool = False
 OSM_OUTPUT_FILE_NAME: None | str = '../osm_files/jihmor.osm.pbf' # set if want osm file cutting using osmium command line tool (need to be uinstalled), If not set to None
-OUTPUT_PDF_NAME: str = '../pdfs/jihmor'
 # AREA: str | list[Point] = [(-18.14143,65.68868),(-18.08538,65.68868),(-18.08538,65.67783),(-18.14143,65.67783)] #island
 # AREA: str | list[Point] = [(6.94872,4.84293),(6.99314,4.84293),(6.99314,4.81603),(6.94872,4.81603)] #afrika
-AREA: str | list[Point] = "Jihomoravský kraj, Czech Republic"
+AREA: str | list[Point] = "Brno, Czech Republic"
+OUTPUT_PDF_NAME: str = '../pdfs/Brno'
 PAPER_DIMENSIONS: PaperSize | tuple[float | None, float | None] = PaperSize.A4.dimensions
 # PAPER_DIMENSIONS = (1200, None) # set own dimensions. If one is left as 'None' it will be automaticaly calculated using area size
 # PAPER_DIMENSIONS = (400, None)
@@ -148,7 +148,7 @@ leisure_styles: FeaturesCategoryStyle = {
     'playground': {StyleKey.COLOR: '#DCE9B9'},  
     'pitch': {StyleKey.COLOR: '#DCE9B9', StyleKey.ZINDEX: 1},  
     'sports_centre': {StyleKey.COLOR: '#9FC98D'}, 
-    'nature_reserve':{StyleKey.COLOR: 'none', StyleKey.EDGE_COLOR: '#97BB72', StyleKey.LINEWIDTH: 80, StyleKey.ZINDEX: 1, StyleKey.ALPHA: 0.6}
+    'nature_reserve':{StyleKey.COLOR: 'none', StyleKey.EDGE_COLOR: '#97BB72', StyleKey.LINEWIDTH: 80, StyleKey.ZINDEX: 1, StyleKey.ALPHA: 0.85}
 }
 
 building_styles: FeaturesCategoryStyle = {
@@ -161,5 +161,5 @@ AREAS_STYLES: FeaturesCategoriesStyles = {
     'natural': (landuse_styles, {StyleKey.COLOR: '#B7DEA6'}),
     'landuse': (landuse_styles, {StyleKey.COLOR: '#EDEDE0'}),
     'water': ({}, {StyleKey.COLOR: '#8FB8DB', StyleKey.ZINDEX: 1}),
-    'boundary':({}, {StyleKey.EDGE_COLOR: '#97BB72', StyleKey.LINEWIDTH: 80, StyleKey.ZINDEX: 1, StyleKey.ALPHA: 0.6})
+    'boundary':({}, {StyleKey.EDGE_COLOR: '#97BB72', StyleKey.LINEWIDTH: 80, StyleKey.ZINDEX: 1, StyleKey.ALPHA: 0.85})
 }

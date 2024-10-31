@@ -102,19 +102,21 @@ class Plotter:
 
     @time_measurement_decorator("areaPlot")            
     def plot_areas(self):
-        # [pd.NA, 'none'] - get all that dont have nan or 'none'
+        # [pd.NA, 'none'] - get all that dont have nan or 'none' (if does not have that column will return true for everything - need check if have that column)
         # plot face
-        face_areas_gdf= GdfUtils.filter_gdf_not_in(self.areas_element_gdf, StyleKey.COLOR, [pd.NA, 'none'])[0]
-        if(not face_areas_gdf.empty and StyleKey.COLOR in face_areas_gdf):
-            face_areas_gdf.plot(ax=self.ax, color = face_areas_gdf[StyleKey.COLOR], alpha=face_areas_gdf[StyleKey.ALPHA])
+        if(StyleKey.COLOR in self.areas_element_gdf):
+            face_areas_gdf = GdfUtils.filter_gdf_not_in(self.areas_element_gdf, StyleKey.COLOR, [pd.NA, 'none'])[0]
+            if(not face_areas_gdf.empty and StyleKey.COLOR in face_areas_gdf):
+                face_areas_gdf.plot(ax=self.ax, color = face_areas_gdf[StyleKey.COLOR], alpha=face_areas_gdf[StyleKey.ALPHA])
         # plot bounds
-        edge_areas_gdf = GdfUtils.filter_gdf_not_in(self.areas_element_gdf, StyleKey.EDGE_COLOR, [pd.NA, 'none'])[0]
-        if(not edge_areas_gdf.empty and StyleKey.EDGE_COLOR in edge_areas_gdf and 
-           StyleKey.LINEWIDTH in edge_areas_gdf):
-            #todo to for with round cupstyles
-            edge_areas_gdf[StyleKey.LINEWIDTH] = edge_areas_gdf[StyleKey.LINEWIDTH] * self.map_object_scaling_factor
-            edge_areas_gdf.plot(ax=self.ax, facecolor = 'none', edgecolor = edge_areas_gdf[StyleKey.EDGE_COLOR],
-                                         linewidth = edge_areas_gdf[StyleKey.LINEWIDTH], alpha=edge_areas_gdf[StyleKey.ALPHA])
+        if(StyleKey.EDGE_COLOR in self.areas_element_gdf):
+            edge_areas_gdf = GdfUtils.filter_gdf_not_in(self.areas_element_gdf, StyleKey.EDGE_COLOR, [pd.NA, 'none'])[0]
+            if(not edge_areas_gdf.empty and StyleKey.EDGE_COLOR in edge_areas_gdf and 
+            StyleKey.LINEWIDTH in edge_areas_gdf):
+                #todo to for with round cupstyles
+                edge_areas_gdf[StyleKey.LINEWIDTH] = edge_areas_gdf[StyleKey.LINEWIDTH] * self.map_object_scaling_factor
+                edge_areas_gdf.plot(ax=self.ax, facecolor = 'none', edgecolor = edge_areas_gdf[StyleKey.EDGE_COLOR],
+                                            linewidth = edge_areas_gdf[StyleKey.LINEWIDTH], alpha=edge_areas_gdf[StyleKey.ALPHA])
 
     
     @time_measurement_decorator("gpxsPlot")            
