@@ -15,6 +15,7 @@ class OsmDataPreprocessor:
             command = [
                 'osmium', 'extract',
                 '--strategy', 'smart',
+                '-S', 'types=any',
                 '-p', temp_geojson_path,
                 self.osm_input_file,
                 '-o', self.osm_output_file
@@ -22,7 +23,6 @@ class OsmDataPreprocessor:
             subprocess.run(command, check=True)
             return self.osm_output_file
 
-        
     def create_tmp_geojson(self, reqired_area_gdf: GeoDataFrame) -> str:
         #create tmp file for osmium extraction
         with tempfile.NamedTemporaryFile(delete=False, suffix=".geojson") as temp_geojson:
