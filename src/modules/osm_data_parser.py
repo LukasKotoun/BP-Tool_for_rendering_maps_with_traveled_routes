@@ -5,35 +5,41 @@ import osmium
 from shapely import wkt
 import pandas as pd
 import geopandas as gpd
+from shapely.geometry import LineString
 
 from common.common_helpers import time_measurement_decorator
 
 class OsmDataParser(osmium.SimpleHandler):
     
-    def __init__(self, wanted_ways, wanted_areas, unwanted_ways_tags, unwanted_areas_tags,
-                 way_additional_columns = [], area_additional_columns = []):
+    def __init__(self, wanted_nodes, wanted_ways, wanted_areas, unwanted_nodes_tags, unwanted_ways_tags, unwanted_areas_tags,
+                 node_additional_columns = {}, way_additional_columns = {}, area_additional_columns = {}):
         super().__init__()
         #init for storing loaded elements
+        self.nodes_tags = []
+        self.nodes_geometry = []
         self.ways_tags = []
         self.ways_geometry = []
         self.areas_tags = []
         self.areas_geometry = []
         
+        self.wanted_nodes = wanted_nodes
         self.wanted_ways = wanted_ways
         self.wanted_areas = wanted_areas
+        self.unwanted_nodes_tags = unwanted_nodes_tags
         self.unwanted_ways_tags = unwanted_ways_tags
         self.unwanted_areas_tags = unwanted_areas_tags
         
         # merge always wanted columns (map objects) with additions wanted info columns
-        self.way_columns = wanted_ways.keys() | way_additional_columns
-        self.area_columns = wanted_areas.keys() | area_additional_columns
+        self.nodes_columns = set(wanted_nodes.keys() | node_additional_columns)
+        self.way_columns = set(wanted_ways.keys() | way_additional_columns)
+        self.area_columns = set(wanted_areas.keys() | area_additional_columns)
         # Create WKT Factory for geometry conversion
-        self.geom_factory = osmium.geom.WKTFactory()  
+        # self.geom_factory =   
         #extract function from libraries - quicker than extracting every time 
-        self.geom_factory_linestring = self.geom_factory.create_linestring
-        self.geom_factory_polygon = self.geom_factory.create_multipolygon
+        self.geom_factory_linestring = osmium.geom.WKTFactory().create_linestring
+        self.geom_factory_polygon = osmium.geom.WKTFactory().create_multipolygon
+        self.geom_factory_point = osmium.geom.WKTFactory().create_point
         self.wkt_loads_func = wkt.loads
-
     @staticmethod
     def _apply_filters_not_allowed(not_allowed_tags, tags, curr_tag_key_inside = None):
         """Checking for unwanted tag values in tags. Recursively going through 
@@ -57,6 +63,8 @@ class OsmDataParser(osmium.SimpleHandler):
         Returns:
             bool: True if doesn't contain any not allowed tags otherwise false 
         """
+        if(not not_allowed_tags):
+            return True
         for dict_tag_key, unwanted_values in not_allowed_tags.items():
             #not directly inside any tag and curr tag is not in tags => skip
             if(curr_tag_key_inside is None and dict_tag_key not in tags): continue
@@ -111,7 +119,22 @@ class OsmDataParser(osmium.SimpleHandler):
                     return True      
         # map feature is not in wanted features        
         return False
-    
+    def node(self, node):
+        if OsmDataParser._apply_filters(self.wanted_nodes, node.tags):
+            try:
+                # convert osmium node to wkt str format and than to shapely point geometry
+                shapely_geometry = self.wkt_loads_func(self.geom_factory_point(node)) 
+                filtered_tags = {tag_key: tag_value for tag_key, tag_value in node.tags if tag_key in self.nodes_columns}
+                self.nodes_geometry.append(shapely_geometry)
+                self.nodes_tags.append(filtered_tags)
+            except RuntimeError as e:
+                warnings.warn(f"Invalid node geometry: {e}")
+                return
+            except Exception as e:
+                warnings.warn(f"Error in node function - osm file processing: {e}")
+                return
+            
+
     def way(self, way):
         if OsmDataParser._apply_filters(self.wanted_ways, way.tags) and OsmDataParser._apply_filters_not_allowed(self.unwanted_ways_tags, way.tags):
             try:
@@ -143,8 +166,14 @@ class OsmDataParser(osmium.SimpleHandler):
             
     @time_measurement_decorator("gdf creating")
     def create_gdf(self, epsg_number):
+        nodes_gdf = gpd.GeoDataFrame(pd.DataFrame(self.nodes_tags).assign(geometry=self.nodes_geometry), crs=f"EPSG:{epsg_number}")
         ways_gdf = gpd.GeoDataFrame(pd.DataFrame(self.ways_tags).assign(geometry=self.ways_geometry), crs=f"EPSG:{epsg_number}")
         areas_gdf = gpd.GeoDataFrame(pd.DataFrame(self.areas_tags).assign(geometry=self.areas_geometry), crs=f"EPSG:{epsg_number}")
+
+        for column, _ in self.wanted_nodes.items():
+            if(column in nodes_gdf):
+                nodes_gdf[column] = nodes_gdf[column].astype("category")
+            
         for column, _ in self.wanted_ways.items():
             if(column in ways_gdf):
                 ways_gdf[column] = ways_gdf[column].astype("category")
@@ -152,17 +181,19 @@ class OsmDataParser(osmium.SimpleHandler):
         for column, _ in self.wanted_areas.items():
             if(column in areas_gdf):
                 areas_gdf[column] = areas_gdf[column].astype("category")
-                
+        # print(nodes_gdf.memory_usage(deep=True))
         # print(ways_gdf.memory_usage(deep=True))
         # print(areas_gdf.memory_usage(deep=True))
-        print(f"ways: {ways_gdf.memory_usage(deep=True).sum()},  areas: {areas_gdf.memory_usage(deep=True).sum()},combined: {ways_gdf.memory_usage(deep=True).sum() + areas_gdf.memory_usage(deep=True).sum()}")
+        print(f"nodes:{nodes_gdf.memory_usage(deep=True).sum()},  ways: {ways_gdf.memory_usage(deep=True).sum()},  areas: {areas_gdf.memory_usage(deep=True).sum()},combined: {nodes_gdf.memory_usage(deep=True).sum() + ways_gdf.memory_usage(deep=True).sum() + areas_gdf.memory_usage(deep=True).sum()}")
             
-        return ways_gdf, areas_gdf
+        return nodes_gdf, ways_gdf, areas_gdf
     
     def get_required_area_gdf(self):
         return self.reqired_area_polygon
     
     def clear_gdf(self):
+        self.nodes_geometry.clear()
+        self.nodes_tags.clear()
         self.ways_geometry.clear()
         self.ways_tags.clear()
         self.areas_geometry.clear()

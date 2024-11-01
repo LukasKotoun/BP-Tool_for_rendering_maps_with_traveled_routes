@@ -13,7 +13,7 @@ from common.common_helpers import time_measurement_decorator
 class GdfUtils:
     
     @staticmethod
-    def get_area_gdf(area: str | list[Point]) -> gpd.GeoDataFrame:
+    def get_area_gdf(area: str | list[Point], epsg) -> gpd.GeoDataFrame:
         if isinstance(area, str): 
             if area.endswith('.geojson'): 
                 reqired_area_gdf: gpd.GeoDataFrame = gpd.read_file(area) # Get area from geojson file
@@ -33,7 +33,7 @@ class GdfUtils:
         elif isinstance(area, list): #get area from coordinates
             #todo try catch...
             area_polygon = geometry.Polygon(area)
-            reqired_area_gdf = gpd.GeoDataFrame(geometry=[area_polygon], crs=f"EPSG:{EPSG_DEGREE_NUMBER}")
+            reqired_area_gdf = GdfUtils.create_gdf_from_polygon(area_polygon, epsg)
         else: #area cannot be created
             raise ValueError("Invalid area")
         return reqired_area_gdf
@@ -61,7 +61,8 @@ class GdfUtils:
             WorldSides.EAST: east,
             WorldSides.NORTH: north
             }
-        
+    
+    
     @staticmethod
     def get_polygon_bounds(polygon: geometry.polygon) -> BoundsDict:
         bounds: tuple[float] = polygon.bounds #[WorldSides.WEST, WorldSides.SOUTH, WorldSides.EAST, WorldSides.NORTH]
@@ -72,8 +73,8 @@ class GdfUtils:
     
     @staticmethod
     def get_dimensions(bounds: BoundsDict) -> DimensionsTuple:
-        width = bounds[WorldSides.EAST] - bounds[WorldSides.WEST]  # east - west
-        height = bounds[WorldSides.NORTH] - bounds[WorldSides.SOUTH]  # north - south
+        width = abs(bounds[WorldSides.EAST] - bounds[WorldSides.WEST])  # east - west
+        height = abs(bounds[WorldSides.NORTH] - bounds[WorldSides.SOUTH])  # north - south
         return width, height
     
     @staticmethod
@@ -90,8 +91,8 @@ class GdfUtils:
             return height
         
     @staticmethod
-    def get_map_size_gdf(*gdfs: gpd.GeoDataFrame) -> float: 
-        bounds = GdfUtils.get_bounds_gdf(*gdfs)
+    def get_map_size_gdf(*gdfs: gpd.GeoDataFrame,  epgs: int | None = None) -> float: 
+        bounds = GdfUtils.get_bounds_gdf(*gdfs, epgs=epgs)
         return GdfUtils.get_map_size(bounds)
    
     @staticmethod
@@ -101,7 +102,53 @@ class GdfUtils:
             return MapOrientation.LANDSCAPE
         else:
             return MapOrientation.PORTRAIT
-        
+  
+    @staticmethod 
+    def create_polygon_from_bounds(area_bounds: BoundsDict) -> geometry.polygon:
+        return geometry.Polygon([
+            (area_bounds[WorldSides.EAST], area_bounds[WorldSides.SOUTH]),  
+            (area_bounds[WorldSides.EAST], area_bounds[WorldSides.NORTH]),  
+            (area_bounds[WorldSides.WEST], area_bounds[WorldSides.NORTH]),  
+            (area_bounds[WorldSides.WEST], area_bounds[WorldSides.SOUTH]),  
+            (area_bounds[WorldSides.EAST], area_bounds[WorldSides.SOUTH])   # Closing the polygon
+        ])
+    
+    @staticmethod 
+    def create_gdf_from_bounds(area_bounds: BoundsDict, epsg) -> gpd.GeoDataFrame:
+        return GdfUtils.create_gdf_from_polygon(GdfUtils.create_polygon_from_bounds(area_bounds), epsg)
+    
+    @staticmethod 
+    def create_gdf_from_polygon(area_polygon: geometry.polygon, epsg) -> gpd.GeoDataFrame:
+        return gpd.GeoDataFrame(geometry=[area_polygon], crs=f"EPSG:{epsg}")
+    
+    @staticmethod
+    def is_polygon_inside_bounds(area_bounds: BoundsDict, polygon: geometry.polygon) -> bool:
+        return GdfUtils.is_polygon_inside_polygon(GdfUtils.create_polygon_from_bounds(area_bounds), polygon)
+
+    @staticmethod 
+    def create_polygon_from_gdf_bounds(*gdfs: gpd.GeoDataFrame, epgs: int | None = None) -> geometry.polygon:
+        bounds = GdfUtils.get_bounds_gdf(*gdfs, epgs=epgs)
+        return GdfUtils.create_polygon_from_bounds(bounds)
+    
+    @staticmethod 
+    def create_polygon_from_gdf(*gdfs: gpd.GeoDataFrame, epgs: int | None = None) -> geometry.polygon:
+        if(len(gdfs) == 1):
+            if(epgs is None):
+                return gdfs[0].unary_union
+            gdf_edit = gdfs[0].to_crs(epsg=epgs)    
+            return gdf_edit.unary_union
+        else:
+            if(epgs is None):
+                combined_gdf = gpd.GeoDataFrame(pd.concat(gdfs, ignore_index=True), crs=gdfs[0].crs)
+            else:
+                combined_gdf = gpd.GeoDataFrame(pd.concat(gdfs, ignore_index=True), crs=gdfs[0].crs, epgs = epgs)
+            return combined_gdf.unary_union
+    
+
+    @staticmethod
+    def is_polygon_inside_polygon(inner: geometry.polygon, outer: geometry.polygon) -> bool:
+        return outer.contains(inner)
+    
     @staticmethod
     def sort_gdf_by_column(gdf: gpd.GeoDataFrame, column_name: StyleKey, ascending: bool = True) -> gpd.GeoDataFrame:
         if(gdf.empty):
@@ -111,19 +158,9 @@ class GdfUtils:
         warnings.warn("Cannot sort - unexisting column name") 
         return gdf
     
-    @staticmethod
-    def is_polygon_inside_bounds(area_bounds: BoundsDict, polygon: geometry.polygon) -> bool:
-        polygon_from_bounds = geometry.Polygon([
-            (area_bounds[WorldSides.EAST], area_bounds[WorldSides.SOUTH]),  
-            (area_bounds[WorldSides.EAST], area_bounds[WorldSides.NORTH]),  
-            (area_bounds[WorldSides.WEST], area_bounds[WorldSides.NORTH]),  
-            (area_bounds[WorldSides.WEST], area_bounds[WorldSides.SOUTH]),  
-            (area_bounds[WorldSides.EAST], area_bounds[WorldSides.SOUTH])   # Closing the polygon
-        ])
-        return polygon_from_bounds.contains(polygon)
     
     @staticmethod
-    def createCondition(gdf: gpd.GeoDataFrame, att_name: str, att_values: list[str] = []) -> pd.Series:
+    def create_condition(gdf: gpd.GeoDataFrame, att_name: str, att_values: list[str] = []) -> pd.Series:
         """Create condition for given gdf, return true for every row that have att_name with att_value (if given,
         if not it check for any value (not nan)).
         If att_name is not in gdf it return condition with all false.
@@ -144,12 +181,12 @@ class GdfUtils:
     
     @staticmethod
     def filter_gdf_in(gdf: gpd.GeoDataFrame, att_name: str, att_values: list[str] = []) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]:
-        condition = GdfUtils.createCondition(gdf, att_name, att_values)
+        condition = GdfUtils.create_condition(gdf, att_name, att_values)
         return gdf[condition].reset_index(drop=True), gdf[~condition].reset_index(drop=True)
        
     @staticmethod
     def filter_gdf_not_in(gdf: gpd.GeoDataFrame, att_name: str, att_values: list[str] = []) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]:
-            condition = GdfUtils.createCondition(gdf, att_name, att_values)
+            condition = GdfUtils.create_condition(gdf, att_name, att_values)
             return gdf[~condition].reset_index(drop=True), gdf[condition].reset_index(drop=True)
     
     #todo use one filter creation and than add with 'and' all ways that are longer, that will leave false with all that i want...
@@ -161,7 +198,7 @@ class GdfUtils:
         condition: pd.Series[bool]  = gdf_mercator_projected.geometry.length > min_lenght
         filtered_gdf_mercator_projected = gdf_mercator_projected[condition]
         return filtered_gdf_mercator_projected.to_crs(epsg=gdf.crs)
-    
+
     @staticmethod
     def buffer_gdf_same_distance(gdf: gpd.GeoDataFrame, distance: float, epsg: int, resolution: int = 16,
                                  cap_style: str = 'round', join_style: str = 'round') -> gpd.GeoDataFrame:

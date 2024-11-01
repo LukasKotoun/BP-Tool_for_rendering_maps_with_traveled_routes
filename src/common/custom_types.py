@@ -1,9 +1,9 @@
 from common.map_enums import WorldSides, StyleKey
 BoundsDict = dict[WorldSides, float]
-ItemStyles = dict[StyleKey, str | int | float]
-CategoryStyle = dict[str, ItemStyles]
-WantedCategories = dict[str, list[str]]
+FeatureStyles = dict[StyleKey, str | int | float]
+FeaturesCategoryStyle = dict[str, FeatureStyles]
+WantedCategories = dict[str, set[str]]
 UnwantedCategories = dict[str, any]
-CategoriesStyles = dict[str, tuple[CategoryStyle, ItemStyles]]
+FeaturesCategoriesStyles = dict[str, tuple[FeaturesCategoryStyle, FeatureStyles]]
 DimensionsTuple = Point = tuple[float, float]
 OptDimensionsTuple = tuple[float | None, float | None]
