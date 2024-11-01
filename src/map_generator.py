@@ -89,14 +89,17 @@ def main():
         #todo check if osmium is instaled
         osm_data_preprocessor = OsmDataPreprocessor(OSM_FILE_NAME, OSM_OUTPUT_FILE_NAME)
         osm_file_name = osm_data_preprocessor.extract_area(map_area_gdf)
-    osm_file_parser = OsmDataParser(wanted_ways, wanted_areas, unwanted_ways_tags, unwanted_areas_tags)
+    osm_file_parser = OsmDataParser(
+        wanted_nodes, wanted_ways, wanted_areas,
+        unwanted_nodes_tags, unwanted_ways_tags, unwanted_areas_tags,
+        node_additional_columns=NODES_ADDITIONAL_COLUMNS)
     
     @time_measurement_decorator("apply file")
     def apply_file():
         osm_file_parser.apply_file(osm_file_name)
     apply_file()
     
-    ways_gdf, areas_gdf = osm_file_parser.create_gdf(EPSG_DEGREE_NUMBER)
+    nodes_gdf, ways_gdf, areas_gdf = osm_file_parser.create_gdf(EPSG_DEGREE_NUMBER)
     osm_file_parser.clear_gdf()
     
     # todo to function
@@ -106,12 +109,16 @@ def main():
     if(not GdfUtils.is_polygon_inside_polygon(reqired_area_polygon, whole_map_gdf)):
         warnings.warn("Selected area map is not whole inside given osm.pbf file. Posible problems")
         
-    #------------filter some elements out------------
+    #------------filter some elements out - before styles adding------------
     # only for some ways categories
     # ways_gdf = GdfUtils.filter_short_ways(ways_gdf, 10)
 
     #------------style elements------------
     #todo styles for ways and areas separeated - 2 geodata stylers
+    nodes_style_assigner = StyleAssigner(NODES_STYLES, GENERAL_DEFAULT_STYLES, NODES_MANDATORY_STYLES)
+    nodes_gdf = nodes_style_assigner.assign_styles_to_gdf(nodes_gdf, wanted_nodes,
+                                                    [StyleKey.COLOR])
+
     ways_style_assigner = StyleAssigner(WAYS_STYLES, GENERAL_DEFAULT_STYLES, WAY_MANDATORY_STYLES)
     ways_gdf = ways_style_assigner.assign_styles_to_gdf(ways_gdf, wanted_ways,
                                                     [StyleKey.COLOR, StyleKey.ZINDEX, StyleKey.LINEWIDTH,
@@ -121,7 +128,7 @@ def main():
                                                      [StyleKey.COLOR, StyleKey.EDGE_COLOR, StyleKey.ZINDEX,
                                                       StyleKey.LINEWIDTH, StyleKey.ALPHA, StyleKey.LINESTYLE])
 
-
+    # print(nodes_gdf)
     ways_gdf = GdfUtils.sort_gdf_by_column(ways_gdf, StyleKey.ZINDEX)
     areas_gdf = GdfUtils.sort_gdf_by_column(areas_gdf, StyleKey.ZINDEX)
     #todo check if gpx go somewhere outside reqired_area - add warning 
@@ -129,8 +136,8 @@ def main():
     gpxs_gdf = gpx_processer.get_gpxs_gdf(EPSG_DEGREE_NUMBER)
     
     
-    plotter = Plotter(GENERAL_DEFAULT_STYLES, ways_gdf, areas_gdf, gpxs_gdf,
-                             map_area_gdf, paper_dimensions_mm, map_object_scaling_factor)
+    plotter = Plotter(nodes_gdf, ways_gdf, areas_gdf, gpxs_gdf,
+                    map_area_gdf, paper_dimensions_mm, map_object_scaling_factor)
     plotter.init_plot(GENERAL_DEFAULT_STYLES[StyleKey.COLOR], area_zoom_preview)
     plotter.plot_areas()
     plotter.plot_ways()

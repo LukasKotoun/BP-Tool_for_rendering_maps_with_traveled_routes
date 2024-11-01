@@ -12,9 +12,9 @@ from modules.utils import Utils
 class Plotter:    
     
     MM_TO_INCH = 25.4
-    def __init__(self, general_styles: FeatureStyles, ways_element_gdf, areas_element_gdf, gpxs_gdf,
+    def __init__(self, nodes_element_gdf, ways_element_gdf, areas_element_gdf, gpxs_gdf,
                  requred_area_gdf, paper_dimensions_mm, map_object_scaling_factor):
-        self.general_styles = general_styles
+        self.nodes_element_gdf = nodes_element_gdf
         self.ways_element_gdf = ways_element_gdf
         self.areas_element_gdf = areas_element_gdf
         self.gpxs_gdf = gpxs_gdf
@@ -37,7 +37,8 @@ class Plotter:
         self.ax.axis('off')
         self.ax.set_aspect('equal')
         self.reqired_area_gdf.plot(ax=self.ax, color=map_bg_color, linewidth=1)
-        
+    def plot_nodes(self):
+        pass    
     def __plot_highways(self,highways_gdf):
         if(highways_gdf.empty):
             return
@@ -61,7 +62,6 @@ class Plotter:
         
         tram_gdf, rails_gdf = GdfUtils.filter_gdf_in(railways_gdf, 'railway', ['tram'])
         if(not tram_gdf.empty):
-            print(tram_gdf[StyleKey.ALPHA])
             tram_gdf.plot(ax = self.ax, color=tram_gdf[StyleKey.COLOR], linewidth = tram_gdf[StyleKey.LINEWIDTH],
                           alpha=tram_gdf[StyleKey.ALPHA], path_effects=[
                     patheffects.Stroke(capstyle="round", joinstyle='round'),

@@ -60,21 +60,35 @@ LINEWIDTH_MULTIPLIER = 1
 #--------------filters--------------
 
 #wanted_ways: WantedFeatures
+wanted_nodes: WantedCategories = {
+    'place': {'city', 'town', 'villiage'}
+    # 'place': {'city'}
+}
+
+# UnwantedFeaturesTags
+unwanted_nodes_tags: UnwantedCategories = {
+    
+}
+#columns that are used for ploting nodes name for city, ele for elevation points
+NODES_ADDITIONAL_COLUMNS = ['name']
+
+#wanted_ways: WantedFeatures
 wanted_ways: WantedCategories = {
-    'waterway': {},
+    'waterway': set({}),
     # 'highway': ['motorway', 'trunk','primary', 'secondary'],
-    'highway': { 'motorway', 'trunk','primary', 'secondary', 'tertiary', 'unclassified', 'residential', 'path', 'footway' },
+    'highway': {'motorway', 'trunk','primary', 'secondary', 'tertiary', 'unclassified', 'residential', 'path', 'footway' },
     # 'highway':[],
     'railway': {'rail', 'tram'}
 }
 
 # UnwantedFeaturesTags
-unwanted_ways_tags: UnwantedCategories  ={
+unwanted_ways_tags: UnwantedCategories = {
     # 'highway':['coridor','via_ferrata','crossing','traffic_island','proposed','construction' ],
     'railway': {
         'service':['yard'],
         'tunnel': ['building_passage'],
     }
+    # {'railway':""}:{'service':['yard'],'tunnel': ['building_passage']}
 }
 
 wanted_areas: WantedCategories = {
@@ -82,7 +96,7 @@ wanted_areas: WantedCategories = {
     'landuse': {'forest', 'residential', 'commercial', 'retail', 'industrial', 'farmland', 'meadow', 'grass'},
     'leisure': {'park', 'pitch', 'garden', 'golf_course', 'nature_reserve', 'playground', 'stadium', 'swimming_pool', 'sports_centre'},
     # # 'leisure': ['park', 'pitch', 'garden', 'golf_course', 'nature_reserve'],
-    'water': {},
+    'water': set({}),
     'boundary': {'national_park'} # todo in automatic this should be to turnoff/on
 
     # 'water': ['river','lake','reservoir'],
@@ -107,6 +121,22 @@ AREA_MANDATORY_STYLES: FeatureStyles = {
 WAY_MANDATORY_STYLES: FeatureStyles = {
     StyleKey.COLOR: '#EDEDE0', StyleKey.ALPHA: 1.0, StyleKey.LINEWIDTH: 1, StyleKey.LINESTYLE: '-'
 }
+#styles that must be assigned to all node features
+NODES_MANDATORY_STYLES: FeatureStyles = {
+
+}
+#nodes 
+place_styles: FeaturesCategoryStyle = {
+    
+}
+
+
+NODES_STYLES: FeaturesCategoriesStyles = {
+    'place': (place_styles, {StyleKey.COLOR: '#FFFFFF'}),
+}
+
+
+#ways
 highway_styles: FeaturesCategoryStyle = {
     'motorway': {StyleKey.COLOR: '#8cd25f', StyleKey.ZINDEX: 7, StyleKey.LINEWIDTH: 32}, 
     'trunk': {StyleKey.COLOR: '#FDC364', StyleKey.ZINDEX: 6, StyleKey.LINEWIDTH: 26},
@@ -126,7 +156,6 @@ railway_styles: FeaturesCategoryStyle = {
     'tram': {StyleKey.COLOR: '#404040', StyleKey.ZINDEX: 1, StyleKey.LINEWIDTH: 4, StyleKey.ALPHA: 0.6},
     'tram_stop': {StyleKey.COLOR: '#404040', StyleKey.ZINDEX: 1, StyleKey.LINEWIDTH: 4},
 }
-
 
 
 WAYS_STYLES: FeaturesCategoriesStyles = {
