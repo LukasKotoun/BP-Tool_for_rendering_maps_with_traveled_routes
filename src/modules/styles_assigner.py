@@ -61,7 +61,7 @@ class StyleAssigner:
         for features_category, (features_category_style, features_category_default_styles) in self.categories_styles.items(): 
             if features_category in wanted_features_categories: 
                 # get wanted map features that i want to include style for
-                wanted_features: list[str] = wanted_features_categories[features_category]
+                wanted_features: dict[str] = wanted_features_categories[features_category]
                 if wanted_features: 
                     # get style for only some features in features category (list is not empty, only some from this category will be plotted)
                     # (if concrete style for some feateru is not defined it will no be added (it only reduce not add))

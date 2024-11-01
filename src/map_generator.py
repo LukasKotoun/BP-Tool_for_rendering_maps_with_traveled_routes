@@ -115,7 +115,7 @@ def main():
     ways_style_assigner = StyleAssigner(WAYS_STYLES, GENERAL_DEFAULT_STYLES, WAY_MANDATORY_STYLES)
     ways_gdf = ways_style_assigner.assign_styles_to_gdf(ways_gdf, wanted_ways,
                                                     [StyleKey.COLOR, StyleKey.ZINDEX, StyleKey.LINEWIDTH,
-                                                     StyleKey.BGCOLOR, StyleKey.LINESTYLE])
+                                                     StyleKey.BGCOLOR, StyleKey.LINESTYLE, StyleKey.ALPHA])
     areas_style_assigner = StyleAssigner(AREAS_STYLES, GENERAL_DEFAULT_STYLES, AREA_MANDATORY_STYLES)
     areas_gdf = areas_style_assigner.assign_styles_to_gdf(areas_gdf, wanted_areas,
                                                      [StyleKey.COLOR, StyleKey.EDGE_COLOR, StyleKey.ZINDEX,

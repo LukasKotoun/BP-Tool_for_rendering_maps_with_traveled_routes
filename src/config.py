@@ -61,12 +61,13 @@ LINEWIDTH_MULTIPLIER = 1
 
 #wanted_ways: WantedFeatures
 wanted_ways: WantedCategories = {
-    'waterway': [],
+    'waterway': {},
     # 'highway': ['motorway', 'trunk','primary', 'secondary'],
-    'highway': [ 'motorway', 'trunk','primary', 'secondary', 'tertiary', 'unclassified', 'residential', 'path', 'footway' ],
+    'highway': { 'motorway', 'trunk','primary', 'secondary', 'tertiary', 'unclassified', 'residential', 'path', 'footway' },
     # 'highway':[],
-    'railway': ['rail']
+    'railway': {'rail', 'tram'}
 }
+
 # UnwantedFeaturesTags
 unwanted_ways_tags: UnwantedCategories  ={
     # 'highway':['coridor','via_ferrata','crossing','traffic_island','proposed','construction' ],
@@ -78,14 +79,15 @@ unwanted_ways_tags: UnwantedCategories  ={
 
 wanted_areas: WantedCategories = {
     # # 'landuse': ['forest', 'residential', 'farmland', 'meadow', 'grass'],
-    'landuse': ['forest', 'residential', 'commercial', 'retail', 'industrial', 'farmland', 'meadow', 'grass'],
-    'leisure': ['park', 'pitch', 'garden', 'golf_course', 'nature_reserve', 'playground', 'stadium', 'swimming_pool', 'sports_centre'],
+    'landuse': {'forest', 'residential', 'commercial', 'retail', 'industrial', 'farmland', 'meadow', 'grass'},
+    'leisure': {'park', 'pitch', 'garden', 'golf_course', 'nature_reserve', 'playground', 'stadium', 'swimming_pool', 'sports_centre'},
     # # 'leisure': ['park', 'pitch', 'garden', 'golf_course', 'nature_reserve'],
-    'water': [],
-    'boundary': ['national_park'] # todo in automatic this should be to turnoff/on
+    'water': {},
+    'boundary': {'national_park'} # todo in automatic this should be to turnoff/on
 
     # 'water': ['river','lake','reservoir'],
 }
+
 
 unwanted_areas_tags: UnwantedCategories ={
     
@@ -99,11 +101,11 @@ GENERAL_DEFAULT_STYLES: FeatureStyles = {StyleKey.COLOR: '#EDEDE0',  StyleKey.ZI
 
 #styles that must be assigned to all area features
 AREA_MANDATORY_STYLES: FeatureStyles = {
-    StyleKey.COLOR: '#EDEDE0', StyleKey.ALPHA: 1
+    StyleKey.COLOR: '#EDEDE0', StyleKey.ALPHA: 1.0
 }
 #styles that must be assigned to all way features
 WAY_MANDATORY_STYLES: FeatureStyles = {
-    StyleKey.COLOR: '#EDEDE0', StyleKey.ALPHA: 1, StyleKey.LINEWIDTH: 1, StyleKey.LINESTYLE: '-'
+    StyleKey.COLOR: '#EDEDE0', StyleKey.ALPHA: 1.0, StyleKey.LINEWIDTH: 1, StyleKey.LINESTYLE: '-'
 }
 highway_styles: FeaturesCategoryStyle = {
     'motorway': {StyleKey.COLOR: '#8cd25f', StyleKey.ZINDEX: 7, StyleKey.LINEWIDTH: 32}, 

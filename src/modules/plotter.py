@@ -42,13 +42,15 @@ class Plotter:
         if(highways_gdf.empty):
             return
         highways_gdf.plot(ax = self.ax,color=highways_gdf[StyleKey.COLOR], linewidth = highways_gdf[StyleKey.LINEWIDTH],
-                           linestyle = highways_gdf[StyleKey.LINESTYLE], path_effects=[patheffects.Stroke(capstyle="round")])
+                           linestyle = highways_gdf[StyleKey.LINESTYLE], 
+                           path_effects=[patheffects.Stroke(capstyle="round", joinstyle='round')])
             
     def __plot_waterways(self, waterways_gdf):
         if(waterways_gdf.empty):
             return
         waterways_gdf.plot(ax = self.ax,color=waterways_gdf[StyleKey.COLOR], linewidth = waterways_gdf[StyleKey.LINEWIDTH],
-                           linestyle = waterways_gdf[StyleKey.LINESTYLE], path_effects=[patheffects.Stroke(capstyle="round")])
+                           linestyle = waterways_gdf[StyleKey.LINESTYLE],
+                           path_effects=[patheffects.Stroke(capstyle="round", joinstyle='round')])
    
 
                     
@@ -59,17 +61,18 @@ class Plotter:
         
         tram_gdf, rails_gdf = GdfUtils.filter_gdf_in(railways_gdf, 'railway', ['tram'])
         if(not tram_gdf.empty):
+            print(tram_gdf[StyleKey.ALPHA])
             tram_gdf.plot(ax = self.ax, color=tram_gdf[StyleKey.COLOR], linewidth = tram_gdf[StyleKey.LINEWIDTH],
-                          alpha=tram_gdf[StyleKey.ALPHA], linestyle = tram_gdf[StyleKey.LINESTYLE], path_effects=[
-                    patheffects.Stroke(capstyle="round"),
-                    patheffects.withTickedStroke(angle=-90, spacing=tram_second_line_spacing, length=0.05),
-                    patheffects.withTickedStroke(angle=90, spacing=tram_second_line_spacing, length=0.05)])
-                    
+                          alpha=tram_gdf[StyleKey.ALPHA], path_effects=[
+                    patheffects.Stroke(capstyle="round", joinstyle='round'),
+                    patheffects.withTickedStroke(angle=-90, capstyle="round",  spacing=tram_second_line_spacing, length=0.2),
+                    patheffects.withTickedStroke(angle=90, capstyle="round", spacing=tram_second_line_spacing, length=0.2)])
+
         if(not rails_gdf.empty and StyleKey.BGCOLOR in rails_gdf):
              rails_gdf.plot(ax = self.ax, color=rails_gdf[StyleKey.BGCOLOR],
                             linewidth = rails_gdf[StyleKey.LINEWIDTH] + rail_bg_width_offset,
                             alpha=rails_gdf[StyleKey.ALPHA], linestyle = rails_gdf[StyleKey.LINESTYLE], path_effects=[
-                    patheffects.Stroke(capstyle="round")])
+                    patheffects.Stroke(capstyle="round", joinstyle='round')])
              
              rails_gdf.plot(ax = self.ax, color=rails_gdf[StyleKey.COLOR], linewidth = rails_gdf[StyleKey.LINEWIDTH],
                             alpha=rails_gdf[StyleKey.ALPHA], linestyle = rails_gdf[StyleKey.LINESTYLE])        
@@ -104,12 +107,12 @@ class Plotter:
             edge_areas_gdf = GdfUtils.filter_gdf_not_in(self.areas_element_gdf, StyleKey.EDGE_COLOR, [pd.NA, 'none'])[0]
             if(not edge_areas_gdf.empty and StyleKey.EDGE_COLOR in edge_areas_gdf and 
             StyleKey.LINEWIDTH in edge_areas_gdf):
-                #todo to for with round cupstyles
                 edge_areas_gdf[StyleKey.LINEWIDTH] = edge_areas_gdf[StyleKey.LINEWIDTH] * self.map_object_scaling_factor
                 edge_areas_gdf.plot(
                     ax=self.ax, facecolor = 'none', edgecolor = edge_areas_gdf[StyleKey.EDGE_COLOR],
                     linewidth = edge_areas_gdf[StyleKey.LINEWIDTH], alpha=edge_areas_gdf[StyleKey.ALPHA],
-                    linestyle = edge_areas_gdf[StyleKey.LINESTYLE], path_effects=[patheffects.Stroke(capstyle="round")])
+                    linestyle = edge_areas_gdf[StyleKey.LINESTYLE], 
+                    path_effects=[patheffects.Stroke(capstyle="round", joinstyle='round')])
 
     
     @time_measurement_decorator("gpxsPlot")            

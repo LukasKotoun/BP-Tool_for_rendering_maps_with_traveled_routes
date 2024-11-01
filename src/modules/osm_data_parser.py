@@ -57,6 +57,8 @@ class OsmDataParser(osmium.SimpleHandler):
         Returns:
             bool: True if doesn't contain any not allowed tags otherwise false 
         """
+        if(not not_allowed_tags):
+            return True
         for dict_tag_key, unwanted_values in not_allowed_tags.items():
             #not directly inside any tag and curr tag is not in tags => skip
             if(curr_tag_key_inside is None and dict_tag_key not in tags): continue
