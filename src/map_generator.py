@@ -1,6 +1,7 @@
 import warnings
 
-
+import geopandas as gpd
+import pandas as pd
 from config import * 
 from modules.gdf_utils import GdfUtils
 from modules.utils import Utils
@@ -21,6 +22,7 @@ def calc_preview(map_area_gdf, paper_dimensions_mm):
     Returns:
         _type_: _description_
     """
+    #todo map area gdfs
     outer_area_gdf = GdfUtils.get_area_gdf(OUTER_AREA, EPSG_DEGREE_NUMBER)
     outer_map_area_dimensions = GdfUtils.get_dimensions_gdf(outer_area_gdf)
     outer_map_area_dimensions_m = GdfUtils.get_dimensions_gdf(outer_area_gdf, EPSG_METERS_NUMBER)
@@ -58,12 +60,34 @@ def calc_preview(map_area_gdf, paper_dimensions_mm):
 
 @time_measurement_decorator("main")
 def main():
+    #validation all inputs and combinations on start to prevent exception after long time of processing and rendering 
+    #some class input data checker
+    #and run function to make checks
     #todo check some reqired constants
-    #todo check file validity - if osm file exits
+    #todo check file validity - if osm files exits  
     #todo check missing styles (create array of reqired styles for every category), and by wanted categories (landues, water) check if have all required styles (check only for default category styles) (in instance of style assigner)
     #------------get map area and calc paper sizes, and calc preview
+    #todo get_area_gdfs and take list of string and lists. and resulted gdf concatenate to one and that return
+    #todo to func checkOsmFilesAndNormalize - if files is list but with len 1 convert to string
+    if(isinstance(OSM_INPUT_FILE_NAMES, list) and len(OSM_INPUT_FILE_NAMES) > 1 and OSM_WANT_EXTRACT_AREA == False):
+        print("Multiple files feature (list of osm files) is avilable only with option OSM_WANT_EXTRACT_AREA")
+        return
+
+
     map_area_gdf = GdfUtils.get_area_gdf(AREA, EPSG_DEGREE_NUMBER)
-    boundary_map_area_gdf = map_area_gdf.copy()
+    # #to func 
+    # map_area_gdf2 = GdfUtils.get_area_gdf("Brno, Czech Republic", EPSG_DEGREE_NUMBER)
+    # # map_area_gdf3 = GdfUtils.get_area_gdf("Slovakia Republic", EPSG_DEGREE_NUMBER)
+    # map_area_gdf = gpd.GeoDataFrame(pd.concat([map_area_gdf, map_area_gdf2], ignore_index=True))
+    
+    if(not PLOT_AREA_BOUNDARY_SEPARATED or OSM_WANT_EXTRACT_AREA):
+        map_area_gdf_joined = GdfUtils.combine_rows_gdf(map_area_gdf, EPSG_DEGREE_NUMBER)   
+
+    if(PLOT_AREA_BOUNDARY_SEPARATED):
+        boundary_map_area_gdf = map_area_gdf.copy()
+    else:
+        boundary_map_area_gdf = map_area_gdf_joined
+   
     map_area_dimensions_m = GdfUtils.get_dimensions_gdf(map_area_gdf, EPSG_METERS_NUMBER)
     paper_dimensions_mm = Utils.adjust_paper_dimensions(map_area_dimensions_m, PAPER_DIMENSIONS,
                                                   GIVEN_SMALLER_PAPER_DIMENSION, WANTED_ORIENTATION)
@@ -81,14 +105,22 @@ def main():
                                     * LINEWIDTH_MULTIPLIER)
 
     #------------get elements from osm file------------
-    osm_file_name = OSM_FILE_NAME
+    
     if(OSM_WANT_EXTRACT_AREA):
-        if(OSM_OUTPUT_FILE_NAME is None): #todo function extractioin checks, output file cant exists or try catch
+        if(OSM_OUTPUT_FILE_NAME is None):
             print("output file is none, cant extract")
             return
         #todo check if osmium is instaled
-        osm_data_preprocessor = OsmDataPreprocessor(OSM_FILE_NAME, OSM_OUTPUT_FILE_NAME)
-        osm_file_name = osm_data_preprocessor.extract_area(map_area_gdf)
+        osm_data_preprocessor = OsmDataPreprocessor(OSM_INPUT_FILE_NAMES, OSM_OUTPUT_FILE_NAME)
+        osm_file_name = osm_data_preprocessor.extract_areas(map_area_gdf_joined)
+    else:
+        #todo function check osm file or in validator before? 
+        # list have length of 1 (checked in validator)
+        if(isinstance(OSM_INPUT_FILE_NAMES, list)):
+            osm_file_name = OSM_INPUT_FILE_NAMES[0]      
+        else:
+            osm_file_name = OSM_INPUT_FILE_NAMES
+        
     osm_file_parser = OsmDataParser(
         wanted_nodes, wanted_ways, wanted_areas,
         unwanted_nodes_tags, unwanted_ways_tags, unwanted_areas_tags,
@@ -103,12 +135,12 @@ def main():
     osm_file_parser.clear_gdf()
     
     # todo to function
+
     whole_map_gdf = GdfUtils.create_polygon_from_gdf_bounds(ways_gdf, areas_gdf)
     reqired_area_polygon = GdfUtils.create_polygon_from_gdf(map_area_gdf)
     #check if area is inside osm file
     if(not GdfUtils.is_polygon_inside_polygon(reqired_area_polygon, whole_map_gdf)):
-        warnings.warn("Selected area map is not whole inside given osm.pbf file. Posible problems")
-        
+        warnings.warn("Selected area map is not whole inside given osm.pbf file.")
     #------------filter some elements out - before styles adding------------
     # only for some ways categories
     # ways_gdf = GdfUtils.filter_short_ways(ways_gdf, 10)

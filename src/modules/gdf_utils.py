@@ -21,7 +21,7 @@ class GdfUtils:
                     raise ValueError("Given GeoJSON file is empty.")
                 return reqired_area_gdf
             else:
-                try:
+                try: 
                     reqired_area_gdf: gpd.GeoDataFrame = ox.geocode_to_gdf(area)  # Get from place name
                 except:
                     #todo if not found error - exit program
@@ -39,7 +39,7 @@ class GdfUtils:
         return reqired_area_gdf
     
     @staticmethod
-    def get_bounds_gdf(*gdfs: gpd.GeoDataFrame, epgs: int | None = None) -> BoundsDict:
+    def get_bounds_gdf(*gdfs: gpd.GeoDataFrame, epsg: int | None = None) -> BoundsDict:
         west = float('inf')
         south = float('inf')
         east = float('-inf')
@@ -47,8 +47,8 @@ class GdfUtils:
         
         for gdf in gdfs:
             gdf_edit = gdf
-            if(epgs is not None):
-                gdf_edit = gdf.to_crs(epsg=epgs)    
+            if(epsg is not None):
+                gdf_edit = gdf.to_crs(epsg=epsg)    
             bounds: tuple[float] = gdf_edit.total_bounds #[WorldSides.WEST, WorldSides.SOUTH, WorldSides.EAST, WorldSides.NORTH]
             west = min(west, bounds[0])
             south = min(south, bounds[1])
@@ -62,6 +62,9 @@ class GdfUtils:
             WorldSides.NORTH: north
             }
     
+    @staticmethod
+    def combine_rows_gdf(gdf: gpd.GeoDataFrame, epsg: int) -> gpd.GeoDataFrame:
+        return gpd.GeoDataFrame(geometry=[gdf.to_crs(epsg=epsg).geometry.unary_union], crs=f"EPSG:{epsg}")
     
     @staticmethod
     def get_polygon_bounds(polygon: geometry.polygon) -> BoundsDict:
@@ -78,8 +81,13 @@ class GdfUtils:
         return width, height
     
     @staticmethod
-    def get_dimensions_gdf(gdf: gpd.GeoDataFrame, epgs: int | None = None) -> DimensionsTuple:
-        bounds = GdfUtils.get_bounds_gdf(gdf, epgs=epgs)
+    def get_dimensions_gdf(gdf: gpd.GeoDataFrame, epsg: int | None = None) -> DimensionsTuple:
+        bounds = GdfUtils.get_bounds_gdf(gdf, epsg=epsg)
+        return GdfUtils.get_dimensions(bounds)
+    
+    @staticmethod
+    def get_dimensions_polygon(polygon: gpd.GeoDataFrame) -> DimensionsTuple:
+        bounds = GdfUtils.get_polygon_bounds(polygon)
         return GdfUtils.get_dimensions(bounds)
     
     @staticmethod
@@ -91,18 +99,11 @@ class GdfUtils:
             return height
         
     @staticmethod
-    def get_map_size_gdf(*gdfs: gpd.GeoDataFrame,  epgs: int | None = None) -> float: 
-        bounds = GdfUtils.get_bounds_gdf(*gdfs, epgs=epgs)
+    def get_map_size_gdf(*gdfs: gpd.GeoDataFrame,  epsg: int | None = None) -> float: 
+        bounds = GdfUtils.get_bounds_gdf(*gdfs, epsg=epsg)
         return GdfUtils.get_map_size(bounds)
    
-    @staticmethod
-    def get_map_orientation(gdf: gpd.GeoDataFrame, epgs: int | None = None) -> MapOrientation:
-        width, height = GdfUtils.calc_dimensions_gdf(gdf, epgs)
-        if width > height:
-            return MapOrientation.LANDSCAPE
-        else:
-            return MapOrientation.PORTRAIT
-  
+
     @staticmethod 
     def create_polygon_from_bounds(area_bounds: BoundsDict) -> geometry.polygon:
         return geometry.Polygon([
@@ -126,22 +127,22 @@ class GdfUtils:
         return GdfUtils.is_polygon_inside_polygon(GdfUtils.create_polygon_from_bounds(area_bounds), polygon)
 
     @staticmethod 
-    def create_polygon_from_gdf_bounds(*gdfs: gpd.GeoDataFrame, epgs: int | None = None) -> geometry.polygon:
-        bounds = GdfUtils.get_bounds_gdf(*gdfs, epgs=epgs)
+    def create_polygon_from_gdf_bounds(*gdfs: gpd.GeoDataFrame, epsg: int | None = None) -> geometry.polygon:
+        bounds = GdfUtils.get_bounds_gdf(*gdfs, epsg=epsg)
         return GdfUtils.create_polygon_from_bounds(bounds)
     
     @staticmethod 
-    def create_polygon_from_gdf(*gdfs: gpd.GeoDataFrame, epgs: int | None = None) -> geometry.polygon:
+    def create_polygon_from_gdf(*gdfs: gpd.GeoDataFrame, epsg: int | None = None) -> geometry.polygon:
         if(len(gdfs) == 1):
-            if(epgs is None):
+            if(epsg is None):
                 return gdfs[0].unary_union
-            gdf_edit = gdfs[0].to_crs(epsg=epgs)    
+            gdf_edit = gdfs[0].to_crs(epsg=epsg)    
             return gdf_edit.unary_union
         else:
-            if(epgs is None):
+            if(epsg is None):
                 combined_gdf = gpd.GeoDataFrame(pd.concat(gdfs, ignore_index=True), crs=gdfs[0].crs)
             else:
-                combined_gdf = gpd.GeoDataFrame(pd.concat(gdfs, ignore_index=True), crs=gdfs[0].crs, epgs = epgs)
+                combined_gdf = gpd.GeoDataFrame(pd.concat(gdfs, ignore_index=True), crs=gdfs[0].crs, epsg = epsg)
             return combined_gdf.unary_union
     
 
@@ -210,7 +211,7 @@ class GdfUtils:
     def buffer_gdf_column_value_distance(gdf: gpd.GeoDataFrame, column_key: str, epsg : int, 
                                          additional_padding: float = 0, resolution: int = 16,
                                          cap_style: str = 'round', join_style: str = 'round') -> gpd.GeoDataFrame:
-        gdf_mercator_projected = gdf.to_crs(epsg) 
+        gdf_mercator_projected = gdf.to_crs(epsg=epsg) 
         gdf_mercator_projected['geometry'] = gdf_mercator_projected.apply(
             lambda row: row['geometry'].buffer(row[column_key] + additional_padding,resolution = resolution,
                                                cap_style = cap_style, join_style = join_style), axis=1

@@ -1,30 +1,70 @@
 import tempfile
 import subprocess
+import os
+from datetime import datetime
+
+
 from geopandas import GeoDataFrame
 
 class OsmDataPreprocessor:
-    #, area: Union[str, List[Tuple[float, float]]]
-    def __init__(self, osm_input_file: str, osm_output_file : str = None):
-        self.osm_input_file: str = osm_input_file # Can be a string (place name) or a list of coordinates
+    def __init__(self, osm_input_files: list[str] | str, osm_output_file : str = None):
+        self.osm_input_files: str = osm_input_files # Can be a string (place name) or a list of coordinates
         self.osm_output_file = osm_output_file
-
-    def extract_area(self, reqired_area_gdf: GeoDataFrame) -> str:
-        #todo check if osm output file does exist
-
-            temp_geojson_path = self.create_tmp_geojson(reqired_area_gdf)
-            command = [
-                'osmium', 'extract',
-                '--strategy', 'smart',
-                '-S', 'types=any',
-                '-p', temp_geojson_path,
-                self.osm_input_file,
-                '-o', self.osm_output_file
-            ]
-            subprocess.run(command, check=True)
-            return self.osm_output_file
-
-    def create_tmp_geojson(self, reqired_area_gdf: GeoDataFrame) -> str:
+        
+        
+    def __create_tmp_geojson(self, reqired_area_gdf: GeoDataFrame) -> str:
         #create tmp file for osmium extraction
         with tempfile.NamedTemporaryFile(delete=False, suffix=".geojson") as temp_geojson:
             reqired_area_gdf.to_file(temp_geojson.name, driver="GeoJSON")
             return temp_geojson.name
+        
+    def __merge_osm_files(self, input_tmp_files: list[str], osm_output_file):
+        command = ['osmium', 'merge'] + input_tmp_files + ['--overwrite', '-o', osm_output_file]
+        subprocess.run(command, check = True)
+      
+    def __extract_area(self, osm_input_file: str, osm_output_file: str, temp_geojson_path: str) -> str:
+            command = [
+                'osmium', 'extract',
+                '--strategy', 'smart',
+                '-S', 'types=any',
+                '--overwrite',
+                '-p', temp_geojson_path,
+                osm_input_file,
+                '-o', osm_output_file
+            ]
+            try:
+                subprocess.run(command, check=True)
+            except Exception as e:
+                os.remove(temp_geojson_path)
+                raise Exception(f"Cannot extract osm file, check if osmium command line tool is installed")
+            return osm_output_file
+           
+                
+    def extract_areas(self, reqired_area_gdf: GeoDataFrame):
+        temp_geojson_path = self.__create_tmp_geojson(reqired_area_gdf)
+        extracted_files_names = []
+
+        if(isinstance(self.osm_input_files, str)):
+            print(f"Extracting area from file: {self.osm_input_files}")
+            self.__extract_area(self.osm_input_files, self.osm_output_file, temp_geojson_path)
+            
+        elif (len(self.osm_input_files) == 1):
+            print(f"Extracting area from file: {self.osm_input_files[0]}")
+            self.__extract_area(self.osm_input_files[0], self.osm_output_file, temp_geojson_path)
+            
+        else:                  
+            for index, osm_input_file in enumerate(self.osm_input_files):
+                print(f"Extracting area from file {index + 1}/{len(self.osm_input_files)}: {osm_input_file}")
+                extracted_file_name = self.__extract_area(osm_input_file, f'temp_output_for_merge_file_{index}_{datetime.now().strftime("%Y%m%d%H%M%S")}_.osm', temp_geojson_path)
+                extracted_files_names.append(extracted_file_name)
+                
+            try:
+                print(f"Merging extracted files")
+                self.__merge_osm_files(extracted_files_names, self.osm_output_file)
+            except Exception as e:
+                raise Exception(f"Cannot merge osm file")
+            finally:
+                for tmp_file in extracted_files_names:
+                    os.remove(tmp_file)
+        os.remove(temp_geojson_path)        
+        return self.osm_output_file

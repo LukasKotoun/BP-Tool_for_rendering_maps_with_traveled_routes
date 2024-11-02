@@ -56,7 +56,6 @@ class Plotter:
 
                     
     def __plot_railways(self,railways_gdf, rail_bg_width_offset, tram_second_line_spacing):
-        #todo change ploting style
         if(railways_gdf.empty):
             return
         
@@ -71,7 +70,7 @@ class Plotter:
         if(not rails_gdf.empty and StyleKey.BGCOLOR in rails_gdf):
              rails_gdf.plot(ax = self.ax, color=rails_gdf[StyleKey.BGCOLOR],
                             linewidth = rails_gdf[StyleKey.LINEWIDTH] + rail_bg_width_offset,
-                            alpha=rails_gdf[StyleKey.ALPHA], linestyle = rails_gdf[StyleKey.LINESTYLE], path_effects=[
+                            alpha=rails_gdf[StyleKey.ALPHA], path_effects=[
                     patheffects.Stroke(capstyle="round", joinstyle='round')])
              
              rails_gdf.plot(ax = self.ax, color=rails_gdf[StyleKey.COLOR], linewidth = rails_gdf[StyleKey.LINEWIDTH],
@@ -142,7 +141,6 @@ class Plotter:
         
         clipping_polygon.plot(ax=self.ax, color=clipped_area_color, alpha=1, zorder=3)
         
-    
     def plot_area_boundary(self, area_gdf = None, color = 'black', linewidth = 1):
         if(area_gdf is None):
             self.reqired_area_gdf.boundary.plot(ax=self.ax, color=color, linewidth=linewidth*self.map_object_scaling_factor, zorder=3)

@@ -3,13 +3,14 @@ from common.map_enums import *
 
 
 #--------------normal map area--------------
-OSM_FILE_NAME: str = '../osm_files/brno.osm.pbf' #todo need fix - cut bigger area than needed
-OSM_WANT_EXTRACT_AREA: bool = False
-OSM_OUTPUT_FILE_NAME: None | str = '../osm_files/jihmor.osm.pbf' # set if want osm file cutting using osmium command line tool (need to be uinstalled), If not set to None
+# OSM_FILE_NAME: str = ['../osm_files/brno.osm.pbf','../osm_files/trebic.osm.pbf']
+OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/cz.osm.pbf'
+OSM_WANT_EXTRACT_AREA: bool = True 
+OSM_OUTPUT_FILE_NAME: None | str = '../osm_files/trebic.osm.pbf' # set if want osm file cutting using osmium command line tool (need to be uinstalled), If not set to None
 # AREA: str | list[Point] = [(-18.14143,65.68868),(-18.08538,65.68868),(-18.08538,65.67783),(-18.14143,65.67783)] #island
 # AREA: str | list[Point] = [(6.94872,4.84293),(6.99314,4.84293),(6.99314,4.81603),(6.94872,4.81603)] #afrika
-AREA: str | list[Point] = "Brno, Czech Republic"
-OUTPUT_PDF_NAME: str = '../pdfs/brno'
+AREA: str | list[Point] = "Třebíč, Czech Republic"
+OUTPUT_PDF_NAME: str = '../pdfs/trebic'
 PAPER_DIMENSIONS: PaperSize | tuple[float | None, float | None] = PaperSize.A4.dimensions
 # PAPER_DIMENSIONS = (1200, None) # set own dimensions. If one is left as 'None' it will be automaticaly calculated using area size
 # PAPER_DIMENSIONS = (400, None)
@@ -24,6 +25,7 @@ TURN_OFF_AREA_CLIPPING = False
 # padding from page borders
 PERCENTAGE_PADDING = 1 # NOTE: must have same settings as the resulting one when generating for large format printing
 PLOT_AREA_BOUNDARY = True
+PLOT_AREA_BOUNDARY_SEPARATED = True # if using multiple areas (if true -> every area will have own boundary, if false -> bounds wont be on common border
 AREA_BOUNDARY_LINEWIDTH = 30
 # set how will resulted paper be oriented
 # can be set to AUTOMATIC (Recommended), LANDSCAPE, PORTRAIT
@@ -32,7 +34,6 @@ WANTED_ORIENTATION: MapOrientation = MapOrientation.AUTOMATIC
 #--------------------------------------------------------------preview--------------------------------------------------------------
 # NOTE: must have same settings as the resulting one when generating for large format printing
 WANT_PREVIEW: bool = False
-
 
 OUTER_AREA = "Czech Republic" # area for that you are creating smaller preview (bigger than normal area) 
 
