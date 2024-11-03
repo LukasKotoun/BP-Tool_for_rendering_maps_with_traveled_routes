@@ -5,8 +5,8 @@ import geopandas as gpd
 import pandas as pd
 import osmnx as ox
 import pygeoops
-from common.map_enums import WorldSides, MapOrientation, StyleKey
-from config import EPSG_DEGREE_NUMBER
+
+from common.map_enums import WorldSides, StyleKey
 from common.custom_types import BoundsDict, DimensionsTuple, Point
 from common.common_helpers import time_measurement_decorator
 
@@ -73,7 +73,7 @@ class GdfUtils:
                WorldSides.SOUTH: bounds[1],
                WorldSides.EAST: bounds[2],
                WorldSides.NORTH: bounds[3]}
-    
+        
     @staticmethod
     def get_dimensions(bounds: BoundsDict) -> DimensionsTuple:
         width = abs(bounds[WorldSides.EAST] - bounds[WorldSides.WEST])  # east - west
@@ -122,9 +122,6 @@ class GdfUtils:
     def create_gdf_from_polygon(area_polygon: geometry.polygon, epsg) -> gpd.GeoDataFrame:
         return gpd.GeoDataFrame(geometry=[area_polygon], crs=f"EPSG:{epsg}")
     
-    @staticmethod
-    def is_polygon_inside_bounds(area_bounds: BoundsDict, polygon: geometry.polygon) -> bool:
-        return GdfUtils.is_polygon_inside_polygon(GdfUtils.create_polygon_from_bounds(area_bounds), polygon)
 
     @staticmethod 
     def create_polygon_from_gdf_bounds(*gdfs: gpd.GeoDataFrame, epsg: int | None = None) -> geometry.polygon:
@@ -145,11 +142,25 @@ class GdfUtils:
                 combined_gdf = gpd.GeoDataFrame(pd.concat(gdfs, ignore_index=True), crs=gdfs[0].crs, epsg = epsg)
             return combined_gdf.unary_union
     
+    @staticmethod
+    def is_polygon_inside_bounds(area_bounds: BoundsDict, polygon: geometry.polygon) -> bool:
+        return GdfUtils.is_polygon_inside_polygon(GdfUtils.create_polygon_from_bounds(area_bounds), polygon)
 
     @staticmethod
     def is_polygon_inside_polygon(inner: geometry.polygon, outer: geometry.polygon) -> bool:
         return outer.contains(inner)
     
+    @staticmethod
+    def is_point_inside_polygon(point: geometry.point, polygon: geometry.polygon) -> bool:
+        return polygon.contains(point)
+    
+    @staticmethod
+    def is_polygon_inside_polygon_threshold(inner: geometry.polygon, outer: geometry.polygon, threshold: float = 0.95):
+        bbox_area = inner.area
+        intersection_area = inner.intersection(outer).area
+        percentage_inside = intersection_area / bbox_area
+        return percentage_inside >= threshold
+
     @staticmethod
     def sort_gdf_by_column(gdf: gpd.GeoDataFrame, column_name: StyleKey, ascending: bool = True) -> gpd.GeoDataFrame:
         if(gdf.empty):
@@ -191,6 +202,11 @@ class GdfUtils:
             return gdf[~condition].reset_index(drop=True), gdf[condition].reset_index(drop=True)
     
     #todo use one filter creation and than add with 'and' all ways that are longer, that will leave false with all that i want...
+    @staticmethod
+    @time_measurement_decorator("test")
+    def filter_gdf_rows_in_gdf_area(gdf_rows: gpd.GeoDataFrame, gdf_area: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
+        return gdf_rows[gdf_rows.geometry.within(gdf_area.unary_union)].reset_index(drop=True)
+
     @staticmethod
     @time_measurement_decorator("short ways filter")
     def filter_short_ways(gdf: gpd.GeoDataFrame, epsg: int, min_lenght: float = 2) -> gpd.GeoDataFrame:

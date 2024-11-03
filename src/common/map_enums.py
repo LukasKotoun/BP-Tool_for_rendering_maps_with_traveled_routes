@@ -8,6 +8,9 @@ class StyleKey(Enum):
     BGCOLOR = 5
     LINESTYLE = 6
     ALPHA = 7
+    FONT_SIZE = 8
+    OUTLINE_WIDTH = 9
+    
 
 class WorldSides(Enum):
     WEST = 'west'

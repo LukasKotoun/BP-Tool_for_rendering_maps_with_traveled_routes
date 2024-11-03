@@ -144,12 +144,14 @@ def main():
     #------------filter some elements out - before styles adding------------
     # only for some ways categories
     # ways_gdf = GdfUtils.filter_short_ways(ways_gdf, 10)
+    nodes_gdf = GdfUtils.filter_gdf_rows_in_gdf_area(nodes_gdf, map_area_gdf)
 
     #------------style elements------------
     #todo styles for ways and areas separeated - 2 geodata stylers
     nodes_style_assigner = StyleAssigner(NODES_STYLES, GENERAL_DEFAULT_STYLES, NODES_MANDATORY_STYLES)
     nodes_gdf = nodes_style_assigner.assign_styles_to_gdf(nodes_gdf, wanted_nodes,
-                                                    [StyleKey.COLOR])
+                                                    [StyleKey.COLOR, StyleKey.FONT_SIZE, StyleKey.OUTLINE_WIDTH,
+                                                     StyleKey.BGCOLOR])
 
     ways_style_assigner = StyleAssigner(WAYS_STYLES, GENERAL_DEFAULT_STYLES, WAY_MANDATORY_STYLES)
     ways_gdf = ways_style_assigner.assign_styles_to_gdf(ways_gdf, wanted_ways,
@@ -171,8 +173,11 @@ def main():
     plotter = Plotter(nodes_gdf, ways_gdf, areas_gdf, gpxs_gdf,
                     map_area_gdf, paper_dimensions_mm, map_object_scaling_factor)
     plotter.init_plot(GENERAL_DEFAULT_STYLES[StyleKey.COLOR], area_zoom_preview)
+    plotter.zoom(zoom_percent_padding=PERCENTAGE_PADDING)
+
     plotter.plot_areas()
     plotter.plot_ways()
+    plotter.plot_nodes()
     plotter.plot_gpxs()
     if(not TURN_OFF_AREA_CLIPPING):
         plotter.clip()
@@ -180,7 +185,6 @@ def main():
     if(PLOT_AREA_BOUNDARY):
         plotter.plot_area_boundary(area_gdf = boundary_map_area_gdf, linewidth=AREA_BOUNDARY_LINEWIDTH)
 
-    plotter.zoom(zoom_percent_padding=PERCENTAGE_PADDING)
     plotter.generate_pdf(OUTPUT_PDF_NAME)
     # plotter.show_plot()
     

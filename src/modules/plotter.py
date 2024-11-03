@@ -2,6 +2,10 @@ from matplotlib import patheffects
 import matplotlib.pyplot as plt
 import geopandas as gpd
 import pandas as pd
+from shapely import geometry
+from matplotlib.transforms import Affine2D
+import textwrap
+from adjustText import adjust_text
 
 
 from config import * 
@@ -19,6 +23,7 @@ class Plotter:
         self.areas_element_gdf = areas_element_gdf
         self.gpxs_gdf = gpxs_gdf
         self.reqired_area_gdf = requred_area_gdf
+        self.reqired_area_polygon = GdfUtils.create_polygon_from_gdf(self.reqired_area_gdf)
         self.paper_dimensions_mm = paper_dimensions_mm
         self.map_object_scaling_factor = map_object_scaling_factor
 
@@ -37,9 +42,44 @@ class Plotter:
         self.ax.axis('off')
         self.ax.set_aspect('equal')
         self.reqired_area_gdf.plot(ax=self.ax, color=map_bg_color, linewidth=1)
+        
+        
+    def plot_city_names(self, city_names_gdf):
+        #todo checks for att
+        r = self.fig.canvas.get_renderer()
+        city_names_gdf[StyleKey.OUTLINE_WIDTH] = city_names_gdf[StyleKey.OUTLINE_WIDTH] * self.map_object_scaling_factor
+        
+        for geom, name, color, fontsize, outline_width, bgcolor in zip(
+            city_names_gdf.geometry, city_names_gdf['name'], city_names_gdf[StyleKey.COLOR],
+            city_names_gdf[StyleKey.FONT_SIZE], city_names_gdf[StyleKey.OUTLINE_WIDTH],
+            city_names_gdf[StyleKey.BGCOLOR]):
+          
+            wraped_name = textwrap.fill(name, width = 15)
+            x = geom.x
+            y = geom.y
+            text = self.ax.text(
+            x, y, wraped_name, fontsize = fontsize, ha = 'center', va = 'center', zorder = 4, color = color, 
+            path_effects = [patheffects.withStroke(linewidth = outline_width, foreground = bgcolor)]) 
+            
+            text_Bbox = text.get_tightbbox(renderer=r).transformed(self.ax.transData.inverted())
+            bbox_polygon = geometry.box(text_Bbox.x0, text_Bbox.y0, text_Bbox.x1, text_Bbox.y1)
+            if(not GdfUtils.is_polygon_inside_polygon_threshold(bbox_polygon, self.reqired_area_polygon, 0.95)):
+                text.remove()
+            
+        
+    @time_measurement_decorator("nodePlot")
     def plot_nodes(self):
-        pass    
-    def __plot_highways(self,highways_gdf):
+        #todo checks for att
+        self.nodes_element_gdf[StyleKey.FONT_SIZE] = self.nodes_element_gdf[StyleKey.FONT_SIZE] * self.map_object_scaling_factor
+        city_names_gdf, rest = GdfUtils.filter_gdf_in(self.nodes_element_gdf, 'place')
+        city_names_gdf = GdfUtils.filter_gdf_in(city_names_gdf, 'name')[0]
+        self.plot_city_names(city_names_gdf)
+        # to function and set in config constants the text force 
+        adjust_text(self.ax.texts, force_text = 0.25, force_explode = 0, army=1)
+
+            
+            
+    def __plot_highways(self, highways_gdf):
         if(highways_gdf.empty):
             return
         highways_gdf.plot(ax = self.ax,color=highways_gdf[StyleKey.COLOR], linewidth = highways_gdf[StyleKey.LINEWIDTH],
@@ -55,7 +95,7 @@ class Plotter:
    
 
                     
-    def __plot_railways(self,railways_gdf, rail_bg_width_offset, tram_second_line_spacing):
+    def __plot_railways(self, railways_gdf, rail_bg_width_offset, tram_second_line_spacing):
         if(railways_gdf.empty):
             return
         
@@ -130,7 +170,7 @@ class Plotter:
         if(reqired_area_gdf is not None):
             reqired_area_polygon = GdfUtils.create_polygon_from_gdf(reqired_area_gdf)
         else:
-            reqired_area_polygon = GdfUtils.create_polygon_from_gdf(self.reqired_area_gdf)
+            reqired_area_polygon = self.reqired_area_polygon
             
         clipping_polygon = whole_area_polygon.difference(reqired_area_polygon)
         if(not GdfUtils.is_polygon_inside_polygon(clipping_polygon, whole_area_polygon)):

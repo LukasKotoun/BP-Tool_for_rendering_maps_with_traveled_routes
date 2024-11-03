@@ -4,13 +4,13 @@ from common.map_enums import *
 
 #--------------normal map area--------------
 # OSM_FILE_NAME: str = ['../osm_files/brno.osm.pbf','../osm_files/trebic.osm.pbf']
-OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/cz.osm.pbf'
-OSM_WANT_EXTRACT_AREA: bool = True 
+OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/jihmor.osm.pbf'
+OSM_WANT_EXTRACT_AREA: bool = False 
 OSM_OUTPUT_FILE_NAME: None | str = '../osm_files/trebic.osm.pbf' # set if want osm file cutting using osmium command line tool (need to be uinstalled), If not set to None
 # AREA: str | list[Point] = [(-18.14143,65.68868),(-18.08538,65.68868),(-18.08538,65.67783),(-18.14143,65.67783)] #island
 # AREA: str | list[Point] = [(6.94872,4.84293),(6.99314,4.84293),(6.99314,4.81603),(6.94872,4.81603)] #afrika
-AREA: str | list[Point] = "Třebíč, Czech Republic"
-OUTPUT_PDF_NAME: str = '../pdfs/trebic'
+AREA: str | list[Point] = "Jihomoravský kraj, Czech Republic"
+OUTPUT_PDF_NAME: str = '../pdfs/jihmor4'
 PAPER_DIMENSIONS: PaperSize | tuple[float | None, float | None] = PaperSize.A4.dimensions
 # PAPER_DIMENSIONS = (1200, None) # set own dimensions. If one is left as 'None' it will be automaticaly calculated using area size
 # PAPER_DIMENSIONS = (400, None)
@@ -20,7 +20,10 @@ GIVEN_SMALLER_PAPER_DIMENSION: bool = True # what side of paper was set (smaller
 # is False it will plot only given AREA (recomended) if True it will plot whole osm file AREA in center 
 TURN_OFF_AREA_CLIPPING = False
 
-
+#todo global text configs - off/on 
+#overflow on/off 
+#wrap on/of 
+#wrap len 
 
 # padding from page borders
 PERCENTAGE_PADDING = 1 # NOTE: must have same settings as the resulting one when generating for large format printing
@@ -62,7 +65,8 @@ LINEWIDTH_MULTIPLIER = 1
 
 #wanted_ways: WantedFeatures
 wanted_nodes: WantedCategories = {
-    'place': {'city', 'town', 'villiage'}
+    'place': {'city', 'town', 'village'}
+    # 'place': { 'town'}
     # 'place': {'city'}
 }
 
@@ -105,7 +109,6 @@ wanted_areas: WantedCategories = {
 
 
 unwanted_areas_tags: UnwantedCategories ={
-    
 }
 
 #------------styles--------------
@@ -124,16 +127,17 @@ WAY_MANDATORY_STYLES: FeatureStyles = {
 }
 #styles that must be assigned to all node features
 NODES_MANDATORY_STYLES: FeatureStyles = {
-
+     StyleKey.COLOR: '#EDEDE0'
 }
 #nodes 
 place_styles: FeaturesCategoryStyle = {
-    
+    'city':{StyleKey.FONT_SIZE: 1500, StyleKey.OUTLINE_WIDTH: 150}, 
+    'town':{StyleKey.FONT_SIZE: 1000, StyleKey.OUTLINE_WIDTH: 100}, 
+    'village':{StyleKey.FONT_SIZE: 200, StyleKey.OUTLINE_WIDTH: 50}
 }
 
-
 NODES_STYLES: FeaturesCategoriesStyles = {
-    'place': (place_styles, {StyleKey.COLOR: '#FFFFFF'}),
+    'place': (place_styles, {StyleKey.COLOR: '#000000', StyleKey.BGCOLOR: '#FFFFFF', }),#linewidth is outlinewidht
 }
 
 
