@@ -44,7 +44,7 @@ CITY_VILLAGE_SIZE_MULTIPLIER = 1 # A smaller distinct settlement, smaller than a
 #text general
 #text settings
 TEXT_WRAP_NAMES_LEN = 15 # len or None if not wrap (15 default)
-TEXT_BOUNDS_OVERFLOW_THRESHOLD = 1 # if allow is false set threashold (0-1) how much of text must be inside 
+TEXT_BOUNDS_OVERFLOW_THRESHOLD = 0.97 # if allow is false set threashold (0-1) how much of text must be inside 
 # padding from page borders
 PERCENTAGE_PADDING = 1 # NOTE: must have same settings as the resulting one when generating for large format printing
 AREA_BOUNDARY_LINEWIDTH = 30

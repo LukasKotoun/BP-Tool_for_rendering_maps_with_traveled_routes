@@ -37,7 +37,7 @@ def calc_preview(map_area_gdf, paper_dimensions_mm):
     # calc map factor for creating automatic array with wanted elements - for preview area (without area_zoom_preview)
     # map_object_scaling_automatic_filters_creating = Utils.calc_map_object_scaling_factor(outer_map_area_dimensions_m, outer_paper_dimensions_mm)
     # map_pdf_ratio_auto_filter = sum(Utils.calc_ratios(outer_paper_dimensions_mm, outer_map_area_dimensions_m))/2
-   
+    #todo to doc - need becaous it will clip by requred area - and that will be some big area in not clipping
     if(not WANT_AREA_CLIPPING):
         area_zoom_preview = None
         #calc bounds so area_zoom_preview will be 1 - paper in mm and areas in degrees (meters are not precies)
@@ -197,7 +197,8 @@ def main():
     
     plotter.adjust_texts(TEXT_BOUNDS_OVERFLOW_THRESHOLD)
     
-    if(WANT_AREA_CLIPPING):
+    #if want is false and preview is true area will be on whole paper (required area is calculated) - clip overflown ways
+    if(WANT_AREA_CLIPPING or WANT_PREVIEW):
         plotter.clip(GdfUtils.create_polygon_from_gdf_bounds(nodes_gdf, ways_gdf, areas_gdf))
         
     if(AREA_BOUNDARY != AreaBounds.NONE):
