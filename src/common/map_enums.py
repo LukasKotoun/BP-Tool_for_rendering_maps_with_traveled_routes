@@ -12,6 +12,21 @@ class StyleKey(Enum):
     OUTLINE_WIDTH = 9,
     ICON_COLOR = 10
     
+class AreaBounds(Enum):
+    NONE = 1
+    WHOLE = 2
+    SEPARATED = 3
+    
+class ExpandArea(Enum):
+    FIT_PAPER_SIZE = 1
+    CUSTOM_AREA = 2
+    PERCENTAGE_OF_AREA = 3
+
+class ExpandArea(Enum):
+    FIT_PAPER_SIZE = 1
+    CUSTOM_AREA = 2
+    PERCENTAGE_OF_AREA = 3
+
 
 class WorldSides(Enum):
     WEST = 'west'

@@ -15,33 +15,39 @@ AREA: str | list[Point] = "Třebíč, Czech Republic"
 OUTPUT_PDF_NAME: str = '../pdfs/trebic'
 PAPER_DIMENSIONS: PaperSize | tuple[float | None, float | None] = PaperSize.A4.dimensions
 # PAPER_DIMENSIONS = (1200, None) # set own dimensions. If one is left as 'None' it will be automaticaly calculated using area size
-# PAPER_DIMENSIONS = (400, None)
-# only if only one side in custom dimension was set to None
+#NOTE: only if only one side in custom dimension was set to None
 GIVEN_SMALLER_PAPER_DIMENSION: bool = True # what side of paper was set (smaller true bigger false)
+WANTED_ORIENTATION: MapOrientation = MapOrientation.AUTOMATIC  # set how will resulted paper be oriented, AUTOMATIC is Recommended
+
+#bounds
+AREA_BOUNDARY = AreaBounds.WHOLE 
+#expand
+EXPAND_AREA = ExpandArea.FIT_PAPER_SIZE # fit paper size recomended with PERCENTAGE_PADDING 0
+OUTER_EXPAND_AREA: float | list[Point] | None  = None
+
+#expand settings
+EXPAND_AREA: float | list[Point] | None  = None
+EXPAND_AREA_BOUNDARY = AreaBounds.WHOLE #NONE or WHOLE
+
+#clipping 
+WANT_AREA_CLIPPING = True # if true it will plot only given AREA (recomended) if False it will plot whole osm file with AREA in center 
 
 
-
-# is True it will plot only given AREA (recomended) if False it will plot whole osm file AREA in center 
-AREA_CLIPPING = True
-#text
-TEXT_WRAP_NAMES_LEN = 15 # len or None if not wrap (15 default)
-TEXT_BOUNDS_OVERFLOW_THRESHOLD = 1 # if allow is false set threashold (0-1) how much of text must be inside 
 #city text 
 SHOW_CITY_NAMES = True # in automatic wanted_nodes creation 
 CITY_CITY_SIZE_MULTIPLIER = 1 # The largest urban settlement or settlements within the territory.
 CITY_TOWN_SIZE_MULTIPLIER = 1 # An important urban centre, between a village and a city in size.
 CITY_VILLAGE_SIZE_MULTIPLIER = 1 # A smaller distinct settlement, smaller than a town with few facilities available with people traveling to nearby towns to access these.	  
+
 #peek text ...
 
-
+#text general
+#text settings
+TEXT_WRAP_NAMES_LEN = 15 # len or None if not wrap (15 default)
+TEXT_BOUNDS_OVERFLOW_THRESHOLD = 1 # if allow is false set threashold (0-1) how much of text must be inside 
 # padding from page borders
 PERCENTAGE_PADDING = 1 # NOTE: must have same settings as the resulting one when generating for large format printing
-PLOT_AREA_BOUNDARY = True
-PLOT_AREA_BOUNDARY_SEPARATED = True # if using multiple areas (if true -> every area will have own boundary, if false -> bounds wont be on common border
 AREA_BOUNDARY_LINEWIDTH = 30
-# set how will resulted paper be oriented
-# can be set to AUTOMATIC (Recommended), LANDSCAPE, PORTRAIT
-WANTED_ORIENTATION: MapOrientation = MapOrientation.AUTOMATIC
 
 #--------------------------------------------------------------preview--------------------------------------------------------------
 # NOTE: must have same settings as the resulting one when generating for large format printing
@@ -54,10 +60,14 @@ OUTER_PAPER_DIMENSIONS = PaperSize.A3.dimensions # real paper size
 
 
 OUTER_GIVEN_SMALLER_PAPER_DIMENSION = True # what side of paper was set (smaller true bigger false)(only if only one side in custom dimension was set)
-# set how will resulted paper be oriented
-# can be set to AUTOMATIC (Recommended), LANDSCAPE, PORTRAIT
+# 
+OUTER_WANTED_ORIENTATION = MapOrientation.AUTOMATIC # set how will resulted paper be oriented, AUTOMATIC is Recommended
+#expand
+OUTER_EXPAND_AREA_MODE = ExpandArea.FIT_PAPER_SIZE 
+OUTER_EXPAND_AREA: float | list[Point] | None  = None
 
-OUTER_WANTED_ORIENTATION = MapOrientation.AUTOMATIC
+
+
 
 
 
@@ -70,6 +80,7 @@ OUTER_WANTED_ORIENTATION = MapOrientation.AUTOMATIC
 EPSG_DEGREE_NUMBER = 4326 # world
 EPSG_METERS_NUMBER = 5514 # cz and sk - 5514, world 3857, europe 25833 
 OBJECT_MULTIPLIER = 1
+
 #--------------filters--------------
 
 #wanted_ways: WantedFeatures

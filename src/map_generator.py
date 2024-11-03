@@ -38,7 +38,7 @@ def calc_preview(map_area_gdf, paper_dimensions_mm):
     # map_object_scaling_automatic_filters_creating = Utils.calc_map_object_scaling_factor(outer_map_area_dimensions_m, outer_paper_dimensions_mm)
     # map_pdf_ratio_auto_filter = sum(Utils.calc_ratios(outer_paper_dimensions_mm, outer_map_area_dimensions_m))/2
    
-    if(not AREA_CLIPPING):
+    if(not WANT_AREA_CLIPPING):
         area_zoom_preview = None
         #calc bounds so area_zoom_preview will be 1 - paper in mm and areas in degrees (meters are not precies)
         paper_fill_bounds = Utils.calc_bounds_to_fill_paper(map_area_gdf.unary_union.centroid,
@@ -83,14 +83,15 @@ def main():
     # if(not PLOT_AREA_BOUNDARY_SEPARATED or OSM_WANT_EXTRACT_AREA): #or EXPAND_AREA
     #     map_area_gdf_joined = GdfUtils.combine_rows_gdf(map_area_gdf, EPSG_DEGREE_NUMBER)   
 
-    if(PLOT_AREA_BOUNDARY_SEPARATED):
+    if(AREA_BOUNDARY == AreaBounds.SEPARATED):
         boundary_map_area_gdf = map_area_gdf.copy()
         map_area_gdf = GdfUtils.combine_rows_gdf(map_area_gdf, EPSG_DEGREE_NUMBER)   
-
     else:
         map_area_gdf = GdfUtils.combine_rows_gdf(map_area_gdf, EPSG_DEGREE_NUMBER)   
         boundary_map_area_gdf = map_area_gdf
-
+        
+    # todo to func expand area - map_area_gdf =  func(map_area_gdf, expandMode, EXPAND_AREA)
+    #todo also to preview
     # if(EXPAND_AREA):
     #     #EXPAND AREA
         
@@ -196,10 +197,10 @@ def main():
     
     plotter.adjust_texts(TEXT_BOUNDS_OVERFLOW_THRESHOLD)
     
-    if(AREA_CLIPPING):
+    if(WANT_AREA_CLIPPING):
         plotter.clip(GdfUtils.create_polygon_from_gdf_bounds(nodes_gdf, ways_gdf, areas_gdf))
         
-    if(PLOT_AREA_BOUNDARY):
+    if(AREA_BOUNDARY != AreaBounds.NONE):
         plotter.plot_area_boundary(area_gdf = boundary_map_area_gdf, linewidth=AREA_BOUNDARY_LINEWIDTH)
         
     # if(expanded_boundary_map_area_gdf not None and PLOT_EXPANDED_AREA_BOUNDARY and EXPAND_AREA):
