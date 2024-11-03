@@ -75,18 +75,30 @@ def main():
 
 
     map_area_gdf = GdfUtils.get_area_gdf(AREA, EPSG_DEGREE_NUMBER)
-    # #to func 
+    # #to func - return one map_area_gdf
     # map_area_gdf2 = GdfUtils.get_area_gdf("Brno, Czech Republic", EPSG_DEGREE_NUMBER)
     # # map_area_gdf3 = GdfUtils.get_area_gdf("Slovakia Republic", EPSG_DEGREE_NUMBER)
     # map_area_gdf = gpd.GeoDataFrame(pd.concat([map_area_gdf, map_area_gdf2], ignore_index=True))
     
-    if(not PLOT_AREA_BOUNDARY_SEPARATED or OSM_WANT_EXTRACT_AREA):
-        map_area_gdf_joined = GdfUtils.combine_rows_gdf(map_area_gdf, EPSG_DEGREE_NUMBER)   
+    # if(not PLOT_AREA_BOUNDARY_SEPARATED or OSM_WANT_EXTRACT_AREA): #or EXPAND_AREA
+    #     map_area_gdf_joined = GdfUtils.combine_rows_gdf(map_area_gdf, EPSG_DEGREE_NUMBER)   
 
     if(PLOT_AREA_BOUNDARY_SEPARATED):
         boundary_map_area_gdf = map_area_gdf.copy()
+        map_area_gdf = GdfUtils.combine_rows_gdf(map_area_gdf, EPSG_DEGREE_NUMBER)   
+
     else:
-        boundary_map_area_gdf = map_area_gdf_joined
+        map_area_gdf = GdfUtils.combine_rows_gdf(map_area_gdf, EPSG_DEGREE_NUMBER)   
+        boundary_map_area_gdf = map_area_gdf
+
+    # if(EXPAND_AREA):
+    #     #EXPAND AREA
+        
+    #     if(PLOT_EXPANDED_AREA_BOUNDARY):
+    #         expanded_boundary_map_area_gdf = 
+    #     else:
+    #         expanded_boundary_map_area_gdf = None
+            
    
     map_area_dimensions_m = GdfUtils.get_dimensions_gdf(map_area_gdf, EPSG_METERS_NUMBER)
     paper_dimensions_mm = Utils.adjust_paper_dimensions(map_area_dimensions_m, PAPER_DIMENSIONS,
@@ -112,7 +124,7 @@ def main():
             return
         #todo check if osmium is instaled
         osm_data_preprocessor = OsmDataPreprocessor(OSM_INPUT_FILE_NAMES, OSM_OUTPUT_FILE_NAME)
-        osm_file_name = osm_data_preprocessor.extract_areas(map_area_gdf_joined)
+        osm_file_name = osm_data_preprocessor.extract_areas(map_area_gdf)
     else:
         #todo function check osm file or in validator before? 
         # list have length of 1 (checked in validator)
@@ -189,6 +201,9 @@ def main():
         
     if(PLOT_AREA_BOUNDARY):
         plotter.plot_area_boundary(area_gdf = boundary_map_area_gdf, linewidth=AREA_BOUNDARY_LINEWIDTH)
+        
+    # if(expanded_boundary_map_area_gdf not None and PLOT_EXPANDED_AREA_BOUNDARY and EXPAND_AREA):
+    #     plotter.plot_area_boundary(area_gdf = expanded_boundary_map_area_gdf, linewidth=EXPANDED_AREA_BOUNDARY_LINEWIDTH)
 
     plotter.generate_pdf(OUTPUT_PDF_NAME)
     # plotter.show_plot()

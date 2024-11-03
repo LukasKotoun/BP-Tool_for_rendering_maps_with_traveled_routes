@@ -64,6 +64,8 @@ class GdfUtils:
     
     @staticmethod
     def combine_rows_gdf(gdf: gpd.GeoDataFrame, epsg: int) -> gpd.GeoDataFrame:
+        if(gdf.index == 1):
+            return gdf.to_crs(epsg=epsg)
         return gpd.GeoDataFrame(geometry=[gdf.to_crs(epsg=epsg).geometry.unary_union], crs=f"EPSG:{epsg}")
     
     @staticmethod
