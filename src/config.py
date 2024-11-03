@@ -4,26 +4,35 @@ from common.map_enums import *
 
 #--------------normal map area--------------
 # OSM_FILE_NAME: str = ['../osm_files/brno.osm.pbf','../osm_files/trebic.osm.pbf']
-OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/jihmor.osm.pbf'
+OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/trebic.osm.pbf'
 OSM_WANT_EXTRACT_AREA: bool = False 
 OSM_OUTPUT_FILE_NAME: None | str = '../osm_files/trebic.osm.pbf' # set if want osm file cutting using osmium command line tool (need to be uinstalled), If not set to None
+
+
 # AREA: str | list[Point] = [(-18.14143,65.68868),(-18.08538,65.68868),(-18.08538,65.67783),(-18.14143,65.67783)] #island
 # AREA: str | list[Point] = [(6.94872,4.84293),(6.99314,4.84293),(6.99314,4.81603),(6.94872,4.81603)] #afrika
-AREA: str | list[Point] = "Jihomoravský kraj, Czech Republic"
-OUTPUT_PDF_NAME: str = '../pdfs/jihmor4'
+AREA: str | list[Point] = "Třebíč, Czech Republic"
+OUTPUT_PDF_NAME: str = '../pdfs/trebic'
 PAPER_DIMENSIONS: PaperSize | tuple[float | None, float | None] = PaperSize.A4.dimensions
 # PAPER_DIMENSIONS = (1200, None) # set own dimensions. If one is left as 'None' it will be automaticaly calculated using area size
 # PAPER_DIMENSIONS = (400, None)
 # only if only one side in custom dimension was set to None
 GIVEN_SMALLER_PAPER_DIMENSION: bool = True # what side of paper was set (smaller true bigger false)
 
-# is False it will plot only given AREA (recomended) if True it will plot whole osm file AREA in center 
-TURN_OFF_AREA_CLIPPING = False
 
-#todo global text configs - off/on 
-#overflow on/off 
-#wrap on/of 
-#wrap len 
+
+# is True it will plot only given AREA (recomended) if False it will plot whole osm file AREA in center 
+AREA_CLIPPING = True
+#text
+TEXT_WRAP_NAMES_LEN = 15 # len or None if not wrap (15 default)
+TEXT_BOUNDS_OVERFLOW_THRESHOLD = 1 # if allow is false set threashold (0-1) how much of text must be inside 
+#city text 
+SHOW_CITY_NAMES = True # in automatic wanted_nodes creation 
+CITY_CITY_SIZE_MULTIPLIER = 1 # The largest urban settlement or settlements within the territory.
+CITY_TOWN_SIZE_MULTIPLIER = 1 # An important urban centre, between a village and a city in size.
+CITY_VILLAGE_SIZE_MULTIPLIER = 1 # A smaller distinct settlement, smaller than a town with few facilities available with people traveling to nearby towns to access these.	  
+#peek text ...
+
 
 # padding from page borders
 PERCENTAGE_PADDING = 1 # NOTE: must have same settings as the resulting one when generating for large format printing
@@ -38,10 +47,10 @@ WANTED_ORIENTATION: MapOrientation = MapOrientation.AUTOMATIC
 # NOTE: must have same settings as the resulting one when generating for large format printing
 WANT_PREVIEW: bool = False
 
-OUTER_AREA = "Czech Republic" # area for that you are creating smaller preview (bigger than normal area) 
+OUTER_AREA = "Vysočina, Czech Republic" # area for that you are creating smaller preview (bigger than normal area) 
 
-# OUTER_PAPER_DIMENSIONS = PaperSize.A4.dimensions # real paper size 
-OUTER_PAPER_DIMENSIONS = (1100, None) # or set own #if one is left none if will be automaticaly calculated by area size
+OUTER_PAPER_DIMENSIONS = PaperSize.A3.dimensions # real paper size 
+# OUTER_PAPER_DIMENSIONS = (1100, None) # or set own #if one is left none if will be automaticaly calculated by area size
 
 
 OUTER_GIVEN_SMALLER_PAPER_DIMENSION = True # what side of paper was set (smaller true bigger false)(only if only one side in custom dimension was set)
@@ -60,7 +69,7 @@ OUTER_WANTED_ORIENTATION = MapOrientation.AUTOMATIC
 #there need to be every mentioned style
 EPSG_DEGREE_NUMBER = 4326 # world
 EPSG_METERS_NUMBER = 5514 # cz and sk - 5514, world 3857, europe 25833 
-LINEWIDTH_MULTIPLIER = 1
+OBJECT_MULTIPLIER = 1
 #--------------filters--------------
 
 #wanted_ways: WantedFeatures
@@ -103,7 +112,7 @@ wanted_areas: WantedCategories = {
     # # 'leisure': ['park', 'pitch', 'garden', 'golf_course', 'nature_reserve'],
     'water': set({}),
     'boundary': {'national_park'} # todo in automatic this should be to turnoff/on
-
+# todo add natural - water
     # 'water': ['river','lake','reservoir'],
 }
 
@@ -129,15 +138,17 @@ WAY_MANDATORY_STYLES: FeatureStyles = {
 NODES_MANDATORY_STYLES: FeatureStyles = {
      StyleKey.COLOR: '#EDEDE0'
 }
+
 #nodes 
 place_styles: FeaturesCategoryStyle = {
-    'city':{StyleKey.FONT_SIZE: 1500, StyleKey.OUTLINE_WIDTH: 150}, 
-    'town':{StyleKey.FONT_SIZE: 1000, StyleKey.OUTLINE_WIDTH: 100}, 
-    'village':{StyleKey.FONT_SIZE: 200, StyleKey.OUTLINE_WIDTH: 50}
+    'city':{StyleKey.FONT_SIZE: 2500 * CITY_CITY_SIZE_MULTIPLIER, StyleKey.OUTLINE_WIDTH: 270 * CITY_CITY_SIZE_MULTIPLIER}, 
+    'town':{StyleKey.FONT_SIZE: 1000 * CITY_TOWN_SIZE_MULTIPLIER, StyleKey.OUTLINE_WIDTH: 100 * CITY_TOWN_SIZE_MULTIPLIER}, 
+    'village':{StyleKey.FONT_SIZE: 300 * CITY_VILLAGE_SIZE_MULTIPLIER, StyleKey.OUTLINE_WIDTH: 50 * CITY_VILLAGE_SIZE_MULTIPLIER}
 }
 
 NODES_STYLES: FeaturesCategoriesStyles = {
-    'place': (place_styles, {StyleKey.COLOR: '#000000', StyleKey.BGCOLOR: '#FFFFFF', }),#linewidth is outlinewidht
+    # color is color of text, bg color is outline color 
+    'place': (place_styles, {StyleKey.COLOR: '#000000', StyleKey.BGCOLOR: '#FFFFFF', }),
 }
 
 

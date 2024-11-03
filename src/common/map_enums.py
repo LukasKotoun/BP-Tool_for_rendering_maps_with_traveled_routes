@@ -9,7 +9,8 @@ class StyleKey(Enum):
     LINESTYLE = 6
     ALPHA = 7
     FONT_SIZE = 8
-    OUTLINE_WIDTH = 9
+    OUTLINE_WIDTH = 9,
+    ICON_COLOR = 10
     
 
 class WorldSides(Enum):

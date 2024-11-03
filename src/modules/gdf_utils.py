@@ -201,13 +201,12 @@ class GdfUtils:
             condition = GdfUtils.create_condition(gdf, att_name, att_values)
             return gdf[~condition].reset_index(drop=True), gdf[condition].reset_index(drop=True)
     
-    #todo use one filter creation and than add with 'and' all ways that are longer, that will leave false with all that i want...
     @staticmethod
-    @time_measurement_decorator("test")
-    def filter_gdf_rows_in_gdf_area(gdf_rows: gpd.GeoDataFrame, gdf_area: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
+    def filter_gdf_rows_inside_gdf_area(gdf_rows: gpd.GeoDataFrame, gdf_area: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
         return gdf_rows[gdf_rows.geometry.within(gdf_area.unary_union)].reset_index(drop=True)
 
     @staticmethod
+    #todo use one filter creation and than add with 'and' all ways that are longer, that will leave false with all that i want...
     @time_measurement_decorator("short ways filter")
     def filter_short_ways(gdf: gpd.GeoDataFrame, epsg: int, min_lenght: float = 2) -> gpd.GeoDataFrame:
         

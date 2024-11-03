@@ -33,12 +33,12 @@ def calc_preview(map_area_gdf, paper_dimensions_mm):
     #in meteres for same proportion keeping
     map_object_scaling_factor = (Utils.calc_map_object_scaling_factor(outer_map_area_dimensions_m,
                                                                      outer_paper_dimensions_mm)
-                                * LINEWIDTH_MULTIPLIER)
+                                * OBJECT_MULTIPLIER)
     # calc map factor for creating automatic array with wanted elements - for preview area (without area_zoom_preview)
     # map_object_scaling_automatic_filters_creating = Utils.calc_map_object_scaling_factor(outer_map_area_dimensions_m, outer_paper_dimensions_mm)
     # map_pdf_ratio_auto_filter = sum(Utils.calc_ratios(outer_paper_dimensions_mm, outer_map_area_dimensions_m))/2
    
-    if(TURN_OFF_AREA_CLIPPING):
+    if(not AREA_CLIPPING):
         area_zoom_preview = None
         #calc bounds so area_zoom_preview will be 1 - paper in mm and areas in degrees (meters are not precies)
         paper_fill_bounds = Utils.calc_bounds_to_fill_paper(map_area_gdf.unary_union.centroid,
@@ -102,7 +102,7 @@ def main():
         # in meteres for same proportion keeping
         map_object_scaling_factor = (Utils.calc_map_object_scaling_factor(map_area_dimensions_m,
                                                                          paper_dimensions_mm) 
-                                    * LINEWIDTH_MULTIPLIER)
+                                    * OBJECT_MULTIPLIER)
 
     #------------get elements from osm file------------
     
@@ -144,8 +144,11 @@ def main():
     #------------filter some elements out - before styles adding------------
     # only for some ways categories
     # ways_gdf = GdfUtils.filter_short_ways(ways_gdf, 10)
-    nodes_gdf = GdfUtils.filter_gdf_rows_in_gdf_area(nodes_gdf, map_area_gdf)
-
+    
+    nodes_gdf = GdfUtils.filter_gdf_rows_inside_gdf_area(nodes_gdf, map_area_gdf)
+    #todo function to filter fun(gdf, tag, value (or none for not nan), not nan in this columns) - use to filter city without names
+    #todo  use to filter peeks withou ele
+    #function(algorithm) to get only usefull peeks + again back to nodes gdf
     #------------style elements------------
     #todo styles for ways and areas separeated - 2 geodata stylers
     nodes_style_assigner = StyleAssigner(NODES_STYLES, GENERAL_DEFAULT_STYLES, NODES_MANDATORY_STYLES)
@@ -170,17 +173,19 @@ def main():
     gpxs_gdf = gpx_processer.get_gpxs_gdf(EPSG_DEGREE_NUMBER)
     
     
-    plotter = Plotter(nodes_gdf, ways_gdf, areas_gdf, gpxs_gdf,
-                    map_area_gdf, paper_dimensions_mm, map_object_scaling_factor)
+    plotter = Plotter(map_area_gdf, paper_dimensions_mm, map_object_scaling_factor)
     plotter.init_plot(GENERAL_DEFAULT_STYLES[StyleKey.COLOR], area_zoom_preview)
     plotter.zoom(zoom_percent_padding=PERCENTAGE_PADDING)
 
-    plotter.plot_areas()
-    plotter.plot_ways()
-    plotter.plot_nodes()
-    plotter.plot_gpxs()
-    if(not TURN_OFF_AREA_CLIPPING):
-        plotter.clip()
+    plotter.plot_areas(areas_gdf)
+    plotter.plot_ways(ways_gdf)
+    plotter.plot_nodes(nodes_gdf, TEXT_WRAP_NAMES_LEN)
+    plotter.plot_gpxs(gpxs_gdf)
+    
+    plotter.adjust_texts(TEXT_BOUNDS_OVERFLOW_THRESHOLD)
+    
+    if(AREA_CLIPPING):
+        plotter.clip(GdfUtils.create_polygon_from_gdf_bounds(nodes_gdf, ways_gdf, areas_gdf))
         
     if(PLOT_AREA_BOUNDARY):
         plotter.plot_area_boundary(area_gdf = boundary_map_area_gdf, linewidth=AREA_BOUNDARY_LINEWIDTH)

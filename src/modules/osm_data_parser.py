@@ -119,6 +119,8 @@ class OsmDataParser(osmium.SimpleHandler):
                     return True      
         # map feature is not in wanted features        
         return False
+    
+    
     def node(self, node):
         if OsmDataParser._apply_filters(self.wanted_nodes, node.tags):
             try:

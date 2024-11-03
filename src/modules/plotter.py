@@ -3,7 +3,6 @@ import matplotlib.pyplot as plt
 import geopandas as gpd
 import pandas as pd
 from shapely import geometry
-from matplotlib.transforms import Affine2D
 import textwrap
 from adjustText import adjust_text
 
@@ -16,12 +15,7 @@ from modules.utils import Utils
 class Plotter:    
     
     MM_TO_INCH = 25.4
-    def __init__(self, nodes_element_gdf, ways_element_gdf, areas_element_gdf, gpxs_gdf,
-                 requred_area_gdf, paper_dimensions_mm, map_object_scaling_factor):
-        self.nodes_element_gdf = nodes_element_gdf
-        self.ways_element_gdf = ways_element_gdf
-        self.areas_element_gdf = areas_element_gdf
-        self.gpxs_gdf = gpxs_gdf
+    def __init__(self, requred_area_gdf, paper_dimensions_mm, map_object_scaling_factor):
         self.reqired_area_gdf = requred_area_gdf
         self.reqired_area_polygon = GdfUtils.create_polygon_from_gdf(self.reqired_area_gdf)
         self.paper_dimensions_mm = paper_dimensions_mm
@@ -44,38 +38,43 @@ class Plotter:
         self.reqired_area_gdf.plot(ax=self.ax, color=map_bg_color, linewidth=1)
         
         
-    def plot_city_names(self, city_names_gdf):
-        #todo checks for att
-        r = self.fig.canvas.get_renderer()
+    def plot_city_names(self, city_names_gdf, wrap_len: int | None):
+        if(city_names_gdf.empty):
+            return
         city_names_gdf[StyleKey.OUTLINE_WIDTH] = city_names_gdf[StyleKey.OUTLINE_WIDTH] * self.map_object_scaling_factor
-        
         for geom, name, color, fontsize, outline_width, bgcolor in zip(
             city_names_gdf.geometry, city_names_gdf['name'], city_names_gdf[StyleKey.COLOR],
             city_names_gdf[StyleKey.FONT_SIZE], city_names_gdf[StyleKey.OUTLINE_WIDTH],
             city_names_gdf[StyleKey.BGCOLOR]):
-          
-            wraped_name = textwrap.fill(name, width = 15)
+            if(wrap_len is not None):
+                wraped_name = textwrap.fill(name, width = wrap_len)
+            else:
+                wraped_name = name
             x = geom.x
             y = geom.y
-            text = self.ax.text(
+            self.ax.text(
             x, y, wraped_name, fontsize = fontsize, ha = 'center', va = 'center', zorder = 4, color = color, 
             path_effects = [patheffects.withStroke(linewidth = outline_width, foreground = bgcolor)]) 
-            
-            text_Bbox = text.get_tightbbox(renderer=r).transformed(self.ax.transData.inverted())
-            bbox_polygon = geometry.box(text_Bbox.x0, text_Bbox.y0, text_Bbox.x1, text_Bbox.y1)
-            if(not GdfUtils.is_polygon_inside_polygon_threshold(bbox_polygon, self.reqired_area_polygon, 0.95)):
-                text.remove()
+
             
         
     @time_measurement_decorator("nodePlot")
-    def plot_nodes(self):
+    def plot_nodes(self, nodes_gdf, wrap_len: int | None):
+        all_columns_present = all(col in nodes_gdf.columns for col in [StyleKey.FONT_SIZE, StyleKey.OUTLINE_WIDTH, StyleKey.COLOR, StyleKey.BGCOLOR])
+        if(nodes_gdf.empty or not all_columns_present):
+            return
         #todo checks for att
-        self.nodes_element_gdf[StyleKey.FONT_SIZE] = self.nodes_element_gdf[StyleKey.FONT_SIZE] * self.map_object_scaling_factor
-        city_names_gdf, rest = GdfUtils.filter_gdf_in(self.nodes_element_gdf, 'place')
+        nodes_gdf[StyleKey.FONT_SIZE] = nodes_gdf[StyleKey.FONT_SIZE] * self.map_object_scaling_factor
+        city_names_gdf, rest_gdf = GdfUtils.filter_gdf_in(nodes_gdf, 'place')
         city_names_gdf = GdfUtils.filter_gdf_in(city_names_gdf, 'name')[0]
-        self.plot_city_names(city_names_gdf)
-        # to function and set in config constants the text force 
-        adjust_text(self.ax.texts, force_text = 0.25, force_explode = 0, army=1)
+        self.plot_city_names(city_names_gdf, wrap_len)
+        
+        #todo filter out elevation without ele - in map_generator
+        #in peak plot check if have name
+        
+        # todo function and set in config constants the text force 
+        # adjust_text(self.ax.texts, force_text = 0.25, avoid_self= False)
+       
 
             
             
@@ -117,13 +116,13 @@ class Plotter:
                             alpha=rails_gdf[StyleKey.ALPHA], linestyle = rails_gdf[StyleKey.LINESTYLE])        
                     
     @time_measurement_decorator("wayplot")            
-    def plot_ways(self):
-        if(self.ways_element_gdf.empty or StyleKey.LINEWIDTH not in self.ways_element_gdf 
-           or StyleKey.COLOR not in self.ways_element_gdf):
+    def plot_ways(self, ways_gdf):
+        if(ways_gdf.empty or StyleKey.LINEWIDTH not in ways_gdf 
+           or StyleKey.COLOR not in ways_gdf):
             return
       
-        self.ways_element_gdf[StyleKey.LINEWIDTH] = self.ways_element_gdf[StyleKey.LINEWIDTH] * self.map_object_scaling_factor
-        waterways_gdf, rest_gdf = GdfUtils.filter_gdf_in(self.ways_element_gdf, 'waterway')
+        ways_gdf[StyleKey.LINEWIDTH] = ways_gdf[StyleKey.LINEWIDTH] * self.map_object_scaling_factor
+        waterways_gdf, rest_gdf = GdfUtils.filter_gdf_in(ways_gdf, 'waterway')
         self.__plot_waterways(waterways_gdf)
         
         highways_gdf, rest_gdf = GdfUtils.filter_gdf_in(rest_gdf, 'highway')
@@ -134,16 +133,18 @@ class Plotter:
 
 
     @time_measurement_decorator("areaPlot")            
-    def plot_areas(self):
+    def plot_areas(self, areas_gdf):
+        if(areas_gdf.empty):
+            return
         # [pd.NA, 'none'] - get all that dont have nan or 'none' (if does not have that column will return true for everything - need check if have that column)
         # plot face
-        if(StyleKey.COLOR in self.areas_element_gdf):
-            face_areas_gdf = GdfUtils.filter_gdf_not_in(self.areas_element_gdf, StyleKey.COLOR, [pd.NA, 'none'])[0]
+        if(StyleKey.COLOR in areas_gdf):
+            face_areas_gdf = GdfUtils.filter_gdf_not_in(areas_gdf, StyleKey.COLOR, [pd.NA, 'none'])[0]
             if(not face_areas_gdf.empty and StyleKey.COLOR in face_areas_gdf):
                 face_areas_gdf.plot(ax=self.ax, color = face_areas_gdf[StyleKey.COLOR], alpha=face_areas_gdf[StyleKey.ALPHA])
         # plot bounds
-        if(StyleKey.EDGE_COLOR in self.areas_element_gdf):
-            edge_areas_gdf = GdfUtils.filter_gdf_not_in(self.areas_element_gdf, StyleKey.EDGE_COLOR, [pd.NA, 'none'])[0]
+        if(StyleKey.EDGE_COLOR in areas_gdf):
+            edge_areas_gdf = GdfUtils.filter_gdf_not_in(areas_gdf, StyleKey.EDGE_COLOR, [pd.NA, 'none'])[0]
             if(not edge_areas_gdf.empty and StyleKey.EDGE_COLOR in edge_areas_gdf and 
             StyleKey.LINEWIDTH in edge_areas_gdf):
                 edge_areas_gdf[StyleKey.LINEWIDTH] = edge_areas_gdf[StyleKey.LINEWIDTH] * self.map_object_scaling_factor
@@ -155,25 +156,39 @@ class Plotter:
 
     
     @time_measurement_decorator("gpxsPlot")            
-    def plot_gpxs(self):
-        self.gpxs_gdf.plot(ax = self.ax, color="red", linewidth = 20 * self.map_object_scaling_factor)
-
+    def plot_gpxs(self, gpxs_gdf):
+        gpxs_gdf.plot(ax = self.ax, color="red", linewidth = 20 * self.map_object_scaling_factor)
         
-    def clip(self, whole_map_gdf = None, reqired_area_gdf = None, clipped_area_color = 'white'):
-        if(self.areas_element_gdf.empty and self.ways_element_gdf.empty):
-            return
-        if(whole_map_gdf is not None):
-            whole_area_polygon = GdfUtils.create_polygon_from_gdf(whole_map_gdf)
-        else:
-            whole_area_polygon = GdfUtils.create_polygon_from_gdf_bounds(self.ways_element_gdf, self.areas_element_gdf)
-            
+    @time_measurement_decorator("adjusting")
+    def adjust_texts(self, text_bounds_overflow_threshold: float):
+        # #remove overflown texts before adjusting, smaller threshold - can be adjusted
+        # if(not allow_text_bounds_overflow):
+        #     r = self.fig.canvas.get_renderer()
+        #     for text in self.ax.texts:
+        #         text_Bbox = text.get_tightbbox(renderer=r).transformed(self.ax.transData.inverted())
+        #         bbox_polygon = geometry.box(text_Bbox.x0, text_Bbox.y0, text_Bbox.x1, text_Bbox.y1)
+        #         if(not GdfUtils.is_polygon_inside_polygon_threshold(bbox_polygon, self.reqired_area_polygon, text_bounds_overflow_threshold * 0.8)):
+        #             text.remove()
+        adjust_text(self.ax.texts, force_text = 0.2)
+        
+        #remove overflown texts after adjusting
+        if(text_bounds_overflow_threshold > 0):
+            r = self.fig.canvas.get_renderer()
+            for text in self.ax.texts:
+                text_Bbox = text.get_tightbbox(renderer=r).transformed(self.ax.transData.inverted())
+                bbox_polygon = geometry.box(text_Bbox.x0, text_Bbox.y0, text_Bbox.x1, text_Bbox.y1)
+                if(not GdfUtils.is_polygon_inside_polygon_threshold(bbox_polygon, self.reqired_area_polygon, text_bounds_overflow_threshold)):
+                    text.remove()
+        
+    def clip(self, whole_map_polygon, reqired_area_gdf = None, clipped_area_color = 'white'):
+        
         if(reqired_area_gdf is not None):
             reqired_area_polygon = GdfUtils.create_polygon_from_gdf(reqired_area_gdf)
         else:
             reqired_area_polygon = self.reqired_area_polygon
             
-        clipping_polygon = whole_area_polygon.difference(reqired_area_polygon)
-        if(not GdfUtils.is_polygon_inside_polygon(clipping_polygon, whole_area_polygon)):
+        clipping_polygon = whole_map_polygon.difference(reqired_area_polygon)
+        if(not GdfUtils.is_polygon_inside_polygon(clipping_polygon, whole_map_polygon)):
             return
         
         # clipping_polygon = geometry.MultiPolygon([clipping_polygon]) - epsg in constructor
