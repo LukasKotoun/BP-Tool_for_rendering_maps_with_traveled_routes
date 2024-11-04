@@ -18,14 +18,14 @@ class AreaBounds(Enum):
     SEPARATED = 3
     
 class ExpandArea(Enum):
-    FIT_PAPER_SIZE = 1
-    CUSTOM_AREA = 2
-    PERCENTAGE_OF_AREA = 3
-
-class ExpandArea(Enum):
-    FIT_PAPER_SIZE = 1
-    CUSTOM_AREA = 2
-    PERCENTAGE_OF_AREA = 3
+    NONE = 1
+    FIT_PAPER_SIZE = 2
+    CUSTOM_AREA = 3
+    PERCENTAGE_OF_AREA = 4
+    
+class ExpandAreaBounds(Enum):
+    NONE = 1
+    WHOLE = 2
 
 
 class WorldSides(Enum):

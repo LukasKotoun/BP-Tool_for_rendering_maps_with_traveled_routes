@@ -35,7 +35,7 @@ def calc_preview(map_area_gdf, paper_dimensions_mm):
                                                                      outer_paper_dimensions_mm)
                                 * OBJECT_MULTIPLIER)
     # calc map factor for creating automatic array with wanted elements - for preview area (without area_zoom_preview)
-    # map_object_scaling_automatic_filters_creating = Utils.calc_map_object_scaling_factor(outer_map_area_dimensions_m, outer_paper_dimensions_mm)
+    # todo map_object_scaling_automatic_filters_creating = Utils.calc_map_object_scaling_factor(outer_map_area_dimensions_m, outer_paper_dimensions_mm)
     # map_pdf_ratio_auto_filter = sum(Utils.calc_ratios(outer_paper_dimensions_mm, outer_map_area_dimensions_m))/2
     #todo to doc - need becaous it will clip by requred area - and that will be some big area in not clipping
     if(not WANT_AREA_CLIPPING):
@@ -75,32 +75,37 @@ def main():
 
 
     map_area_gdf = GdfUtils.get_area_gdf(AREA, EPSG_DEGREE_NUMBER)
-    # #to func - return one map_area_gdf
-    # map_area_gdf2 = GdfUtils.get_area_gdf("Brno, Czech Republic", EPSG_DEGREE_NUMBER)
-    # # map_area_gdf3 = GdfUtils.get_area_gdf("Slovakia Republic", EPSG_DEGREE_NUMBER)
-    # map_area_gdf = gpd.GeoDataFrame(pd.concat([map_area_gdf, map_area_gdf2], ignore_index=True))
-    
+    # #todo func - return one map_area_gdf
+    # map_area_gdf2 = GdfUtils.get_area_gdf("Třebíč, Czech Republic", EPSG_DEGREE_NUMBER)
+    # map_area_gdf3 = GdfUtils.get_area_gdf("Slovakia Republic", EPSG_DEGREE_NUMBER)
+    # map_area_gdf4 = GdfUtils.get_area_gdf("Germany", EPSG_DEGREE_NUMBER)
+    # map_area_gdf5 = GdfUtils.get_area_gdf("Italy", EPSG_DEGREE_NUMBER)
+    # map_area_gdf6 = GdfUtils.get_area_gdf("Slovakia Republic", EPSG_DEGREE_NUMBER)
+    # map_area_gdf = gpd.GeoDataFrame(pd.concat([map_area_gdf, map_area_gdf2,map_area_gdf3,map_area_gdf4,map_area_gdf5,map_area_gdf6], ignore_index=True))
+    #todo as function gdfUtils.concat_gdfs()
+    # map_area_gdf = pd.concat([map_area_gdf,map_area_gdf2], ignore_index=True)
+
     # if(not PLOT_AREA_BOUNDARY_SEPARATED or OSM_WANT_EXTRACT_AREA): #or EXPAND_AREA
     #     map_area_gdf_joined = GdfUtils.combine_rows_gdf(map_area_gdf, EPSG_DEGREE_NUMBER)   
 
     if(AREA_BOUNDARY == AreaBounds.SEPARATED):
         boundary_map_area_gdf = map_area_gdf.copy()
-        map_area_gdf = GdfUtils.combine_rows_gdf(map_area_gdf, EPSG_DEGREE_NUMBER)   
     else:
         map_area_gdf = GdfUtils.combine_rows_gdf(map_area_gdf, EPSG_DEGREE_NUMBER)   
         boundary_map_area_gdf = map_area_gdf
         
-    # todo to func expand area - map_area_gdf =  func(map_area_gdf, expandMode, EXPAND_AREA)
     #todo also to preview
-    # if(EXPAND_AREA):
+    # if(EXPAND_AREA_MODE):
+    # todo to func expand area - map_area_gdf =  func(map_area_gdf, expandMode, EXPAND_AREA)
+    #concat here or concat after this
     #     #EXPAND AREA
-        
-    #     if(PLOT_EXPANDED_AREA_BOUNDARY):
+    #     if(EXPAND_AREA_BOUNDS):
     #         expanded_boundary_map_area_gdf = 
     #     else:
     #         expanded_boundary_map_area_gdf = None
-            
-   
+    # else:
+    # map_area_gdf = GdfUtils.combine_rows_gdf(map_area_gdf, EPSG_DEGREE_NUMBER) Dont need in preview
+
     map_area_dimensions_m = GdfUtils.get_dimensions_gdf(map_area_gdf, EPSG_METERS_NUMBER)
     paper_dimensions_mm = Utils.adjust_paper_dimensions(map_area_dimensions_m, PAPER_DIMENSIONS,
                                                   GIVEN_SMALLER_PAPER_DIMENSION, WANTED_ORIENTATION)
@@ -110,7 +115,7 @@ def main():
     else:
         area_zoom_preview = None
         # calc map factor for creating automatic array with wanted elements
-        # map_object_scaling_automatic_filters_creating = Utils.calc_map_object_scaling_factor(map_area_dimensions_m, paper_dimensions_mm)
+        # todo map_object_scaling_automatic_filters_creating = Utils.calc_map_object_scaling_factor(map_area_dimensions_m, paper_dimensions_mm)
         # map_pdf_ratio_auto_filter = sum(Utils.calc_ratios(paper_dimensions_mm, map_area_dimensions_m))/2
         # in meteres for same proportion keeping
         map_object_scaling_factor = (Utils.calc_map_object_scaling_factor(map_area_dimensions_m,
@@ -127,7 +132,7 @@ def main():
         osm_data_preprocessor = OsmDataPreprocessor(OSM_INPUT_FILE_NAMES, OSM_OUTPUT_FILE_NAME)
         osm_file_name = osm_data_preprocessor.extract_areas(map_area_gdf)
     else:
-        #todo function check osm file or in validator before? 
+        # todo function check osm file or in validator before? 
         # list have length of 1 (checked in validator)
         if(isinstance(OSM_INPUT_FILE_NAMES, list)):
             osm_file_name = OSM_INPUT_FILE_NAMES[0]      

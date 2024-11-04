@@ -186,7 +186,7 @@ class OsmDataParser(osmium.SimpleHandler):
         # print(nodes_gdf.memory_usage(deep=True))
         # print(ways_gdf.memory_usage(deep=True))
         # print(areas_gdf.memory_usage(deep=True))
-        print(f"nodes:{nodes_gdf.memory_usage(deep=True).sum()},  ways: {ways_gdf.memory_usage(deep=True).sum()},  areas: {areas_gdf.memory_usage(deep=True).sum()},combined: {nodes_gdf.memory_usage(deep=True).sum() + ways_gdf.memory_usage(deep=True).sum() + areas_gdf.memory_usage(deep=True).sum()}")
+        print(f"nodes: {nodes_gdf.memory_usage(deep=True).sum()}, ways: {ways_gdf.memory_usage(deep=True).sum()}, areas: {areas_gdf.memory_usage(deep=True).sum()}, combined: {nodes_gdf.memory_usage(deep=True).sum() + ways_gdf.memory_usage(deep=True).sum() + areas_gdf.memory_usage(deep=True).sum()}")
             
         return nodes_gdf, ways_gdf, areas_gdf
     
