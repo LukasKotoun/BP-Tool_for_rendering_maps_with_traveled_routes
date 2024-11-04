@@ -4,34 +4,35 @@ from common.map_enums import *
 
 #--------------normal map area--------------
 # OSM_INPUT_FILE_NAMES: str = ['../osm_files/brno.osm.pbf','../osm_files/trebic.osm.pbf']
-OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/jihmor.osm.pbf'
+OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/vys.osm.pbf'
 #extract
 OSM_WANT_EXTRACT_AREA: bool = False 
-OSM_OUTPUT_FILE_NAME: None | str = '../osm_files/cz.osm.pbf' # set if want osm file cutting using osmium command line tool (need to be uinstalled), If not set to None
+OSM_OUTPUT_FILE_NAME: None | str = '../osm_files/usti.osm.pbf' # set if want osm file cutting using osmium command line tool (need to be uinstalled), If not set to None
 
 # AREA: str | list[Point] = [(-18.14143,65.68868),(-18.08538,65.68868),(-18.08538,65.67783),(-18.14143,65.67783)] #island
 # AREA: str | list[Point] = [(6.94872,4.84293),(6.99314,4.84293),(6.99314,4.81603),(6.94872,4.81603)] #afrika
-AREA: str | list[Point] = "Brno, Czech Republic"
-OUTPUT_PDF_NAME: str = '../pdfs/brno'
-PAPER_DIMENSIONS: PaperSize | tuple[float | None, float | None] = PaperSize.A2.dimensions
-# PAPER_DIMENSIONS = (1200, None) # set own dimensions. If one is left as 'None' it will be automaticaly calculated using area size
+AREA: str | list[Point] = "Vysočina, Czech Republic"
+PAPER_DIMENSIONS: PaperSize | tuple[float | None, float | None] = PaperSize.A4.dimensions
+# PAPER_DIMENSIONS = (2000, None) # set own dimensions. If one is left as 'None' it will be automaticaly calculated using area size
+OUTPUT_PDF_NAME: str = '../pdfs/vys_texty'
+
 #NOTE: only if only one side in custom dimension was set to None
 GIVEN_SMALLER_PAPER_DIMENSION: bool = True # what side of paper was set (smaller true bigger false)
 WANTED_ORIENTATION: MapOrientation = MapOrientation.AUTOMATIC  # set how will resulted paper be oriented, AUTOMATIC is Recommended
 
-#bounds
-AREA_BOUNDARY = AreaBounds.WHOLE #WHOLE - one bound around area, SEPARATED - separated bounds around every area in AREA variable
-EXPAND_AREA_BOUNDS =  ExpandAreaBounds.WHOLE 
-
 #expand (recomended NONE or FIT_PAPER_SIZE (recomended with PERCENTAGE_PADDING 0)) 
 EXPAND_AREA_MODE = ExpandArea.NONE
 CUSTOM_EXPAND_AREA: float | list[Point] | None = None # percentage or polygon - custom area must be bigger than normal
-#todo fit přepsání, percentage přepsání??-zeptat se, custom spojení
+#todo fit přepsání, percentage přepsání?? - zeptat se, custom spojení
 
-#clipping 
+#bounds
+AREA_BOUNDARY = AreaBounds.WHOLE #WHOLE - one bound around area, SEPARATED - separated bounds around every area in AREA variable
+EXPAND_AREA_BOUNDS = ExpandAreaBounds.WHOLE 
+
+#clipping
 WANT_AREA_CLIPPING = True # if true it will plot only given AREA (recomended) if False it will plot whole osm file with AREA in center 
 
-#city text 
+#city text
 SHOW_CITY_NAMES = True # in automatic wanted_nodes creation 
 CITY_CITY_SIZE_MULTIPLIER = 1 # The largest urban settlement or settlements within the territory.
 CITY_TOWN_SIZE_MULTIPLIER = 1 # An important urban centre, between a village and a city in size.
@@ -39,7 +40,6 @@ CITY_VILLAGE_SIZE_MULTIPLIER = 1 # A smaller distinct settlement, smaller than a
 
 #peek text ...
 #text general
-#text settings
 TEXT_WRAP_NAMES_LEN = 15 # len or None if not wrap (15 default)
 TEXT_BOUNDS_OVERFLOW_THRESHOLD = 0.97 # if allow is false set threashold (0-1) how much of text must be inside 
 # padding from page borders
@@ -49,7 +49,7 @@ AREA_BOUNDARY_LINEWIDTH = 30
 #--------------------------------------------------------------preview--------------------------------------------------------------
 # NOTE: must have same settings as the resulting one when generating for large format printing
 WANT_PREVIEW: bool = False
-OUTER_AREA = "Vysočina, Czech Republic" # area for that you are creating smaller preview (bigger than normal area) 
+OUTER_AREA = "Brno, Czech Republic" # area for that you are creating smaller preview (bigger than normal area) 
 
 OUTER_PAPER_DIMENSIONS = PaperSize.A3.dimensions # real paper size 
 # OUTER_PAPER_DIMENSIONS = (1100, None) # or set own #if one is left none if will be automaticaly calculated by area size
@@ -73,6 +73,7 @@ OUTER_CUSTOM_EXPAND_AREA: float | list[Point] | None  = None # percentage or pol
 #there need to be every mentioned style
 EPSG_DEGREE_NUMBER = 4326 # world
 EPSG_METERS_NUMBER = 5514 # cz and sk - 5514, world 3857, europe 25833 
+# todo table with epsg 
 OBJECT_MULTIPLIER = 1
 
 #--------------filters--------------
@@ -141,7 +142,8 @@ WAY_MANDATORY_STYLES: FeatureStyles = {
 }
 #styles that must be assigned to all node features
 NODES_MANDATORY_STYLES: FeatureStyles = {
-     StyleKey.COLOR: '#EDEDE0'
+     StyleKey.COLOR: '#000000', StyleKey.FONT_SIZE: 50, StyleKey.BGCOLOR: '#FFFFFF',
+     StyleKey.OUTLINE_WIDTH: 5
 }
 
 #nodes 
@@ -153,7 +155,7 @@ place_styles: FeaturesCategoryStyle = {
 
 NODES_STYLES: FeaturesCategoriesStyles = {
     # color is color of text, bg color is outline color 
-    'place': (place_styles, {StyleKey.COLOR: '#000000', StyleKey.BGCOLOR: '#FFFFFF', }),
+    'place': (place_styles, {StyleKey.COLOR: '#000000', StyleKey.BGCOLOR: '#FFFFFF'}),
 }
 
 
