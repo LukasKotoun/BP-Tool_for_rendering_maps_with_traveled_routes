@@ -25,7 +25,7 @@ def calc_preview(map_area_gdf, paper_dimensions_mm):
     #todo map area gdfs
     outer_area_gdf = GdfUtils.get_area_gdf(OUTER_AREA, EPSG_DEGREE_NUMBER)
     outer_map_area_dimensions = GdfUtils.get_dimensions_gdf(outer_area_gdf)
-    outer_map_area_dimensions_m = GdfUtils.get_dimensions_gdf(outer_area_gdf, EPSG_METERS_NUMBER)
+    outer_map_area_dimensions_m = GdfUtils.get_dimensions_m_gdf(outer_area_gdf)
     # map in meters for calc automatic orientation and same pdf sides proportions
     outer_paper_dimensions_mm = Utils.adjust_paper_dimensions(outer_map_area_dimensions_m, OUTER_PAPER_DIMENSIONS,
                                                             OUTER_GIVEN_SMALLER_PAPER_DIMENSION,
@@ -37,7 +37,7 @@ def calc_preview(map_area_gdf, paper_dimensions_mm):
     # calc map factor for creating automatic array with wanted elements - for preview area (without area_zoom_preview)
     # todo map_object_scaling_automatic_filters_creating = Utils.calc_map_object_scaling_factor(outer_map_area_dimensions_m, outer_paper_dimensions_mm)
     # map_pdf_ratio_auto_filter = sum(Utils.calc_ratios(outer_paper_dimensions_mm, outer_map_area_dimensions_m))/2
-    #todo to doc - need becaous it will clip by requred area - and that will be some big area in not clipping
+    # ?? to doc - need because it will clip by requred area - and that will be some big area in not clipping
     if(not WANT_AREA_CLIPPING):
         area_zoom_preview = None
         #calc bounds so area_zoom_preview will be 1 - paper in mm and areas in degrees (meters are not precies)
@@ -48,13 +48,13 @@ def calc_preview(map_area_gdf, paper_dimensions_mm):
         map_area_gdf = GdfUtils.create_gdf_from_bounds(paper_fill_bounds, EPSG_DEGREE_NUMBER)
     else:
         map_area_dimensions = GdfUtils.get_dimensions_gdf(map_area_gdf)
-        # calc zoom - paper in mm and areas in degrees (meters are not precies)
+        # calc zoom - paper in mm and areas in degrees (meters are not that accurate)
         # if want clipping instead of bounds calculation calculate need zoom/unzoom 
         area_zoom_preview = Utils.calc_zoom_for_smaller_area(
             outer_map_area_dimensions, outer_paper_dimensions_mm,
             map_area_dimensions, paper_dimensions_mm,
         )
-    
+
     return area_zoom_preview, map_object_scaling_factor, map_area_gdf 
 
 
@@ -106,7 +106,7 @@ def main():
     # else:
     # map_area_gdf = GdfUtils.combine_rows_gdf(map_area_gdf, EPSG_DEGREE_NUMBER) Dont need in preview
 
-    map_area_dimensions_m = GdfUtils.get_dimensions_gdf(map_area_gdf, EPSG_METERS_NUMBER)
+    map_area_dimensions_m = GdfUtils.get_dimensions_m_gdf(map_area_gdf)
     paper_dimensions_mm = Utils.adjust_paper_dimensions(map_area_dimensions_m, PAPER_DIMENSIONS,
                                                   GIVEN_SMALLER_PAPER_DIMENSION, WANTED_ORIENTATION)
     if(WANT_PREVIEW):
@@ -195,8 +195,8 @@ def main():
     plotter.init_plot(GENERAL_DEFAULT_STYLES[StyleKey.COLOR], area_zoom_preview)
     plotter.zoom(zoom_percent_padding=PERCENTAGE_PADDING)
 
-    plotter.plot_areas(areas_gdf)
-    plotter.plot_ways(ways_gdf)
+    plotter.plot_areas(areas_gdf, AREAS_EDGE_WIDTH_MULTIPLIER)
+    plotter.plot_ways(ways_gdf, WAYS_WIDTH_MULTIPLIER)
     plotter.plot_nodes(nodes_gdf, TEXT_WRAP_NAMES_LEN)
     plotter.plot_gpxs(gpxs_gdf)
     

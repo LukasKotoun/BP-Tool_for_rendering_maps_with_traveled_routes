@@ -5,6 +5,9 @@ import geopandas as gpd
 import pandas as pd
 import osmnx as ox
 import pygeoops
+from pyproj import Transformer
+from pyproj.aoi import AreaOfInterest 
+from geopy.distance import geodesic
 
 from common.map_enums import WorldSides, StyleKey
 from common.custom_types import BoundsDict, DimensionsTuple, Point
@@ -54,7 +57,6 @@ class GdfUtils:
             south = min(south, bounds[1])
             east = max(east, bounds[2])
             north = max(north, bounds[3])
-            
         return {
             WorldSides.WEST: west,
             WorldSides.SOUTH: south,
@@ -77,14 +79,34 @@ class GdfUtils:
                WorldSides.NORTH: bounds[3]}
         
     @staticmethod
+    def get_dimensions_m(bounds: BoundsDict) -> DimensionsTuple:
+        northern = (bounds[WorldSides.NORTH], (bounds[WorldSides.WEST] + bounds[WorldSides.EAST]) / 2) 
+        southern = (bounds[WorldSides.SOUTH], (bounds[WorldSides.WEST] + bounds[WorldSides.EAST]) / 2)
+        eastern = ((bounds[WorldSides.NORTH] + bounds[WorldSides.SOUTH]) / 2, bounds[WorldSides.EAST])  
+        western = ((bounds[WorldSides.NORTH] + bounds[WorldSides.SOUTH]) / 2, bounds[WorldSides.WEST])
+        width = geodesic(eastern, western).meters        
+        height = geodesic(northern, southern).meters
+        return width, height
+        
+    @staticmethod
+    def get_dimensions_m_gdf(gdf: gpd.GeoDataFrame) -> DimensionsTuple:        
+        bounds = GdfUtils.get_bounds_gdf(gdf)
+        return GdfUtils.get_dimensions_m(bounds)
+    
+    @staticmethod
+    def get_dimensions_m_polygon(polygon: gpd.GeoDataFrame) -> DimensionsTuple:
+        bounds = GdfUtils.get_polygon_bounds(polygon)
+        return GdfUtils.get_dimensions_m(bounds)
+    
+    @staticmethod
     def get_dimensions(bounds: BoundsDict) -> DimensionsTuple:
         width = abs(bounds[WorldSides.EAST] - bounds[WorldSides.WEST])  # east - west
         height = abs(bounds[WorldSides.NORTH] - bounds[WorldSides.SOUTH])  # north - south
         return width, height
     
     @staticmethod
-    def get_dimensions_gdf(gdf: gpd.GeoDataFrame, epsg: int | None = None) -> DimensionsTuple:
-        bounds = GdfUtils.get_bounds_gdf(gdf, epsg=epsg)
+    def get_dimensions_gdf(gdf: gpd.GeoDataFrame) -> DimensionsTuple:        
+        bounds = GdfUtils.get_bounds_gdf(gdf)
         return GdfUtils.get_dimensions(bounds)
     
     @staticmethod
@@ -92,20 +114,6 @@ class GdfUtils:
         bounds = GdfUtils.get_polygon_bounds(polygon)
         return GdfUtils.get_dimensions(bounds)
     
-    @staticmethod
-    def get_map_size(bounds: BoundsDict) -> float:
-        width, height = GdfUtils.get_dimensions(bounds)
-        if width > height:
-            return width
-        else:
-            return height
-        
-    @staticmethod
-    def get_map_size_gdf(*gdfs: gpd.GeoDataFrame,  epsg: int | None = None) -> float: 
-        bounds = GdfUtils.get_bounds_gdf(*gdfs, epsg=epsg)
-        return GdfUtils.get_map_size(bounds)
-   
-
     @staticmethod 
     def create_polygon_from_bounds(area_bounds: BoundsDict) -> geometry.polygon:
         return geometry.Polygon([

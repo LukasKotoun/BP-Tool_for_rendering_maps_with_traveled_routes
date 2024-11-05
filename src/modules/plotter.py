@@ -116,12 +116,12 @@ class Plotter:
                             alpha=rails_gdf[StyleKey.ALPHA], linestyle = rails_gdf[StyleKey.LINESTYLE])        
                     
     @time_measurement_decorator("wayplot")            
-    def plot_ways(self, ways_gdf):
+    def plot_ways(self, ways_gdf, ways_width_multiplier):
         if(ways_gdf.empty or StyleKey.LINEWIDTH not in ways_gdf 
            or StyleKey.COLOR not in ways_gdf):
             return
       
-        ways_gdf[StyleKey.LINEWIDTH] = ways_gdf[StyleKey.LINEWIDTH] * self.map_object_scaling_factor
+        ways_gdf[StyleKey.LINEWIDTH] = ways_gdf[StyleKey.LINEWIDTH] * self.map_object_scaling_factor * ways_width_multiplier
         waterways_gdf, rest_gdf = GdfUtils.filter_gdf_in(ways_gdf, 'waterway')
         self.__plot_waterways(waterways_gdf)
         
@@ -133,7 +133,7 @@ class Plotter:
 
 
     @time_measurement_decorator("areaPlot")            
-    def plot_areas(self, areas_gdf):
+    def plot_areas(self, areas_gdf, areas_bounds_multiplier):
         if(areas_gdf.empty):
             return
         # [pd.NA, 'none'] - get all that dont have nan or 'none' (if does not have that column will return true for everything - need check if have that column)
@@ -147,7 +147,7 @@ class Plotter:
             edge_areas_gdf = GdfUtils.filter_gdf_not_in(areas_gdf, StyleKey.EDGE_COLOR, [pd.NA, 'none'])[0]
             if(not edge_areas_gdf.empty and StyleKey.EDGE_COLOR in edge_areas_gdf and 
             StyleKey.LINEWIDTH in edge_areas_gdf):
-                edge_areas_gdf[StyleKey.LINEWIDTH] = edge_areas_gdf[StyleKey.LINEWIDTH] * self.map_object_scaling_factor
+                edge_areas_gdf[StyleKey.LINEWIDTH] = edge_areas_gdf[StyleKey.LINEWIDTH] * self.map_object_scaling_factor * areas_bounds_multiplier
                 edge_areas_gdf.plot(
                     ax=self.ax, facecolor = 'none', edgecolor = edge_areas_gdf[StyleKey.EDGE_COLOR],
                     linewidth = edge_areas_gdf[StyleKey.LINEWIDTH], alpha=edge_areas_gdf[StyleKey.ALPHA],

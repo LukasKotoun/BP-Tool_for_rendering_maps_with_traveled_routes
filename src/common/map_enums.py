@@ -21,7 +21,6 @@ class ExpandArea(Enum):
     NONE = 1
     FIT_PAPER_SIZE = 2
     CUSTOM_AREA = 3
-    PERCENTAGE_OF_AREA = 4
     
 class ExpandAreaBounds(Enum):
     NONE = 1

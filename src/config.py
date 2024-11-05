@@ -75,7 +75,8 @@ EPSG_DEGREE_NUMBER = 4326 # world
 EPSG_METERS_NUMBER = 5514 # cz and sk - 5514, world 3857, europe 25833 
 # todo table with epsg 
 OBJECT_MULTIPLIER = 1
-
+AREAS_EDGE_WIDTH_MULTIPLIER = 1
+WAYS_WIDTH_MULTIPLIER = 1
 #--------------filters--------------
 
 #wanted_ways: WantedFeatures
@@ -145,6 +146,7 @@ NODES_MANDATORY_STYLES: FeatureStyles = {
      StyleKey.COLOR: '#000000', StyleKey.FONT_SIZE: 50, StyleKey.BGCOLOR: '#FFFFFF',
      StyleKey.OUTLINE_WIDTH: 5
 }
+#? appka asi taky tímhle stylem? pokud bude chtít vlastní nastavení styl (např pro šířku) - (nemá automatické nastavování - to má pouze které výběr....)
 
 #nodes 
 place_styles: FeaturesCategoryStyle = {
