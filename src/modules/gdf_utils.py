@@ -1,6 +1,7 @@
 import warnings
 
 from shapely import geometry
+from shapely.geometry.polygon import Polygon
 import geopandas as gpd
 import pandas as pd
 import osmnx as ox
@@ -33,7 +34,7 @@ class GdfUtils:
 
         elif isinstance(area, list): #get area from coordinates
             try:
-                area_polygon = geometry.Polygon(area)
+                area_polygon = Polygon(area)
                 reqired_area_gdf = GdfUtils.create_gdf_from_polygon(area_polygon, epsg)
             except:
                 raise ValueError("Invalid area given by list of cordinates.")
@@ -91,7 +92,7 @@ class GdfUtils:
         return gpd.GeoDataFrame(geometry=[gdf.to_crs(epsg=epsg).geometry.unary_union], crs=f"EPSG:{epsg}")
     
     @staticmethod
-    def get_polygon_bounds(polygon: geometry.polygon) -> BoundsDict:
+    def get_polygon_bounds(polygon: Polygon) -> BoundsDict:
         bounds: tuple[float] = polygon.bounds #[WorldSides.WEST, WorldSides.SOUTH, WorldSides.EAST, WorldSides.NORTH]
         return {WorldSides.WEST: bounds[0],
                WorldSides.SOUTH: bounds[1],
@@ -135,8 +136,8 @@ class GdfUtils:
         return GdfUtils.get_dimensions(bounds)
     
     @staticmethod 
-    def create_polygon_from_bounds(area_bounds: BoundsDict) -> geometry.polygon:
-        return geometry.Polygon([
+    def create_polygon_from_bounds(area_bounds: BoundsDict) -> Polygon:
+        return Polygon([
             (area_bounds[WorldSides.EAST], area_bounds[WorldSides.SOUTH]),  
             (area_bounds[WorldSides.EAST], area_bounds[WorldSides.NORTH]),  
             (area_bounds[WorldSides.WEST], area_bounds[WorldSides.NORTH]),  
@@ -149,17 +150,17 @@ class GdfUtils:
         return GdfUtils.create_gdf_from_polygon(GdfUtils.create_polygon_from_bounds(area_bounds), epsg)
     
     @staticmethod 
-    def create_gdf_from_polygon(area_polygon: geometry.polygon, epsg) -> gpd.GeoDataFrame:
+    def create_gdf_from_polygon(area_polygon: Polygon, epsg) -> gpd.GeoDataFrame:
         return gpd.GeoDataFrame(geometry=[area_polygon], crs=f"EPSG:{epsg}")
     
 
     @staticmethod 
-    def create_polygon_from_gdf_bounds(*gdfs: gpd.GeoDataFrame, epsg: int | None = None) -> geometry.polygon:
+    def create_polygon_from_gdf_bounds(*gdfs: gpd.GeoDataFrame, epsg: int | None = None) -> Polygon:
         bounds = GdfUtils.get_bounds_gdf(*gdfs, epsg=epsg)
         return GdfUtils.create_polygon_from_bounds(bounds)
     
     @staticmethod 
-    def create_polygon_from_gdf(*gdfs: gpd.GeoDataFrame, epsg: int | None = None) -> geometry.polygon:
+    def create_polygon_from_gdf(*gdfs: gpd.GeoDataFrame, epsg: int | None = None) -> Polygon:
         if(len(gdfs) == 1):
             if(epsg is None):
                 return gdfs[0].unary_union
@@ -173,19 +174,19 @@ class GdfUtils:
             return combined_gdf.unary_union
     
     @staticmethod
-    def is_polygon_inside_bounds(area_bounds: BoundsDict, polygon: geometry.polygon) -> bool:
+    def is_polygon_inside_bounds(area_bounds: BoundsDict, polygon: Polygon) -> bool:
         return GdfUtils.is_polygon_inside_polygon(GdfUtils.create_polygon_from_bounds(area_bounds), polygon)
 
     @staticmethod
-    def is_polygon_inside_polygon(inner: geometry.polygon, outer: geometry.polygon) -> bool:
+    def is_polygon_inside_polygon(inner: Polygon, outer: Polygon) -> bool:
         return outer.contains(inner)
     
     @staticmethod
-    def is_point_inside_polygon(point: geometry.point, polygon: geometry.polygon) -> bool:
+    def is_point_inside_polygon(point: geometry.point.Point, polygon: Polygon) -> bool:
         return polygon.contains(point)
     
     @staticmethod
-    def is_polygon_inside_polygon_threshold(inner: geometry.polygon, outer: geometry.polygon, threshold: float = 0.95):
+    def is_polygon_inside_polygon_threshold(inner: Polygon, outer: Polygon, threshold: float = 0.95):
         bbox_area = inner.area
         intersection_area = inner.intersection(outer).area
         percentage_inside = intersection_area / bbox_area
