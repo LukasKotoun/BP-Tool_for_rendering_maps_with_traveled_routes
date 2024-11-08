@@ -5,15 +5,14 @@ import geopandas as gpd
 import pandas as pd
 import osmnx as ox
 import pygeoops
-from pyproj import Transformer
-from pyproj.aoi import AreaOfInterest 
 from geopy.distance import geodesic
 
 from common.map_enums import WorldSides, StyleKey
-from common.custom_types import BoundsDict, DimensionsTuple, Point
+from common.custom_types import BoundsDict, DimensionsTuple, Point, WantedArea
 from common.common_helpers import time_measurement_decorator
 
 class GdfUtils:
+
     
     @staticmethod
     def get_area_gdf(area: str | list[Point], epsg) -> gpd.GeoDataFrame:
@@ -35,11 +34,34 @@ class GdfUtils:
 
         elif isinstance(area, list): #get area from coordinates
             #todo try catch...
-            area_polygon = geometry.Polygon(area)
-            reqired_area_gdf = GdfUtils.create_gdf_from_polygon(area_polygon, epsg)
+            try:
+                area_polygon = geometry.Polygon(area)
+                reqired_area_gdf = GdfUtils.create_gdf_from_polygon(area_polygon, epsg)
+            except:
+                raise ValueError("Invalid area given by list of cordinates.")
         else: #area cannot be created
-            raise ValueError("Invalid area")
+            raise ValueError("Invalid area format.")
         return reqired_area_gdf
+    
+        
+    @staticmethod
+    @time_measurement_decorator("spojeni")
+    def get_whole_area_gdf(whole_area: WantedArea, epsg) -> gpd.GeoDataFrame:
+        
+        if (isinstance(whole_area, str) or (isinstance(whole_area, list) and len(whole_area) == 1)  #normal area
+            or (isinstance(whole_area, list) and all(isinstance(item, tuple) and len(item) == 2 for item in whole_area))): 
+            if((isinstance(whole_area, list) and len(whole_area) == 1)): # one area in list
+                return GdfUtils.get_area_gdf(whole_area[0], epsg)
+            else:
+                return GdfUtils.get_area_gdf(whole_area, epsg)
+        elif (isinstance(whole_area, list)): #area from multiple areas
+            areas_gdf_list: list[gpd.GeoDataFrame] = []
+            for area in whole_area:
+                areas_gdf_list.append(GdfUtils.get_area_gdf(area, epsg))
+            return pd.concat(areas_gdf_list, ignore_index=True)
+        else: #area cannot be created
+            raise ValueError("Invalid area format.")
+    
     
     @staticmethod
     def get_bounds_gdf(*gdfs: gpd.GeoDataFrame, epsg: int | None = None) -> BoundsDict:

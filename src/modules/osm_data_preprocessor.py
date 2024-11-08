@@ -8,7 +8,7 @@ from geopandas import GeoDataFrame
 
 class OsmDataPreprocessor:
     def __init__(self, osm_input_files: list[str] | str, osm_output_file : str = None):
-        self.osm_input_files: str = osm_input_files # Can be a string (place name) or a list of coordinates
+        self.osm_input_files: list[str] | str = osm_input_files # Can be a string (place name) or a list of coordinates
         self.osm_output_file = osm_output_file
         
         
@@ -48,11 +48,11 @@ class OsmDataPreprocessor:
             print(f"Extracting area from file: {self.osm_input_files}")
             self.__extract_area(self.osm_input_files, self.osm_output_file, temp_geojson_path)
             
-        elif (len(self.osm_input_files) == 1):
+        elif (isinstance(self.osm_input_files, list) and len(self.osm_input_files) == 1):
             print(f"Extracting area from file: {self.osm_input_files[0]}")
             self.__extract_area(self.osm_input_files[0], self.osm_output_file, temp_geojson_path)
             
-        else:                  
+        elif(isinstance(self.osm_input_files, list)):                  
             for index, osm_input_file in enumerate(self.osm_input_files):
                 print(f"Extracting area from file {index + 1}/{len(self.osm_input_files)}: {osm_input_file}")
                 extracted_file_name = self.__extract_area(osm_input_file, f'temp_output_for_merge_file_{index}_{datetime.now().strftime("%Y%m%d%H%M%S")}_.osm', temp_geojson_path)

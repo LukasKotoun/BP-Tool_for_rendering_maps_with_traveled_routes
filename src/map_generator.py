@@ -74,16 +74,7 @@ def main():
         return
 
 
-    map_area_gdf = GdfUtils.get_area_gdf(AREA, EPSG_DEGREE_NUMBER)
-    # #todo func - return one map_area_gdf
-    # map_area_gdf2 = GdfUtils.get_area_gdf("Třebíč, Czech Republic", EPSG_DEGREE_NUMBER)
-    # map_area_gdf3 = GdfUtils.get_area_gdf("Slovakia Republic", EPSG_DEGREE_NUMBER)
-    # map_area_gdf4 = GdfUtils.get_area_gdf("Germany", EPSG_DEGREE_NUMBER)
-    # map_area_gdf5 = GdfUtils.get_area_gdf("Italy", EPSG_DEGREE_NUMBER)
-    # map_area_gdf6 = GdfUtils.get_area_gdf("Slovakia Republic", EPSG_DEGREE_NUMBER)
-    # map_area_gdf = gpd.GeoDataFrame(pd.concat([map_area_gdf, map_area_gdf2,map_area_gdf3,map_area_gdf4,map_area_gdf5,map_area_gdf6], ignore_index=True))
-    #todo as function gdfUtils.concat_gdfs()
-    # map_area_gdf = pd.concat([map_area_gdf,map_area_gdf2], ignore_index=True)
+    map_area_gdf = GdfUtils.get_whole_area_gdf(AREA, EPSG_DEGREE_NUMBER)
 
     # if(not PLOT_AREA_BOUNDARY_SEPARATED or OSM_WANT_EXTRACT_AREA): #or EXPAND_AREA
     #     map_area_gdf_joined = GdfUtils.combine_rows_gdf(map_area_gdf, EPSG_DEGREE_NUMBER)   
