@@ -15,7 +15,7 @@ class GdfUtils:
 
     
     @staticmethod
-    def get_area_gdf(area: str | list[Point], epsg) -> gpd.GeoDataFrame:
+    def get_area_gdf(area: str | list[Point], epsg: int) -> gpd.GeoDataFrame:
         if isinstance(area, str): 
             if area.endswith('.geojson'): 
                 reqired_area_gdf: gpd.GeoDataFrame = gpd.read_file(area) # Get area from geojson file
@@ -24,16 +24,14 @@ class GdfUtils:
                 return reqired_area_gdf
             else:
                 try: 
+                    # need internet connection 
                     reqired_area_gdf: gpd.GeoDataFrame = ox.geocode_to_gdf(area)  # Get from place name
                 except:
-                    #todo if not found error - exit program
-                    #if internet connection error - find in osm file
                     raise ValueError("The requested location has not been found.")
                 if(reqired_area_gdf.empty):
                     raise ValueError("The requested location has not been found.")
 
         elif isinstance(area, list): #get area from coordinates
-            #todo try catch...
             try:
                 area_polygon = geometry.Polygon(area)
                 reqired_area_gdf = GdfUtils.create_gdf_from_polygon(area_polygon, epsg)
@@ -46,7 +44,7 @@ class GdfUtils:
         
     @staticmethod
     @time_measurement_decorator("spojeni")
-    def get_whole_area_gdf(whole_area: WantedArea, epsg) -> gpd.GeoDataFrame:
+    def get_whole_area_gdf(whole_area: WantedArea, epsg: int) -> gpd.GeoDataFrame:
         
         if (isinstance(whole_area, str) or (isinstance(whole_area, list) and len(whole_area) == 1)  #normal area
             or (isinstance(whole_area, list) and all(isinstance(item, tuple) and len(item) == 2 for item in whole_area))): 

@@ -86,7 +86,7 @@ wanted_nodes: WantedCategories = {
 }
 
 # UnwantedFeaturesTags
-unwanted_nodes_tags: UnwantedCategories = {
+unwanted_nodes_tags: UnwantedTags = {
     
 }
 #columns that are used for ploting nodes name for city, ele for elevation points
@@ -102,7 +102,7 @@ wanted_ways: WantedCategories = {
 }
 
 # UnwantedFeaturesTags
-unwanted_ways_tags: UnwantedCategories = {
+unwanted_ways_tags: UnwantedTags = {
     # 'highway':['coridor','via_ferrata','crossing','traffic_island','proposed','construction' ],
     'railway': {
         'service':['yard'],
@@ -123,7 +123,7 @@ wanted_areas: WantedCategories = {
 }
 
 
-unwanted_areas_tags: UnwantedCategories ={
+unwanted_areas_tags: UnwantedTags ={
 }
 
 #------------styles--------------
