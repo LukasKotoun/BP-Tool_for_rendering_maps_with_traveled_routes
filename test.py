@@ -327,4 +327,17 @@
                 #     feature_style = features_category_styles.get(style_key)
                 #     # assign style of concrete feature or default if is not specified for this feature
                 #     assigned_styles[style_key] = feature_style if feature_style is not None else features_category_default_styles.get(style_key, self.general_default_styles[style_key]) 
-                    
+import timeit
+test = set({"asd"})
+
+
+def my_function():
+    # Simulate some work with a delay
+    if(not test):
+       return True
+        
+    # for dict_tag_key, unwanted_values in test.items():
+    #    return True
+    # return False         
+execution_time = timeit.timeit(my_function, number=90000000)  # Run the function 100 times
+print(f"Execution time for 100 runs: {execution_time:.6f} seconds")
