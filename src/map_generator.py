@@ -22,8 +22,12 @@ def calc_preview(map_area_gdf, paper_dimensions_mm):
     Returns:
         _type_: _description_
     """
-    #todo map area gdfs
-    outer_area_gdf = GdfUtils.get_area_gdf(OUTER_AREA, EPSG_DEGREE_NUMBER)
+
+    outer_area_gdf = GdfUtils.get_whole_area_gdf(OUTER_AREA, EPSG_DEGREE_NUMBER)
+    if(OUTER_EXPAND_AREA_MODE != ExpandArea.NONE):
+        outer_area_gdf = GdfUtils.expand_area(outer_area_gdf, EPSG_DEGREE_NUMBER,
+                OUTER_CUSTOM_EXPAND_AREA if OUTER_EXPAND_AREA_MODE == ExpandArea.CUSTOM_AREA else None)
+        
     outer_map_area_dimensions = GdfUtils.get_dimensions_gdf(outer_area_gdf)
     outer_map_area_dimensions_m = GdfUtils.get_dimensions_m_gdf(outer_area_gdf)
     # map in meters for calc automatic orientation and same pdf sides proportions
@@ -37,7 +41,7 @@ def calc_preview(map_area_gdf, paper_dimensions_mm):
     # calc map factor for creating automatic array with wanted elements - for preview area (without area_zoom_preview)
     # todo map_object_scaling_automatic_filters_creating = Utils.calc_map_object_scaling_factor(outer_map_area_dimensions_m, outer_paper_dimensions_mm)
     # map_pdf_ratio_auto_filter = sum(Utils.calc_ratios(outer_paper_dimensions_mm, outer_map_area_dimensions_m))/2
-    # ?? to doc - need because it will clip by requred area - and that will be some big area in not clipping
+    # ?? to doc - need because it will clip by required area - and that will be some big area in not clipping (cant use only first approach)
     if(not WANT_AREA_CLIPPING):
         area_zoom_preview = None
         #calc bounds so area_zoom_preview will be 1 - paper in mm and areas in degrees (meters are not precies)
@@ -60,6 +64,7 @@ def calc_preview(map_area_gdf, paper_dimensions_mm):
 
 @time_measurement_decorator("main")
 def main():
+    #------------input validation------------
     #validation all inputs and combinations on start to prevent exception after long time of processing and rendering 
     #some class input data checker
     #and run function to make checks
@@ -73,48 +78,42 @@ def main():
         print("Multiple files feature (list of osm files) is avilable only with option OSM_WANT_EXTRACT_AREA")
         return
 
-
     map_area_gdf = GdfUtils.get_whole_area_gdf(AREA, EPSG_DEGREE_NUMBER)
-
-    # if(not PLOT_AREA_BOUNDARY_SEPARATED or OSM_WANT_EXTRACT_AREA): #or EXPAND_AREA
-    #     map_area_gdf_joined = GdfUtils.combine_rows_gdf(map_area_gdf, EPSG_DEGREE_NUMBER)   
-
+    #------------store bounds to plot and combine area rows in gdf to 1 row------------
     if(AREA_BOUNDARY == AreaBounds.SEPARATED):
         boundary_map_area_gdf = map_area_gdf.copy()
+        map_area_gdf = GdfUtils.combine_rows_gdf(map_area_gdf, EPSG_DEGREE_NUMBER)   
     else:
         map_area_gdf = GdfUtils.combine_rows_gdf(map_area_gdf, EPSG_DEGREE_NUMBER)   
         boundary_map_area_gdf = map_area_gdf
         
-    #todo also to preview
-    # if(EXPAND_AREA_MODE):
-    # todo to func expand area - map_area_gdf =  func(map_area_gdf, expandMode, EXPAND_AREA)
-    #concat here or concat after this
-    #     #EXPAND AREA
-    #     if(EXPAND_AREA_BOUNDS):
-    #         expanded_boundary_map_area_gdf = 
-    #     else:
-    #         expanded_boundary_map_area_gdf = None
-    # else:
-    # map_area_gdf = GdfUtils.combine_rows_gdf(map_area_gdf, EPSG_DEGREE_NUMBER) Dont need in preview
-
+    #------------expand area------------
+    expanded_boundary_map_area_gdf = None    
+    if(EXPAND_AREA_MODE != ExpandArea.NONE):
+        map_area_gdf = GdfUtils.expand_area(map_area_gdf, EPSG_DEGREE_NUMBER,
+                CUSTOM_EXPAND_AREA if EXPAND_AREA_MODE == ExpandArea.CUSTOM_AREA else None)
+        if(EXPAND_AREA_BOUNDS_PLOT):
+            expanded_boundary_map_area_gdf = map_area_gdf.copy()
+            
+    #------------get paper dimension (size and orientation)------------
     map_area_dimensions_m = GdfUtils.get_dimensions_m_gdf(map_area_gdf)
     paper_dimensions_mm = Utils.adjust_paper_dimensions(map_area_dimensions_m, PAPER_DIMENSIONS,
                                                   GIVEN_SMALLER_PAPER_DIMENSION, WANTED_ORIENTATION)
     if(WANT_PREVIEW):
         (area_zoom_preview, map_object_scaling_factor,
          map_area_gdf) = calc_preview(map_area_gdf, paper_dimensions_mm)
+        #todo automatic creationg of wanted elements and linewidths - factor or directly giving paper size and area dimensions
     else:
+        #todo automatic creationg of wanted elements and linewidths - factor or directly giving paper size and area dimensions
         area_zoom_preview = None
-        # calc map factor for creating automatic array with wanted elements
+        # calc map factor for creating automatic array with wanted elements 
         # todo map_object_scaling_automatic_filters_creating = Utils.calc_map_object_scaling_factor(map_area_dimensions_m, paper_dimensions_mm)
         # map_pdf_ratio_auto_filter = sum(Utils.calc_ratios(paper_dimensions_mm, map_area_dimensions_m))/2
         # in meteres for same proportion keeping
         map_object_scaling_factor = (Utils.calc_map_object_scaling_factor(map_area_dimensions_m,
                                                                          paper_dimensions_mm) 
                                     * OBJECT_MULTIPLIER)
-
     #------------get elements from osm file------------
-    
     if(OSM_WANT_EXTRACT_AREA):
         if(OSM_OUTPUT_FILE_NAME is None):
             print("output file is none, cant extract")
@@ -130,6 +129,7 @@ def main():
         else:
             osm_file_name = OSM_INPUT_FILE_NAMES
         
+    # can use also outer paper size and area 
     osm_file_parser = OsmDataParser(
         wanted_nodes, wanted_ways, wanted_areas,
         unwanted_nodes_tags, unwanted_ways_tags, unwanted_areas_tags,
@@ -143,7 +143,7 @@ def main():
     nodes_gdf, ways_gdf, areas_gdf = osm_file_parser.create_gdf(EPSG_DEGREE_NUMBER)
     osm_file_parser.clear_gdf()
     
-    # todo to function
+    # todo check if area is inside osm to function
 
     whole_map_gdf = GdfUtils.create_polygon_from_gdf_bounds(ways_gdf, areas_gdf)
     reqired_area_polygon = GdfUtils.create_polygon_from_gdf(map_area_gdf)
@@ -156,10 +156,9 @@ def main():
     
     nodes_gdf = GdfUtils.filter_gdf_rows_inside_gdf_area(nodes_gdf, map_area_gdf)
     #todo function to filter fun(gdf, tag, value (or none for not nan), not nan in this columns) - use to filter city without names
-    #todo  use to filter peeks withou ele
+    #todo  use to filter peeks withou ele and name?
     #function(algorithm) to get only usefull peeks + again back to nodes gdf
     #------------style elements------------
-    #todo styles for ways and areas separeated - 2 geodata stylers
     nodes_style_assigner = StyleAssigner(NODES_STYLES, GENERAL_DEFAULT_STYLES, NODES_MANDATORY_STYLES)
     nodes_gdf = nodes_style_assigner.assign_styles_to_gdf(nodes_gdf, wanted_nodes,
                                                     [StyleKey.COLOR, StyleKey.FONT_SIZE, StyleKey.OUTLINE_WIDTH,
@@ -198,10 +197,10 @@ def main():
         plotter.clip(GdfUtils.create_polygon_from_gdf_bounds(nodes_gdf, ways_gdf, areas_gdf))
         
     if(AREA_BOUNDARY != AreaBounds.NONE):
-        plotter.plot_area_boundary(area_gdf = boundary_map_area_gdf, linewidth=AREA_BOUNDARY_LINEWIDTH)
+        plotter.plot_area_boundary(area_gdf=boundary_map_area_gdf, linewidth=AREA_BOUNDARY_LINEWIDTH)
         
-    # if(expanded_boundary_map_area_gdf not None and PLOT_EXPANDED_AREA_BOUNDARY and EXPAND_AREA):
-    #     plotter.plot_area_boundary(area_gdf = expanded_boundary_map_area_gdf, linewidth=EXPANDED_AREA_BOUNDARY_LINEWIDTH)
+    if(expanded_boundary_map_area_gdf is not None and EXPAND_AREA_BOUNDS_PLOT):
+        plotter.plot_area_boundary(area_gdf=expanded_boundary_map_area_gdf, linewidth=AREA_BOUNDARY_LINEWIDTH)
 
     plotter.generate_pdf(OUTPUT_PDF_NAME)
     # plotter.show_plot()

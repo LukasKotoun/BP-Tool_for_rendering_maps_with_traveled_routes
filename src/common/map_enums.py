@@ -21,11 +21,6 @@ class ExpandArea(Enum):
     NONE = 1
     FIT_PAPER_SIZE = 2
     CUSTOM_AREA = 3
-    
-class ExpandAreaBounds(Enum):
-    NONE = 1
-    WHOLE = 2
-
 
 class WorldSides(Enum):
     WEST = 'west'

@@ -14,7 +14,6 @@ from common.common_helpers import time_measurement_decorator
 
 class GdfUtils:
 
-    
     @staticmethod
     def get_area_gdf(area: str | list[Point], epsg: int) -> gpd.GeoDataFrame:
         if isinstance(area, str): 
@@ -84,13 +83,7 @@ class GdfUtils:
             WorldSides.EAST: east,
             WorldSides.NORTH: north
             }
-    
-    @staticmethod
-    def combine_rows_gdf(gdf: gpd.GeoDataFrame, epsg: int) -> gpd.GeoDataFrame:
-        if(len(gdf) == 1):
-            return gdf.to_crs(epsg=epsg)
-        return gpd.GeoDataFrame(geometry=[gdf.to_crs(epsg=epsg).geometry.unary_union], crs=f"EPSG:{epsg}")
-    
+
     @staticmethod
     def get_polygon_bounds(polygon: Polygon) -> BoundsDict:
         bounds: tuple[float] = polygon.bounds #[WorldSides.WEST, WorldSides.SOUTH, WorldSides.EAST, WorldSides.NORTH]
@@ -191,7 +184,21 @@ class GdfUtils:
         intersection_area = inner.intersection(outer).area
         percentage_inside = intersection_area / bbox_area
         return percentage_inside >= threshold
-
+   
+    @staticmethod
+    def combine_rows_gdf(gdf: gpd.GeoDataFrame, epsg: int) -> gpd.GeoDataFrame:
+        if(len(gdf) == 1):
+            return gdf.to_crs(epsg=epsg)
+        return gpd.GeoDataFrame(geometry=[gdf.to_crs(epsg=epsg).geometry.unary_union], crs=f"EPSG:{epsg}")
+    
+    @staticmethod
+    def expand_area(area_gdf: gpd.GeoDataFrame, epsg, custom_area: WantedArea | None = None):
+        if(custom_area is not None): # custom expand area to one row in gdf
+            return GdfUtils.combine_rows_gdf(GdfUtils.get_whole_area_gdf(custom_area, epsg), epsg)
+        else: # fit paper - expand by area bounds to rectangle
+            bounds: BoundsDict = GdfUtils.get_bounds_gdf(area_gdf)
+            return GdfUtils.create_gdf_from_bounds(bounds, epsg)
+        
     @staticmethod
     def sort_gdf_by_column(gdf: gpd.GeoDataFrame, column_name: StyleKey, ascending: bool = True) -> gpd.GeoDataFrame:
         if(gdf.empty):
