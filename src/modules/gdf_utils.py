@@ -200,11 +200,11 @@ class GdfUtils:
             return GdfUtils.create_gdf_from_bounds(bounds, epsg)
         
     @staticmethod
-    def sort_gdf_by_column(gdf: gpd.GeoDataFrame, column_name: StyleKey, ascending: bool = True) -> gpd.GeoDataFrame:
+    def sort_gdf_by_column(gdf: gpd.GeoDataFrame, column_name: StyleKey, ascending: bool = True, na_position: str='first') -> gpd.GeoDataFrame:
         if(gdf.empty):
             return gdf
         if(column_name in gdf):
-           return gdf.sort_values(by=column_name, ascending = ascending).reset_index(drop=True)
+           return gdf.sort_values(by=column_name, ascending = ascending, na_position=na_position).reset_index(drop=True)
         warnings.warn("Cannot sort - unexisting column name") 
         return gdf
     
