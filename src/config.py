@@ -79,7 +79,7 @@ WAYS_WIDTH_MULTIPLIER = 1
 
 #wanted_ways: WantedFeatures
 wanted_nodes: WantedCategories = {
-    'place': {'city', 'town', 'village'}
+    # 'place': {'city', 'town', 'village'}
     # 'place': { 'town'}
     # 'place': {'city'}
 }
@@ -174,17 +174,19 @@ highway_styles: FeaturesCategoryStyle = {
     'path': {StyleKey.COLOR: '#8f8364'},
     'residential': {StyleKey.COLOR: '#8f8364'}
 }
-
+#todo add bridge BG??
 railway_styles: FeaturesCategoryStyle = {
-    'rail': {StyleKey.COLOR: '#FFFFFF', StyleKey.ZINDEX: 1, StyleKey.LINEWIDTH: 10, StyleKey.BGCOLOR: '#5d5d5d', StyleKey.LINESTYLE: (0, (5, 5))},
+    'rail': {StyleKey.COLOR: '#FFFFFF', StyleKey.ZINDEX: 1, StyleKey.LINEWIDTH: 10,
+             StyleKey.BGCOLOR: '#5d5d5d', StyleKey.BRIDGE_EDGE_COLOR: '#5d5d5d', StyleKey.LINESTYLE: (0, (5, 5))},
     'tram': {StyleKey.COLOR: '#404040', StyleKey.ZINDEX: 1, StyleKey.LINEWIDTH: 4, StyleKey.ALPHA: 0.6},
     'tram_stop': {StyleKey.COLOR: '#404040', StyleKey.ZINDEX: 1, StyleKey.LINEWIDTH: 4},
 }
 
 
 WAYS_STYLES: FeaturesCategoriesStyles = {
-    'waterway': ({}, {StyleKey.EDGE_COLOR: "None",StyleKey.COLOR: '#8FB8DB', StyleKey.LINEWIDTH: 8, StyleKey.ZINDEX: 0}),
-    'highway': (highway_styles, {StyleKey.COLOR: '#FFFFFF', StyleKey.ZINDEX: 2, StyleKey.LINEWIDTH: 8}),
+    'waterway': ({}, {StyleKey.COLOR: '#8FB8DB', StyleKey.LINEWIDTH: 8, StyleKey.ZINDEX: 0}),
+    'highway': (highway_styles, {StyleKey.COLOR: '#FFFFFF', StyleKey.EDGE_COLOR: "red",
+                                 StyleKey.BRIDGE_EDGE_COLOR: "#7D7D7D", StyleKey.ZINDEX: 1, StyleKey.LINEWIDTH: 8}),
     'railway': (railway_styles, {StyleKey.COLOR: '#FFFFFF', StyleKey.ZINDEX: 2, StyleKey.LINEWIDTH: 8}),
 }
 #areas
