@@ -66,6 +66,7 @@ class Plotter:
                 wraped_name = name
             x = geom.x
             y = geom.y
+            # weight='bold'
             self.ax.text(
             x, y, wraped_name, fontsize = fontsize, ha = 'center', va = 'center', zorder = 4, color = color, 
             path_effects = [patheffects.withStroke(linewidth = outline_width, foreground = bgcolor)]) 
@@ -98,13 +99,15 @@ class Plotter:
         highways_gdf.plot(ax = self.ax,color = highways_gdf[StyleKey.COLOR], linewidth = highways_gdf[StyleKey.LINEWIDTH],
                            linestyle = highways_gdf[StyleKey.LINESTYLE], 
                            path_effects = [patheffects.Stroke(capstyle = "round", joinstyle = 'round')])
-            
+        #todo add edge ploting - like in areas
+         
     def __plot_waterways(self, waterways_gdf: gpd.GeoDataFrame):
         if(waterways_gdf.empty):
             return
         waterways_gdf.plot(ax = self.ax, color = waterways_gdf[StyleKey.COLOR], linewidth = waterways_gdf[StyleKey.LINEWIDTH],
                            linestyle = waterways_gdf[StyleKey.LINESTYLE],
                            path_effects=[patheffects.Stroke(capstyle = "round", joinstyle = 'round')])
+        #todo add edge ploting - like in areas 
    
 
                     
@@ -144,6 +147,23 @@ class Plotter:
         
         railways_gdf, rest_gdf = GdfUtils.filter_gdf_in(rest_gdf, 'railway')
         self.__plot_railways(railways_gdf, 2 * self.map_object_scaling_factor, 15 * self.map_object_scaling_factor)
+
+        ## edit - for bridge plotting
+        # #todo split to normal and bridges
+        # #todo can merge
+        # bridges_gdf, normal_ways_gdf = GdfUtils.filter_gdf_in(ways_gdf, 'bridge')
+        # # waterways_gdf, rest_gdf = GdfUtils.filter_gdf_in(ways_gdf, 'waterway')
+        # # highways_gdf, rest_gdf = GdfUtils.filter_gdf_in(rest_gdf, 'highway')
+        # railways_gdf, rest_gdf = GdfUtils.filter_gdf_in(normal_ways_gdf, 'railway')
+        # #todo plot rest
+        
+        # #todo plot 
+        # # self.__plot_waterways(waterways_gdf)
+        # self.__plot_highways(normal_ways_gdf)
+        
+        # self.__plot_railways(railways_gdf, 2 * self.map_object_scaling_factor, 15 * self.map_object_scaling_factor)
+        # #and change this 2 * self.map_object_scaling_factor, 15 * self.map_object_scaling_factor
+        # #todo plot bridgies with bridge edge colors
 
 
     @time_measurement_decorator("areaPlot")            

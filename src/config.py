@@ -90,6 +90,7 @@ unwanted_nodes_tags: UnwantedTags = {
 }
 #columns that are used for ploting nodes name for city, ele for elevation points
 NODES_ADDITIONAL_COLUMNS = ['name']
+WAYS_ADDITIONAL_COLUMNS = ['bridge']
 
 #wanted_ways: WantedFeatures
 wanted_ways: WantedCategories = {
@@ -182,7 +183,7 @@ railway_styles: FeaturesCategoryStyle = {
 
 
 WAYS_STYLES: FeaturesCategoriesStyles = {
-    'waterway': ({}, {StyleKey.COLOR: '#8FB8DB', StyleKey.LINEWIDTH: 8}),
+    'waterway': ({}, {StyleKey.EDGE_COLOR: "None",StyleKey.COLOR: '#8FB8DB', StyleKey.LINEWIDTH: 8, StyleKey.ZINDEX: 0}),
     'highway': (highway_styles, {StyleKey.COLOR: '#FFFFFF', StyleKey.ZINDEX: 2, StyleKey.LINEWIDTH: 8}),
     'railway': (railway_styles, {StyleKey.COLOR: '#FFFFFF', StyleKey.ZINDEX: 2, StyleKey.LINEWIDTH: 8}),
 }
