@@ -11,8 +11,12 @@ class StyleKey(Enum):
     FONT_SIZE = 8
     OUTLINE_WIDTH = 9,
     ICON_COLOR = 10,
-    BRIDGE_EDGE_COLOR = 11
-    EDGE_WIDTH = 12
+    BRIDGE_COLOR = 11 
+    BRIDGE_EDGE_COLOR = 12
+    EDGE_WIDTH_RATIO = 13
+    BRIDGE_WIDTH_RATIO = 14
+
+    
     
 class AreaBounds(Enum):
     NONE = 1

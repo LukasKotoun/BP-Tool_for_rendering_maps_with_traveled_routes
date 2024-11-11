@@ -162,19 +162,21 @@ def main():
     nodes_style_assigner = StyleAssigner(NODES_STYLES, GENERAL_DEFAULT_STYLES, NODES_MANDATORY_STYLES)
     nodes_gdf = nodes_style_assigner.assign_styles_to_gdf(nodes_gdf, wanted_nodes,
                                                     [StyleKey.COLOR, StyleKey.FONT_SIZE, StyleKey.OUTLINE_WIDTH,
-                                                     StyleKey.BGCOLOR])
+                                                     StyleKey.EDGE_COLOR])
 
     ways_style_assigner = StyleAssigner(WAYS_STYLES, GENERAL_DEFAULT_STYLES, WAY_MANDATORY_STYLES)
     ways_gdf = ways_style_assigner.assign_styles_to_gdf(ways_gdf, wanted_ways,
                                                     [StyleKey.COLOR, StyleKey.ZINDEX, StyleKey.LINEWIDTH,
-                                                     StyleKey.BGCOLOR, StyleKey.LINESTYLE, StyleKey.ALPHA,
-                                                     StyleKey.EDGE_COLOR, StyleKey.BRIDGE_EDGE_COLOR])
+                                                    StyleKey.LINESTYLE, StyleKey.ALPHA,StyleKey.EDGE_COLOR,
+                                                    StyleKey.BRIDGE_COLOR, StyleKey.BRIDGE_EDGE_COLOR,
+                                                    StyleKey.EDGE_WIDTH_RATIO, StyleKey.BRIDGE_WIDTH_RATIO])
     areas_style_assigner = StyleAssigner(AREAS_STYLES, GENERAL_DEFAULT_STYLES, AREA_MANDATORY_STYLES)
     areas_gdf = areas_style_assigner.assign_styles_to_gdf(areas_gdf, wanted_areas,
                                                      [StyleKey.COLOR, StyleKey.EDGE_COLOR, StyleKey.ZINDEX,
                                                       StyleKey.LINEWIDTH, StyleKey.ALPHA, StyleKey.LINESTYLE])
 
     # print(nodes_gdf)
+    ways_gdf = GdfUtils.sort_gdf_by_column(ways_gdf, "layer")
     ways_gdf = GdfUtils.sort_gdf_by_column(ways_gdf, StyleKey.ZINDEX)
     areas_gdf = GdfUtils.sort_gdf_by_column(areas_gdf, StyleKey.ZINDEX)
     #todo check if gpx go somewhere outside reqired_area - add warning 

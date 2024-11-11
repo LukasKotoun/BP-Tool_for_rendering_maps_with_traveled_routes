@@ -90,7 +90,7 @@ unwanted_nodes_tags: UnwantedTags = {
 }
 #columns that are used for ploting nodes name for city, ele for elevation points
 NODES_ADDITIONAL_COLUMNS = ['name']
-WAYS_ADDITIONAL_COLUMNS = ['bridge']
+WAYS_ADDITIONAL_COLUMNS = ['bridge', 'layer']
 
 #wanted_ways: WantedFeatures
 wanted_ways: WantedCategories = {
@@ -129,8 +129,8 @@ unwanted_areas_tags: UnwantedTags ={
 #------------styles--------------
 # there must be all somewhere used styles, if not program can crash
 GENERAL_DEFAULT_STYLES: FeatureStyles = {StyleKey.COLOR: '#EDEDE0',  StyleKey.ZINDEX: 0,
-                                         StyleKey.LINEWIDTH: 1, StyleKey.BGCOLOR: '#5D5D5D', StyleKey.LINESTYLE: '-',
-                                         StyleKey.EDGE_COLOR: 'none', StyleKey.ALPHA: 1}
+                                         StyleKey.LINEWIDTH: 1, StyleKey.EDGE_COLOR: '#EDEDE0', StyleKey.LINESTYLE: '-',
+                                         StyleKey.ALPHA: 1}
 
 #styles that must be assigned to all area features
 AREA_MANDATORY_STYLES: FeatureStyles = {
@@ -138,12 +138,14 @@ AREA_MANDATORY_STYLES: FeatureStyles = {
 }
 #styles that must be assigned to all way features
 WAY_MANDATORY_STYLES: FeatureStyles = {
-    StyleKey.COLOR: '#EDEDE0', StyleKey.ALPHA: 1.0, StyleKey.LINEWIDTH: 1, StyleKey.LINESTYLE: '-'
+    StyleKey.COLOR: '#EDEDE0', StyleKey.ALPHA: 1.0, StyleKey.LINEWIDTH: 1, StyleKey.LINESTYLE: '-',
+    StyleKey.EDGE_WIDTH_RATIO: 0.3, StyleKey.BRIDGE_WIDTH_RATIO: 0, StyleKey.BRIDGE_COLOR: "#FFFFFF", 
+    StyleKey.EDGE_COLOR: '#EDEDE0', StyleKey.BRIDGE_EDGE_COLOR: "#7D7D7D"
 }
 #styles that must be assigned to all node features
 NODES_MANDATORY_STYLES: FeatureStyles = {
-     StyleKey.COLOR: '#000000', StyleKey.FONT_SIZE: 50, StyleKey.BGCOLOR: '#FFFFFF',
-     StyleKey.OUTLINE_WIDTH: 5
+     StyleKey.COLOR: '#000000', StyleKey.FONT_SIZE: 50, StyleKey.EDGE_COLOR: '#FFFFFF',
+     StyleKey.OUTLINE_WIDTH: 5,
 }
 #? appka asi taky tímhle stylem? pokud bude chtít vlastní nastavení styl (např pro šířku) - (nemá automatické nastavování - to má pouze které výběr....)
 
@@ -156,7 +158,7 @@ place_styles: FeaturesCategoryStyle = {
 
 NODES_STYLES: FeaturesCategoriesStyles = {
     # color is color of text, bg color is outline color 
-    'place': (place_styles, {StyleKey.COLOR: '#000000', StyleKey.BGCOLOR: '#FFFFFF'}),
+    'place': (place_styles, {StyleKey.COLOR: '#000000', StyleKey.EDGE_COLOR: '#FFFFFF'}),
 }
 
 
@@ -169,24 +171,27 @@ highway_styles: FeaturesCategoryStyle = {
     'tertiary': {StyleKey.COLOR: '#FFFFFF', StyleKey.ZINDEX: 3, StyleKey.LINEWIDTH: 16},
     'unclassified': {StyleKey.COLOR: '#FFFFFF'},
     'road': {StyleKey.COLOR: '#FFFFFF'},
-    'footway': {StyleKey.COLOR: '#8f8364'},
+    'footway': {StyleKey.COLOR: '#8f8364', StyleKey.LINESTYLE:"--", StyleKey.BRIDGE_COLOR: "#FFFFFF"},
     'steps': {StyleKey.COLOR: '#8f8364'},
-    'path': {StyleKey.COLOR: '#8f8364'},
+    'path': {StyleKey.COLOR: '#8f8364', StyleKey.LINESTYLE:"--", StyleKey.BRIDGE_COLOR: "#FFFFFF"},
     'residential': {StyleKey.COLOR: '#8f8364'}
 }
-#todo add bridge BG??
+
+
 railway_styles: FeaturesCategoryStyle = {
     'rail': {StyleKey.COLOR: '#FFFFFF', StyleKey.ZINDEX: 1, StyleKey.LINEWIDTH: 10,
-             StyleKey.BGCOLOR: '#5d5d5d', StyleKey.BRIDGE_EDGE_COLOR: '#5d5d5d', StyleKey.LINESTYLE: (0, (5, 5))},
-    'tram': {StyleKey.COLOR: '#404040', StyleKey.ZINDEX: 1, StyleKey.LINEWIDTH: 4, StyleKey.ALPHA: 0.6},
+             StyleKey.BRIDGE_EDGE_COLOR: '#5d5d5d', StyleKey.BRIDGE_COLOR: "#FFFFFF",
+             StyleKey.EDGE_COLOR: '#5d5d5d', StyleKey.BRIDGE_WIDTH_RATIO: 2, StyleKey.LINESTYLE: (0, (5, 5))},
+    'tram': {StyleKey.COLOR: '#404040', StyleKey.ZINDEX: 10, StyleKey.LINEWIDTH: 4, StyleKey.ALPHA: 0.6},
     'tram_stop': {StyleKey.COLOR: '#404040', StyleKey.ZINDEX: 1, StyleKey.LINEWIDTH: 4},
 }
 
 
 WAYS_STYLES: FeaturesCategoriesStyles = {
     'waterway': ({}, {StyleKey.COLOR: '#8FB8DB', StyleKey.LINEWIDTH: 8, StyleKey.ZINDEX: 0}),
-    'highway': (highway_styles, {StyleKey.COLOR: '#FFFFFF', StyleKey.EDGE_COLOR: "red",
-                                 StyleKey.BRIDGE_EDGE_COLOR: "#7D7D7D", StyleKey.ZINDEX: 1, StyleKey.LINEWIDTH: 8}),
+    'highway': (highway_styles, {StyleKey.COLOR: '#FFFFFF', 
+                                 StyleKey.BRIDGE_EDGE_COLOR: "#7D7D7D",
+                                 StyleKey.ZINDEX: 1, StyleKey.LINEWIDTH: 8, StyleKey.EDGE_COLOR: "red"}),
     'railway': (railway_styles, {StyleKey.COLOR: '#FFFFFF', StyleKey.ZINDEX: 2, StyleKey.LINEWIDTH: 8}),
 }
 #areas
