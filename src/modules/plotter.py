@@ -23,7 +23,7 @@ class Plotter:
         self.reqired_area_polygon = GdfUtils.create_polygon_from_gdf(self.reqired_area_gdf)
         self.paper_dimensions_mm = paper_dimensions_mm
         self.map_object_scaling_factor = map_object_scaling_factor
-
+        self.text_to_adjust = []
 
     def init_plot(self, map_bg_color: str, area_zoom_preview: None | DimensionsTuple = None):
         self.fig, self.ax = plt.subplots(figsize=(self.paper_dimensions_mm[0]/self.MM_TO_INCH,
@@ -43,7 +43,7 @@ class Plotter:
         
 
 
-    def plot_city_names(self, place_names_gdf: gpd.GeoDataFrame, wrap_len: int | None):
+    def __plot_city_names(self, place_names_gdf: gpd.GeoDataFrame, wrap_len: int | None):
         if(place_names_gdf.empty):
             return
         place_names_gdf[StyleKey.OUTLINE_WIDTH] = place_names_gdf[StyleKey.OUTLINE_WIDTH] * self.map_object_scaling_factor
@@ -68,11 +68,26 @@ class Plotter:
             x = geom.x
             y = geom.y
             # weight='bold'
-            self.ax.text(
+            text = self.ax.text(
             x, y, wraped_name, fontsize = fontsize, ha = 'center', va = 'center', zorder = 4, color = color, 
             path_effects = [patheffects.withStroke(linewidth = outline_width, foreground = edge_color)]) 
+            self.text_to_adjust.append(text)
 
-            
+    def __plot_elevations(self, elevations_gdf: gpd.GeoDataFrame):
+        if(elevations_gdf.empty):
+            return
+        elevations_gdf[StyleKey.ICON_SIZE] = elevations_gdf[StyleKey.ICON_SIZE] * self.map_object_scaling_factor
+        elevations_gdf[StyleKey.ICON_EDGE] = elevations_gdf[StyleKey.ICON_EDGE] * self.map_object_scaling_factor
+        # elevations_gdf.plot(ax=self.ax, marker=elevations_gdf[StyleKey.ICON], color=elevations_gdf[StyleKey.ICON_COLOR], markersize=elevations_gdf[StyleKey.ICON_SIZE], label='Points')
+        # Add annotations for each point
+        for idx, row in elevations_gdf.iterrows():
+            x, y = row.geometry.x, row.geometry.y
+            self.ax.scatter(x, y, marker=row[StyleKey.ICON], color=row[StyleKey.ICON_COLOR], s=row[StyleKey.ICON_SIZE],
+                            edgecolor=row[StyleKey.EDGE_COLOR], linewidth = row[StyleKey.ICON_EDGE])
+            # self.ax.annotate("text", (x, y), textcoords="offset points", xytext=(0, 7), ha='center', color='blue')  
+            # self.ax.text(x, y, "test", fontsize=200*self.map_object_scaling_factor, ha='center', color='blue')  # Annotate above the triangle
+
+              
         
     @time_measurement_decorator("nodePlot")
     def plot_nodes(self, nodes_gdf: gpd.GeoDataFrame, wrap_len: int | None):
@@ -83,13 +98,11 @@ class Plotter:
         nodes_gdf[StyleKey.FONT_SIZE] = nodes_gdf[StyleKey.FONT_SIZE] * self.map_object_scaling_factor
         place_names_gdf, rest_gdf = GdfUtils.filter_gdf_in(nodes_gdf, 'place')
         place_names_gdf = GdfUtils.filter_gdf_in(place_names_gdf, 'name')[0]
-        self.plot_city_names(place_names_gdf, wrap_len)
+        self.__plot_city_names(place_names_gdf, wrap_len)
+        rest_gdf = GdfUtils.filter_gdf_in(rest_gdf,'natural', ['peak'] )[0]
+        self.__plot_elevations(rest_gdf)
         
-        #todo filter out elevation without ele - in map_generator
-        #in peak plot check if have name
-        
-        # todo function and set in config constants the text force 
-        # adjust_text(self.ax.texts, force_text = 0.25, avoid_self= False)
+       
        
        
     def __plot_ways_edges(self, ways_gdf):
@@ -102,7 +115,7 @@ class Plotter:
             edge_ways_gdf = GdfUtils.filter_gdf_not_in(edge_ways_gdf, StyleKey.EDGE_WIDTH_RATIO, [pd.NA, 'none'])[0]
             edge_ways_gdf = GdfUtils.filter_gdf_in(edge_ways_gdf, StyleKey.LINESTYLE, [pd.NA, 'none', '-'])[0]
             if(not edge_ways_gdf.empty):
-                edge_ways_gdf[StyleKey.LINEWIDTH] = edge_ways_gdf[StyleKey.LINEWIDTH] + edge_ways_gdf[StyleKey.LINEWIDTH]*edge_ways_gdf[StyleKey.EDGE_WIDTH_RATIO]
+                edge_ways_gdf[StyleKey.LINEWIDTH] = edge_ways_gdf[StyleKey.LINEWIDTH] + edge_ways_gdf[StyleKey.LINEWIDTH]*edge_ways_gdf[StyleKey.EDGE_WIcDTH_RATIO]
                 edge_ways_gdf.plot(ax=self.ax, color=edge_ways_gdf[StyleKey.EDGE_COLOR],
                                     linewidth=edge_ways_gdf[StyleKey.LINEWIDTH],
                                     alpha=edge_ways_gdf[StyleKey.ALPHA],
@@ -243,8 +256,10 @@ class Plotter:
         #         bbox_polygon = geometry.box(text_Bbox.x0, text_Bbox.y0, text_Bbox.x1, text_Bbox.y1)
         #         if(not GdfUtils.is_polygon_inside_polygon_threshold(bbox_polygon, self.reqired_area_polygon, text_bounds_overflow_threshold * 0.8)):
         #             text.remove()
-        adjust_text(self.ax.texts, force_text = 0.2)
-        
+        # adjust_text(self.ax.texts, force_text = 0.2) 
+        adjust_text(self.text_to_adjust, force_text = 0.2) #todo only for city, for points 
+         # text force 
+        # adjust_text(self.ax.texts, force_text = 0.25, avoid_self= False)
         #remove overflown texts after adjusting
         if(text_bounds_overflow_threshold > 0):
             r: RendererAgg = self.fig.canvas.get_renderer()

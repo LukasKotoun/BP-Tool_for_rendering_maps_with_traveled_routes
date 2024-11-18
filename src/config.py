@@ -4,17 +4,18 @@ from common.map_enums import *
 
 #--------------normal map area--------------
 # OSM_INPUT_FILE_NAMES: str = ['../osm_files/brno.osm.pbf','../osm_files/trebic.osm.pbf']
-OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/trebic.osm.pbf'
+OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/brno.osm.pbf'
 #extract
 OSM_WANT_EXTRACT_AREA: bool = False 
-OSM_OUTPUT_FILE_NAME: None | str = '../osm_files/usti.osm.pbf' # set if want osm file cutting using osmium command line tool (need to be uinstalled), If not set to None
+OSM_OUTPUT_FILE_NAME: None | str = '../osm_files/hv.osm.pbf' # set if want osm file cutting using osmium command line tool (need to be uinstalled), If not set to None
 
 OUTPUT_PDF_NAME: str = '../pdfs/divočina'
 PERCENTAGE_PADDING = 0.5 # padding from page borders NOTE: must have same settings as the resulting one when generating for large format printing
 
 # AREA: WantedArea = [(-18.14143,65.68868),(-18.08538,65.68868),(-18.08538,65.67783),(-18.14143,65.67783)] #island
 # AREA: WantedArea = [(6.94872,4.84293),(6.99314,4.84293),(6.99314,4.81603),(6.94872,4.81603)] #afrika
-AREA: WantedArea = "třebíč, Česko"
+# AREA: WantedArea = "Horní Vilémovice, Česko"
+AREA: WantedArea = "Brno, Česko"
 PAPER_DIMENSIONS: PaperSize | tuple[float | None, float | None] = PaperSize.A4.dimensions
 # PAPER_DIMENSIONS = (1100, None) # set own dimensions. If one is left as 'None' it will be automaticaly calculated using area size
 GIVEN_SMALLER_PAPER_DIMENSION: bool = True # what side of paper was set (smaller true bigger false) - only if only one side in custom dimension was set to None
@@ -80,8 +81,9 @@ WAYS_WIDTH_MULTIPLIER = 1
 #wanted_ways: WantedFeatures
 wanted_nodes: WantedCategories = {
     # 'place': {'city', 'town', 'village'}
-    # 'place': { 'town'}
+    # 'place': {'town'}
     # 'place': {'city'}
+    'natural':{'peak'}
 }
 
 # UnwantedFeaturesTags
@@ -98,7 +100,7 @@ wanted_ways: WantedCategories = {
     # 'highway': ['motorway', 'trunk','primary', 'secondary'],
     'highway': {'motorway', 'trunk','primary', 'secondary', 'tertiary', 'unclassified', 'residential', 'path', 'footway' },
     # 'highway':[],
-    'railway': {'rail', 'tram'}
+    'railway': {'rail'}
 }
 
 # UnwantedFeaturesTags
@@ -150,15 +152,19 @@ NODES_MANDATORY_STYLES: FeatureStyles = {
 #? appka asi taky tímhle stylem? pokud bude chtít vlastní nastavení styl (např pro šířku) - (nemá automatické nastavování - to má pouze které výběr....)
 
 #nodes 
-place_styles: FeaturesCategoryStyle = {
+place_styles: FeaturesCategoryStyle = {#todo OUTLINE_WIDTH to edge size ratio 
     'city':{StyleKey.FONT_SIZE: 2500 * CITY_CITY_SIZE_MULTIPLIER, StyleKey.OUTLINE_WIDTH: 270 * CITY_CITY_SIZE_MULTIPLIER}, 
     'town':{StyleKey.FONT_SIZE: 1000 * CITY_TOWN_SIZE_MULTIPLIER, StyleKey.OUTLINE_WIDTH: 100 * CITY_TOWN_SIZE_MULTIPLIER}, 
     'village':{StyleKey.FONT_SIZE: 300 * CITY_VILLAGE_SIZE_MULTIPLIER, StyleKey.OUTLINE_WIDTH: 50 * CITY_VILLAGE_SIZE_MULTIPLIER}
 }
+natural_styles_nodes: FeaturesCategoryStyle = {
+    'peak': {StyleKey.ICON: "^", StyleKey.ICON_COLOR: "#7f3016", StyleKey.ICON_EDGE: 50}
+}
 
 NODES_STYLES: FeaturesCategoriesStyles = {
-    # color is color of text, bg color is outline color 
+    # color is color of text, EDGE_COLOR is outline color 
     'place': (place_styles, {StyleKey.COLOR: '#000000', StyleKey.EDGE_COLOR: '#FFFFFF'}),
+    'natural': (natural_styles_nodes, {StyleKey.COLOR: '#000000', StyleKey.EDGE_COLOR: '#FFFFFF', StyleKey.ICON_SIZE: 300, StyleKey.ICON_COLOR: "red"}),
 }
 
 

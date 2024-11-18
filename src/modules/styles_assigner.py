@@ -102,7 +102,7 @@ class StyleAssigner:
 
     @time_measurement_decorator("styles assign")
     def assign_styles_to_gdf(self, gdf: GeoDataFrame, wanted_features_categories: WantedCategories,
-                            wanted_styles: list[StyleKey]) -> GeoDataFrame:
+                            wanted_styles: list[StyleKey], dont_categorize: list[str] = []) -> GeoDataFrame:
         """Will assign wanted_styles to all features (rows) in given GeoDataFrame that are in WantedCategories. 
         If they are not in wanted categories it will assign from general styles.
 
@@ -141,6 +141,6 @@ class StyleAssigner:
 
         # convert object columns to pandas category - for memory optimalization
         for style_column in wanted_styles:
-            if(style_column in styled_gdf and styled_gdf[style_column].dtype == object):
+            if(style_column in styled_gdf and style_column not in dont_categorize and styled_gdf[style_column].dtype == object):
                 styled_gdf[style_column] = styled_gdf[style_column].astype("category")            
         return styled_gdf

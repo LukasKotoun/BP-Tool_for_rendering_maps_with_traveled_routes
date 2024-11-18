@@ -168,12 +168,13 @@ def main():
     nodes_style_assigner = StyleAssigner(NODES_STYLES, GENERAL_DEFAULT_STYLES, NODES_MANDATORY_STYLES)
     nodes_gdf = nodes_style_assigner.assign_styles_to_gdf(nodes_gdf, wanted_nodes,
                                                     [StyleKey.COLOR, StyleKey.FONT_SIZE, StyleKey.OUTLINE_WIDTH,
-                                                     StyleKey.EDGE_COLOR])
+                                                     StyleKey.EDGE_COLOR, StyleKey.ICON_COLOR, StyleKey.ICON_SIZE,
+                                                     StyleKey.ICON, StyleKey.ICON_EDGE])
 
     ways_style_assigner = StyleAssigner(WAYS_STYLES, GENERAL_DEFAULT_STYLES, WAY_MANDATORY_STYLES)
     ways_gdf = ways_style_assigner.assign_styles_to_gdf(ways_gdf, wanted_ways,
                                                     [StyleKey.COLOR, StyleKey.ZINDEX, StyleKey.LINEWIDTH,
-                                                    StyleKey.LINESTYLE, StyleKey.ALPHA,StyleKey.EDGE_COLOR,
+                                                    StyleKey.LINESTYLE, StyleKey.ALPHA, StyleKey.EDGE_COLOR,
                                                     StyleKey.BRIDGE_COLOR, StyleKey.BRIDGE_EDGE_COLOR,
                                                     StyleKey.EDGE_WIDTH_RATIO, StyleKey.BRIDGE_WIDTH_RATIO])
     areas_style_assigner = StyleAssigner(AREAS_STYLES, GENERAL_DEFAULT_STYLES, AREA_MANDATORY_STYLES)

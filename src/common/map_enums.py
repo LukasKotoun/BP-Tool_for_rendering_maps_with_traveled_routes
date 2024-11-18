@@ -2,20 +2,21 @@ from enum import Enum
 
 class StyleKey(Enum):
     COLOR = 1
-    EDGE_COLOR = 2
+    ALPHA = 2
     ZINDEX = 3
     LINEWIDTH = 4
-    BGCOLOR = 5
-    LINESTYLE = 6
-    ALPHA = 7
-    FONT_SIZE = 8
-    OUTLINE_WIDTH = 9,
-    ICON_COLOR = 10,
-    BRIDGE_COLOR = 11 
-    BRIDGE_EDGE_COLOR = 12
-    EDGE_WIDTH_RATIO = 13
-    BRIDGE_WIDTH_RATIO = 14
-
+    LINESTYLE = 5
+    EDGE_COLOR = 7 # nastavit asi jako text outline width a color
+    EDGE_WIDTH_RATIO = 11
+    BRIDGE_COLOR = 9
+    BRIDGE_WIDTH_RATIO = 12
+    BRIDGE_EDGE_COLOR = 10
+    FONT_SIZE = 6
+    OUTLINE_WIDTH = 8
+    ICON = 16
+    ICON_COLOR = 13
+    ICON_EDGE = 14
+    ICON_SIZE = 15
     
     
 class AreaBounds(Enum):
