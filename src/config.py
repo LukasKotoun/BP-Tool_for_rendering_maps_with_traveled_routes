@@ -14,18 +14,18 @@ PERCENTAGE_PADDING = 0.5 # padding from page borders NOTE: must have same settin
 
 # AREA: WantedArea = [(-18.14143,65.68868),(-18.08538,65.68868),(-18.08538,65.67783),(-18.14143,65.67783)] #island
 # AREA: WantedArea = [(6.94872,4.84293),(6.99314,4.84293),(6.99314,4.81603),(6.94872,4.81603)] #afrika
-AREA: WantedArea = "Třebíč, Česko"
+AREA: WantedArea = "třebíč, Česko"
 PAPER_DIMENSIONS: PaperSize | tuple[float | None, float | None] = PaperSize.A4.dimensions
 # PAPER_DIMENSIONS = (1100, None) # set own dimensions. If one is left as 'None' it will be automaticaly calculated using area size
 GIVEN_SMALLER_PAPER_DIMENSION: bool = True # what side of paper was set (smaller true bigger false) - only if only one side in custom dimension was set to None
 WANTED_ORIENTATION: MapOrientation = MapOrientation.AUTOMATIC  # set how will resulted paper be oriented, AUTOMATIC is Recommended
 
-EXPAND_AREA_MODE = ExpandArea.FIT_PAPER_SIZE # FIT_PAPER_SIZE recomended with PERCENTAGE_PADDING 0
-CUSTOM_EXPAND_AREA: WantedArea | None = None # polygon or country name - custom area must be bigger than normal
+EXPAND_AREA_MODE = ExpandArea.NONE # FIT_PAPER_SIZE recomended with PERCENTAGE_PADDING 0
+CUSTOM_EXPAND_AREA: WantedArea | None = ["Česko"]# polygon or country name - custom area must be bigger than normal
 #todo fit přepsání, percentage přepsání?? - zeptat se, custom spojení
 
 #bounds
-AREA_BOUNDARY = AreaBounds.WHOLE #WHOLE - one bound around area, SEPARATED - separated bounds around every area in AREA variable
+AREA_BOUNDARY = AreaBounds.COMBINED #COMBINED - one bound around area, SEPARATED - separated bounds around every area in AREA variable
 EXPAND_AREA_BOUNDS_PLOT = False 
 AREA_BOUNDARY_LINEWIDTH = 30
 
@@ -129,7 +129,7 @@ unwanted_areas_tags: UnwantedTags ={
 #------------styles--------------
 # there must be all somewhere used styles, if not program can crash
 GENERAL_DEFAULT_STYLES: FeatureStyles = {StyleKey.COLOR: '#EDEDE0',  StyleKey.ZINDEX: 0,
-                                         StyleKey.LINEWIDTH: 1, StyleKey.EDGE_COLOR: '#EDEDE0', StyleKey.LINESTYLE: '-',
+                                         StyleKey.LINEWIDTH: 1, StyleKey.LINESTYLE: '-',
                                          StyleKey.ALPHA: 1}
 
 #styles that must be assigned to all area features
@@ -140,7 +140,7 @@ AREA_MANDATORY_STYLES: FeatureStyles = {
 WAY_MANDATORY_STYLES: FeatureStyles = {
     StyleKey.COLOR: '#EDEDE0', StyleKey.ALPHA: 1.0, StyleKey.LINEWIDTH: 1, StyleKey.LINESTYLE: '-',
     StyleKey.EDGE_WIDTH_RATIO: 0.3, StyleKey.BRIDGE_WIDTH_RATIO: 0, StyleKey.BRIDGE_COLOR: "#FFFFFF", 
-    StyleKey.EDGE_COLOR: '#EDEDE0', StyleKey.BRIDGE_EDGE_COLOR: "#7D7D7D"
+    StyleKey.BRIDGE_EDGE_COLOR: "#7D7D7D"
 }
 #styles that must be assigned to all node features
 NODES_MANDATORY_STYLES: FeatureStyles = {
@@ -181,7 +181,7 @@ highway_styles: FeaturesCategoryStyle = {
 railway_styles: FeaturesCategoryStyle = {
     'rail': {StyleKey.COLOR: '#FFFFFF', StyleKey.ZINDEX: 1, StyleKey.LINEWIDTH: 10,
              StyleKey.BRIDGE_EDGE_COLOR: '#5d5d5d', StyleKey.BRIDGE_COLOR: "#FFFFFF",
-             StyleKey.EDGE_COLOR: '#5d5d5d', StyleKey.BRIDGE_WIDTH_RATIO: 2, StyleKey.LINESTYLE: (0, (5, 5))},
+             StyleKey.EDGE_COLOR: '#5d5d5d', StyleKey.BRIDGE_WIDTH_RATIO: 1.7, StyleKey.LINESTYLE: (2.5, (5, 5))},
     'tram': {StyleKey.COLOR: '#404040', StyleKey.ZINDEX: 10, StyleKey.LINEWIDTH: 4, StyleKey.ALPHA: 0.6},
     'tram_stop': {StyleKey.COLOR: '#404040', StyleKey.ZINDEX: 1, StyleKey.LINEWIDTH: 4},
 }

@@ -1,7 +1,5 @@
 import warnings
 
-import geopandas as gpd
-import pandas as pd
 from config import * 
 from modules.gdf_utils import GdfUtils
 from modules.utils import Utils
@@ -61,7 +59,6 @@ def calc_preview(map_area_gdf, paper_dimensions_mm):
 
     return area_zoom_preview, map_object_scaling_factor, map_area_gdf 
 
-
 @time_measurement_decorator("main")
 def main():
     #------------input validation------------
@@ -74,27 +71,35 @@ def main():
     #------------get map area and calc paper sizes, and calc preview
     #todo get_area_gdfs and take list of string and lists. and resulted gdf concatenate to one and that return
     #todo to func checkOsmFilesAndNormalize - if files is list but with len 1 convert to string
+
+    
     if(isinstance(OSM_INPUT_FILE_NAMES, list) and len(OSM_INPUT_FILE_NAMES) > 1 and OSM_WANT_EXTRACT_AREA == False):
         print("Multiple files feature (list of osm files) is avilable only with option OSM_WANT_EXTRACT_AREA")
         return
 
     map_area_gdf = GdfUtils.get_whole_area_gdf(AREA, EPSG_DEGREE_NUMBER)
     #------------store bounds to plot and combine area rows in gdf to 1 row------------
+    boundary_map_area_gdf = None # default dont plot
     if(AREA_BOUNDARY == AreaBounds.SEPARATED):
+        #store separated areas (before gdf row merge)
         boundary_map_area_gdf = map_area_gdf.copy()
         map_area_gdf = GdfUtils.combine_rows_gdf(map_area_gdf, EPSG_DEGREE_NUMBER)   
     else:
-        map_area_gdf = GdfUtils.combine_rows_gdf(map_area_gdf, EPSG_DEGREE_NUMBER)   
-        boundary_map_area_gdf = map_area_gdf
-        
+        map_area_gdf = GdfUtils.combine_rows_gdf(map_area_gdf, EPSG_DEGREE_NUMBER)
+        if(AREA_BOUNDARY == AreaBounds.COMBINED):
+            #store comined areas (after row combination)
+            boundary_map_area_gdf = map_area_gdf.copy()
+            
     #------------expand area------------
-    expanded_boundary_map_area_gdf = None    
     if(EXPAND_AREA_MODE != ExpandArea.NONE):
         map_area_gdf = GdfUtils.expand_area(map_area_gdf, EPSG_DEGREE_NUMBER,
                 CUSTOM_EXPAND_AREA if EXPAND_AREA_MODE == ExpandArea.CUSTOM_AREA else None)
+        #store bounds as rows
         if(EXPAND_AREA_BOUNDS_PLOT):
-            expanded_boundary_map_area_gdf = map_area_gdf.copy()
-            
+            if(boundary_map_area_gdf is not None):
+                boundary_map_area_gdf = GdfUtils.combine_gdfs([boundary_map_area_gdf, map_area_gdf.copy()])
+            else:
+                boundary_map_area_gdf = map_area_gdf.copy()
     #------------get paper dimension (size and orientation)------------
     map_area_dimensions_m = GdfUtils.get_dimensions_m_gdf(map_area_gdf)
     paper_dimensions_mm = Utils.adjust_paper_dimensions(map_area_dimensions_m, PAPER_DIMENSIONS,
@@ -113,6 +118,7 @@ def main():
         map_object_scaling_factor = (Utils.calc_map_object_scaling_factor(map_area_dimensions_m,
                                                                          paper_dimensions_mm) 
                                     * OBJECT_MULTIPLIER)
+    
     #------------get elements from osm file------------
     if(OSM_WANT_EXTRACT_AREA):
         if(OSM_OUTPUT_FILE_NAME is None):
@@ -128,7 +134,7 @@ def main():
             osm_file_name = OSM_INPUT_FILE_NAMES[0]      
         else:
             osm_file_name = OSM_INPUT_FILE_NAMES
-        
+      
     # can use also outer paper size and area 
     osm_file_parser = OsmDataParser(
         wanted_nodes, wanted_ways, wanted_areas,
@@ -174,8 +180,7 @@ def main():
     areas_gdf = areas_style_assigner.assign_styles_to_gdf(areas_gdf, wanted_areas,
                                                      [StyleKey.COLOR, StyleKey.EDGE_COLOR, StyleKey.ZINDEX,
                                                       StyleKey.LINEWIDTH, StyleKey.ALPHA, StyleKey.LINESTYLE])
-
-    # print(nodes_gdf)
+    
     ways_gdf = GdfUtils.sort_gdf_by_column(ways_gdf, "layer")
     ways_gdf = GdfUtils.sort_gdf_by_column(ways_gdf, StyleKey.ZINDEX)
     areas_gdf = GdfUtils.sort_gdf_by_column(areas_gdf, StyleKey.ZINDEX)
@@ -183,11 +188,9 @@ def main():
     gpx_processer =  GpxProcesser('../gpxs')
     gpxs_gdf = gpx_processer.get_gpxs_gdf(EPSG_DEGREE_NUMBER)
     
-    
     plotter = Plotter(map_area_gdf, paper_dimensions_mm, map_object_scaling_factor)
     plotter.init_plot(GENERAL_DEFAULT_STYLES[StyleKey.COLOR], area_zoom_preview)
     plotter.zoom(zoom_percent_padding=PERCENTAGE_PADDING)
-
     plotter.plot_areas(areas_gdf, AREAS_EDGE_WIDTH_MULTIPLIER)
     plotter.plot_ways(ways_gdf, WAYS_WIDTH_MULTIPLIER)
     plotter.plot_nodes(nodes_gdf, TEXT_WRAP_NAMES_LEN)
@@ -199,15 +202,12 @@ def main():
     if(WANT_AREA_CLIPPING or WANT_PREVIEW):
         plotter.clip(GdfUtils.create_polygon_from_gdf_bounds(nodes_gdf, ways_gdf, areas_gdf))
         
-    if(AREA_BOUNDARY != AreaBounds.NONE):
+    if(boundary_map_area_gdf is not None):
         plotter.plot_area_boundary(area_gdf=boundary_map_area_gdf, linewidth=AREA_BOUNDARY_LINEWIDTH)
         
-    if(expanded_boundary_map_area_gdf is not None and EXPAND_AREA_BOUNDS_PLOT):
-        plotter.plot_area_boundary(area_gdf=expanded_boundary_map_area_gdf, linewidth=AREA_BOUNDARY_LINEWIDTH)
 
     plotter.generate_pdf(OUTPUT_PDF_NAME)
     # plotter.show_plot()
-    
     
 if __name__ == "__main__":
     main()

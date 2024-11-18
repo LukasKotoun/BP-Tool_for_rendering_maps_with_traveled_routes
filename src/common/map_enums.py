@@ -20,7 +20,7 @@ class StyleKey(Enum):
     
 class AreaBounds(Enum):
     NONE = 1
-    WHOLE = 2
+    COMBINED = 2
     SEPARATED = 3
     
 class ExpandArea(Enum):

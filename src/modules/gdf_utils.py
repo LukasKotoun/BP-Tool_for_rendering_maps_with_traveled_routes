@@ -55,8 +55,8 @@ class GdfUtils:
         elif (isinstance(whole_area, list)): #area from multiple areas
             areas_gdf_list: list[gpd.GeoDataFrame] = []
             for area in whole_area:
-                areas_gdf_list.append(GdfUtils.get_area_gdf(area, epsg))
-            return pd.concat(areas_gdf_list, ignore_index=True)
+                areas_gdf_list.append(GdfUtils.get_area_gdf(area, epsg)) # store areas to list of areas
+            return GdfUtils.combine_gdfs(areas_gdf_list)
         else: #area cannot be created
             raise ValueError("Invalid area format.")
     
@@ -190,6 +190,13 @@ class GdfUtils:
         if(len(gdf) == 1):
             return gdf.to_crs(epsg=epsg)
         return gpd.GeoDataFrame(geometry=[gdf.to_crs(epsg=epsg).geometry.unary_union], crs=f"EPSG:{epsg}")
+    
+    @staticmethod
+    def combine_gdfs(gdfs: list[gpd.GeoDataFrame]) -> gpd.GeoDataFrame:
+        if(len(gdfs) == 1):
+            return gdfs
+        return pd.concat(gdfs, ignore_index=True) #concat to one gdf
+
     
     @staticmethod
     def expand_area(area_gdf: gpd.GeoDataFrame, epsg, custom_area: WantedArea | None = None):

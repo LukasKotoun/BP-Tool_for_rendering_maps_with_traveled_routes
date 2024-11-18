@@ -327,17 +327,60 @@
                 #     feature_style = features_category_styles.get(style_key)
                 #     # assign style of concrete feature or default if is not specified for this feature
                 #     assigned_styles[style_key] = feature_style if feature_style is not None else features_category_default_styles.get(style_key, self.general_default_styles[style_key]) 
-import timeit
-test = set({"asd"})
+# import timeit
+# test = set({"asd"})
 
 
-def my_function():
-    # Simulate some work with a delay
-    if(not test):
-       return True
+# def my_function():
+#     # Simulate some work with a delay
+#     if(not test):
+#        return True
         
-    # for dict_tag_key, unwanted_values in test.items():
-    #    return True
-    # return False         
-execution_time = timeit.timeit(my_function, number=90000000)  # Run the function 100 times
-print(f"Execution time for 100 runs: {execution_time:.6f} seconds")
+#     # for dict_tag_key, unwanted_values in test.items():
+#     #    return True
+#     # return False         
+# execution_time = timeit.timeit(my_function, number=90000000)  # Run the function 100 times
+# print(f"Execution time for 100 runs: {execution_time:.6f} seconds")
+import matplotlib.pyplot as plt
+import matplotlib.patheffects as PathEffects
+import numpy as np
+
+if 1:
+    plt.figure(1, figsize=(8, 3))
+    ax1 = plt.subplot(131)
+    ax1.imshow([[1, 2], [2, 3]])
+    txt = ax1.annotate("test", (1., 1.), (0., 0),
+                       arrowprops=dict(arrowstyle="->",
+                                       connectionstyle="angle3", lw=2),
+                       size=20, ha="center", path_effects=[PathEffects.withStroke(linewidth=3,
+                                                                                  foreground="w")])
+    txt.arrow_patch.set_path_effects([
+        PathEffects.Stroke(linewidth=25, foreground="w"),
+        PathEffects.Normal()])
+
+    ax1.grid(True, linestyle="-")
+
+    pe = [PathEffects.withStroke(linewidth=23,
+                                 foreground="w")]
+    for l in ax1.get_xgridlines() + ax1.get_ygridlines():
+        l.set_path_effects(pe)
+
+    ax2 = plt.subplot(132)
+    arr = np.arange(25).reshape((5, 5))
+    ax2.imshow(arr)
+    cntr = ax2.contour(arr, colors="k")
+
+    plt.setp(cntr.collections, path_effects=[
+        PathEffects.withStroke(linewidth=23, foreground="w")])
+
+    clbls = ax2.clabel(cntr, fmt="%2.0f", use_clabeltext=True)
+    plt.setp(clbls, path_effects=[
+        PathEffects.withStroke(linewidth=12, foreground="w")])
+
+    # shadow as a path effect
+    ax3 = plt.subplot(133)
+    p1, = ax3.plot([0, 1], [0, 1])
+    leg = ax3.legend([p1], ["Line 1"], fancybox=True, loc=2)
+    leg.legendPatch.set_path_effects([PathEffects.withSimplePatchShadow()])
+
+    plt.show()
