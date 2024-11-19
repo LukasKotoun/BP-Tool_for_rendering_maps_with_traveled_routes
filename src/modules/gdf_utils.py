@@ -39,7 +39,7 @@ class GdfUtils:
                 raise ValueError("Invalid area given by list of cordinates.")
         else: #area cannot be created
             raise ValueError("Invalid area format.")
-        return reqired_area_gdf
+        return reqired_area_gdf.to_crs(epsg=epsg)
     
         
     @staticmethod

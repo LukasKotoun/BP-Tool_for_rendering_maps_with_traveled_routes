@@ -3,32 +3,34 @@ from common.map_enums import *
 
 
 #--------------normal map area--------------
-# OSM_INPUT_FILE_NAMES: str = ['../osm_files/brno.osm.pbf','../osm_files/trebic.osm.pbf']
-OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/brno.osm.pbf'
+# OSM_INPUT_FILE_NAMES: str = ['../osm_files/vys.osm.pbf','../osm_files/jihmor.osm.pbf']
+# OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/vysJihE.osm.pbf'
+OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/brnoE.osm.pbf'
 #extract
 OSM_WANT_EXTRACT_AREA: bool = False 
-OSM_OUTPUT_FILE_NAME: None | str = '../osm_files/hv.osm.pbf' # set if want osm file cutting using osmium command line tool (need to be uinstalled), If not set to None
+OSM_OUTPUT_FILE_NAME: None | str = '../osm_files/brnoE.osm.pbf' # set if want osm file cutting using osmium command line tool (need to be uinstalled), If not set to None
 
-OUTPUT_PDF_NAME: str = '../pdfs/divočina'
-PERCENTAGE_PADDING = 0.5 # padding from page borders NOTE: must have same settings as the resulting one when generating for large format printing
+OUTPUT_PDF_NAME: str = '../pdfs/brnoFitPaper2'
+PERCENTAGE_PADDING = 0 # padding from page borders NOTE: must have same settings as the resulting one when generating for large format printing
 
 # AREA: WantedArea = [(-18.14143,65.68868),(-18.08538,65.68868),(-18.08538,65.67783),(-18.14143,65.67783)] #island
 # AREA: WantedArea = [(6.94872,4.84293),(6.99314,4.84293),(6.99314,4.81603),(6.94872,4.81603)] #afrika
-# AREA: WantedArea = "Horní Vilémovice, Česko"
 AREA: WantedArea = "Brno, Česko"
-PAPER_DIMENSIONS: PaperSize | tuple[float | None, float | None] = PaperSize.A4.dimensions
+# AREA: WantedArea = ["Vysočina, Česko", "Jihomoravský kraj, Česko"]
+# PAPER_DIMENSIONS: PaperSize | tuple[float | None, float | None] = PaperSize.A3.dimensions
+PAPER_DIMENSIONS = (400, None)
 # PAPER_DIMENSIONS = (1100, None) # set own dimensions. If one is left as 'None' it will be automaticaly calculated using area size
 GIVEN_SMALLER_PAPER_DIMENSION: bool = True # what side of paper was set (smaller true bigger false) - only if only one side in custom dimension was set to None
 WANTED_ORIENTATION: MapOrientation = MapOrientation.AUTOMATIC  # set how will resulted paper be oriented, AUTOMATIC is Recommended
 
-EXPAND_AREA_MODE = ExpandArea.NONE # FIT_PAPER_SIZE recomended with PERCENTAGE_PADDING 0
+EXPAND_AREA_MODE = ExpandArea.FIT_PAPER_SIZE # FIT_PAPER_SIZE recomended with PERCENTAGE_PADDING 0
 CUSTOM_EXPAND_AREA: WantedArea | None = ["Česko"]# polygon or country name - custom area must be bigger than normal
 #todo fit přepsání, percentage přepsání?? - zeptat se, custom spojení
 
 #bounds
-AREA_BOUNDARY = AreaBounds.COMBINED #COMBINED - one bound around area, SEPARATED - separated bounds around every area in AREA variable
-EXPAND_AREA_BOUNDS_PLOT = False 
-AREA_BOUNDARY_LINEWIDTH = 30
+AREA_BOUNDARY = AreaBounds.SEPARATED #COMBINED - one bound around area, SEPARATED - separated bounds around every area in AREA variable
+EXPAND_AREA_BOUNDS_PLOT = True 
+AREA_BOUNDARY_LINEWIDTH = 50
 
 #clipping
 WANT_AREA_CLIPPING = True # if true it will plot only given AREA (recomended) if False it will plot whole osm file with AREA in center 
@@ -70,19 +72,22 @@ OUTER_CUSTOM_EXPAND_AREA: WantedArea | None = "Česko"
 #------------cons--------------
 
 #there need to be every mentioned style
-EPSG_DEGREE_NUMBER = 4326 # world
-EPSG_METERS_NUMBER = 5514 # cz and sk - 5514, world 3857, europe 25833 
+EPSG_DEGREE_NUMBER = 4326 # world 4326
+EPSG_METERS_NUMBER = 3857 # cz and sk - 5514, world 3857, europe 25833 
 # todo table with epsg 
 OBJECT_MULTIPLIER = 1
 AREAS_EDGE_WIDTH_MULTIPLIER = 1
 WAYS_WIDTH_MULTIPLIER = 1
 #--------------filters--------------
+#columns that are used for ploting nodes name for city, ele for elevation points
+NODES_ADDITIONAL_COLUMNS = ['name']
+WAYS_ADDITIONAL_COLUMNS = ['bridge', 'layer']
 
 #wanted_ways: WantedFeatures
 wanted_nodes: WantedCategories = {
     # 'place': {'city', 'town', 'village'}
     # 'place': {'town'}
-    # 'place': {'city'}
+    'place': {'city','town'},
     'natural':{'peak'}
 }
 
@@ -90,9 +95,6 @@ wanted_nodes: WantedCategories = {
 unwanted_nodes_tags: UnwantedTags = {
     
 }
-#columns that are used for ploting nodes name for city, ele for elevation points
-NODES_ADDITIONAL_COLUMNS = ['name']
-WAYS_ADDITIONAL_COLUMNS = ['bridge', 'layer']
 
 #wanted_ways: WantedFeatures
 wanted_ways: WantedCategories = {
@@ -158,7 +160,7 @@ place_styles: FeaturesCategoryStyle = {#todo OUTLINE_WIDTH to edge size ratio
     'village':{StyleKey.FONT_SIZE: 300 * CITY_VILLAGE_SIZE_MULTIPLIER, StyleKey.OUTLINE_WIDTH: 50 * CITY_VILLAGE_SIZE_MULTIPLIER}
 }
 natural_styles_nodes: FeaturesCategoryStyle = {
-    'peak': {StyleKey.ICON: "^", StyleKey.ICON_COLOR: "#7f3016", StyleKey.ICON_EDGE: 50}
+    'peak': {StyleKey.ICON: "^", StyleKey.ICON_COLOR: "#7f3016", StyleKey.ICON_EDGE: 20}
 }
 
 NODES_STYLES: FeaturesCategoriesStyles = {
@@ -167,27 +169,24 @@ NODES_STYLES: FeaturesCategoriesStyles = {
     'natural': (natural_styles_nodes, {StyleKey.COLOR: '#000000', StyleKey.EDGE_COLOR: '#FFFFFF', StyleKey.ICON_SIZE: 300, StyleKey.ICON_COLOR: "red"}),
 }
 
-
 #ways
 highway_styles: FeaturesCategoryStyle = {
-    'motorway': {StyleKey.COLOR: '#8cd25f', StyleKey.ZINDEX: 7, StyleKey.LINEWIDTH: 32}, 
-    'trunk': {StyleKey.COLOR: '#FDC364', StyleKey.ZINDEX: 6, StyleKey.LINEWIDTH: 26},
-    'primary': {StyleKey.COLOR: '#FDC364', StyleKey.ZINDEX: 5, StyleKey.LINEWIDTH: 22},
-    'secondary': {StyleKey.COLOR: '#F7ED60', StyleKey.ZINDEX: 4, StyleKey.LINEWIDTH: 20},
+    'motorway': {StyleKey.COLOR: '#8cd25f', StyleKey.ZINDEX: 7, StyleKey.LINEWIDTH: 32, StyleKey.EDGE_COLOR: "#5E9346"}, 
+    'trunk': {StyleKey.COLOR: '#FDC364', StyleKey.ZINDEX: 6, StyleKey.LINEWIDTH: 26, StyleKey.EDGE_COLOR: "#E19532"},
+    'primary': {StyleKey.COLOR: '#FDC364', StyleKey.ZINDEX: 5, StyleKey.LINEWIDTH: 22, StyleKey.EDGE_COLOR: "#E19532"},
+    'secondary': {StyleKey.COLOR: '#F7ED60', StyleKey.ZINDEX: 4, StyleKey.LINEWIDTH: 20, StyleKey.EDGE_COLOR: "#c1b42a"},
     'tertiary': {StyleKey.COLOR: '#FFFFFF', StyleKey.ZINDEX: 3, StyleKey.LINEWIDTH: 16},
     'unclassified': {StyleKey.COLOR: '#FFFFFF'},
     'road': {StyleKey.COLOR: '#FFFFFF'},
     'footway': {StyleKey.COLOR: '#8f8364', StyleKey.LINESTYLE:"--", StyleKey.BRIDGE_COLOR: "#FFFFFF"},
-    'steps': {StyleKey.COLOR: '#8f8364'},
+    'steps': {StyleKey.COLOR: '#8f8364', StyleKey.LINESTYLE:"--"},
     'path': {StyleKey.COLOR: '#8f8364', StyleKey.LINESTYLE:"--", StyleKey.BRIDGE_COLOR: "#FFFFFF"},
-    'residential': {StyleKey.COLOR: '#8f8364'}
+    'residential': {StyleKey.COLOR: '#FFFFFF'}
 }
-
-
 railway_styles: FeaturesCategoryStyle = {
     'rail': {StyleKey.COLOR: '#FFFFFF', StyleKey.ZINDEX: 1, StyleKey.LINEWIDTH: 10,
-             StyleKey.BRIDGE_EDGE_COLOR: '#5d5d5d', StyleKey.BRIDGE_COLOR: "#FFFFFF",
-             StyleKey.EDGE_COLOR: '#5d5d5d', StyleKey.BRIDGE_WIDTH_RATIO: 1.7, StyleKey.LINESTYLE: (2.5, (5, 5))},
+             StyleKey.BRIDGE_EDGE_COLOR: '#5D5D5D', StyleKey.BRIDGE_COLOR: "#FFFFFF",
+             StyleKey.EDGE_COLOR: '#5D5D5D', StyleKey.BRIDGE_WIDTH_RATIO: 1.7, StyleKey.LINESTYLE: (2.5, (5, 5))},
     'tram': {StyleKey.COLOR: '#404040', StyleKey.ZINDEX: 10, StyleKey.LINEWIDTH: 4, StyleKey.ALPHA: 0.6},
     'tram_stop': {StyleKey.COLOR: '#404040', StyleKey.ZINDEX: 1, StyleKey.LINEWIDTH: 4},
 }
@@ -197,7 +196,7 @@ WAYS_STYLES: FeaturesCategoriesStyles = {
     'waterway': ({}, {StyleKey.COLOR: '#8FB8DB', StyleKey.LINEWIDTH: 8, StyleKey.ZINDEX: 0}),
     'highway': (highway_styles, {StyleKey.COLOR: '#FFFFFF', 
                                  StyleKey.BRIDGE_EDGE_COLOR: "#7D7D7D",
-                                 StyleKey.ZINDEX: 1, StyleKey.LINEWIDTH: 8, StyleKey.EDGE_COLOR: "red"}),
+                                 StyleKey.ZINDEX: 1, StyleKey.LINEWIDTH: 8, StyleKey.EDGE_COLOR: "#B0A78D"}),
     'railway': (railway_styles, {StyleKey.COLOR: '#FFFFFF', StyleKey.ZINDEX: 2, StyleKey.LINEWIDTH: 8}),
 }
 #areas

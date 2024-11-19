@@ -115,7 +115,7 @@ class Plotter:
             edge_ways_gdf = GdfUtils.filter_gdf_not_in(edge_ways_gdf, StyleKey.EDGE_WIDTH_RATIO, [pd.NA, 'none'])[0]
             edge_ways_gdf = GdfUtils.filter_gdf_in(edge_ways_gdf, StyleKey.LINESTYLE, [pd.NA, 'none', '-'])[0]
             if(not edge_ways_gdf.empty):
-                edge_ways_gdf[StyleKey.LINEWIDTH] = edge_ways_gdf[StyleKey.LINEWIDTH] + edge_ways_gdf[StyleKey.LINEWIDTH]*edge_ways_gdf[StyleKey.EDGE_WIcDTH_RATIO]
+                edge_ways_gdf[StyleKey.LINEWIDTH] = edge_ways_gdf[StyleKey.LINEWIDTH] + edge_ways_gdf[StyleKey.LINEWIDTH]*edge_ways_gdf[StyleKey.EDGE_WIDTH_RATIO]
                 edge_ways_gdf.plot(ax=self.ax, color=edge_ways_gdf[StyleKey.EDGE_COLOR],
                                     linewidth=edge_ways_gdf[StyleKey.LINEWIDTH],
                                     alpha=edge_ways_gdf[StyleKey.ALPHA],
@@ -259,7 +259,7 @@ class Plotter:
         # adjust_text(self.ax.texts, force_text = 0.2) 
         adjust_text(self.text_to_adjust, force_text = 0.2) #todo only for city, for points 
          # text force 
-        # adjust_text(self.ax.texts, force_text = 0.25, avoid_self= False)
+        # adjust_text(self.ax.texts, force_text = 0.25, avoid_self = False)
         #remove overflown texts after adjusting
         if(text_bounds_overflow_threshold > 0):
             r: RendererAgg = self.fig.canvas.get_renderer()
