@@ -12,6 +12,7 @@ import textwrap
 from adjustText import adjust_text
 
 from config import * 
+from modules.utils import Utils
 from modules.gdf_utils import GdfUtils
 from common.common_helpers import time_measurement_decorator
 
@@ -38,7 +39,7 @@ class Plotter:
             self.fig.subplots_adjust(left=left_margin, right=right_margin, top=top_margin, bottom=bottom_margin) 
             
         self.ax.axis('off')
-        self.ax.set_aspect('equal')
+        # self.ax.set_aspect('equal')
         self.reqired_area_gdf.plot(ax=self.ax, color=map_bg_color, linewidth=1)
         
 
@@ -269,7 +270,7 @@ class Plotter:
                 if(not GdfUtils.is_polygon_inside_polygon_threshold(bbox_polygon, self.reqired_area_polygon, text_bounds_overflow_threshold)):
                     text.remove()
         
-    def clip(self, whole_map_polygon: Polygon, reqired_area_gdf: gpd.GeoDataFrame | None = None, clipped_area_color: str = 'white'):
+    def clip(self, epsg: int, whole_map_polygon: Polygon, reqired_area_gdf: gpd.GeoDataFrame | None = None, clipped_area_color: str = 'white'):
         
         if(reqired_area_gdf is not None):
             reqired_area_polygon = GdfUtils.create_polygon_from_gdf(reqired_area_gdf)
@@ -281,7 +282,7 @@ class Plotter:
             return
         
         # clipping_polygon = geometry.MultiPolygon([clipping_polygon]) - epsg in constructor
-        clipping_polygon = gpd.GeoDataFrame(geometry=[clipping_polygon], crs=f"EPSG:{EPSG_DEGREE_NUMBER}")
+        clipping_polygon = gpd.GeoDataFrame(geometry=[clipping_polygon], crs=f"EPSG:{epsg}")
         
         clipping_polygon.plot(ax=self.ax, color=clipped_area_color, alpha=1, zorder=3)
         
@@ -295,7 +296,7 @@ class Plotter:
         zoom_padding = zoom_percent_padding / 100 #convert from percent
         
         zoom_bounds = GdfUtils.get_bounds_gdf(self.reqired_area_gdf)
-        width, height = GdfUtils.get_dimensions(zoom_bounds)
+        width, height = Utils.get_dimensions(zoom_bounds)
 
         width_buffer = width * zoom_padding  # 1% of width
         height_buffer = height * zoom_padding  # 1% of height

@@ -93,26 +93,57 @@ class Utils:
         width_ratio = area1[0] / area2[0]
         height_ratio = area1[1] / area2[1]
         return width_ratio, height_ratio
-       
-    #funkce která na zakladě střed, a pomeru velikosti vetší oblasti a papíru zjistí potřebnou velikost oblasti a vrátí ji jako polygon 
-
+        
     @staticmethod
-    def calc_bounds_to_fill_paper(center_point: Point, pdf_dim: DimensionsTuple,
+    def get_dimensions(bounds: BoundsDict) -> DimensionsTuple:
+        width = abs(bounds[WorldSides.EAST] - bounds[WorldSides.WEST])  # east - west
+        height = abs(bounds[WorldSides.NORTH] - bounds[WorldSides.SOUTH])  # north - south
+        return width, height
+    
+    #funkce která na zakladě střed, a pomeru velikosti vetší oblasti a papíru zjistí potřebnou velikost oblasti a vrátí ji jako polygon 
+    @staticmethod
+    def calc_bounds_to_fill_paper_with_ratio(center_point: Point, pdf_dim: DimensionsTuple,
                                   bigger_area_dim: DimensionsTuple, bigger_pdf_dim: DimensionsTuple) -> BoundsDict:
-        area_to_pdf_ratio = Utils.calc_ratios(bigger_pdf_dim, bigger_area_dim)
-         
-        # expressed coefficient from the equation pdf_dim / (center_point * (1+coefficient) - center_point * (1-coefficient)) = bigger_pdf_dim / bigger_area_dim
-        # where bigger_pdf_dim / bigger_area_dim is area_to_pdf_ratio, (center_point * (1+coefficient) - center_point * (1-coefficient)) is area_dim (length of height or width)
-        width_coefficient = pdf_dim[0] / (2 * center_point.x * area_to_pdf_ratio[0])
-        height_coefficient = pdf_dim[1] / (2 * center_point.y * area_to_pdf_ratio[1])
+        pdf_to_area_ratio_bigger = Utils.calc_ratios(bigger_area_dim, bigger_pdf_dim)
+        # Calc from eqation  = bigger_area_dim / bigger_pdf_dim
+        #  bigger_area_dim (in M)/ bigger_pdf_dim ==  area_dim(M) /pdf_dim => areaDim(M) == bigger_area_dim (in M)/bigger_pdf_dim*pdf_dim =>
+        #  => areaDim(M) == pdf_to_area_ratio_bigger * pdf_dim
+        new_width = pdf_dim[0] * pdf_to_area_ratio_bigger[0]
+        new_height = pdf_dim[1] * pdf_to_area_ratio_bigger[1]
 
-        return{
-            WorldSides.WEST: center_point.x * (1 - width_coefficient),
-            WorldSides.SOUTH: center_point.y * (1 - height_coefficient),
-            WorldSides.EAST:  center_point.x * (1 + width_coefficient),
-            WorldSides.NORTH: center_point.y * (1 + height_coefficient)
-        }
-     
+        return Utils.adjust_bounds_to_fill_paper({
+            WorldSides.WEST: center_point.x - (new_width / 2),
+            WorldSides.EAST: center_point.x + (new_width / 2),
+            WorldSides.SOUTH: center_point.y - (new_height / 2),
+            WorldSides.NORTH: center_point.y + (new_height / 2)
+        }, pdf_dim)
+        
+    @staticmethod
+    def adjust_bounds_to_fill_paper(area_bounds: BoundsDict, pdf_dim: DimensionsTuple) -> BoundsDict:
+         
+        width, height = Utils.get_dimensions(area_bounds)
+        # width / height
+        paper_aspect_ratio = pdf_dim[0] / pdf_dim[1]
+        current_aspect_ratio = width / height
+        
+        if current_aspect_ratio < paper_aspect_ratio:
+            # Current aspect have shorther width to height ratio than paper => adjust width
+            # Expand width 
+            # w/h == pw/ph => w = h * (pw/ph)
+            new_width = height * paper_aspect_ratio
+            width_diff = (new_width - width) / 2
+            area_bounds[WorldSides.WEST] -= width_diff
+            area_bounds[WorldSides.EAST] += width_diff
+        else:
+            # Current aspect have longer width to height ratio than paper => adjust height
+            # Expand height 
+            # w/h == pw/ph => h = w / (pw/ph)
+            new_height = width / paper_aspect_ratio
+            height_diff = (new_height - height) / 2
+            area_bounds[WorldSides.SOUTH] -= height_diff
+            area_bounds[WorldSides.NORTH] += height_diff
+            
+        return area_bounds
     @staticmethod
     def calc_map_object_scaling_factor(map_dimensions_m, paper_dimensions_mm):
         """_summary_

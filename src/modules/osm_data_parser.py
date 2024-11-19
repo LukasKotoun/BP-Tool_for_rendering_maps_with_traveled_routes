@@ -173,10 +173,10 @@ class OsmDataParser(osmium.SimpleHandler):
             
             
     @time_measurement_decorator("gdf creating")
-    def create_gdf(self, epsg_number: int):
-        nodes_gdf = gpd.GeoDataFrame(pd.DataFrame(self.nodes_tags).assign(geometry=self.nodes_geometry), crs=f"EPSG:{epsg_number}")
-        ways_gdf = gpd.GeoDataFrame(pd.DataFrame(self.ways_tags).assign(geometry=self.ways_geometry), crs=f"EPSG:{epsg_number}")
-        areas_gdf = gpd.GeoDataFrame(pd.DataFrame(self.areas_tags).assign(geometry=self.areas_geometry), crs=f"EPSG:{epsg_number}")
+    def create_gdf(self, fromEpsg: int, toEpsg: int | None = None):
+        nodes_gdf = gpd.GeoDataFrame(pd.DataFrame(self.nodes_tags).assign(geometry=self.nodes_geometry), crs=f"EPSG:{fromEpsg}")
+        ways_gdf = gpd.GeoDataFrame(pd.DataFrame(self.ways_tags).assign(geometry=self.ways_geometry), crs=f"EPSG:{fromEpsg}")
+        areas_gdf = gpd.GeoDataFrame(pd.DataFrame(self.areas_tags).assign(geometry=self.areas_geometry), crs=f"EPSG:{fromEpsg}")
 
         for column, _ in self.wanted_nodes.items():
             if(column in nodes_gdf):
@@ -193,9 +193,10 @@ class OsmDataParser(osmium.SimpleHandler):
         # print(ways_gdf.memory_usage(deep=True))
         # print(areas_gdf.memory_usage(deep=True))
         print(f"nodes: {nodes_gdf.memory_usage(deep=True).sum()}, ways: {ways_gdf.memory_usage(deep=True).sum()}, areas: {areas_gdf.memory_usage(deep=True).sum()}, combined: {nodes_gdf.memory_usage(deep=True).sum() + ways_gdf.memory_usage(deep=True).sum() + areas_gdf.memory_usage(deep=True).sum()}")
-            
-        return nodes_gdf, ways_gdf, areas_gdf
-    
+        if(toEpsg is None):
+            return nodes_gdf, ways_gdf, areas_gdf
+        else:
+            return nodes_gdf.to_crs(epsg=toEpsg), ways_gdf.to_crs(epsg=toEpsg), areas_gdf.to_crs(epsg=toEpsg)
     
     def clear_gdf(self):
         self.nodes_geometry.clear()

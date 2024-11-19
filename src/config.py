@@ -10,27 +10,27 @@ OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/brnoE.osm.pbf'
 OSM_WANT_EXTRACT_AREA: bool = False 
 OSM_OUTPUT_FILE_NAME: None | str = '../osm_files/brnoE.osm.pbf' # set if want osm file cutting using osmium command line tool (need to be uinstalled), If not set to None
 
-OUTPUT_PDF_NAME: str = '../pdfs/brnoFitPaper2'
+OUTPUT_PDF_NAME: str = '../pdfs/divočina'
+#with fill or false cliping is recomended 0
 PERCENTAGE_PADDING = 0 # padding from page borders NOTE: must have same settings as the resulting one when generating for large format printing
 
 # AREA: WantedArea = [(-18.14143,65.68868),(-18.08538,65.68868),(-18.08538,65.67783),(-18.14143,65.67783)] #island
 # AREA: WantedArea = [(6.94872,4.84293),(6.99314,4.84293),(6.99314,4.81603),(6.94872,4.81603)] #afrika
 AREA: WantedArea = "Brno, Česko"
 # AREA: WantedArea = ["Vysočina, Česko", "Jihomoravský kraj, Česko"]
-# PAPER_DIMENSIONS: PaperSize | tuple[float | None, float | None] = PaperSize.A3.dimensions
-PAPER_DIMENSIONS = (400, None)
+PAPER_DIMENSIONS: PaperSize | tuple[float | None, float | None] = PaperSize.A4.dimensions
+# PAPER_DIMENSIONS = (400, None)
 # PAPER_DIMENSIONS = (1100, None) # set own dimensions. If one is left as 'None' it will be automaticaly calculated using area size
 GIVEN_SMALLER_PAPER_DIMENSION: bool = True # what side of paper was set (smaller true bigger false) - only if only one side in custom dimension was set to None
 WANTED_ORIENTATION: MapOrientation = MapOrientation.AUTOMATIC  # set how will resulted paper be oriented, AUTOMATIC is Recommended
 
 EXPAND_AREA_MODE = ExpandArea.FIT_PAPER_SIZE # FIT_PAPER_SIZE recomended with PERCENTAGE_PADDING 0
-CUSTOM_EXPAND_AREA: WantedArea | None = ["Česko"]# polygon or country name - custom area must be bigger than normal
-#todo fit přepsání, percentage přepsání?? - zeptat se, custom spojení
+CUSTOM_EXPAND_AREA: WantedArea | None = ["Třebíč, Česko"]# polygon or country name - custom area must be bigger than normal
 
 #bounds
 AREA_BOUNDARY = AreaBounds.SEPARATED #COMBINED - one bound around area, SEPARATED - separated bounds around every area in AREA variable
 EXPAND_AREA_BOUNDS_PLOT = True 
-AREA_BOUNDARY_LINEWIDTH = 50
+AREA_BOUNDARY_LINEWIDTH = 70
 
 #clipping
 WANT_AREA_CLIPPING = True # if true it will plot only given AREA (recomended) if False it will plot whole osm file with AREA in center 
@@ -52,8 +52,8 @@ TEXT_BOUNDS_OVERFLOW_THRESHOLD = 0.97 # if allow is false set threashold (0-1) h
 WANT_PREVIEW: bool = False
 OUTER_AREA: WantedArea = "Vysočina, Česko" # area for that you are creating smaller preview (bigger than normal area) 
 
-OUTER_PAPER_DIMENSIONS = PaperSize.A3.dimensions # real paper size 
-# OUTER_PAPER_DIMENSIONS = (1100, None) # or set own #if one is left none if will be automaticaly calculated by area size
+OUTER_PAPER_DIMENSIONS = PaperSize.A0.dimensions # real paper size 
+# OUTER_PAPER_DIMENSIONS = (300, None) # or set own #if one is left none if will be automaticaly calculated by area size
 OUTER_GIVEN_SMALLER_PAPER_DIMENSION = True # what side of paper was set (smaller true bigger false)(only if only one side in custom dimension was set)
 OUTER_WANTED_ORIENTATION = MapOrientation.AUTOMATIC # set how will resulted paper be oriented, AUTOMATIC is Recommended
 
@@ -71,9 +71,10 @@ OUTER_CUSTOM_EXPAND_AREA: WantedArea | None = "Česko"
 
 #------------cons--------------
 
-#there need to be every mentioned style
-EPSG_DEGREE_NUMBER = 4326 # world 4326
-EPSG_METERS_NUMBER = 3857 # cz and sk - 5514, world 3857, europe 25833 
+# world 3857
+EPSG_OSM = 4326
+EPSG_CALC = 3857 # cz and sk - 5514, , europe 25833 
+EPSG_DISPLAY = 3857 #
 # todo table with epsg 
 OBJECT_MULTIPLIER = 1
 AREAS_EDGE_WIDTH_MULTIPLIER = 1

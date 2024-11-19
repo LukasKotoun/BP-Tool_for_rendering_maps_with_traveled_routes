@@ -6,6 +6,8 @@ import geopandas as gpd
 import pandas as pd
 import osmnx as ox
 import pygeoops
+
+from modules.utils import Utils
 from geopy.distance import geodesic
 
 from common.map_enums import WorldSides, StyleKey
@@ -15,7 +17,7 @@ from common.common_helpers import time_measurement_decorator
 class GdfUtils:
 
     @staticmethod
-    def get_area_gdf(area: str | list[Point], epsg: int) -> gpd.GeoDataFrame:
+    def get_area_gdf(area: str | list[Point], fromEpsg: int, toEpsg: int | None = None) -> gpd.GeoDataFrame:
         if isinstance(area, str): 
             if area.endswith('.geojson'): 
                 reqired_area_gdf: gpd.GeoDataFrame = gpd.read_file(area) # Get area from geojson file
@@ -34,35 +36,36 @@ class GdfUtils:
         elif isinstance(area, list): #get area from coordinates
             try:
                 area_polygon = Polygon(area)
-                reqired_area_gdf = GdfUtils.create_gdf_from_polygon(area_polygon, epsg)
+                reqired_area_gdf = GdfUtils.create_gdf_from_polygon(area_polygon, fromEpsg) #todo change
             except:
                 raise ValueError("Invalid area given by list of cordinates.")
         else: #area cannot be created
             raise ValueError("Invalid area format.")
-        return reqired_area_gdf.to_crs(epsg=epsg)
-    
+        if(toEpsg is None):
+            return reqired_area_gdf
+        else:
+            return reqired_area_gdf.to_crs(epsg = toEpsg)
         
     @staticmethod
     @time_measurement_decorator("spojeni")
-    def get_whole_area_gdf(whole_area: WantedArea, epsg: int) -> gpd.GeoDataFrame:
-        
+    def get_whole_area_gdf(whole_area: WantedArea, fromEpsg: int, toEpsg: int | None = None) -> gpd.GeoDataFrame:
         if (isinstance(whole_area, str) or (isinstance(whole_area, list) and len(whole_area) == 1)  #normal area
             or (isinstance(whole_area, list) and all(isinstance(item, tuple) and len(item) == 2 for item in whole_area))): 
             if((isinstance(whole_area, list) and len(whole_area) == 1)): # one area in list
-                return GdfUtils.get_area_gdf(whole_area[0], epsg)
+                return GdfUtils.get_area_gdf(whole_area[0], fromEpsg, toEpsg)
             else:
-                return GdfUtils.get_area_gdf(whole_area, epsg)
+                return GdfUtils.get_area_gdf(whole_area, fromEpsg, toEpsg)
         elif (isinstance(whole_area, list)): #area from multiple areas
             areas_gdf_list: list[gpd.GeoDataFrame] = []
             for area in whole_area:
-                areas_gdf_list.append(GdfUtils.get_area_gdf(area, epsg)) # store areas to list of areas
+                areas_gdf_list.append(GdfUtils.get_area_gdf(area, fromEpsg, toEpsg)) # store areas to list of areas
             return GdfUtils.combine_gdfs(areas_gdf_list)
         else: #area cannot be created
             raise ValueError("Invalid area format.")
     
     
     @staticmethod
-    def get_bounds_gdf(*gdfs: gpd.GeoDataFrame, epsg: int | None = None) -> BoundsDict:
+    def get_bounds_gdf(*gdfs: gpd.GeoDataFrame, toEpsg: int | None = None) -> BoundsDict:
         west = float('inf')
         south = float('inf')
         east = float('-inf')
@@ -70,8 +73,8 @@ class GdfUtils:
         
         for gdf in gdfs:
             gdf_edit = gdf
-            if(epsg is not None):
-                gdf_edit = gdf.to_crs(epsg=epsg)    
+            if(toEpsg is not None):
+                gdf_edit = gdf.to_crs(epsg=toEpsg)    
             bounds: tuple[float] = gdf_edit.total_bounds #[WorldSides.WEST, WorldSides.SOUTH, WorldSides.EAST, WorldSides.NORTH]
             west = min(west, bounds[0])
             south = min(south, bounds[1])
@@ -112,21 +115,17 @@ class GdfUtils:
         bounds = GdfUtils.get_polygon_bounds(polygon)
         return GdfUtils.get_dimensions_m(bounds)
     
-    @staticmethod
-    def get_dimensions(bounds: BoundsDict) -> DimensionsTuple:
-        width = abs(bounds[WorldSides.EAST] - bounds[WorldSides.WEST])  # east - west
-        height = abs(bounds[WorldSides.NORTH] - bounds[WorldSides.SOUTH])  # north - south
-        return width, height
+    
     
     @staticmethod
     def get_dimensions_gdf(gdf: gpd.GeoDataFrame) -> DimensionsTuple:        
         bounds = GdfUtils.get_bounds_gdf(gdf)
-        return GdfUtils.get_dimensions(bounds)
+        return Utils.get_dimensions(bounds)
     
     @staticmethod
     def get_dimensions_polygon(polygon: gpd.GeoDataFrame) -> DimensionsTuple:
         bounds = GdfUtils.get_polygon_bounds(polygon)
-        return GdfUtils.get_dimensions(bounds)
+        return Utils.get_dimensions(bounds)
     
     @staticmethod 
     def create_polygon_from_bounds(area_bounds: BoundsDict) -> Polygon:
@@ -139,31 +138,33 @@ class GdfUtils:
         ])
     
     @staticmethod 
-    def create_gdf_from_bounds(area_bounds: BoundsDict, epsg) -> gpd.GeoDataFrame:
-        return GdfUtils.create_gdf_from_polygon(GdfUtils.create_polygon_from_bounds(area_bounds), epsg)
+    def create_gdf_from_bounds(area_bounds: BoundsDict, fromEpsg: int, toEpsg: int | None = None) -> gpd.GeoDataFrame:
+        return GdfUtils.create_gdf_from_polygon(GdfUtils.create_polygon_from_bounds(area_bounds), fromEpsg, toEpsg)
     
     @staticmethod 
-    def create_gdf_from_polygon(area_polygon: Polygon, epsg) -> gpd.GeoDataFrame:
-        return gpd.GeoDataFrame(geometry=[area_polygon], crs=f"EPSG:{epsg}")
-    
+    def create_gdf_from_polygon(area_polygon: Polygon, fromEpsg: int, toEpsg: int | None = None) -> gpd.GeoDataFrame:
+        if(toEpsg is None):
+            return gpd.GeoDataFrame(geometry=[area_polygon], crs=f"EPSG:{fromEpsg}")
+        else:
+            return gpd.GeoDataFrame(geometry=[area_polygon], crs=f"EPSG:{fromEpsg}").to_crs(epsg=toEpsg)
 
     @staticmethod 
-    def create_polygon_from_gdf_bounds(*gdfs: gpd.GeoDataFrame, epsg: int | None = None) -> Polygon:
-        bounds = GdfUtils.get_bounds_gdf(*gdfs, epsg=epsg)
+    def create_polygon_from_gdf_bounds(*gdfs: gpd.GeoDataFrame, toEpsg: int | None = None) -> Polygon:
+        bounds = GdfUtils.get_bounds_gdf(*gdfs, toEpsg=toEpsg)
         return GdfUtils.create_polygon_from_bounds(bounds)
     
     @staticmethod 
-    def create_polygon_from_gdf(*gdfs: gpd.GeoDataFrame, epsg: int | None = None) -> Polygon:
+    def create_polygon_from_gdf(*gdfs: gpd.GeoDataFrame, toEpsg: int | None = None) -> Polygon:
         if(len(gdfs) == 1):
-            if(epsg is None):
+            if(toEpsg is None):
                 return gdfs[0].unary_union
-            gdf_edit = gdfs[0].to_crs(epsg=epsg)    
+            gdf_edit = gdfs[0].to_crs(epsg=toEpsg)    
             return gdf_edit.unary_union
         else:
-            if(epsg is None):
+            if(toEpsg is None):
                 combined_gdf = gpd.GeoDataFrame(pd.concat(gdfs, ignore_index=True), crs=gdfs[0].crs)
             else:
-                combined_gdf = gpd.GeoDataFrame(pd.concat(gdfs, ignore_index=True), crs=gdfs[0].crs, epsg = epsg)
+                combined_gdf = gpd.GeoDataFrame(pd.concat(gdfs, ignore_index=True), crs=gdfs[0].crs).to_crs(epsg=toEpsg)
             return combined_gdf.unary_union
     
     @staticmethod
@@ -186,10 +187,10 @@ class GdfUtils:
         return percentage_inside >= threshold
    
     @staticmethod
-    def combine_rows_gdf(gdf: gpd.GeoDataFrame, epsg: int) -> gpd.GeoDataFrame:
+    def combine_rows_gdf(gdf: gpd.GeoDataFrame, toEpsg: int) -> gpd.GeoDataFrame:
         if(len(gdf) == 1):
-            return gdf.to_crs(epsg=epsg)
-        return gpd.GeoDataFrame(geometry=[gdf.to_crs(epsg=epsg).geometry.unary_union], crs=f"EPSG:{epsg}")
+            return gdf.to_crs(epsg=toEpsg)
+        return gpd.GeoDataFrame(geometry=[gdf.to_crs(epsg=toEpsg).geometry.unary_union], crs=f"EPSG:{toEpsg}")
     
     @staticmethod
     def combine_gdfs(gdfs: list[gpd.GeoDataFrame]) -> gpd.GeoDataFrame:
@@ -199,12 +200,12 @@ class GdfUtils:
 
     
     @staticmethod
-    def expand_area(area_gdf: gpd.GeoDataFrame, epsg, custom_area: WantedArea | None = None):
+    def expand_area(area_gdf: gpd.GeoDataFrame | None, fromEpsg: int, toEpsg: int | None = None, pdf_dim: DimensionsTuple | None = None, custom_area: WantedArea | None = None):
         if(custom_area is not None): # custom expand area to one row in gdf
-            return GdfUtils.combine_rows_gdf(GdfUtils.get_whole_area_gdf(custom_area, epsg), epsg)
+            return GdfUtils.combine_rows_gdf(GdfUtils.get_whole_area_gdf(custom_area, fromEpsg, toEpsg), toEpsg)
         else: # fit paper - expand by area bounds to rectangle
             bounds: BoundsDict = GdfUtils.get_bounds_gdf(area_gdf)
-            return GdfUtils.create_gdf_from_bounds(bounds, epsg)
+            return  GdfUtils.create_gdf_from_bounds(Utils.adjust_bounds_to_fill_paper(bounds, pdf_dim), fromEpsg, toEpsg)
         
     @staticmethod
     def sort_gdf_by_column(gdf: gpd.GeoDataFrame, column_name: StyleKey, ascending: bool = True, na_position: str='first') -> gpd.GeoDataFrame:
@@ -253,25 +254,25 @@ class GdfUtils:
     @staticmethod
     #todo use one filter creation and than add with 'and' all ways that are longer, that will leave false with all that i want...
     @time_measurement_decorator("short ways filter")
-    def filter_short_ways(gdf: gpd.GeoDataFrame, epsg: int, min_lenght: float = 2) -> gpd.GeoDataFrame:
+    def filter_short_ways(gdf: gpd.GeoDataFrame, toEpsg: int, min_lenght: float = 2) -> gpd.GeoDataFrame:
         
-        gdf_mercator_projected = gdf.to_crs(epsg=epsg) 
+        gdf_mercator_projected = gdf.to_crs(epsg=toEpsg) 
         condition: pd.Series[bool]  = gdf_mercator_projected.geometry.length > min_lenght
         filtered_gdf_mercator_projected = gdf_mercator_projected[condition]
         return filtered_gdf_mercator_projected.to_crs(epsg=gdf.crs)
 
     @staticmethod
-    def buffer_gdf_same_distance(gdf: gpd.GeoDataFrame, distance: float, epsg: int, resolution: int = 16,
+    def buffer_gdf_same_distance(gdf: gpd.GeoDataFrame, distance: float, toEpsg: int, resolution: int = 16,
                                  cap_style: str = 'round', join_style: str = 'round') -> gpd.GeoDataFrame:
-        gdf_mercator_projected = gdf.to_crs(epsg=epsg) 
+        gdf_mercator_projected = gdf.to_crs(epsg=toEpsg) 
         gdf_mercator_projected['geometry'] = gdf_mercator_projected['geometry'].buffer(distance,resolution = resolution, cap_style= cap_style, join_style = join_style) 
         return gdf_mercator_projected.to_crs(epsg=gdf.crs)
     
     @staticmethod
-    def buffer_gdf_column_value_distance(gdf: gpd.GeoDataFrame, column_key: str, epsg : int, 
+    def buffer_gdf_column_value_distance(gdf: gpd.GeoDataFrame, column_key: str, toEpsg : int, 
                                          additional_padding: float = 0, resolution: int = 16,
                                          cap_style: str = 'round', join_style: str = 'round') -> gpd.GeoDataFrame:
-        gdf_mercator_projected = gdf.to_crs(epsg=epsg) 
+        gdf_mercator_projected = gdf.to_crs(epsg=toEpsg) 
         gdf_mercator_projected['geometry'] = gdf_mercator_projected.apply(
             lambda row: row['geometry'].buffer(row[column_key] + additional_padding,resolution = resolution,
                                                cap_style = cap_style, join_style = join_style), axis=1
@@ -279,10 +280,10 @@ class GdfUtils:
         return gdf_mercator_projected.to_crs(epsg=gdf.crs)
     
     @staticmethod
-    def aggregate_close_lines(gdf: gpd.GeoDataFrame, epsg: int, aggreagate_distance: float = 5) -> gpd.GeoDataFrame:
+    def aggregate_close_lines(gdf: gpd.GeoDataFrame, toEpsg: int, aggreagate_distance: float = 5) -> gpd.GeoDataFrame:
         if(gdf.empty):
             return gdf
-        gdf_mercator_projected = gdf.to_crs(epsg=epsg) 
+        gdf_mercator_projected = gdf.to_crs(epsg=toEpsg) 
         gdf_mercator_projected['geometry'] = gdf_mercator_projected['geometry'].buffer(aggreagate_distance) 
         
         #https://stackoverflow.com/questions/73566774/group-by-and-combine-intersecting-overlapping-geometries-in-geopandas
