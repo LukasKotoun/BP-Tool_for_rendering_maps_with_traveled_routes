@@ -104,10 +104,13 @@ class Plotter:
         # todo checks for att
         nodes_gdf[StyleKey.FONT_SIZE] = nodes_gdf[StyleKey.FONT_SIZE] * \
             self.map_object_scaling_factor
-        place_names_gdf, rest_gdf = GdfUtils.filter_gdf_in(nodes_gdf, 'place')
-        place_names_gdf = GdfUtils.filter_gdf_in(place_names_gdf, 'name')[0]
+        place_names_gdf, rest_gdf = GdfUtils.filter_gdf_column_values(
+            nodes_gdf, 'place', compl=True)
+        place_names_gdf = GdfUtils.filter_gdf_column_values(
+            place_names_gdf, 'name')
         self.__plot_city_names(place_names_gdf, wrap_len)
-        rest_gdf = GdfUtils.filter_gdf_in(rest_gdf, 'natural', ['peak'])[0]
+        rest_gdf = GdfUtils.filter_gdf_column_values(
+            rest_gdf, 'natural', ['peak'])
         self.__plot_elevations(rest_gdf)
 
     def __plot_ways_edges(self, ways_gdf):
@@ -115,13 +118,10 @@ class Plotter:
             return
         if (StyleKey.EDGE_COLOR in ways_gdf and StyleKey.LINESTYLE in ways_gdf
            and StyleKey.EDGE_WIDTH_RATIO in ways_gdf):
-            # todo check not none in some function with passing only columns and aditional not allowed ['-'] and also is nan and aditional allowed
-            edge_ways_gdf = GdfUtils.filter_gdf_not_in(
-                ways_gdf, StyleKey.EDGE_COLOR, [pd.NA, 'none'])[0]
-            edge_ways_gdf = GdfUtils.filter_gdf_not_in(
-                edge_ways_gdf, StyleKey.EDGE_WIDTH_RATIO, [pd.NA, 'none'])[0]
-            edge_ways_gdf = GdfUtils.filter_gdf_in(
-                edge_ways_gdf, StyleKey.LINESTYLE, [pd.NA, 'none', '-'])[0]
+            edge_ways_gdf = GdfUtils.filter_gdf_columns_values_AND(
+                ways_gdf, [StyleKey.EDGE_COLOR, StyleKey.EDGE_WIDTH_RATIO], [pd.NA], True)
+            edge_ways_gdf = GdfUtils.filter_gdf_column_values(
+                edge_ways_gdf, StyleKey.LINESTYLE, [pd.NA, '-'])
             if (not edge_ways_gdf.empty):
                 edge_ways_gdf[StyleKey.LINEWIDTH] = edge_ways_gdf[StyleKey.LINEWIDTH] + \
                     edge_ways_gdf[StyleKey.LINEWIDTH] * \
@@ -154,8 +154,8 @@ class Plotter:
         if (railways_gdf.empty):
             return
 
-        tram_gdf, rails_gdf = GdfUtils.filter_gdf_in(
-            railways_gdf, 'railway', ['tram'])
+        tram_gdf, rails_gdf = GdfUtils.filter_gdf_column_values(
+            railways_gdf, 'railway', ['tram'], compl=True)
         if (not tram_gdf.empty):
             tram_gdf.plot(ax=self.ax, color=tram_gdf[StyleKey.COLOR], linewidth=tram_gdf[StyleKey.LINEWIDTH],
                           alpha=tram_gdf[StyleKey.ALPHA], path_effects=[
@@ -179,10 +179,10 @@ class Plotter:
             return
 
         def plot_bridges_edges(gdf: gpd.GeoDataFrame):
-            gdf = GdfUtils.filter_gdf_not_in(
-                gdf, StyleKey.BRIDGE_EDGE_COLOR, [pd.NA, 'none'])[0]
-            gdf = GdfUtils.filter_gdf_not_in(
-                gdf, StyleKey.BRIDGE_WIDTH_RATIO, [pd.NA, 'none'])[0]
+            gdf = GdfUtils.filter_gdf_columns_values_AND(
+                gdf, [StyleKey.BRIDGE_EDGE_COLOR, StyleKey.BRIDGE_WIDTH_RATIO], [pd.NA], True)
+            if (gdf.empty):
+                return
             gdf[StyleKey.LINEWIDTH] = gdf[StyleKey.LINEWIDTH] + gdf[StyleKey.LINEWIDTH] * \
                 (gdf[StyleKey.BRIDGE_WIDTH_RATIO] +
                  gdf[StyleKey.EDGE_WIDTH_RATIO])
@@ -192,10 +192,10 @@ class Plotter:
                      path_effects=[patheffects.Stroke(capstyle="butt", joinstyle='round')])
 
         def plot_bridges(gdf: gpd.GeoDataFrame):
-            gdf = GdfUtils.filter_gdf_not_in(
-                gdf, StyleKey.BRIDGE_WIDTH_RATIO, [pd.NA, 'none'])[0]
-            gdf = GdfUtils.filter_gdf_not_in(
-                gdf, StyleKey.BRIDGE_COLOR, [pd.NA, 'none'])[0]
+            gdf = GdfUtils.filter_gdf_columns_values_AND(
+                gdf, [StyleKey.BRIDGE_WIDTH_RATIO, StyleKey.BRIDGE_COLOR], [pd.NA], True)
+            if (gdf.empty):
+                return
             gdf[StyleKey.LINEWIDTH] = gdf[StyleKey.LINEWIDTH] + \
                 gdf[StyleKey.LINEWIDTH] * gdf[StyleKey.BRIDGE_WIDTH_RATIO]
             gdf.plot(ax=self.ax, color=gdf[StyleKey.BRIDGE_COLOR],
@@ -204,14 +204,15 @@ class Plotter:
                      path_effects=[patheffects.Stroke(capstyle="butt", joinstyle='round')])
 
         def plot_ways_bridges(gdf: gpd.GeoDataFrame):
-            waterways_gdf, rest_gdf = GdfUtils.filter_gdf_in(gdf, 'waterway')
-            highways_gdf, rest_gdf = GdfUtils.filter_gdf_in(
-                rest_gdf, 'highway')
-            railways_gdf, rest_gdf = GdfUtils.filter_gdf_in(
+            waterways_gdf, rest_gdf = GdfUtils.filter_gdf_column_values(
+                gdf, 'waterway', compl=True)
+            highways_gdf, rest_gdf = GdfUtils.filter_gdf_column_values(
+                rest_gdf, 'highway', compl=True)
+            railways_gdf = GdfUtils.filter_gdf_column_values(
                 rest_gdf, 'railway')
             self.__plot_waterways(waterways_gdf)
-            highways_gdf = GdfUtils.filter_gdf_in(
-                highways_gdf, StyleKey.LINESTYLE, [pd.NA, 'none', '-'])[0]
+            highways_gdf = GdfUtils.filter_gdf_column_values(
+                highways_gdf, StyleKey.LINESTYLE, [pd.NA, 'none', '-'])
             self.__plot_highways(highways_gdf, False)
             self.__plot_railways(
                 railways_gdf, 2 * self.map_object_scaling_factor, 15 * self.map_object_scaling_factor)
@@ -231,11 +232,14 @@ class Plotter:
         ways2_gdf[StyleKey.LINEWIDTH] = ways2_gdf[StyleKey.LINEWIDTH] * \
             self.map_object_scaling_factor * ways_width_multiplier
         # odfiltrovat mosty taky podle parametrů - pokud má bridge BRIDGE_WIDTH_RATIO tak plotit jako normální a pokud má BRIDGE_EDGE_COLOR a zaroven BRIDGE_COLOR tak taky jako normální - jediný čím se liší od normálních cest
-        bridges_gdf, rest_gdf = GdfUtils.filter_gdf_in(
-            ways2_gdf, 'bridge', ['yes'])
-        waterways_gdf, rest_gdf = GdfUtils.filter_gdf_in(rest_gdf, 'waterway')
-        highways_gdf, rest_gdf = GdfUtils.filter_gdf_in(rest_gdf, 'highway')
-        railways_gdf, rest_gdf = GdfUtils.filter_gdf_in(rest_gdf, 'railway')
+        bridges_gdf, rest_gdf = GdfUtils.filter_gdf_column_values(
+            ways2_gdf, 'bridge', ['yes'], compl=True)
+        waterways_gdf, rest_gdf = GdfUtils.filter_gdf_column_values(
+            rest_gdf, 'waterway', compl=True)
+        highways_gdf, rest_gdf = GdfUtils.filter_gdf_column_values(
+            rest_gdf, 'highway', compl=True)
+        railways_gdf = GdfUtils.filter_gdf_column_values(
+            rest_gdf, 'railway')
 
         self.__plot_waterways(waterways_gdf)
         self.__plot_highways(highways_gdf, True)
@@ -250,15 +254,15 @@ class Plotter:
         # [pd.NA, 'none'] - get all that dont have nan or 'none' (if does not have that column will return true for everything - need check if have that column)
         # plot face
         if (StyleKey.COLOR in areas_gdf):
-            face_areas_gdf = GdfUtils.filter_gdf_not_in(
-                areas_gdf, StyleKey.COLOR, [pd.NA, 'none'])[0]
+            face_areas_gdf = GdfUtils.filter_gdf_column_values(
+                areas_gdf, StyleKey.COLOR, [pd.NA], True)
             if (not face_areas_gdf.empty and StyleKey.COLOR in face_areas_gdf):
                 face_areas_gdf.plot(
                     ax=self.ax, color=face_areas_gdf[StyleKey.COLOR], alpha=face_areas_gdf[StyleKey.ALPHA])
         # plot bounds
         if (StyleKey.EDGE_COLOR in areas_gdf):
-            edge_areas_gdf = GdfUtils.filter_gdf_not_in(
-                areas_gdf, StyleKey.EDGE_COLOR, [pd.NA, 'none'])[0]
+            edge_areas_gdf = GdfUtils.filter_gdf_column_values(
+                areas_gdf, StyleKey.EDGE_COLOR, [pd.NA], True)
             if (not edge_areas_gdf.empty and StyleKey.EDGE_COLOR in edge_areas_gdf and
                StyleKey.LINEWIDTH in edge_areas_gdf):
                 edge_areas_gdf[StyleKey.LINEWIDTH] = edge_areas_gdf[StyleKey.LINEWIDTH] * \

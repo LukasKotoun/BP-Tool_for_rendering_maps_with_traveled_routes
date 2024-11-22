@@ -17,6 +17,7 @@ from common.common_helpers import time_measurement_decorator
 
 class GdfUtils:
 
+    # ------------getting informations------------
     @staticmethod
     def get_area_gdf(area: str | list[Point], fromEpsg: int, toEpsg: int | None = None) -> gpd.GeoDataFrame:
         if isinstance(area, str):
@@ -137,6 +138,7 @@ class GdfUtils:
         bounds = GdfUtils.get_polygon_bounds(polygon)
         return Utils.get_dimensions(bounds)
 
+    # ------------creating------------
     @staticmethod
     def create_polygon_from_bounds(area_bounds: BoundsDict) -> Polygon:
         return Polygon([
@@ -180,25 +182,7 @@ class GdfUtils:
                     pd.concat(gdfs, ignore_index=True), crs=gdfs[0].crs).to_crs(epsg=toEpsg)
             return combined_gdf.unary_union
 
-    @staticmethod
-    def is_polygon_inside_bounds(area_bounds: BoundsDict, polygon: Polygon) -> bool:
-        return GdfUtils.is_polygon_inside_polygon(GdfUtils.create_polygon_from_bounds(area_bounds), polygon)
-
-    @staticmethod
-    def is_polygon_inside_polygon(inner: Polygon, outer: Polygon) -> bool:
-        return outer.contains(inner)
-
-    @staticmethod
-    def is_point_inside_polygon(point: geometry.point.Point, polygon: Polygon) -> bool:
-        return polygon.contains(point)
-
-    @staticmethod
-    def is_polygon_inside_polygon_threshold(inner: Polygon, outer: Polygon, threshold: float = 0.95):
-        bbox_area = inner.area
-        intersection_area = inner.intersection(outer).area
-        percentage_inside = intersection_area / bbox_area
-        return percentage_inside >= threshold
-
+    # ------------editing gdf------------
     @staticmethod
     def combine_rows_gdf(gdf: gpd.GeoDataFrame, toEpsg: int) -> gpd.GeoDataFrame:
         if (len(gdf) == 1):
@@ -228,10 +212,31 @@ class GdfUtils:
         warnings.warn("Cannot sort - unexisting column name")
         return gdf
 
+    # ------------Bool operations------------
+    @staticmethod
+    def is_polygon_inside_bounds(area_bounds: BoundsDict, polygon: Polygon) -> bool:
+        return GdfUtils.is_polygon_inside_polygon(GdfUtils.create_polygon_from_bounds(area_bounds), polygon)
+
+    @staticmethod
+    def is_polygon_inside_polygon(inner: Polygon, outer: Polygon) -> bool:
+        return outer.contains(inner)
+
+    @staticmethod
+    def is_point_inside_polygon(point: geometry.point.Point, polygon: Polygon) -> bool:
+        return polygon.contains(point)
+
+    @staticmethod
+    def is_polygon_inside_polygon_threshold(inner: Polygon, outer: Polygon, threshold: float = 0.95) -> bool:
+        bbox_area: float = inner.area
+        intersection_area: float = inner.intersection(outer).area
+        percentage_inside: float = intersection_area / bbox_area
+        return percentage_inside >= threshold
+
+    # ------------Filtering------------
     @staticmethod
     def create_condition(gdf: gpd.GeoDataFrame, att_name: str, att_values: list[str] = []) -> pd.Series:
         """Create condition for given gdf, return true for every row that have att_name with att_value (if given,
-        if not it check for any value (not nan)).
+        if not it check for any value (not NA)).
         If att_name is not in gdf it return condition with all false.
 
         Args:
@@ -242,21 +247,133 @@ class GdfUtils:
         Returns:
             pd.Series[bool]: condition for given gdf.
         """
-        if (att_values and att_name in gdf):
-            return gdf[att_name].isin(att_values)
-        elif (att_name in gdf):
-            return gdf[att_name].notna()
-        return gdf.index < 0  # set all to false
 
     @staticmethod
-    def filter_gdf_in(gdf: gpd.GeoDataFrame, att_name: str, att_values: list[str] = []) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]:
-        condition = GdfUtils.create_condition(gdf, att_name, att_values)
-        return gdf[condition].reset_index(drop=True), gdf[~condition].reset_index(drop=True)
+    def filter_gdf_column_values(gdf: gpd.GeoDataFrame, col_name: str,
+                                 col_values: list = [], neg: bool = False,
+                                 compl: bool = False) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame] | gpd.GeoDataFrame:
+        if (col_values and col_name in gdf):
+            condition = gdf[col_name].isin(col_values)
+        elif (col_name in gdf):
+            condition = gdf[col_name].notna()
+        else:
+            if (col_values and any(pd.isna(value) for value in col_values)):
+                # match missin column as NA
+                condition = gdf.index >= 0
+            else:
+                # cant have NA and have missing column
+                condition = gdf.index < 0
+                
+        if (compl):
+            if (neg):
+                return gdf[~condition].reset_index(drop=True), gdf[condition].reset_index(drop=True)
+            else:
+                return gdf[condition].reset_index(drop=True), gdf[~condition].reset_index(drop=True)
+        else:
+            if (neg):
+                return gdf[~condition].reset_index(drop=True)
+            else:
+                return gdf[condition].reset_index(drop=True)
 
     @staticmethod
-    def filter_gdf_not_in(gdf: gpd.GeoDataFrame, att_name: str, att_values: list[str] = []) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]:
-        condition = GdfUtils.create_condition(gdf, att_name, att_values)
-        return gdf[~condition].reset_index(drop=True), gdf[condition].reset_index(drop=True)
+    @time_measurement_decorator("filter")
+    def filter_gdf_columns_values_AND(gdf: gpd.GeoDataFrame, col_names: list[str],
+                                      col_values: list = [], neg: bool = False,
+                                      compl: bool = False) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame] | gpd.GeoDataFrame:
+        """Return gdf with rows that have in every column specified in 'col_names' any of 'col_values'.
+        If neg is used return gdf with rows that dont have any of values specified in 'col_values' in any of 'col_names'.
+
+        Example of usage:
+                Want all rows that have '-' or pd.NA in columns 1 and 2
+                    filter_gdf_columns_values_AND(gdf, [1, 2], ['-', pd.NA])
+                Want all rows that dont have '-' or pd.NA in columns 1 and 2
+                    filter_gdf_columns_values_AND(gdf, [1, 2], ['-', pd.NA], True)
+                Want all rows that have some value in columns 1 and 2
+                    filter_gdf_columns_values_AND(gdf, [1, 2], [])
+                Want all rows that dont have some value (have pd.NA) in columns 1 and 2
+                    filter_gdf_columns_values_AND(gdf, [1, 2], [], True)
+        Args:
+            gdf (gpd.GeoDataFrame): GeoDataFrame where to check.
+            col_names (list[str]): List of columns to check.
+            col_values (list, optional): List of values to check for in columns. Defaults to [].
+            neg (bool, optional): If is set to true returned gdfs will be swapped (AND first and than OR). Defaults to False.
+
+        Returns:
+            tuple[gpd.GeoDataFrame, gpd.GeoDataFrame] | gpd.GeoDataFrame: Filtered frames one with conditions and optionaly compl gdf.
+        """
+        existing_columns: list[str] = [
+            col for col in col_names if col in gdf.columns]
+
+        # None of values in col_values can be in any of column in each row
+        if (neg):
+            # All of col_names are in gdf
+            if (set(existing_columns) == set(col_names)):
+                if (col_values):
+                    # ~(some column have some value from col_values) == no column has any value from col_values
+                    condition = ~gdf[existing_columns].isin(
+                        col_values).any(axis=1)
+                else:
+                    # col values are not specified - values must have NA
+                    condition = gdf[existing_columns].isna().all(axis=1)
+
+            # None of col_names is in gdf
+            elif (not existing_columns):
+                if (col_values and any(pd.isna(value) for value in col_values)):
+                    # cant have NA
+                    condition = gdf.index < 0
+                else:
+                    # can have na - match missing columns (all) as NA
+                    condition = gdf.index >= 0
+
+            # Some of col_names are in gdf
+            else:
+                if (col_values and any(pd.isna(value) for value in col_values)):
+                    # cant have NA and have missing columns
+                    condition = gdf.index < 0
+                else:
+                    if (col_values):
+                        # can have NA
+                        condition = ~gdf[existing_columns].isin(
+                            col_values).any(axis=1)
+                    else:
+                        # Must have NA
+                        condition = gdf[existing_columns].isna().all(axis=1)
+                    # match missing columns as NA and check rest
+
+        # Some value from col_values must be in every column in each row
+        else:
+            # All of col_names are in gdf
+            if (set(existing_columns) == set(col_names)):
+                if (col_values):
+                    condition = gdf[existing_columns].isin(
+                        col_values).all(axis=1)
+                else:
+                    # col values are not specified - values cant have NA
+                    condition = gdf[existing_columns].notna().all(axis=1)
+
+            # None of col_names is in gdf
+            elif (not existing_columns):
+                if (col_values and any(pd.isna(value) for value in col_values)):
+                    # match missing columns (all) as NA
+                    condition = gdf.index >= 0
+                else:
+                    # cant have NA - non specified or not containing NA
+                    condition = gdf.index < 0
+
+            # Some of col_names are in gdf
+            else:
+                if (col_values and any(pd.isna(value) for value in col_values)):
+                    # match missing columns as NA and check rest
+                    condition = gdf[existing_columns].isin(
+                        col_values).all(axis=1)
+                else:
+                    # cant have NA and have missing columns
+                    condition = gdf.index < 0
+
+        if (compl):
+            return gdf[condition].reset_index(drop=True), gdf[~condition].reset_index(drop=True)
+        else:
+            return gdf[condition].reset_index(drop=True)
 
     @staticmethod
     def filter_gdf_rows_inside_gdf_area(gdf_rows: gpd.GeoDataFrame, gdf_area: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
@@ -272,6 +389,7 @@ class GdfUtils:
         filtered_gdf_mercator_projected = gdf_mercator_projected[condition]
         return filtered_gdf_mercator_projected.to_crs(epsg=gdf.crs)
 
+    # ------------Others functions------------
     @staticmethod
     def buffer_gdf_same_distance(gdf: gpd.GeoDataFrame, distance: float, toEpsg: int, resolution: int = 16,
                                  cap_style: str = 'round', join_style: str = 'round') -> gpd.GeoDataFrame:
