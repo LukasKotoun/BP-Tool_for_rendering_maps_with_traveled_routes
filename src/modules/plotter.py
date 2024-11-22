@@ -11,44 +11,49 @@ from shapely.geometry.linestring import LineString
 import textwrap
 from adjustText import adjust_text
 
-from config import * 
+from config import *
 from modules.utils import Utils
 from modules.gdf_utils import GdfUtils
 from common.common_helpers import time_measurement_decorator
 
-class Plotter:    
-    
+
+class Plotter:
+
     MM_TO_INCH = 25.4
+
     def __init__(self, requred_area_gdf: gpd.GeoDataFrame, paper_dimensions_mm: DimensionsTuple, map_object_scaling_factor: float):
         self.reqired_area_gdf = requred_area_gdf
-        self.reqired_area_polygon = GdfUtils.create_polygon_from_gdf(self.reqired_area_gdf)
+        self.reqired_area_polygon = GdfUtils.create_polygon_from_gdf(
+            self.reqired_area_gdf)
         self.paper_dimensions_mm = paper_dimensions_mm
         self.map_object_scaling_factor = map_object_scaling_factor
         self.text_to_adjust = []
 
     def init_plot(self, map_bg_color: str, area_zoom_preview: None | DimensionsTuple = None):
         self.fig, self.ax = plt.subplots(figsize=(self.paper_dimensions_mm[0]/self.MM_TO_INCH,
-                                                  self.paper_dimensions_mm[1]/self.MM_TO_INCH)) #convert mm to inch
-        if(area_zoom_preview is None):
-            self.fig.subplots_adjust(left=0, right=1, top=1, bottom=0)  # No margins
+                                                  # convert mm to inch
+                                                  self.paper_dimensions_mm[1]/self.MM_TO_INCH))
+        if (area_zoom_preview is None):
+            self.fig.subplots_adjust(
+                left=0, right=1, top=1, bottom=0)  # No margins
         else:
             left_margin = (1 - area_zoom_preview[0])/2
             right_margin = 1 - left_margin
             bottom_margin = (1 - area_zoom_preview[1])/2
             top_margin = 1 - bottom_margin
-            self.fig.subplots_adjust(left=left_margin, right=right_margin, top=top_margin, bottom=bottom_margin) 
-            
+            self.fig.subplots_adjust(
+                left=left_margin, right=right_margin, top=top_margin, bottom=bottom_margin)
+
         self.ax.axis('off')
         # self.ax.set_aspect('equal')
         self.reqired_area_gdf.plot(ax=self.ax, color=map_bg_color, linewidth=1)
-        
-
 
     def __plot_city_names(self, place_names_gdf: gpd.GeoDataFrame, wrap_len: int | None):
-        if(place_names_gdf.empty):
+        if (place_names_gdf.empty):
             return
-        place_names_gdf[StyleKey.OUTLINE_WIDTH] = place_names_gdf[StyleKey.OUTLINE_WIDTH] * self.map_object_scaling_factor
-        
+        place_names_gdf[StyleKey.OUTLINE_WIDTH] = place_names_gdf[StyleKey.OUTLINE_WIDTH] * \
+            self.map_object_scaling_factor
+
         def get_place_data(city_names_gdf: gpd.GeoDataFrame) -> Generator[tuple[Point, str, str, str, int, float], None, None]:
             """Yields a tuple of city data for each city in the GeoDataFrame."""
             for data in zip(
@@ -62,191 +67,213 @@ class Plotter:
                 yield data
 
         for geom, name, color, edge_color, fontsize, outline_width in get_place_data(place_names_gdf):
-            if(wrap_len is not None):
-                wraped_name = textwrap.fill(name, width = wrap_len)
+            if (wrap_len is not None):
+                wraped_name = textwrap.fill(name, width=wrap_len)
             else:
                 wraped_name = name
             x = geom.x
             y = geom.y
             # weight='bold'
             text = self.ax.text(
-            x, y, wraped_name, fontsize = fontsize, ha = 'center', va = 'center', zorder = 4, color = color, 
-            path_effects = [patheffects.withStroke(linewidth = outline_width, foreground = edge_color)]) 
+                x, y, wraped_name, fontsize=fontsize, ha='center', va='center', zorder=4, color=color,
+                path_effects=[patheffects.withStroke(linewidth=outline_width, foreground=edge_color)])
             self.text_to_adjust.append(text)
 
     def __plot_elevations(self, elevations_gdf: gpd.GeoDataFrame):
-        if(elevations_gdf.empty):
+        if (elevations_gdf.empty):
             return
-        elevations_gdf[StyleKey.ICON_SIZE] = elevations_gdf[StyleKey.ICON_SIZE] * self.map_object_scaling_factor
-        elevations_gdf[StyleKey.ICON_EDGE] = elevations_gdf[StyleKey.ICON_EDGE] * self.map_object_scaling_factor
+        elevations_gdf[StyleKey.ICON_SIZE] = elevations_gdf[StyleKey.ICON_SIZE] * \
+            self.map_object_scaling_factor
+        elevations_gdf[StyleKey.ICON_EDGE] = elevations_gdf[StyleKey.ICON_EDGE] * \
+            self.map_object_scaling_factor
         # elevations_gdf.plot(ax=self.ax, marker=elevations_gdf[StyleKey.ICON], color=elevations_gdf[StyleKey.ICON_COLOR], markersize=elevations_gdf[StyleKey.ICON_SIZE], label='Points')
         # Add annotations for each point
         for idx, row in elevations_gdf.iterrows():
             x, y = row.geometry.x, row.geometry.y
             self.ax.scatter(x, y, marker=row[StyleKey.ICON], color=row[StyleKey.ICON_COLOR], s=row[StyleKey.ICON_SIZE],
-                            edgecolor=row[StyleKey.EDGE_COLOR], linewidth = row[StyleKey.ICON_EDGE])
-            # self.ax.annotate("text", (x, y), textcoords="offset points", xytext=(0, 7), ha='center', color='blue')  
+                            edgecolor=row[StyleKey.EDGE_COLOR], linewidth=row[StyleKey.ICON_EDGE])
+            # self.ax.annotate("text", (x, y), textcoords="offset points", xytext=(0, 7), ha='center', color='blue')
             # self.ax.text(x, y, "test", fontsize=200*self.map_object_scaling_factor, ha='center', color='blue')  # Annotate above the triangle
 
-              
-        
     @time_measurement_decorator("nodePlot")
     def plot_nodes(self, nodes_gdf: gpd.GeoDataFrame, wrap_len: int | None):
-        all_columns_present = all(col in nodes_gdf.columns for col in [StyleKey.FONT_SIZE, StyleKey.OUTLINE_WIDTH, StyleKey.COLOR, StyleKey.EDGE_COLOR])
-        if(nodes_gdf.empty or not all_columns_present):
+        all_columns_present = all(col in nodes_gdf.columns for col in [
+                                  StyleKey.FONT_SIZE, StyleKey.OUTLINE_WIDTH, StyleKey.COLOR, StyleKey.EDGE_COLOR])
+        if (nodes_gdf.empty or not all_columns_present):
             return
-        #todo checks for att
-        nodes_gdf[StyleKey.FONT_SIZE] = nodes_gdf[StyleKey.FONT_SIZE] * self.map_object_scaling_factor
+        # todo checks for att
+        nodes_gdf[StyleKey.FONT_SIZE] = nodes_gdf[StyleKey.FONT_SIZE] * \
+            self.map_object_scaling_factor
         place_names_gdf, rest_gdf = GdfUtils.filter_gdf_in(nodes_gdf, 'place')
         place_names_gdf = GdfUtils.filter_gdf_in(place_names_gdf, 'name')[0]
         self.__plot_city_names(place_names_gdf, wrap_len)
-        rest_gdf = GdfUtils.filter_gdf_in(rest_gdf,'natural', ['peak'] )[0]
+        rest_gdf = GdfUtils.filter_gdf_in(rest_gdf, 'natural', ['peak'])[0]
         self.__plot_elevations(rest_gdf)
-        
-       
-       
-       
-    def __plot_ways_edges(self, ways_gdf):
-        if(ways_gdf.empty):
-            return
-        if(StyleKey.EDGE_COLOR in ways_gdf and StyleKey.LINESTYLE in ways_gdf 
-           and StyleKey.EDGE_WIDTH_RATIO in ways_gdf):
-            #todo check not none in some function with passing only columns and aditional not allowed ['-'] and also is nan and aditional allowed
-            edge_ways_gdf = GdfUtils.filter_gdf_not_in(ways_gdf, StyleKey.EDGE_COLOR, [pd.NA, 'none'])[0]
-            edge_ways_gdf = GdfUtils.filter_gdf_not_in(edge_ways_gdf, StyleKey.EDGE_WIDTH_RATIO, [pd.NA, 'none'])[0]
-            edge_ways_gdf = GdfUtils.filter_gdf_in(edge_ways_gdf, StyleKey.LINESTYLE, [pd.NA, 'none', '-'])[0]
-            if(not edge_ways_gdf.empty):
-                edge_ways_gdf[StyleKey.LINEWIDTH] = edge_ways_gdf[StyleKey.LINEWIDTH] + edge_ways_gdf[StyleKey.LINEWIDTH]*edge_ways_gdf[StyleKey.EDGE_WIDTH_RATIO]
-                edge_ways_gdf.plot(ax=self.ax, color=edge_ways_gdf[StyleKey.EDGE_COLOR],
-                                    linewidth=edge_ways_gdf[StyleKey.LINEWIDTH],
-                                    alpha=edge_ways_gdf[StyleKey.ALPHA],
-                                    path_effects = [patheffects.Stroke(capstyle="butt", joinstyle='round')])
 
-            
+    def __plot_ways_edges(self, ways_gdf):
+        if (ways_gdf.empty):
+            return
+        if (StyleKey.EDGE_COLOR in ways_gdf and StyleKey.LINESTYLE in ways_gdf
+           and StyleKey.EDGE_WIDTH_RATIO in ways_gdf):
+            # todo check not none in some function with passing only columns and aditional not allowed ['-'] and also is nan and aditional allowed
+            edge_ways_gdf = GdfUtils.filter_gdf_not_in(
+                ways_gdf, StyleKey.EDGE_COLOR, [pd.NA, 'none'])[0]
+            edge_ways_gdf = GdfUtils.filter_gdf_not_in(
+                edge_ways_gdf, StyleKey.EDGE_WIDTH_RATIO, [pd.NA, 'none'])[0]
+            edge_ways_gdf = GdfUtils.filter_gdf_in(
+                edge_ways_gdf, StyleKey.LINESTYLE, [pd.NA, 'none', '-'])[0]
+            if (not edge_ways_gdf.empty):
+                edge_ways_gdf[StyleKey.LINEWIDTH] = edge_ways_gdf[StyleKey.LINEWIDTH] + \
+                    edge_ways_gdf[StyleKey.LINEWIDTH] * \
+                    edge_ways_gdf[StyleKey.EDGE_WIDTH_RATIO]
+                edge_ways_gdf.plot(ax=self.ax, color=edge_ways_gdf[StyleKey.EDGE_COLOR],
+                                   linewidth=edge_ways_gdf[StyleKey.LINEWIDTH],
+                                   alpha=edge_ways_gdf[StyleKey.ALPHA],
+                                   path_effects=[patheffects.Stroke(capstyle="butt", joinstyle='round')])
+
     def __plot_highways(self, highways_gdf: gpd.GeoDataFrame, plotEdges: bool = False):
-        if(highways_gdf.empty):
+        if (highways_gdf.empty):
             return
-        if(plotEdges):
+        if (plotEdges):
             self.__plot_ways_edges(highways_gdf)
-           
-            
-        highways_gdf.plot(ax = self.ax, color = highways_gdf[StyleKey.COLOR], linewidth = highways_gdf[StyleKey.LINEWIDTH],
-                           linestyle = highways_gdf[StyleKey.LINESTYLE], 
-                           path_effects = [patheffects.Stroke(capstyle = "round", joinstyle = 'round')])
-        
+
+        highways_gdf.plot(ax=self.ax, color=highways_gdf[StyleKey.COLOR], linewidth=highways_gdf[StyleKey.LINEWIDTH],
+                          linestyle=highways_gdf[StyleKey.LINESTYLE],
+                          path_effects=[patheffects.Stroke(capstyle="round", joinstyle='round')])
+
     def __plot_waterways(self, waterways_gdf: gpd.GeoDataFrame, plotEdges: bool = False):
-        if(waterways_gdf.empty):
+        if (waterways_gdf.empty):
             return
-        if(plotEdges):
+        if (plotEdges):
             self.__plot_ways_edges(waterways_gdf)
-        waterways_gdf.plot(ax = self.ax, color = waterways_gdf[StyleKey.COLOR], linewidth = waterways_gdf[StyleKey.LINEWIDTH],
-                           linestyle = waterways_gdf[StyleKey.LINESTYLE],
-                           path_effects=[patheffects.Stroke(capstyle = "round", joinstyle = 'round')])
-   
+        waterways_gdf.plot(ax=self.ax, color=waterways_gdf[StyleKey.COLOR], linewidth=waterways_gdf[StyleKey.LINEWIDTH],
+                           linestyle=waterways_gdf[StyleKey.LINESTYLE],
+                           path_effects=[patheffects.Stroke(capstyle="round", joinstyle='round')])
 
     def __plot_railways(self, railways_gdf: gpd.GeoDataFrame, rail_bg_width_offset: float, tram_second_line_spacing: float):
-        if(railways_gdf.empty):
+        if (railways_gdf.empty):
             return
-        
-        tram_gdf, rails_gdf = GdfUtils.filter_gdf_in(railways_gdf, 'railway', ['tram'])
-        if(not tram_gdf.empty):
-            tram_gdf.plot(ax = self.ax, color = tram_gdf[StyleKey.COLOR], linewidth = tram_gdf[StyleKey.LINEWIDTH],
-                          alpha=tram_gdf[StyleKey.ALPHA], path_effects = [
-                    patheffects.Stroke(capstyle="round", joinstyle = 'round'),
-                    patheffects.withTickedStroke(angle = -90, capstyle = "round",  spacing = tram_second_line_spacing, length=0.2),
-                    patheffects.withTickedStroke(angle = 90, capstyle = "round", spacing = tram_second_line_spacing, length=0.2)])
-            
-        if(not rails_gdf.empty and StyleKey.EDGE_COLOR in rails_gdf):
-             rails_gdf.plot(ax = self.ax, color = rails_gdf[StyleKey.EDGE_COLOR],
-                            linewidth = rails_gdf[StyleKey.LINEWIDTH] + rail_bg_width_offset,
-                            alpha = rails_gdf[StyleKey.ALPHA], path_effects = [
-                    patheffects.Stroke(capstyle = "projecting", joinstyle = 'round')])
-             
-             rails_gdf.plot(ax = self.ax, color = rails_gdf[StyleKey.COLOR], linewidth = rails_gdf[StyleKey.LINEWIDTH],
-                            alpha = rails_gdf[StyleKey.ALPHA], linestyle = rails_gdf[StyleKey.LINESTYLE])      
-               
+
+        tram_gdf, rails_gdf = GdfUtils.filter_gdf_in(
+            railways_gdf, 'railway', ['tram'])
+        if (not tram_gdf.empty):
+            tram_gdf.plot(ax=self.ax, color=tram_gdf[StyleKey.COLOR], linewidth=tram_gdf[StyleKey.LINEWIDTH],
+                          alpha=tram_gdf[StyleKey.ALPHA], path_effects=[
+                patheffects.Stroke(capstyle="round", joinstyle='round'),
+                patheffects.withTickedStroke(
+                    angle=-90, capstyle="round",  spacing=tram_second_line_spacing, length=0.2),
+                patheffects.withTickedStroke(angle=90, capstyle="round", spacing=tram_second_line_spacing, length=0.2)])
+
+        if (not rails_gdf.empty and StyleKey.EDGE_COLOR in rails_gdf):
+            rails_gdf.plot(ax=self.ax, color=rails_gdf[StyleKey.EDGE_COLOR],
+                           linewidth=rails_gdf[StyleKey.LINEWIDTH] +
+                           rail_bg_width_offset,
+                           alpha=rails_gdf[StyleKey.ALPHA], path_effects=[
+                patheffects.Stroke(capstyle="projecting", joinstyle='round')])
+
+            rails_gdf.plot(ax=self.ax, color=rails_gdf[StyleKey.COLOR], linewidth=rails_gdf[StyleKey.LINEWIDTH],
+                           alpha=rails_gdf[StyleKey.ALPHA], linestyle=rails_gdf[StyleKey.LINESTYLE])
+
     def __plot_bridges(self, bridges_gdf: gpd.GeoDataFrame):
-        if(bridges_gdf.empty):
+        if (bridges_gdf.empty):
             return
+
         def plot_bridges_edges(gdf: gpd.GeoDataFrame):
-            gdf = GdfUtils.filter_gdf_not_in(gdf, StyleKey.BRIDGE_EDGE_COLOR, [pd.NA, 'none'])[0]
-            gdf = GdfUtils.filter_gdf_not_in(gdf, StyleKey.BRIDGE_WIDTH_RATIO, [pd.NA, 'none'])[0]
-            gdf[StyleKey.LINEWIDTH] = gdf[StyleKey.LINEWIDTH] + gdf[StyleKey.LINEWIDTH] * (gdf[StyleKey.BRIDGE_WIDTH_RATIO] + gdf[StyleKey.EDGE_WIDTH_RATIO])
+            gdf = GdfUtils.filter_gdf_not_in(
+                gdf, StyleKey.BRIDGE_EDGE_COLOR, [pd.NA, 'none'])[0]
+            gdf = GdfUtils.filter_gdf_not_in(
+                gdf, StyleKey.BRIDGE_WIDTH_RATIO, [pd.NA, 'none'])[0]
+            gdf[StyleKey.LINEWIDTH] = gdf[StyleKey.LINEWIDTH] + gdf[StyleKey.LINEWIDTH] * \
+                (gdf[StyleKey.BRIDGE_WIDTH_RATIO] +
+                 gdf[StyleKey.EDGE_WIDTH_RATIO])
             gdf.plot(ax=self.ax, color=gdf[StyleKey.BRIDGE_EDGE_COLOR],
-                                    linewidth=gdf[StyleKey.LINEWIDTH],
-                                    alpha=gdf[StyleKey.ALPHA],
-                                    path_effects = [patheffects.Stroke(capstyle="butt", joinstyle='round')])
-            
+                     linewidth=gdf[StyleKey.LINEWIDTH],
+                     alpha=gdf[StyleKey.ALPHA],
+                     path_effects=[patheffects.Stroke(capstyle="butt", joinstyle='round')])
+
         def plot_bridges(gdf: gpd.GeoDataFrame):
-            gdf = GdfUtils.filter_gdf_not_in(gdf, StyleKey.BRIDGE_WIDTH_RATIO, [pd.NA, 'none'])[0]
-            gdf = GdfUtils.filter_gdf_not_in(gdf, StyleKey.BRIDGE_COLOR, [pd.NA, 'none'])[0]
-            gdf[StyleKey.LINEWIDTH] = gdf[StyleKey.LINEWIDTH] + gdf[StyleKey.LINEWIDTH] * gdf[StyleKey.BRIDGE_WIDTH_RATIO]
+            gdf = GdfUtils.filter_gdf_not_in(
+                gdf, StyleKey.BRIDGE_WIDTH_RATIO, [pd.NA, 'none'])[0]
+            gdf = GdfUtils.filter_gdf_not_in(
+                gdf, StyleKey.BRIDGE_COLOR, [pd.NA, 'none'])[0]
+            gdf[StyleKey.LINEWIDTH] = gdf[StyleKey.LINEWIDTH] + \
+                gdf[StyleKey.LINEWIDTH] * gdf[StyleKey.BRIDGE_WIDTH_RATIO]
             gdf.plot(ax=self.ax, color=gdf[StyleKey.BRIDGE_COLOR],
-                                    linewidth=gdf[StyleKey.LINEWIDTH],
-                                    alpha=gdf[StyleKey.ALPHA],
-                                    path_effects = [patheffects.Stroke(capstyle="butt", joinstyle='round')])
-            
+                     linewidth=gdf[StyleKey.LINEWIDTH],
+                     alpha=gdf[StyleKey.ALPHA],
+                     path_effects=[patheffects.Stroke(capstyle="butt", joinstyle='round')])
+
         def plot_ways_bridges(gdf: gpd.GeoDataFrame):
             waterways_gdf, rest_gdf = GdfUtils.filter_gdf_in(gdf, 'waterway')
-            highways_gdf, rest_gdf = GdfUtils.filter_gdf_in(rest_gdf, 'highway')
-            railways_gdf, rest_gdf = GdfUtils.filter_gdf_in(rest_gdf, 'railway')
+            highways_gdf, rest_gdf = GdfUtils.filter_gdf_in(
+                rest_gdf, 'highway')
+            railways_gdf, rest_gdf = GdfUtils.filter_gdf_in(
+                rest_gdf, 'railway')
             self.__plot_waterways(waterways_gdf)
-            highways_gdf = GdfUtils.filter_gdf_in(highways_gdf, StyleKey.LINESTYLE, [pd.NA, 'none', '-'])[0]
+            highways_gdf = GdfUtils.filter_gdf_in(
+                highways_gdf, StyleKey.LINESTYLE, [pd.NA, 'none', '-'])[0]
             self.__plot_highways(highways_gdf, False)
-            self.__plot_railways(railways_gdf, 2 * self.map_object_scaling_factor, 15 * self.map_object_scaling_factor)
-        
-        bridges_gdf = GdfUtils.sort_gdf_by_column(bridges_gdf,"layer")
+            self.__plot_railways(
+                railways_gdf, 2 * self.map_object_scaling_factor, 15 * self.map_object_scaling_factor)
+
+        bridges_gdf = GdfUtils.sort_gdf_by_column(bridges_gdf, "layer")
         for layer, bridge_layer_gdf in bridges_gdf.groupby("layer"):
             plot_bridges_edges(bridge_layer_gdf.copy())
             plot_bridges(bridge_layer_gdf.copy())
             plot_ways_bridges(bridge_layer_gdf.copy())
-     
-    @time_measurement_decorator("wayplot")            
+
+    @time_measurement_decorator("wayplot")
     def plot_ways(self, ways_gdf: gpd.GeoDataFrame, ways_width_multiplier: float):
-        if(ways_gdf.empty or StyleKey.LINEWIDTH not in ways_gdf 
+        if (ways_gdf.empty or StyleKey.LINEWIDTH not in ways_gdf
            or StyleKey.COLOR not in ways_gdf):
             return
         ways2_gdf = ways_gdf.copy()
-        ways2_gdf[StyleKey.LINEWIDTH] = ways2_gdf[StyleKey.LINEWIDTH] * self.map_object_scaling_factor * ways_width_multiplier
+        ways2_gdf[StyleKey.LINEWIDTH] = ways2_gdf[StyleKey.LINEWIDTH] * \
+            self.map_object_scaling_factor * ways_width_multiplier
         # odfiltrovat mosty taky podle parametrů - pokud má bridge BRIDGE_WIDTH_RATIO tak plotit jako normální a pokud má BRIDGE_EDGE_COLOR a zaroven BRIDGE_COLOR tak taky jako normální - jediný čím se liší od normálních cest
-        bridges_gdf, rest_gdf = GdfUtils.filter_gdf_in(ways2_gdf, 'bridge', ['yes'])
+        bridges_gdf, rest_gdf = GdfUtils.filter_gdf_in(
+            ways2_gdf, 'bridge', ['yes'])
         waterways_gdf, rest_gdf = GdfUtils.filter_gdf_in(rest_gdf, 'waterway')
         highways_gdf, rest_gdf = GdfUtils.filter_gdf_in(rest_gdf, 'highway')
         railways_gdf, rest_gdf = GdfUtils.filter_gdf_in(rest_gdf, 'railway')
 
         self.__plot_waterways(waterways_gdf)
         self.__plot_highways(highways_gdf, True)
-        self.__plot_railways(railways_gdf, 2 * self.map_object_scaling_factor, 15 * self.map_object_scaling_factor)
+        self.__plot_railways(
+            railways_gdf, 2 * self.map_object_scaling_factor, 15 * self.map_object_scaling_factor)
         self.__plot_bridges(bridges_gdf)
-       
 
-    @time_measurement_decorator("areaPlot")            
+    @time_measurement_decorator("areaPlot")
     def plot_areas(self, areas_gdf: gpd.GeoDataFrame, areas_bounds_multiplier: float):
-        if(areas_gdf.empty):
+        if (areas_gdf.empty):
             return
         # [pd.NA, 'none'] - get all that dont have nan or 'none' (if does not have that column will return true for everything - need check if have that column)
         # plot face
-        if(StyleKey.COLOR in areas_gdf):
-            face_areas_gdf = GdfUtils.filter_gdf_not_in(areas_gdf, StyleKey.COLOR, [pd.NA, 'none'])[0]
-            if(not face_areas_gdf.empty and StyleKey.COLOR in face_areas_gdf):
-                face_areas_gdf.plot(ax=self.ax, color = face_areas_gdf[StyleKey.COLOR], alpha = face_areas_gdf[StyleKey.ALPHA])
+        if (StyleKey.COLOR in areas_gdf):
+            face_areas_gdf = GdfUtils.filter_gdf_not_in(
+                areas_gdf, StyleKey.COLOR, [pd.NA, 'none'])[0]
+            if (not face_areas_gdf.empty and StyleKey.COLOR in face_areas_gdf):
+                face_areas_gdf.plot(
+                    ax=self.ax, color=face_areas_gdf[StyleKey.COLOR], alpha=face_areas_gdf[StyleKey.ALPHA])
         # plot bounds
-        if(StyleKey.EDGE_COLOR in areas_gdf):
-            edge_areas_gdf = GdfUtils.filter_gdf_not_in(areas_gdf, StyleKey.EDGE_COLOR, [pd.NA, 'none'])[0]
-            if(not edge_areas_gdf.empty and StyleKey.EDGE_COLOR in edge_areas_gdf and 
-            StyleKey.LINEWIDTH in edge_areas_gdf):
-                edge_areas_gdf[StyleKey.LINEWIDTH] = edge_areas_gdf[StyleKey.LINEWIDTH] * self.map_object_scaling_factor * areas_bounds_multiplier
+        if (StyleKey.EDGE_COLOR in areas_gdf):
+            edge_areas_gdf = GdfUtils.filter_gdf_not_in(
+                areas_gdf, StyleKey.EDGE_COLOR, [pd.NA, 'none'])[0]
+            if (not edge_areas_gdf.empty and StyleKey.EDGE_COLOR in edge_areas_gdf and
+               StyleKey.LINEWIDTH in edge_areas_gdf):
+                edge_areas_gdf[StyleKey.LINEWIDTH] = edge_areas_gdf[StyleKey.LINEWIDTH] * \
+                    self.map_object_scaling_factor * areas_bounds_multiplier
                 edge_areas_gdf.plot(
-                    ax=self.ax, facecolor = 'none', edgecolor = edge_areas_gdf[StyleKey.EDGE_COLOR],
-                    linewidth = edge_areas_gdf[StyleKey.LINEWIDTH], alpha = edge_areas_gdf[StyleKey.ALPHA],
-                    linestyle = edge_areas_gdf[StyleKey.LINESTYLE], 
-                    path_effects = [patheffects.Stroke(capstyle = "round", joinstyle = 'round')])
+                    ax=self.ax, facecolor='none', edgecolor=edge_areas_gdf[StyleKey.EDGE_COLOR],
+                    linewidth=edge_areas_gdf[StyleKey.LINEWIDTH], alpha=edge_areas_gdf[StyleKey.ALPHA],
+                    linestyle=edge_areas_gdf[StyleKey.LINESTYLE],
+                    path_effects=[patheffects.Stroke(capstyle="round", joinstyle='round')])
 
-    
-    @time_measurement_decorator("gpxsPlot")            
+    @time_measurement_decorator("gpxsPlot")
     def plot_gpxs(self, gpxs_gdf: gpd.GeoDataFrame):
-        gpxs_gdf.plot(ax = self.ax, color="red", linewidth = 20 * self.map_object_scaling_factor)
-        
+        gpxs_gdf.plot(ax=self.ax, color="red", linewidth=20 *
+                      self.map_object_scaling_factor)
+
     @time_measurement_decorator("adjusting")
     def adjust_texts(self, text_bounds_overflow_threshold: float):
         # #remove overflown texts before adjusting, smaller threshold - can be adjusted
@@ -257,56 +284,68 @@ class Plotter:
         #         bbox_polygon = geometry.box(text_Bbox.x0, text_Bbox.y0, text_Bbox.x1, text_Bbox.y1)
         #         if(not GdfUtils.is_polygon_inside_polygon_threshold(bbox_polygon, self.reqired_area_polygon, text_bounds_overflow_threshold * 0.8)):
         #             text.remove()
-        # adjust_text(self.ax.texts, force_text = 0.2) 
-        adjust_text(self.text_to_adjust, force_text = 0.2) #todo only for city, for points 
-         # text force 
+        # adjust_text(self.ax.texts, force_text = 0.2)
+        # todo only for city, for points
+        adjust_text(self.text_to_adjust, force_text=0.2)
+        # text force
         # adjust_text(self.ax.texts, force_text = 0.25, avoid_self = False)
-        #remove overflown texts after adjusting
-        if(text_bounds_overflow_threshold > 0):
+        # remove overflown texts after adjusting
+        if (text_bounds_overflow_threshold > 0):
             r: RendererAgg = self.fig.canvas.get_renderer()
             for text in self.ax.texts:
-                text_Bbox = text.get_tightbbox(renderer=r).transformed(self.ax.transData.inverted())
-                bbox_polygon = geometry.box(text_Bbox.x0, text_Bbox.y0, text_Bbox.x1, text_Bbox.y1)
-                if(not GdfUtils.is_polygon_inside_polygon_threshold(bbox_polygon, self.reqired_area_polygon, text_bounds_overflow_threshold)):
+                text_Bbox = text.get_tightbbox(renderer=r).transformed(
+                    self.ax.transData.inverted())
+                bbox_polygon = geometry.box(
+                    text_Bbox.x0, text_Bbox.y0, text_Bbox.x1, text_Bbox.y1)
+                if (not GdfUtils.is_polygon_inside_polygon_threshold(bbox_polygon, self.reqired_area_polygon, text_bounds_overflow_threshold)):
                     text.remove()
-        
+
     def clip(self, epsg: int, whole_map_polygon: Polygon, reqired_area_gdf: gpd.GeoDataFrame | None = None, clipped_area_color: str = 'white'):
-        
-        if(reqired_area_gdf is not None):
-            reqired_area_polygon = GdfUtils.create_polygon_from_gdf(reqired_area_gdf)
+
+        if (reqired_area_gdf is not None):
+            reqired_area_polygon = GdfUtils.create_polygon_from_gdf(
+                reqired_area_gdf)
         else:
             reqired_area_polygon = self.reqired_area_polygon
-            
+
         clipping_polygon = whole_map_polygon.difference(reqired_area_polygon)
-        if(not GdfUtils.is_polygon_inside_polygon(clipping_polygon, whole_map_polygon)):
+        if (not GdfUtils.is_polygon_inside_polygon(clipping_polygon, whole_map_polygon)):
             return
-        
+
         # clipping_polygon = geometry.MultiPolygon([clipping_polygon]) - epsg in constructor
-        clipping_polygon = gpd.GeoDataFrame(geometry=[clipping_polygon], crs=f"EPSG:{epsg}")
-        
-        clipping_polygon.plot(ax=self.ax, color=clipped_area_color, alpha=1, zorder=3)
-        
+        clipping_polygon = gpd.GeoDataFrame(
+            geometry=[clipping_polygon], crs=f"EPSG:{epsg}")
+
+        clipping_polygon.plot(
+            ax=self.ax, color=clipped_area_color, alpha=1, zorder=3)
+
     def plot_area_boundary(self, area_gdf: gpd.GeoDataFrame | None = None, color: str = 'black', linewidth: float = 1):
-        if(area_gdf is None):
-            self.reqired_area_gdf.boundary.plot(ax=self.ax, color=color, linewidth=linewidth*self.map_object_scaling_factor, zorder=3)
+        if (area_gdf is None):
+            self.reqired_area_gdf.boundary.plot(
+                ax=self.ax, color=color, linewidth=linewidth*self.map_object_scaling_factor, zorder=3)
         else:
-            area_gdf.boundary.plot(ax=self.ax, color=color, linewidth=linewidth*self.map_object_scaling_factor, zorder=3)
-            
+            area_gdf.boundary.plot(
+                ax=self.ax, color=color, linewidth=linewidth*self.map_object_scaling_factor, zorder=3)
+
     def zoom(self, zoom_percent_padding: float = 1):
-        zoom_padding = zoom_percent_padding / 100 #convert from percent
-        
+        zoom_padding = zoom_percent_padding / 100  # convert from percent
+
         zoom_bounds = GdfUtils.get_bounds_gdf(self.reqired_area_gdf)
         width, height = Utils.get_dimensions(zoom_bounds)
 
         width_buffer = width * zoom_padding  # 1% of width
         height_buffer = height * zoom_padding  # 1% of height
-     
-        self.ax.set_xlim([zoom_bounds[WorldSides.WEST] - width_buffer, zoom_bounds[WorldSides.EAST] + width_buffer])  # Expand x limits
-        self.ax.set_ylim([zoom_bounds[WorldSides.SOUTH] - height_buffer, zoom_bounds[WorldSides.NORTH] + height_buffer])  # Expand y limits
-         
-        
+
+        self.ax.set_xlim([zoom_bounds[WorldSides.WEST] - width_buffer,
+                         # Expand x limits
+                          zoom_bounds[WorldSides.EAST] + width_buffer])
+        self.ax.set_ylim([zoom_bounds[WorldSides.SOUTH] - height_buffer,
+                         # Expand y limits
+                          zoom_bounds[WorldSides.NORTH] + height_buffer])
+
     def generate_pdf(self, pdf_name: str):
-        plt.savefig(f'{pdf_name}.pdf', format='pdf', transparent=True, pad_inches=0.1)
-    
+        plt.savefig(f'{pdf_name}.pdf', format='pdf',
+                    transparent=True, pad_inches=0.1)
+
     def show_plot(self):
         plt.show()

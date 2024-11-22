@@ -10,39 +10,44 @@ from shapely.geometry import Point, LineString, Polygon
 
 from common.common_helpers import time_measurement_decorator
 from common.custom_types import WantedCategories, UnwantedTags
+
+
 class OsmDataParser(osmium.SimpleHandler):
-    
+
     def __init__(self, wanted_nodes: WantedCategories, wanted_ways: WantedCategories, wanted_areas: WantedCategories,
                  unwanted_nodes_tags: UnwantedTags, unwanted_ways_tags: UnwantedTags, unwanted_areas_tags: UnwantedTags,
                  node_additional_columns: dict[str] = {}, way_additional_columns: dict[str] = {}, area_additional_columns: dict[str] = {}):
         super().__init__()
-        #init for storing loaded elements
+        # init for storing loaded elements
         self.nodes_tags: list[dict] = []
         self.nodes_geometry: list[Point] = []
         self.ways_tags: list[dict] = []
         self.ways_geometry: list[LineString] = []
         self.areas_tags: list[dict] = []
         self.areas_geometry: list[Polygon] = []
-        
+
         self.wanted_nodes = wanted_nodes
         self.wanted_ways = wanted_ways
         self.wanted_areas = wanted_areas
         self.unwanted_nodes_tags = unwanted_nodes_tags
         self.unwanted_ways_tags = unwanted_ways_tags
         self.unwanted_areas_tags = unwanted_areas_tags
-        
+
         # merge always wanted columns (map objects) with additions wanted info columns
         self.nodes_columns = set(wanted_nodes.keys() | node_additional_columns)
         self.way_columns = set(wanted_ways.keys() | way_additional_columns)
         self.area_columns = set(wanted_areas.keys() | area_additional_columns)
         # Create WKT Factory for geometry conversion
-        #extract function from libraries - quicker than extracting every time 
-        self.geom_factory_point: Callable[[Node], str]  = osmium.geom.WKTFactory().create_point
-        self.geom_factory_linestring: Callable[[Way], str] = osmium.geom.WKTFactory().create_linestring
-        self.geom_factory_polygon: Callable[[Area], str]  = osmium.geom.WKTFactory().create_multipolygon
-        self.wkt_loads_func: Callable[[str], Point | LineString | Polygon] = wkt.loads
-    
-    
+        # extract function from libraries - quicker than extracting every time
+        self.geom_factory_point: Callable[[
+            Node], str] = osmium.geom.WKTFactory().create_point
+        self.geom_factory_linestring: Callable[[
+            Way], str] = osmium.geom.WKTFactory().create_linestring
+        self.geom_factory_polygon: Callable[[
+            Area], str] = osmium.geom.WKTFactory().create_multipolygon
+        self.wkt_loads_func: Callable[[str],
+                                      Point | LineString | Polygon] = wkt.loads
+
     @staticmethod
     def _apply_filters_not_allowed(not_allowed_tags: UnwantedTags, tags: TagList, curr_tag_key_inside: str | None = None):
         """Checking for unwanted tag values in tags. Recursively going through 
@@ -66,45 +71,48 @@ class OsmDataParser(osmium.SimpleHandler):
         Returns:
             bool: True if doesn't contain any not allowed tags otherwise false 
         """
-        if(not not_allowed_tags):
+        if (not not_allowed_tags):
             return True
         for dict_tag_key, unwanted_values in not_allowed_tags.items():
-            #not directly inside any tag and curr tag is not in tags => skip
-            if(curr_tag_key_inside is None and dict_tag_key not in tags): continue
-            
+            # not directly inside any tag and curr tag is not in tags => skip
+            if (curr_tag_key_inside is None and dict_tag_key not in tags):
+                continue
+
             # Checking if map feature meets the defined conditions
-            if(isinstance(unwanted_values, dict)):
+            if (isinstance(unwanted_values, dict)):
                 # The unwanted values are more nested => need to go down further
                 next_tag_key_inside: str | None = None
-                if(dict_tag_key in tags): # dict_tag_key is tag_key (column name) in tags
+                if (dict_tag_key in tags):  # dict_tag_key is tag_key (column name) in tags
                     next_tag_key_inside = dict_tag_key
-               
+
                 else:  # tag_key_value after tag_key
                     # check if the value inside the current key matches the dict tag key - map feature meet this condition
                     curr_tag_key_value = tags.get(curr_tag_key_inside)
-                    if(curr_tag_key_value != dict_tag_key): 
-                        continue # map feature does not meet this conditon for going to this next recursion level => skip
-                
+                    if (curr_tag_key_value != dict_tag_key):
+                        continue  # map feature does not meet this conditon for going to this next recursion level => skip
+
                 # map feature meet this condition go to next recursion level
-                return_value = OsmDataParser._apply_filters_not_allowed(unwanted_values, tags, next_tag_key_inside)
-                if(return_value): continue # unwanted value not found in this branch try to find in some other tag (can't have a single one)
-                return False # one unwanted was found, tags are not valid
-            
-            # map feature meets the defined conditions 
+                return_value = OsmDataParser._apply_filters_not_allowed(
+                    unwanted_values, tags, next_tag_key_inside)
+                if (return_value):
+                    # unwanted value not found in this branch try to find in some other tag (can't have a single one)
+                    continue
+                return False  # one unwanted was found, tags are not valid
+
+            # map feature meets the defined conditions
             # Check map feature for illegal values in dict_tag_key columns
             dict_key_value = tags.get(dict_tag_key)
-            if(dict_key_value is not None):
+            if (dict_key_value is not None):
                 # list of unwanted values is empty ban all values, else check for specific value in list
                 if not unwanted_values or dict_key_value in unwanted_values:
-                    return False      
-        # does not conntain unwanted tags  
-        return True  
-          
-          
+                    return False
+        # does not conntain unwanted tags
+        return True
+
     @staticmethod
     def _apply_filters(wanted_features: WantedCategories, tags: TagList):
         """ Checking for wanted features by checking values in tags. Going through wanted_tags and check if map feature is some of wanted map feature.
-        
+
         Map feature is represented as key (feature category) with value (concrete feature) (e.g. key=landuse and value=forest).  
 
         Args:
@@ -119,85 +127,95 @@ class OsmDataParser(osmium.SimpleHandler):
             feature: str | None = tags.get(features_category)
             if feature is not None:
                 # features_values is empty list => get all from features_category else check if feature is wanted
-                if not wanted_features_values or feature in wanted_features_values: 
-                    return True      
-        # map feature is not in wanted features        
+                if not wanted_features_values or feature in wanted_features_values:
+                    return True
+        # map feature is not in wanted features
         return False
-    
-    
+
     def node(self, node: Node):
         if OsmDataParser._apply_filters(self.wanted_nodes, node.tags):
             try:
                 # convert osmium node to wkt str format and than to shapely point geometry
-                shapely_geometry: Point = self.wkt_loads_func(self.geom_factory_point(node)) 
-                filtered_tags = {tag_key: tag_value for tag_key, tag_value in node.tags if tag_key in self.nodes_columns}
+                shapely_geometry: Point = self.wkt_loads_func(
+                    self.geom_factory_point(node))
+                filtered_tags = {tag_key: tag_value for tag_key,
+                                 tag_value in node.tags if tag_key in self.nodes_columns}
                 self.nodes_geometry.append(shapely_geometry)
                 self.nodes_tags.append(filtered_tags)
             except RuntimeError as e:
                 warnings.warn(f"Invalid node geometry: {e}")
                 return
             except Exception as e:
-                warnings.warn(f"Error in node function - osm file processing: {e}")
+                warnings.warn(
+                    f"Error in node function - osm file processing: {e}")
                 return
-            
 
     def way(self, way: Way):
         if OsmDataParser._apply_filters(self.wanted_ways, way.tags) and OsmDataParser._apply_filters_not_allowed(self.unwanted_ways_tags, way.tags):
             try:
                 # convert osmium way to wkt str format and than to shapely linestring geometry
-                shapely_geometry: LineString = self.wkt_loads_func(self.geom_factory_linestring(way)) 
-                filtered_tags = {tag_key: tag_value for tag_key, tag_value in way.tags if tag_key in self.way_columns}
+                shapely_geometry: LineString = self.wkt_loads_func(
+                    self.geom_factory_linestring(way))
+                filtered_tags = {tag_key: tag_value for tag_key,
+                                 tag_value in way.tags if tag_key in self.way_columns}
                 self.ways_geometry.append(shapely_geometry)
                 self.ways_tags.append(filtered_tags)
             except RuntimeError as e:
                 warnings.warn(f"Invalid way geometry: {e}")
                 return
             except Exception as e:
-                warnings.warn(f"Error in way function - osm file processing: {e}")
+                warnings.warn(
+                    f"Error in way function - osm file processing: {e}")
                 return
-            
-            
+
     def area(self, area: Area):
         if OsmDataParser._apply_filters(self.wanted_areas, area.tags) and OsmDataParser._apply_filters_not_allowed(self.unwanted_areas_tags, area.tags):
             try:
-                shapely_geometry: Polygon = self.wkt_loads_func(self.geom_factory_polygon(area)) #convert osmium area to wkt str format and than to shapely polygon/multipolygon geometry 
-                filtered_tags = {tag_key: tag_value for tag_key, tag_value in area.tags if tag_key in self.area_columns}
+                # convert osmium area to wkt str format and than to shapely polygon/multipolygon geometry
+                shapely_geometry: Polygon = self.wkt_loads_func(
+                    self.geom_factory_polygon(area))
+                filtered_tags = {tag_key: tag_value for tag_key,
+                                 tag_value in area.tags if tag_key in self.area_columns}
                 self.areas_geometry.append(shapely_geometry)
                 self.areas_tags.append(filtered_tags)
             except RuntimeError as e:
                 warnings.warn(f"Invalid area geometry: {e}")
                 return
             except Exception as e:
-                warnings.warn(f"Error in area function - osm file processing: {e}")
+                warnings.warn(
+                    f"Error in area function - osm file processing: {e}")
                 return
-            
-            
+
     @time_measurement_decorator("gdf creating")
     def create_gdf(self, fromEpsg: int, toEpsg: int | None = None):
-        nodes_gdf = gpd.GeoDataFrame(pd.DataFrame(self.nodes_tags).assign(geometry=self.nodes_geometry), crs=f"EPSG:{fromEpsg}")
-        ways_gdf = gpd.GeoDataFrame(pd.DataFrame(self.ways_tags).assign(geometry=self.ways_geometry), crs=f"EPSG:{fromEpsg}")
-        areas_gdf = gpd.GeoDataFrame(pd.DataFrame(self.areas_tags).assign(geometry=self.areas_geometry), crs=f"EPSG:{fromEpsg}")
+        nodes_gdf = gpd.GeoDataFrame(pd.DataFrame(self.nodes_tags).assign(
+            geometry=self.nodes_geometry), crs=f"EPSG:{fromEpsg}")
+        ways_gdf = gpd.GeoDataFrame(pd.DataFrame(self.ways_tags).assign(
+            geometry=self.ways_geometry), crs=f"EPSG:{fromEpsg}")
+        areas_gdf = gpd.GeoDataFrame(pd.DataFrame(self.areas_tags).assign(
+            geometry=self.areas_geometry), crs=f"EPSG:{fromEpsg}")
 
         for column, _ in self.wanted_nodes.items():
-            if(column in nodes_gdf):
+            if (column in nodes_gdf):
                 nodes_gdf[column] = nodes_gdf[column].astype("category")
-            
+
         for column, _ in self.wanted_ways.items():
-            if(column in ways_gdf):
+            if (column in ways_gdf):
                 ways_gdf[column] = ways_gdf[column].astype("category")
-                
+
         for column, _ in self.wanted_areas.items():
-            if(column in areas_gdf):
+            if (column in areas_gdf):
                 areas_gdf[column] = areas_gdf[column].astype("category")
         # print(nodes_gdf.memory_usage(deep=True))
         # print(ways_gdf.memory_usage(deep=True))
         # print(areas_gdf.memory_usage(deep=True))
-        print(f"nodes: {nodes_gdf.memory_usage(deep=True).sum()}, ways: {ways_gdf.memory_usage(deep=True).sum()}, areas: {areas_gdf.memory_usage(deep=True).sum()}, combined: {nodes_gdf.memory_usage(deep=True).sum() + ways_gdf.memory_usage(deep=True).sum() + areas_gdf.memory_usage(deep=True).sum()}")
-        if(toEpsg is None):
+        print(f"nodes: {nodes_gdf.memory_usage(deep=True).sum()}, ways: {ways_gdf.memory_usage(deep=True).sum()}, areas: {areas_gdf.memory_usage(deep=True).sum(
+        )}, combined: {nodes_gdf.memory_usage(deep=True).sum() + ways_gdf.memory_usage(deep=True).sum() + areas_gdf.memory_usage(deep=True).sum()}")
+        if (toEpsg is None):
             return nodes_gdf, ways_gdf, areas_gdf
         else:
             return nodes_gdf.to_crs(epsg=toEpsg), ways_gdf.to_crs(epsg=toEpsg), areas_gdf.to_crs(epsg=toEpsg)
-    
+
     def clear_gdf(self):
         self.nodes_geometry.clear()
         self.nodes_tags.clear()
