@@ -189,7 +189,9 @@ def main():
 
     nodes_gdf = GdfUtils.filter_gdf_rows_inside_gdf_area(
         nodes_gdf, map_area_gdf)
-    # todo function to filter fun(gdf, tag, value (or none for not nan), not nan in this columns) - use to filter city without names
+    # get only places with name
+    nodes_gdf = GdfUtils.filter_gdf_related_columns_values(
+        nodes_gdf, 'place', [], ['name'], [])
     # todo  use to filter peeks withou ele and name?
     # function(algorithm) to get only usefull peeks + again back to nodes gdf
     # ------------style elements------------

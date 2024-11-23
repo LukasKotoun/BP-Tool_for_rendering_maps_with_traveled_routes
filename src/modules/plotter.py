@@ -119,7 +119,7 @@ class Plotter:
         if (StyleKey.EDGE_COLOR in ways_gdf and StyleKey.LINESTYLE in ways_gdf
            and StyleKey.EDGE_WIDTH_RATIO in ways_gdf):
             edge_ways_gdf = GdfUtils.filter_gdf_columns_values_AND(
-                ways_gdf, [StyleKey.EDGE_COLOR, StyleKey.EDGE_WIDTH_RATIO], [pd.NA], True)
+                ways_gdf, [StyleKey.EDGE_COLOR, StyleKey.EDGE_WIDTH_RATIO])
             edge_ways_gdf = GdfUtils.filter_gdf_column_values(
                 edge_ways_gdf, StyleKey.LINESTYLE, [pd.NA, '-'])
             if (not edge_ways_gdf.empty):
@@ -180,7 +180,7 @@ class Plotter:
 
         def plot_bridges_edges(gdf: gpd.GeoDataFrame):
             gdf = GdfUtils.filter_gdf_columns_values_AND(
-                gdf, [StyleKey.BRIDGE_EDGE_COLOR, StyleKey.BRIDGE_WIDTH_RATIO], [pd.NA], True)
+                gdf, [StyleKey.BRIDGE_EDGE_COLOR, StyleKey.BRIDGE_WIDTH_RATIO])
             if (gdf.empty):
                 return
             gdf[StyleKey.LINEWIDTH] = gdf[StyleKey.LINEWIDTH] + gdf[StyleKey.LINEWIDTH] * \
@@ -193,7 +193,7 @@ class Plotter:
 
         def plot_bridges(gdf: gpd.GeoDataFrame):
             gdf = GdfUtils.filter_gdf_columns_values_AND(
-                gdf, [StyleKey.BRIDGE_WIDTH_RATIO, StyleKey.BRIDGE_COLOR], [pd.NA], True)
+                gdf, [StyleKey.BRIDGE_WIDTH_RATIO, StyleKey.BRIDGE_COLOR])
             if (gdf.empty):
                 return
             gdf[StyleKey.LINEWIDTH] = gdf[StyleKey.LINEWIDTH] + \
