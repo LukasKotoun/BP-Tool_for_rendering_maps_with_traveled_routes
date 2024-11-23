@@ -6,7 +6,7 @@ from modules.gdf_utils import GdfUtils
 from modules.utils import Utils
 from modules.osm_data_preprocessor import OsmDataPreprocessor
 from modules.osm_data_parser import OsmDataParser
-from modules.styles_assigner import StyleAssigner
+from modules.styles_assigner import MapElementStyleAssigner
 from modules.plotter import Plotter
 from modules.gpx_processer import GpxProcesser
 from common.common_helpers import time_measurement_decorator
@@ -195,21 +195,21 @@ def main():
     # todo  use to filter peeks withou ele and name?
     # function(algorithm) to get only usefull peeks + again back to nodes gdf
     # ------------style elements------------
-    nodes_style_assigner = StyleAssigner(
+    nodes_style_assigner = MapElementStyleAssigner(
         NODES_STYLES, GENERAL_DEFAULT_STYLES, NODES_MANDATORY_STYLES)
     nodes_gdf = nodes_style_assigner.assign_styles_to_gdf(nodes_gdf, wanted_nodes,
                                                           [StyleKey.COLOR, StyleKey.FONT_SIZE, StyleKey.OUTLINE_WIDTH,
                                                            StyleKey.EDGE_COLOR, StyleKey.ICON_COLOR, StyleKey.ICON_SIZE,
                                                            StyleKey.ICON, StyleKey.ICON_EDGE])
 
-    ways_style_assigner = StyleAssigner(
+    ways_style_assigner = MapElementStyleAssigner(
         WAYS_STYLES, GENERAL_DEFAULT_STYLES, WAY_MANDATORY_STYLES)
     ways_gdf = ways_style_assigner.assign_styles_to_gdf(ways_gdf, wanted_ways,
                                                         [StyleKey.COLOR, StyleKey.ZINDEX, StyleKey.LINEWIDTH,
                                                          StyleKey.LINESTYLE, StyleKey.ALPHA, StyleKey.EDGE_COLOR,
                                                          StyleKey.BRIDGE_COLOR, StyleKey.BRIDGE_EDGE_COLOR,
                                                          StyleKey.EDGE_WIDTH_RATIO, StyleKey.BRIDGE_WIDTH_RATIO])
-    areas_style_assigner = StyleAssigner(
+    areas_style_assigner = MapElementStyleAssigner(
         AREAS_STYLES, GENERAL_DEFAULT_STYLES, AREA_MANDATORY_STYLES)
     areas_gdf = areas_style_assigner.assign_styles_to_gdf(areas_gdf, wanted_areas,
                                                           [StyleKey.COLOR, StyleKey.EDGE_COLOR, StyleKey.ZINDEX,

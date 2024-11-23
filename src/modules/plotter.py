@@ -106,8 +106,6 @@ class Plotter:
             self.map_object_scaling_factor
         place_names_gdf, rest_gdf = GdfUtils.filter_gdf_column_values(
             nodes_gdf, 'place', compl=True)
-        place_names_gdf = GdfUtils.filter_gdf_column_values(
-            place_names_gdf, 'name')
         self.__plot_city_names(place_names_gdf, wrap_len)
         rest_gdf = GdfUtils.filter_gdf_column_values(
             rest_gdf, 'natural', ['peak'])

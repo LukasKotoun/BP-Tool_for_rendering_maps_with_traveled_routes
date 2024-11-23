@@ -7,8 +7,8 @@ from geopandas import GeoDataFrame
 from common.map_enums import StyleKey
 from common.custom_types import FeaturesCategoriesStyles, WantedCategories, FeatureStyles, FeaturesCategoryStyle
 
-
-class StyleAssigner:
+# element or static or map element and gpx...?
+class MapElementStyleAssigner:
     def __init__(self, categories_styles: FeaturesCategoriesStyles,
                  general_default_styles: FeatureStyles, mandatory_styles: FeatureStyles):
         self.categories_styles = categories_styles
@@ -46,7 +46,23 @@ class StyleAssigner:
         # osm data feature is not in any features category avilable in avilable_styles
         # if that occure assign styles from global styles and assign only wanted
         return {style_key: self.general_default_styles[style_key] for style_key in wanted_feature_styles}
-
+    
+    # def __replace_none_with_na(self, data):
+    #     """
+    #     Recursively replaces all None values in a nested structure with pd.NA.
+    #     Supports nested dictionaries, lists, and tuples.
+    #     """
+    #     if isinstance(data, dict):
+    #         return {key: self.__replace_none_with_na(value) for key, value in data.items()}
+    #     elif isinstance(data, list):
+    #         return [ self.__replace_none_with_na(item) for item in data]
+    #     elif isinstance(data, tuple):
+    #         return tuple( self.__replace_none_with_na(item) for item in data)
+    #     elif data is None:
+    #         return pd.NA
+    #     else:
+    #         return data
+    
     def _filter_category_styles(self, wanted_features_categories: WantedCategories,
                                 wanted_features_styles: list[StyleKey]) -> FeaturesCategoriesStyles:
         """Create features categories styles, but containng wanted features categories with wanted styles. 
