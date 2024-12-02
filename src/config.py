@@ -82,23 +82,17 @@ OUTER_CUSTOM_EXPAND_AREA: WantedArea | None = "Česko"
 # --------------------------------------------------------------gpx settings--------------------------------------------------------------
 
 GPX_FOLDER: str = '../gpxs/trebic'
-# todo here automatic wanted objects setup using map and pdf ratio automatic_filters_creating_factor - own class ()
 
 #?can be created automaticali from: {"FOLDER NAME": "COLOR", "FOLDER NAME": "COLOR"}"
 # -------------------gpx styles by folder-------------------
 folders_styles: FeaturesCategoryStyle = {
-    'test' : {StyleKey.COLOR: "Blue",  StyleKey.LINESTYLE: "--"}
+    'pěšky' : {StyleKey.COLOR: "Blue"},
+    'Kolo testování' : {StyleKey.COLOR: "Red"},
+    'Kolo' : {StyleKey.COLOR: "Orange"}
 }
 
 GPXS_STYLES: FeaturesCategoriesStyles = {
-    'folder': (folders_styles, {StyleKey.COLOR: 'Blue', StyleKey.LINEWIDTH: 40, StyleKey.ZINDEX: 0}),
-}
-
-
-# set wanted categories to all gpxs with folder -> 
-# switching/ workaround from styling map elements by category to styling GPX routes by folder
-GPX_CATEGORIES: WantedCategories = {
-    'folder': set({}),
+    'folder': (folders_styles, {StyleKey.COLOR: 'Red', StyleKey.LINEWIDTH: 200, StyleKey.ALPHA: 0.7,  StyleKey.ZINDEX: 0}),
 }
 
 # styles that must be assigned to all gpxs 
@@ -118,6 +112,15 @@ wanted_nodes: WantedCategories = {
     # 'place': {'town'}
     'place': {'city', 'town'},
     'natural': {'peak'}
+}
+
+
+# todo automatic wanted objects setup using map and pdf ratio automatic_filters_creating_factor - own class ()
+
+# set wanted categories to all gpxs with folder -> 
+# switching/workaround from styling map elements by category to styling GPX routes by folder
+GPX_CATEGORIES: WantedCategories = {
+    'folder': set({}),
 }
 
 unwanted_nodes_tags: UnwantedTags = {

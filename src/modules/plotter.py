@@ -136,7 +136,7 @@ class Plotter:
             self.__plot_line_edges(highways_gdf)
 
         highways_gdf.plot(ax=self.ax, color=highways_gdf[StyleKey.COLOR], linewidth=highways_gdf[StyleKey.LINEWIDTH],
-                          linestyle=highways_gdf[StyleKey.LINESTYLE],
+                          linestyle=highways_gdf[StyleKey.LINESTYLE], alpha=highways_gdf[StyleKey.ALPHA],
                           path_effects=[patheffects.Stroke(capstyle="round", joinstyle='round')])
 
     def __plot_waterways(self, waterways_gdf: gpd.GeoDataFrame, plotEdges: bool = False):
@@ -145,7 +145,7 @@ class Plotter:
         if (plotEdges):
             self.__plot_line_edges(waterways_gdf)
         waterways_gdf.plot(ax=self.ax, color=waterways_gdf[StyleKey.COLOR], linewidth=waterways_gdf[StyleKey.LINEWIDTH],
-                           linestyle=waterways_gdf[StyleKey.LINESTYLE],
+                           linestyle=waterways_gdf[StyleKey.LINESTYLE], alpha=waterways_gdf[StyleKey.ALPHA],
                            path_effects=[patheffects.Stroke(capstyle="round", joinstyle='round')])
 
     def __plot_railways(self, railways_gdf: gpd.GeoDataFrame, rail_bg_width_offset: float, tram_second_line_spacing: float):
@@ -282,7 +282,7 @@ class Plotter:
         gpxs_gdf[StyleKey.LINEWIDTH] = gpxs_gdf[StyleKey.LINEWIDTH] * \
             self.map_object_scaling_factor * line_width_multiplier
         gpxs_gdf.plot(ax=self.ax, color=gpxs_gdf[StyleKey.COLOR], linewidth=gpxs_gdf[StyleKey.LINEWIDTH],
-                          linestyle=gpxs_gdf[StyleKey.LINESTYLE],
+                          linestyle=gpxs_gdf[StyleKey.LINESTYLE], alpha=gpxs_gdf[StyleKey.ALPHA],
                           path_effects=[patheffects.Stroke(capstyle="round", joinstyle='round')])
 
     @time_measurement_decorator("adjusting")
