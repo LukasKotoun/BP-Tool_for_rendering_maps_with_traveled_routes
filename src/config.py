@@ -21,10 +21,10 @@ PERCENTAGE_PADDING = 0
 # AREA: WantedArea = "Třebíč, Česko"
 AREA: WantedArea = [(15.7396182,49.3111173), (16.0273871,49.3028839), (16.0266146,49.1439064), (15.6712219,49.1928600)] #trebic 
 # AREA: WantedArea = ["Vysočina, Česko", "Jihomoravský kraj, Česko"]
-# PAPER_DIMENSIONS: PaperSize | tuple[float | None, float | None] = PaperSize.A4.dimensions
+PAPER_DIMENSIONS: PaperSize | tuple[float | None, float | None] = PaperSize.A4.dimensions
 # PAPER_DIMENSIONS = (400, None)
 # set own dimensions. If one is left as 'None' it will be automaticaly calculated using area size
-PAPER_DIMENSIONS = (1100, None)
+# PAPER_DIMENSIONS = (1100, None)
 # what side of paper was set (smaller true bigger false) - only if only one side in custom dimension was set to None
 GIVEN_SMALLER_PAPER_DIMENSION: bool = True
 # set how will resulted paper be oriented, AUTOMATIC is Recommended
@@ -83,7 +83,8 @@ OUTER_CUSTOM_EXPAND_AREA: WantedArea | None = "Česko"
 
 GPX_FOLDER: str = '../gpxs/trebic'
 
-#?can be created automaticali from: {"FOLDER NAME": "COLOR", "FOLDER NAME": "COLOR"}"
+#?can be created automaticali from: {"FOLDER NAME": "COLOR", "FOLDER NAME": "COLOR"}" - in gui
+
 # -------------------gpx styles by folder-------------------
 folders_styles: FeaturesCategoryStyle = {
     'pěšky' : {StyleKey.COLOR: "Blue"},

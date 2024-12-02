@@ -3,6 +3,7 @@ from common.common_helpers import time_measurement_decorator
 
 import pandas as pd
 from geopandas import GeoDataFrame
+from modules.gdf_utils import GdfUtils
 
 from common.map_enums import StyleKey
 from common.custom_types import FeaturesCategoriesStyles, WantedCategories, FeatureStyles, FeaturesCategoryStyle
@@ -162,11 +163,13 @@ class StyleAssigner:
 
         styled_gdf = gdf.join(styles_columns_df)
 
+        categorical_list = []
         # convert object columns to pandas category - for memory optimalization
         for style_column in wanted_styles:
             if (style_column in styled_gdf and style_column not in dont_categorize and styled_gdf[style_column].dtype == object):
-                styled_gdf[style_column] = styled_gdf[style_column].astype(
-                    "category")
+                categorical_list.append(style_column)
+        GdfUtils.change_columns_to_categorical(styled_gdf, categorical_list)
+        
         return styled_gdf
 
 #todo gpx root folder diff colors..

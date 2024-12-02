@@ -4,6 +4,7 @@ import unicodedata
 
 import pandas as pd
 import geopandas as gpd
+from modules.gdf_utils import GdfUtils
 
 
 class GpxManager:
@@ -22,14 +23,16 @@ class GpxManager:
                 # get file path with name of last folder before file
                 file_path: str = os.path.join(root, file)
                 relative_path: str = os.path.relpath(root, self.gpx_folder)
-                last_folder = os.path.basename(relative_path) if relative_path != "." else ""
+                last_folder: str = os.path.basename(relative_path) if relative_path != "." else ""
+                
                 gpx_gdf: gpd.GeoDataFrame = (gpd.read_file(file_path, layer='tracks'))
                 gpx_gdf['fileName'] = file
                 gpx_gdf['folder'] = unicodedata.normalize('NFC', last_folder)
                 gpx_list.append(gpx_gdf.to_crs(epsg=toEpsg))
             
         if(gpx_list):
-            self.gpxs_gdf = gpd.GeoDataFrame(pd.concat(gpx_list, ignore_index=True), crs=f"EPSG:{toEpsg}")
+            #GdfUtils.combine_gdfs 
+            self.gpxs_gdf = GdfUtils.combine_gdfs(gpx_list)
         else:
             warnings.warn(f"No GPX files found in {self.gpx_folder}")
     
@@ -38,9 +41,8 @@ class GpxManager:
         if (self.gpxs_gdf.empty):
             return self.gpxs_gdf
         
-        for column in ['name', 'folder']:
-            if (column in self.gpxs_gdf):
-                self.gpxs_gdf[column] = self.gpxs_gdf[column].astype("category")
+        GdfUtils.change_columns_to_categorical(self.gpxs_gdf, ['name', 'folder'])
+                
         if (toEpsg is None):
             return self.gpxs_gdf
         else:

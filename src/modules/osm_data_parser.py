@@ -7,6 +7,7 @@ import geopandas as gpd
 from typing import Callable
 from osmium.osm.types import TagList, Node, Way, Area
 from shapely.geometry import Point, LineString, Polygon
+from modules.gdf_utils import GdfUtils
 
 from common.common_helpers import time_measurement_decorator
 from common.custom_types import WantedCategories, UnwantedTags
@@ -188,24 +189,15 @@ class OsmDataParser(osmium.SimpleHandler):
 
     @time_measurement_decorator("gdf creating")
     def create_gdf(self, fromEpsg: int, toEpsg: int | None = None):
-        nodes_gdf = gpd.GeoDataFrame(pd.DataFrame(self.nodes_tags).assign(
-            geometry=self.nodes_geometry), crs=f"EPSG:{fromEpsg}")
-        ways_gdf = gpd.GeoDataFrame(pd.DataFrame(self.ways_tags).assign(
-            geometry=self.ways_geometry), crs=f"EPSG:{fromEpsg}")
-        areas_gdf = gpd.GeoDataFrame(pd.DataFrame(self.areas_tags).assign(
-            geometry=self.areas_geometry), crs=f"EPSG:{fromEpsg}")
 
-        for column, _ in self.wanted_nodes.items():
-            if (column in nodes_gdf):
-                nodes_gdf[column] = nodes_gdf[column].astype("category")
+        nodes_gdf = GdfUtils.create_gdf_from_geometry_and_attributes(self.nodes_geometry, self.nodes_tags, fromEpsg)
+        ways_gdf = GdfUtils.create_gdf_from_geometry_and_attributes(self.ways_geometry, self.ways_tags, fromEpsg)
+        areas_gdf = GdfUtils.create_gdf_from_geometry_and_attributes(self.areas_geometry, self.areas_tags, fromEpsg)
+        
+        GdfUtils.change_columns_to_categorical(nodes_gdf, [key for key, _ in self.wanted_nodes.items()])
+        GdfUtils.change_columns_to_categorical(ways_gdf, [key for key, _ in self.wanted_ways.items()])
+        GdfUtils.change_columns_to_categorical(areas_gdf, [key for key, _ in self.wanted_areas.items()])
 
-        for column, _ in self.wanted_ways.items():
-            if (column in ways_gdf):
-                ways_gdf[column] = ways_gdf[column].astype("category")
-
-        for column, _ in self.wanted_areas.items():
-            if (column in areas_gdf):
-                areas_gdf[column] = areas_gdf[column].astype("category")
         # print(nodes_gdf.memory_usage(deep=True))
         # print(ways_gdf.memory_usage(deep=True))
         # print(areas_gdf.memory_usage(deep=True))

@@ -43,7 +43,7 @@ class GdfUtils:
             try:
                 area_polygon = Polygon(area)
                 reqired_area_gdf = GdfUtils.create_gdf_from_polygon(
-                    area_polygon, fromEpsg)  # todo change
+                    area_polygon, fromEpsg)
             except:
                 raise ValueError("Invalid area given by list of cordinates.")
         else:  # area cannot be created
@@ -137,11 +137,8 @@ class GdfUtils:
     def get_dimensions_polygon(polygon: gpd.GeoDataFrame) -> DimensionsTuple:
         bounds = GdfUtils.get_polygon_bounds(polygon)
         return Utils.get_dimensions(bounds)
-    
-    @staticmethod
-    def get_empty_gdf() -> gpd.GeoDataFrame:
-        return gpd.GeoDataFrame()
 
+   
     # ------------creating------------
     @staticmethod
     def create_polygon_from_bounds(area_bounds: BoundsDict) -> Polygon:
@@ -154,6 +151,17 @@ class GdfUtils:
             (area_bounds[WorldSides.EAST], area_bounds[WorldSides.SOUTH])
         ])
 
+    @staticmethod
+    def create_gdf_from_geometry_and_attributes(geometry: list, tags: list[dict], fromEpsg: int) -> gpd.GeoDataFrame:
+        return gpd.GeoDataFrame(pd.DataFrame(tags).assign(
+            geometry=geometry), crs=f"EPSG:{fromEpsg}")
+
+    @staticmethod
+    def create_empty_gdf() -> gpd.GeoDataFrame:
+        return gpd.GeoDataFrame()
+
+
+    
     @staticmethod
     def create_gdf_from_bounds(area_bounds: BoundsDict, fromEpsg: int, toEpsg: int | None = None) -> gpd.GeoDataFrame:
         return GdfUtils.create_gdf_from_polygon(GdfUtils.create_polygon_from_bounds(area_bounds), fromEpsg, toEpsg)
@@ -186,7 +194,15 @@ class GdfUtils:
                     pd.concat(gdfs, ignore_index=True), crs=gdfs[0].crs).to_crs(epsg=toEpsg)
             return combined_gdf.unary_union
 
+
     # ------------editing gdf------------
+    @staticmethod
+    def change_columns_to_categorical(gdf: gpd.GeoDataFrame, columns: list) -> gpd.GeoDataFrame:
+        for column in columns:
+            if (column in gdf):
+                gdf[column] = gdf[column].astype("category")
+
+    
     @staticmethod
     def combine_rows_gdf(gdf: gpd.GeoDataFrame, toEpsg: int) -> gpd.GeoDataFrame:
         if (len(gdf) == 1):
@@ -196,7 +212,7 @@ class GdfUtils:
     @staticmethod
     def combine_gdfs(gdfs: list[gpd.GeoDataFrame]) -> gpd.GeoDataFrame:
         if (len(gdfs) == 1):
-            return gdfs
+            return gdfs[0]
         return pd.concat(gdfs, ignore_index=True)  # concat to one gdf
 
     @staticmethod

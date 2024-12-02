@@ -87,7 +87,7 @@ def main():
     map_area_gdf = GdfUtils.get_whole_area_gdf(AREA, EPSG_OSM, EPSG_CALC)
 
     # ------------store bounds to plot and combine area rows in gdf to 1 row------------
-    boundary_map_area_gdf = GdfUtils.get_empty_gdf()  # default dont plot
+    boundary_map_area_gdf = GdfUtils.create_empty_gdf()  # default dont plot
     if (AREA_BOUNDARY == AreaBounds.SEPARATED):
         # store separated areas (before gdf row merge)
         boundary_map_area_gdf = map_area_gdf.copy()
