@@ -22,11 +22,11 @@ class Plotter:
     MM_TO_INCH = 25.4
 
     def __init__(self, requred_area_gdf: gpd.GeoDataFrame, paper_dimensions_mm: DimensionsTuple, map_object_scaling_factor: float):
-        self.reqired_area_gdf = requred_area_gdf
-        self.reqired_area_polygon = GdfUtils.create_polygon_from_gdf(
+        self.reqired_area_gdf: gpd.GeoDataFrame = requred_area_gdf
+        self.reqired_area_polygon: Polygon = GdfUtils.create_polygon_from_gdf(
             self.reqired_area_gdf)
         self.paper_dimensions_mm = paper_dimensions_mm
-        self.map_object_scaling_factor = map_object_scaling_factor
+        self.map_object_scaling_factor: float = map_object_scaling_factor
         self.text_to_adjust = []
 
     def init_plot(self, map_bg_color: str, area_zoom_preview: None | DimensionsTuple = None):
@@ -97,7 +97,7 @@ class Plotter:
 
     @time_measurement_decorator("nodePlot")
     def plot_nodes(self, nodes_gdf: gpd.GeoDataFrame, wrap_len: int | None):
-        all_columns_present = all(col in nodes_gdf.columns for col in [
+        all_columns_present: bool = all(col in nodes_gdf.columns for col in [
                                   StyleKey.FONT_SIZE, StyleKey.OUTLINE_WIDTH, StyleKey.COLOR, StyleKey.EDGE_COLOR])
         if (nodes_gdf.empty or not all_columns_present):
             return
@@ -111,29 +111,29 @@ class Plotter:
             rest_gdf, 'natural', ['peak'])
         self.__plot_elevations(rest_gdf)
 
-    def __plot_ways_edges(self, ways_gdf):
-        if (ways_gdf.empty):
+    def __plot_line_edges(self, lines_gdf):
+        if (lines_gdf.empty):
             return
-        if (StyleKey.EDGE_COLOR in ways_gdf and StyleKey.LINESTYLE in ways_gdf
-           and StyleKey.EDGE_WIDTH_RATIO in ways_gdf):
-            edge_ways_gdf = GdfUtils.filter_gdf_columns_values_AND(
-                ways_gdf, [StyleKey.EDGE_COLOR, StyleKey.EDGE_WIDTH_RATIO])
-            edge_ways_gdf = GdfUtils.filter_gdf_column_values(
-                edge_ways_gdf, StyleKey.LINESTYLE, [pd.NA, '-'])
-            if (not edge_ways_gdf.empty):
-                edge_ways_gdf[StyleKey.LINEWIDTH] = edge_ways_gdf[StyleKey.LINEWIDTH] + \
-                    edge_ways_gdf[StyleKey.LINEWIDTH] * \
-                    edge_ways_gdf[StyleKey.EDGE_WIDTH_RATIO]
-                edge_ways_gdf.plot(ax=self.ax, color=edge_ways_gdf[StyleKey.EDGE_COLOR],
-                                   linewidth=edge_ways_gdf[StyleKey.LINEWIDTH],
-                                   alpha=edge_ways_gdf[StyleKey.ALPHA],
+        if (StyleKey.EDGE_COLOR in lines_gdf and StyleKey.LINESTYLE in lines_gdf
+           and StyleKey.EDGE_WIDTH_RATIO in lines_gdf):
+            edge_lines_gdf = GdfUtils.filter_gdf_columns_values_AND(
+                lines_gdf, [StyleKey.EDGE_COLOR, StyleKey.EDGE_WIDTH_RATIO])
+            edge_lines_gdf = GdfUtils.filter_gdf_column_values(
+                edge_lines_gdf, StyleKey.LINESTYLE, [pd.NA, '-'])
+            if (not edge_lines_gdf.empty):
+                edge_lines_gdf[StyleKey.LINEWIDTH] = edge_lines_gdf[StyleKey.LINEWIDTH] + \
+                    edge_lines_gdf[StyleKey.LINEWIDTH] * \
+                    edge_lines_gdf[StyleKey.EDGE_WIDTH_RATIO]
+                edge_lines_gdf.plot(ax=self.ax, color=edge_lines_gdf[StyleKey.EDGE_COLOR],
+                                   linewidth=edge_lines_gdf[StyleKey.LINEWIDTH],
+                                   alpha=edge_lines_gdf[StyleKey.ALPHA],
                                    path_effects=[patheffects.Stroke(capstyle="butt", joinstyle='round')])
 
     def __plot_highways(self, highways_gdf: gpd.GeoDataFrame, plotEdges: bool = False):
         if (highways_gdf.empty):
             return
         if (plotEdges):
-            self.__plot_ways_edges(highways_gdf)
+            self.__plot_line_edges(highways_gdf)
 
         highways_gdf.plot(ax=self.ax, color=highways_gdf[StyleKey.COLOR], linewidth=highways_gdf[StyleKey.LINEWIDTH],
                           linestyle=highways_gdf[StyleKey.LINESTYLE],
@@ -143,7 +143,7 @@ class Plotter:
         if (waterways_gdf.empty):
             return
         if (plotEdges):
-            self.__plot_ways_edges(waterways_gdf)
+            self.__plot_line_edges(waterways_gdf)
         waterways_gdf.plot(ax=self.ax, color=waterways_gdf[StyleKey.COLOR], linewidth=waterways_gdf[StyleKey.LINEWIDTH],
                            linestyle=waterways_gdf[StyleKey.LINESTYLE],
                            path_effects=[patheffects.Stroke(capstyle="round", joinstyle='round')])
@@ -226,17 +226,16 @@ class Plotter:
         if (ways_gdf.empty or StyleKey.LINEWIDTH not in ways_gdf
            or StyleKey.COLOR not in ways_gdf):
             return
-        ways2_gdf = ways_gdf.copy()
-        ways2_gdf[StyleKey.LINEWIDTH] = ways2_gdf[StyleKey.LINEWIDTH] * \
+        ways_gdf[StyleKey.LINEWIDTH] = ways_gdf[StyleKey.LINEWIDTH] * \
             self.map_object_scaling_factor * ways_width_multiplier
-        # odfiltrovat mosty taky podle parametrů - pokud má bridge BRIDGE_WIDTH_RATIO tak plotit jako normální a pokud má BRIDGE_EDGE_COLOR a zaroven BRIDGE_COLOR tak taky jako normální - jediný čím se liší od normálních cest
+            
         bridges_gdf, rest_gdf = GdfUtils.filter_gdf_column_values(
-            ways2_gdf, 'bridge', ['yes'], compl=True)
+            ways_gdf, 'bridge', ['yes'], compl=True)
         waterways_gdf, rest_gdf = GdfUtils.filter_gdf_column_values(
             rest_gdf, 'waterway', compl=True)
         highways_gdf, rest_gdf = GdfUtils.filter_gdf_column_values(
             rest_gdf, 'highway', compl=True)
-        railways_gdf = GdfUtils.filter_gdf_column_values(
+        railways_gdf= GdfUtils.filter_gdf_column_values(
             rest_gdf, 'railway')
 
         self.__plot_waterways(waterways_gdf)
@@ -272,9 +271,19 @@ class Plotter:
                     path_effects=[patheffects.Stroke(capstyle="round", joinstyle='round')])
 
     @time_measurement_decorator("gpxsPlot")
-    def plot_gpxs(self, gpxs_gdf: gpd.GeoDataFrame):
-        gpxs_gdf.plot(ax=self.ax, color="red", linewidth=20 *
-                      self.map_object_scaling_factor)
+    def plot_gpxs(self, gpxs_gdf: gpd.GeoDataFrame, line_width_multiplier: float):
+       
+
+        if(gpxs_gdf.empty):
+            return
+        # gpxs_gdf.plot(ax=self.ax, color="red", linewidth=20 *
+        #               self.map_object_scaling_factor)
+        # self.__plot_line_edges(gpxs_gdf)
+        gpxs_gdf[StyleKey.LINEWIDTH] = gpxs_gdf[StyleKey.LINEWIDTH] * \
+            self.map_object_scaling_factor * line_width_multiplier
+        gpxs_gdf.plot(ax=self.ax, color=gpxs_gdf[StyleKey.COLOR], linewidth=gpxs_gdf[StyleKey.LINEWIDTH],
+                          linestyle=gpxs_gdf[StyleKey.LINESTYLE],
+                          path_effects=[patheffects.Stroke(capstyle="round", joinstyle='round')])
 
     @time_measurement_decorator("adjusting")
     def adjust_texts(self, text_bounds_overflow_threshold: float):

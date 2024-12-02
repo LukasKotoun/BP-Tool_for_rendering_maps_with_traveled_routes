@@ -2,23 +2,24 @@ from common.custom_types import *
 from common.map_enums import *
 
 
-# --------------normal map area--------------
+# --------------------------------------------------------------map area--------------------------------------------------------------
 # OSM_INPUT_FILE_NAMES: str = ['../osm_files/vys.osm.pbf','../osm_files/jihmor.osm.pbf']
 # OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/vysJihE.osm.pbf'
-OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/HV.osm.pbf'
+OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/trebic_vic.osm.pbf'
 # extract
 OSM_WANT_EXTRACT_AREA: bool = False
 # set if want osm file cutting using osmium command line tool (need to be uinstalled), If not set to None
-OSM_OUTPUT_FILE_NAME: None | str = '../osm_files/brnoE.osm.pbf'
+OSM_OUTPUT_FILE_NAME: None | str = '../osm_files/trebic_vic.osm.pbf'
 
 OUTPUT_PDF_NAME: str = '../pdfs/divočina'
 # with fill or false cliping is recomended 0
 # padding from page borders NOTE: must have same settings as the resulting one when generating for large format printing
-PERCENTAGE_PADDING = 0.5
+PERCENTAGE_PADDING = 0
 
 # AREA: WantedArea = [(-18.14143,65.68868),(-18.08538,65.68868),(-18.08538,65.67783),(-18.14143,65.67783)] #island
 # AREA: WantedArea = [(6.94872,4.84293),(6.99314,4.84293),(6.99314,4.81603),(6.94872,4.81603)] #afrika
-AREA: WantedArea = "Česko"
+# AREA: WantedArea = "Třebíč, Česko"
+AREA: WantedArea = [(15.7396182,49.3111173), (16.0273871,49.3028839), (16.0266146,49.1439064), (15.6712219,49.1928600)] #trebic 
 # AREA: WantedArea = ["Vysočina, Česko", "Jihomoravský kraj, Česko"]
 # PAPER_DIMENSIONS: PaperSize | tuple[float | None, float | None] = PaperSize.A4.dimensions
 # PAPER_DIMENSIONS = (400, None)
@@ -30,20 +31,21 @@ GIVEN_SMALLER_PAPER_DIMENSION: bool = True
 WANTED_ORIENTATION: MapOrientation = MapOrientation.AUTOMATIC
 
 # FIT_PAPER_SIZE recomended with PERCENTAGE_PADDING 0
-EXPAND_AREA_MODE = ExpandArea.NONE
+EXPAND_AREA_MODE = ExpandArea.FIT_PAPER_SIZE
 # polygon or country name - custom area must be bigger than normal
 CUSTOM_EXPAND_AREA: WantedArea | None = ["Třebíč, Česko"]
 
 # bounds
 # COMBINED - one bound around area, SEPARATED - separated bounds around every area in AREA variable
-AREA_BOUNDARY = AreaBounds.SEPARATED
-EXPAND_AREA_BOUNDS_PLOT = True
+AREA_BOUNDARY = AreaBounds.NONE
+EXPAND_AREA_BOUNDS_PLOT = False
 AREA_BOUNDARY_LINEWIDTH = 70
 
 # clipping
 # if true it will plot only given AREA (recomended) if False it will plot whole osm file with AREA in center
 WANT_AREA_CLIPPING = True
 
+# --------------------------------------------------------------names settings--------------------------------------------------------------
 # city text
 SHOW_CITY_NAMES = True  # in automatic wanted_nodes creation
 # The largest urban settlement or settlements within the territory.
@@ -77,25 +79,39 @@ OUTER_WANTED_ORIENTATION = MapOrientation.AUTOMATIC
 OUTER_EXPAND_AREA_MODE = ExpandArea.FIT_PAPER_SIZE
 OUTER_CUSTOM_EXPAND_AREA: WantedArea | None = "Česko"
 
+# --------------------------------------------------------------gpx settings--------------------------------------------------------------
 
+GPX_FOLDER: str = '../gpxs/trebic'
 # todo here automatic wanted objects setup using map and pdf ratio automatic_filters_creating_factor - own class ()
 
+#?can be created automaticali from: {"FOLDER NAME": "COLOR", "FOLDER NAME": "COLOR"}"
+# -------------------gpx styles by folder-------------------
+folders_styles: FeaturesCategoryStyle = {
+    'test' : {StyleKey.COLOR: "Blue",  StyleKey.LINESTYLE: "--"}
+}
 
-# ------------cons--------------
+GPXS_STYLES: FeaturesCategoriesStyles = {
+    'folder': (folders_styles, {StyleKey.COLOR: 'Blue', StyleKey.LINEWIDTH: 40, StyleKey.ZINDEX: 0}),
+}
 
-# world 3857
-EPSG_OSM = 4326
-EPSG_CALC = 3857  # cz and sk - 5514, , europe 25833
-EPSG_DISPLAY = 3857
-# todo table with epsg
-OBJECT_MULTIPLIER = 1
-AREAS_EDGE_WIDTH_MULTIPLIER = 1
-WAYS_WIDTH_MULTIPLIER = 1
-# --------------filters--------------
+
+# set wanted categories to all gpxs with folder -> 
+# switching/ workaround from styling map elements by category to styling GPX routes by folder
+GPX_CATEGORIES: WantedCategories = {
+    'folder': set({}),
+}
+
+# styles that must be assigned to all gpxs 
+GPXS_MANDATORY_STYLES: FeatureStyles = {
+    StyleKey.COLOR: 'Red', StyleKey.ALPHA: 1.0, StyleKey.LINESTYLE: "-"
+}
+
+
+
+# --------------filters for map elements--------------
 # columns that are used for ploting nodes name for city, ele for elevation points
 NODES_ADDITIONAL_COLUMNS = ['name']
 WAYS_ADDITIONAL_COLUMNS = ['bridge', 'layer']
-
 # wanted_ways: WantedFeatures
 wanted_nodes: WantedCategories = {
     # 'place': {'city', 'town', 'village'}
@@ -104,12 +120,10 @@ wanted_nodes: WantedCategories = {
     'natural': {'peak'}
 }
 
-# UnwantedFeaturesTags
 unwanted_nodes_tags: UnwantedTags = {
 
 }
 
-# wanted_ways: WantedFeatures
 wanted_ways: WantedCategories = {
     'waterway': set({}),
     # 'highway': ['motorway', 'trunk','primary', 'secondary'],
@@ -118,7 +132,6 @@ wanted_ways: WantedCategories = {
     'railway': {'rail'}
 }
 
-# UnwantedFeaturesTags
 unwanted_ways_tags: UnwantedTags = {
     # 'highway':['coridor','via_ferrata','crossing','traffic_island','proposed','construction' ],
     'railway': {
@@ -127,6 +140,7 @@ unwanted_ways_tags: UnwantedTags = {
     }
     # {'railway':""}:{'service':['yard'],'tunnel': ['building_passage']}
 }
+
 
 wanted_areas: WantedCategories = {
     # # 'landuse': ['forest', 'residential', 'farmland', 'meadow', 'grass'],
@@ -139,35 +153,23 @@ wanted_areas: WantedCategories = {
     # todo add natural - water
     # 'water': ['river','lake','reservoir'],
 }
-
-
 unwanted_areas_tags: UnwantedTags = {
 }
 
 # ------------styles--------------
-# there must be all somewhere used styles, if not program can crash
+# there must be all somewhere used styles, if not program can crash todo
 GENERAL_DEFAULT_STYLES: FeatureStyles = {StyleKey.COLOR: '#EDEDE0',  StyleKey.ZINDEX: 0,
                                          StyleKey.LINEWIDTH: 1, StyleKey.LINESTYLE: '-',
-                                         StyleKey.ALPHA: 1}
+                                         StyleKey.ALPHA: 1, StyleKey.EDGE_COLOR: None}
 
-# styles that must be assigned to all area features
-AREA_MANDATORY_STYLES: FeatureStyles = {
-    StyleKey.COLOR: '#EDEDE0', StyleKey.ALPHA: 1.0
-}
-# styles that must be assigned to all way features
-WAY_MANDATORY_STYLES: FeatureStyles = {
-    StyleKey.COLOR: '#EDEDE0', StyleKey.ALPHA: 1.0, StyleKey.LINEWIDTH: 1, StyleKey.LINESTYLE: '-',
-    StyleKey.EDGE_WIDTH_RATIO: 0.3, StyleKey.BRIDGE_WIDTH_RATIO: 0, StyleKey.BRIDGE_COLOR: "#FFFFFF",
-    StyleKey.BRIDGE_EDGE_COLOR: "#7D7D7D"
-}
+# ? appka asi taky tímhle stylem? pokud bude chtít vlastní nastavení styl (např pro šířku) - (nemá automatické nastavování - to má pouze které výběr....)
+
+# -------------------nodes-------------------  
 # styles that must be assigned to all node features
 NODES_MANDATORY_STYLES: FeatureStyles = {
     StyleKey.COLOR: '#000000', StyleKey.FONT_SIZE: 50, StyleKey.EDGE_COLOR: '#FFFFFF',
     StyleKey.OUTLINE_WIDTH: 5,
 }
-# ? appka asi taky tímhle stylem? pokud bude chtít vlastní nastavení styl (např pro šířku) - (nemá automatické nastavování - to má pouze které výběr....)
-
-# nodes
 place_styles: FeaturesCategoryStyle = {  # todo OUTLINE_WIDTH to edge size ratio
     'city': {StyleKey.FONT_SIZE: 2500 * CITY_CITY_SIZE_MULTIPLIER, StyleKey.OUTLINE_WIDTH: 270 * CITY_CITY_SIZE_MULTIPLIER},
     'town': {StyleKey.FONT_SIZE: 1000 * CITY_TOWN_SIZE_MULTIPLIER, StyleKey.OUTLINE_WIDTH: 100 * CITY_TOWN_SIZE_MULTIPLIER},
@@ -183,7 +185,14 @@ NODES_STYLES: FeaturesCategoriesStyles = {
     'natural': (natural_styles_nodes, {StyleKey.COLOR: '#000000', StyleKey.EDGE_COLOR: '#FFFFFF', StyleKey.ICON_SIZE: 300, StyleKey.ICON_COLOR: "red"}),
 }
 
-# ways
+# -------------------ways-------------------  
+# styles that must be assigned to all way features
+WAY_MANDATORY_STYLES: FeatureStyles = {
+    StyleKey.COLOR: '#EDEDE0', StyleKey.ALPHA: 1.0, StyleKey.LINEWIDTH: 1, StyleKey.LINESTYLE: '-',
+    StyleKey.EDGE_WIDTH_RATIO: 0.3, StyleKey.BRIDGE_WIDTH_RATIO: 0, StyleKey.BRIDGE_COLOR: "#FFFFFF",
+    StyleKey.BRIDGE_EDGE_COLOR: "#7D7D7D"
+}
+
 highway_styles: FeaturesCategoryStyle = {
     'motorway': {StyleKey.COLOR: '#8cd25f', StyleKey.ZINDEX: 7, StyleKey.LINEWIDTH: 32, StyleKey.EDGE_COLOR: "#5E9346"},
     'trunk': {StyleKey.COLOR: '#FDC364', StyleKey.ZINDEX: 6, StyleKey.LINEWIDTH: 26, StyleKey.EDGE_COLOR: "#E19532"},
@@ -213,8 +222,12 @@ WAYS_STYLES: FeaturesCategoriesStyles = {
                                  StyleKey.ZINDEX: 1, StyleKey.LINEWIDTH: 8, StyleKey.EDGE_COLOR: "#B0A78D"}),
     'railway': (railway_styles, {StyleKey.COLOR: '#FFFFFF', StyleKey.ZINDEX: 2, StyleKey.LINEWIDTH: 8}),
 }
-# areas
 
+# -------------------areas-------------------  
+# styles that must be assigned to all area features
+AREA_MANDATORY_STYLES: FeatureStyles = {
+    StyleKey.COLOR: '#EDEDE0', StyleKey.ALPHA: 1.0
+}
 landuse_styles: FeaturesCategoryStyle = {
     'farmland': {StyleKey.COLOR: '#EDEDE0'},
     'forest': {StyleKey.COLOR: '#9FC98D'},
@@ -232,7 +245,7 @@ leisure_styles: FeaturesCategoryStyle = {
     'playground': {StyleKey.COLOR: '#DCE9B9'},
     'pitch': {StyleKey.COLOR: '#DCE9B9', StyleKey.ZINDEX: 1},
     'sports_centre': {StyleKey.COLOR: '#9FC98D'},
-    'nature_reserve': {StyleKey.COLOR: 'none', StyleKey.EDGE_COLOR: '#97BB72', StyleKey.LINEWIDTH: 80,
+    'nature_reserve': {StyleKey.COLOR: None, StyleKey.EDGE_COLOR: '#97BB72', StyleKey.LINEWIDTH: 80,
                        StyleKey.ZINDEX: 1, StyleKey.ALPHA: 0.85, StyleKey.LINESTYLE: '-'}
 }
 
@@ -248,3 +261,16 @@ AREAS_STYLES: FeaturesCategoriesStyles = {
     'water': ({}, {StyleKey.COLOR: '#8FB8DB', StyleKey.ZINDEX: 1}),
     'boundary': ({}, {StyleKey.EDGE_COLOR: '#97BB72', StyleKey.LINEWIDTH: 80, StyleKey.LINESTYLE: '-', StyleKey.ZINDEX: 1, StyleKey.ALPHA: 0.85})
 }
+
+
+
+# ------------constants--------------
+
+# world 3857
+EPSG_OSM = 4326
+EPSG_CALC = 3857  # cz and sk - 5514, , europe 25833
+EPSG_DISPLAY = 3857
+# todo table with epsg
+OBJECT_MULTIPLIER = 1
+AREAS_EDGE_WIDTH_MULTIPLIER = 1
+WAYS_WIDTH_MULTIPLIER = 1

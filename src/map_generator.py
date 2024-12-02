@@ -6,9 +6,9 @@ from modules.gdf_utils import GdfUtils
 from modules.utils import Utils
 from modules.osm_data_preprocessor import OsmDataPreprocessor
 from modules.osm_data_parser import OsmDataParser
-from modules.styles_assigner import MapElementStyleAssigner
+from modules.style_assigner import StyleAssigner
 from modules.plotter import Plotter
-from modules.gpx_processer import GpxProcesser
+from modules.gpx_manager import GpxManager
 from common.common_helpers import time_measurement_decorator
 
 
@@ -87,7 +87,7 @@ def main():
     map_area_gdf = GdfUtils.get_whole_area_gdf(AREA, EPSG_OSM, EPSG_CALC)
 
     # ------------store bounds to plot and combine area rows in gdf to 1 row------------
-    boundary_map_area_gdf = None  # default dont plot
+    boundary_map_area_gdf = GdfUtils.get_empty_gdf()  # default dont plot
     if (AREA_BOUNDARY == AreaBounds.SEPARATED):
         # store separated areas (before gdf row merge)
         boundary_map_area_gdf = map_area_gdf.copy()
@@ -146,7 +146,9 @@ def main():
         # todo check if osmium is instaled
         osm_data_preprocessor = OsmDataPreprocessor(
             OSM_INPUT_FILE_NAMES, OSM_OUTPUT_FILE_NAME)
-        osm_file_name = osm_data_preprocessor.extract_areas(map_area_gdf)
+        print(map_area_gdf)
+        osm_file_name = osm_data_preprocessor.extract_areas(
+            map_area_gdf, EPSG_OSM)
     else:
         # todo function check osm file or in validator before?
         # list have length of 1 (checked in validator)
@@ -170,10 +172,11 @@ def main():
     nodes_gdf, ways_gdf, areas_gdf = osm_file_parser.create_gdf(
         EPSG_OSM, EPSG_DISPLAY)
     osm_file_parser.clear_gdf()
-
-    map_area_gdf = map_area_gdf.to_crs(f"epsg:{EPSG_DISPLAY}")
-    boundary_map_area_gdf = boundary_map_area_gdf.to_crs(
-        f"epsg:{EPSG_DISPLAY}")
+    if (not map_area_gdf.empty):
+        map_area_gdf = map_area_gdf.to_crs(f"epsg:{EPSG_DISPLAY}")
+    if (not boundary_map_area_gdf.empty):
+        boundary_map_area_gdf = boundary_map_area_gdf.to_crs(
+            f"epsg:{EPSG_DISPLAY}")
 
     # todo check if area is inside osm to function
     whole_map_gdf = GdfUtils.create_polygon_from_gdf_bounds(
@@ -192,35 +195,45 @@ def main():
     # get only places with name
     nodes_gdf = GdfUtils.filter_gdf_related_columns_values(
         nodes_gdf, 'place', [], ['name'], [])
-    # todo  use to filter peeks withou ele and name?
+    # todo use to filter peeks withou ele and name?
     # function(algorithm) to get only usefull peeks + again back to nodes gdf
     # ------------style elements------------
-    nodes_style_assigner = MapElementStyleAssigner(
+    nodes_style_assigner = StyleAssigner(
         NODES_STYLES, GENERAL_DEFAULT_STYLES, NODES_MANDATORY_STYLES)
-    nodes_gdf = nodes_style_assigner.assign_styles_to_gdf(nodes_gdf, wanted_nodes,
-                                                          [StyleKey.COLOR, StyleKey.FONT_SIZE, StyleKey.OUTLINE_WIDTH,
-                                                           StyleKey.EDGE_COLOR, StyleKey.ICON_COLOR, StyleKey.ICON_SIZE,
-                                                           StyleKey.ICON, StyleKey.ICON_EDGE])
+    nodes_gdf = nodes_style_assigner.assign_styles(nodes_gdf, wanted_nodes,
+                                                   [StyleKey.COLOR, StyleKey.FONT_SIZE, StyleKey.OUTLINE_WIDTH,
+                                                    StyleKey.EDGE_COLOR, StyleKey.ICON_COLOR, StyleKey.ICON_SIZE,
+                                                    StyleKey.ICON, StyleKey.ICON_EDGE])
 
-    ways_style_assigner = MapElementStyleAssigner(
+    ways_style_assigner = StyleAssigner(
         WAYS_STYLES, GENERAL_DEFAULT_STYLES, WAY_MANDATORY_STYLES)
-    ways_gdf = ways_style_assigner.assign_styles_to_gdf(ways_gdf, wanted_ways,
-                                                        [StyleKey.COLOR, StyleKey.ZINDEX, StyleKey.LINEWIDTH,
-                                                         StyleKey.LINESTYLE, StyleKey.ALPHA, StyleKey.EDGE_COLOR,
-                                                         StyleKey.BRIDGE_COLOR, StyleKey.BRIDGE_EDGE_COLOR,
-                                                         StyleKey.EDGE_WIDTH_RATIO, StyleKey.BRIDGE_WIDTH_RATIO])
-    areas_style_assigner = MapElementStyleAssigner(
+    ways_gdf = ways_style_assigner.assign_styles(ways_gdf, wanted_ways,
+                                                 [StyleKey.COLOR, StyleKey.ZINDEX, StyleKey.LINEWIDTH,
+                                                  StyleKey.LINESTYLE, StyleKey.ALPHA, StyleKey.EDGE_COLOR,
+                                                  StyleKey.BRIDGE_COLOR, StyleKey.BRIDGE_EDGE_COLOR,
+                                                  StyleKey.EDGE_WIDTH_RATIO, StyleKey.BRIDGE_WIDTH_RATIO])
+    areas_style_assigner = StyleAssigner(
         AREAS_STYLES, GENERAL_DEFAULT_STYLES, AREA_MANDATORY_STYLES)
-    areas_gdf = areas_style_assigner.assign_styles_to_gdf(areas_gdf, wanted_areas,
-                                                          [StyleKey.COLOR, StyleKey.EDGE_COLOR, StyleKey.ZINDEX,
-                                                           StyleKey.LINEWIDTH, StyleKey.ALPHA, StyleKey.LINESTYLE])
+    areas_gdf = areas_style_assigner.assign_styles(areas_gdf, wanted_areas,
+                                                   [StyleKey.COLOR, StyleKey.EDGE_COLOR, StyleKey.ZINDEX,
+                                                    StyleKey.LINEWIDTH, StyleKey.ALPHA, StyleKey.LINESTYLE])
 
     ways_gdf = GdfUtils.sort_gdf_by_column(ways_gdf, "layer")
     ways_gdf = GdfUtils.sort_gdf_by_column(ways_gdf, StyleKey.ZINDEX)
     areas_gdf = GdfUtils.sort_gdf_by_column(areas_gdf, StyleKey.ZINDEX)
+
     # todo check if gpx go somewhere outside reqired_area - add warning
-    gpx_processer = GpxProcesser('../gpxs')
-    gpxs_gdf = gpx_processer.get_gpxs_gdf(EPSG_DISPLAY)
+
+    gpxs_style_assigner = StyleAssigner(
+        GPXS_STYLES, GENERAL_DEFAULT_STYLES, GPXS_MANDATORY_STYLES)
+    gpx_manager = GpxManager(GPX_FOLDER, EPSG_DISPLAY)
+    gpxs_gdf = gpx_manager.get_gpxs_gdf()
+
+    gpxs_gdf: gpd.GeoDataFrame = gpxs_style_assigner.assign_styles(gpxs_gdf, GPX_CATEGORIES,
+                                                                   [StyleKey.COLOR, StyleKey.ZINDEX, StyleKey.LINEWIDTH,
+                                                                    StyleKey.LINESTYLE, StyleKey.ALPHA, StyleKey.EDGE_COLOR])
+
+    # ------------plot------------
 
     plotter = Plotter(map_area_gdf, paper_dimensions_mm,
                       map_object_scaling_factor)
@@ -230,7 +243,7 @@ def main():
     plotter.plot_areas(areas_gdf, AREAS_EDGE_WIDTH_MULTIPLIER)
     plotter.plot_ways(ways_gdf, WAYS_WIDTH_MULTIPLIER)
     plotter.plot_nodes(nodes_gdf, TEXT_WRAP_NAMES_LEN)
-    plotter.plot_gpxs(gpxs_gdf)
+    plotter.plot_gpxs(gpxs_gdf, 1)
 
     plotter.adjust_texts(TEXT_BOUNDS_OVERFLOW_THRESHOLD)
 
@@ -239,7 +252,7 @@ def main():
         plotter.clip(EPSG_DISPLAY, GdfUtils.create_polygon_from_gdf_bounds(
             nodes_gdf, ways_gdf, areas_gdf))
 
-    if (boundary_map_area_gdf is not None):
+    if (boundary_map_area_gdf is not None and not boundary_map_area_gdf.empty):
         plotter.plot_area_boundary(area_gdf=boundary_map_area_gdf.to_crs(
             epsg=EPSG_DISPLAY), linewidth=AREA_BOUNDARY_LINEWIDTH)
 

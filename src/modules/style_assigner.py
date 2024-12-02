@@ -8,7 +8,7 @@ from common.map_enums import StyleKey
 from common.custom_types import FeaturesCategoriesStyles, WantedCategories, FeatureStyles, FeaturesCategoryStyle
 
 # element or static or map element and gpx...?
-class MapElementStyleAssigner:
+class StyleAssigner:
     def __init__(self, categories_styles: FeaturesCategoriesStyles,
                  general_default_styles: FeatureStyles, mandatory_styles: FeatureStyles):
         self.categories_styles = categories_styles
@@ -42,7 +42,7 @@ class MapElementStyleAssigner:
                                    features_category_default_styles, **features_category_styles}
                 return assigned_styles
         warnings.warn(
-            "_get_styles_for_map_feature: some map FeaturesCategory does not have any style in some FeaturesCategoriesStyles")
+            "_get_styles_for_map_feature: some map FeaturesCategory does not have any style in FeaturesCategoriesStyles")
         # osm data feature is not in any features category avilable in avilable_styles
         # if that occure assign styles from global styles and assign only wanted
         return {style_key: self.general_default_styles[style_key] for style_key in wanted_feature_styles}
@@ -120,7 +120,7 @@ class MapElementStyleAssigner:
         return filtered_features_categories_styles
 
     @time_measurement_decorator("styles assign")
-    def assign_styles_to_gdf(self, gdf: GeoDataFrame, wanted_features_categories: WantedCategories,
+    def assign_styles(self, gdf: GeoDataFrame, wanted_features_categories: WantedCategories,
                              wanted_styles: list[StyleKey], dont_categorize: list[str] = []) -> GeoDataFrame:
         """Will assign wanted_styles to all features (rows) in given GeoDataFrame that are in WantedCategories. 
         If they are not in wanted categories it will assign from general styles.
@@ -145,6 +145,7 @@ class MapElementStyleAssigner:
         styles_columns = gdf.apply(lambda map_feature: self._get_styles_for_map_feature(
             map_feature, available_styles, wanted_styles), axis=1).tolist()
         styles_columns_df = pd.DataFrame(styles_columns)
+        
         # fill missing values
         # for style_key in wanted_styles:
         #     if style_key not in styles_columns_df:
@@ -157,8 +158,7 @@ class MapElementStyleAssigner:
             col for col in wanted_styles if col in gdf.columns]
         if (duplicated_columns):
             gdf = gdf.drop(columns=duplicated_columns)
-            warnings.warn(f"Reassigning once assigned styles (the new one were used): {
-                          ', '.join([str(col) for col in duplicated_columns])}")
+            warnings.warn(f"Reassigning once assigned styles (the new one were used): {', '.join([str(col) for col in duplicated_columns])}")
 
         styled_gdf = gdf.join(styles_columns_df)
 
@@ -168,3 +168,5 @@ class MapElementStyleAssigner:
                 styled_gdf[style_column] = styled_gdf[style_column].astype(
                     "category")
         return styled_gdf
+
+#todo gpx root folder diff colors..

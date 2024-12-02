@@ -137,6 +137,10 @@ class GdfUtils:
     def get_dimensions_polygon(polygon: gpd.GeoDataFrame) -> DimensionsTuple:
         bounds = GdfUtils.get_polygon_bounds(polygon)
         return Utils.get_dimensions(bounds)
+    
+    @staticmethod
+    def get_empty_gdf() -> gpd.GeoDataFrame:
+        return gpd.GeoDataFrame()
 
     # ------------creating------------
     @staticmethod
