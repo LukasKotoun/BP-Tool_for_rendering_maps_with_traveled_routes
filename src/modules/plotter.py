@@ -74,6 +74,7 @@ class Plotter:
             x = geom.x
             y = geom.y
             # weight='bold'
+            #todo to func?
             text = self.ax.text(
                 x, y, wraped_name, fontsize=fontsize, ha='center', va='center', zorder=4, color=color,
                 path_effects=[patheffects.withStroke(linewidth=outline_width, foreground=edge_color)])
@@ -86,13 +87,21 @@ class Plotter:
             self.map_object_scaling_factor
         elevations_gdf[StyleKey.ICON_EDGE] = elevations_gdf[StyleKey.ICON_EDGE] * \
             self.map_object_scaling_factor
+        elevations_gdf[StyleKey.OUTLINE_WIDTH] = elevations_gdf[StyleKey.OUTLINE_WIDTH] * \
+            self.map_object_scaling_factor
         # elevations_gdf.plot(ax=self.ax, marker=elevations_gdf[StyleKey.ICON], color=elevations_gdf[StyleKey.ICON_COLOR], markersize=elevations_gdf[StyleKey.ICON_SIZE], label='Points')
         # Add annotations for each point
+       
         for idx, row in elevations_gdf.iterrows():
             x, y = row.geometry.x, row.geometry.y
             self.ax.scatter(x, y, marker=row[StyleKey.ICON], color=row[StyleKey.ICON_COLOR], s=row[StyleKey.ICON_SIZE],
                             edgecolor=row[StyleKey.EDGE_COLOR], linewidth=row[StyleKey.ICON_EDGE])
-            # self.ax.annotate("text", (x, y), textcoords="offset points", xytext=(0, 7), ha='center', color='blue')
+            #todo add text to elevation
+            #todo dynamic xy text offset - also text to function - anotate vs text
+            self.ax.annotate(row['name'], (x, y), textcoords="offset points", xytext=(0, 300 * self.map_object_scaling_factor), ha='center', color=row[StyleKey.COLOR],
+                path_effects=[patheffects.withStroke(linewidth=row[StyleKey.OUTLINE_WIDTH], foreground=row[StyleKey.EDGE_COLOR])], fontsize=row[StyleKey.FONT_SIZE])
+            self.ax.annotate(row['ele'], (x, y), textcoords="offset points", xytext=(0, -300 * self.map_object_scaling_factor - row[StyleKey.ICON_SIZE]), ha='center', color=row[StyleKey.COLOR],
+                path_effects=[patheffects.withStroke(linewidth=row[StyleKey.OUTLINE_WIDTH], foreground=row[StyleKey.EDGE_COLOR])], fontsize=row[StyleKey.FONT_SIZE])
             # self.ax.text(x, y, "test", fontsize=200*self.map_object_scaling_factor, ha='center', color='blue')  # Annotate above the triangle
 
     @time_measurement_decorator("nodePlot")
@@ -101,6 +110,7 @@ class Plotter:
                                   StyleKey.FONT_SIZE, StyleKey.OUTLINE_WIDTH, StyleKey.COLOR, StyleKey.EDGE_COLOR])
         if (nodes_gdf.empty or not all_columns_present):
             return
+        
         # todo checks for att
         nodes_gdf[StyleKey.FONT_SIZE] = nodes_gdf[StyleKey.FONT_SIZE] * \
             self.map_object_scaling_factor
@@ -189,7 +199,7 @@ class Plotter:
                      alpha=gdf[StyleKey.ALPHA],
                      path_effects=[patheffects.Stroke(capstyle="butt", joinstyle='round')])
 
-        def plot_bridges(gdf: gpd.GeoDataFrame):
+        def plot_bridges_center(gdf: gpd.GeoDataFrame):
             gdf = GdfUtils.filter_gdf_columns_values_AND(
                 gdf, [StyleKey.BRIDGE_WIDTH_RATIO, StyleKey.BRIDGE_COLOR])
             if (gdf.empty):
@@ -201,7 +211,7 @@ class Plotter:
                      alpha=gdf[StyleKey.ALPHA],
                      path_effects=[patheffects.Stroke(capstyle="butt", joinstyle='round')])
 
-        def plot_ways_bridges(gdf: gpd.GeoDataFrame):
+        def plot_ways_on_bridges(gdf: gpd.GeoDataFrame):
             waterways_gdf, rest_gdf = GdfUtils.filter_gdf_column_values(
                 gdf, 'waterway', compl=True)
             highways_gdf, rest_gdf = GdfUtils.filter_gdf_column_values(
@@ -218,8 +228,8 @@ class Plotter:
         bridges_gdf = GdfUtils.sort_gdf_by_column(bridges_gdf, "layer")
         for layer, bridge_layer_gdf in bridges_gdf.groupby("layer"):
             plot_bridges_edges(bridge_layer_gdf.copy())
-            plot_bridges(bridge_layer_gdf.copy())
-            plot_ways_bridges(bridge_layer_gdf.copy())
+            plot_bridges_center(bridge_layer_gdf.copy())
+            plot_ways_on_bridges(bridge_layer_gdf.copy())
 
     @time_measurement_decorator("wayplot")
     def plot_ways(self, ways_gdf: gpd.GeoDataFrame, ways_width_multiplier: float):
@@ -296,7 +306,7 @@ class Plotter:
         #         if(not GdfUtils.is_polygon_inside_polygon_threshold(bbox_polygon, self.reqired_area_polygon, text_bounds_overflow_threshold * 0.8)):
         #             text.remove()
         # adjust_text(self.ax.texts, force_text = 0.2)
-        # todo only for city, for points
+        # todo only for city, for points differently - first adjust city names and than all but without move?
         adjust_text(self.text_to_adjust, force_text=0.2)
         # text force
         # adjust_text(self.ax.texts, force_text = 0.25, avoid_self = False)

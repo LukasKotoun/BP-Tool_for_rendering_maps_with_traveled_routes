@@ -89,7 +89,7 @@ GPX_FOLDER: str = '../gpxs/trebic'
 folders_styles: FeaturesCategoryStyle = {
     'pěšky' : {StyleKey.COLOR: "Blue"},
     'Kolo testování' : {StyleKey.COLOR: "Red"},
-    'Kolo' : {StyleKey.COLOR: "Orange"}
+    'Kolo' : {StyleKey.COLOR: "Purple"}
 }
 
 GPXS_STYLES: FeaturesCategoriesStyles = {
@@ -105,13 +105,13 @@ GPXS_MANDATORY_STYLES: FeatureStyles = {
 
 # --------------filters for map elements--------------
 # columns that are used for ploting nodes name for city, ele for elevation points
-NODES_ADDITIONAL_COLUMNS = ['name']
+NODES_ADDITIONAL_COLUMNS = ['name', 'ele']
 WAYS_ADDITIONAL_COLUMNS = ['bridge', 'layer']
 # wanted_ways: WantedFeatures
 wanted_nodes: WantedCategories = {
     # 'place': {'city', 'town', 'village'}
     # 'place': {'town'}
-    'place': {'city', 'town'},
+    'place': {'city', 'town', 'village'}, 
     'natural': {'peak'}
 }
 
@@ -174,13 +174,15 @@ NODES_MANDATORY_STYLES: FeatureStyles = {
     StyleKey.COLOR: '#000000', StyleKey.FONT_SIZE: 50, StyleKey.EDGE_COLOR: '#FFFFFF',
     StyleKey.OUTLINE_WIDTH: 5,
 }
+
 place_styles: FeaturesCategoryStyle = {  # todo OUTLINE_WIDTH to edge size ratio
     'city': {StyleKey.FONT_SIZE: 2500 * CITY_CITY_SIZE_MULTIPLIER, StyleKey.OUTLINE_WIDTH: 270 * CITY_CITY_SIZE_MULTIPLIER},
-    'town': {StyleKey.FONT_SIZE: 1000 * CITY_TOWN_SIZE_MULTIPLIER, StyleKey.OUTLINE_WIDTH: 100 * CITY_TOWN_SIZE_MULTIPLIER},
-    'village': {StyleKey.FONT_SIZE: 300 * CITY_VILLAGE_SIZE_MULTIPLIER, StyleKey.OUTLINE_WIDTH: 50 * CITY_VILLAGE_SIZE_MULTIPLIER}
+    'town': {StyleKey.FONT_SIZE: 1500 * CITY_TOWN_SIZE_MULTIPLIER, StyleKey.OUTLINE_WIDTH: 170 * CITY_TOWN_SIZE_MULTIPLIER},
+    'village': {StyleKey.FONT_SIZE: 500 * CITY_VILLAGE_SIZE_MULTIPLIER, StyleKey.OUTLINE_WIDTH: 100 * CITY_VILLAGE_SIZE_MULTIPLIER}
 }
+
 natural_styles_nodes: FeaturesCategoryStyle = {
-    'peak': {StyleKey.ICON: "^", StyleKey.ICON_COLOR: "#7f3016", StyleKey.ICON_EDGE: 20}
+    'peak': {StyleKey.ICON: "^", StyleKey.ICON_COLOR: "#7f3016", StyleKey.ICON_EDGE: 20, StyleKey.OUTLINE_WIDTH: 50, StyleKey.FONT_SIZE: 400} #? textOutlineWitdh
 }
 
 NODES_STYLES: FeaturesCategoriesStyles = {

@@ -195,7 +195,9 @@ def main():
     # get only places with name
     nodes_gdf = GdfUtils.filter_gdf_related_columns_values(
         nodes_gdf, 'place', [], ['name'], [])
-    # todo use to filter peeks withou ele and name?
+    #todosplit to importatnt and not important height points and filter out without name
+    nodes_gdf = GdfUtils.filter_gdf_related_columns_values(
+        nodes_gdf, 'natural', ['peak'], ['name', 'ele'], []) # add name, ele
     # function(algorithm) to get only usefull peeks + again back to nodes gdf
     # ------------style elements------------
     nodes_style_assigner = StyleAssigner(
