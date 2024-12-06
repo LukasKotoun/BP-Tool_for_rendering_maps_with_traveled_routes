@@ -5,6 +5,7 @@ from matplotlib import patheffects
 from matplotlib.backends.backend_agg import RendererAgg
 import pandas as pd
 import geopandas as gpd
+import numpy as np
 from shapely import geometry
 from shapely.geometry.polygon import Polygon
 from shapely.geometry.linestring import LineString
@@ -27,7 +28,9 @@ class Plotter:
             self.reqired_area_gdf)
         self.paper_dimensions_mm = paper_dimensions_mm
         self.map_object_scaling_factor: float = map_object_scaling_factor
-        self.text_to_adjust = []
+        self.city_names = []
+        self.other_text = []
+        self.icons = []
 
     def init_plot(self, map_bg_color: str, area_zoom_preview: None | DimensionsTuple = None):
         self.fig, self.ax = plt.subplots(figsize=(self.paper_dimensions_mm[0]/self.MM_TO_INCH,
@@ -74,43 +77,54 @@ class Plotter:
             x = geom.x
             y = geom.y
             # weight='bold'
-            #todo to func?
+            # todo to func?
             text = self.ax.text(
                 x, y, wraped_name, fontsize=fontsize, ha='center', va='center', zorder=4, color=color,
                 path_effects=[patheffects.withStroke(linewidth=outline_width, foreground=edge_color)])
-            self.text_to_adjust.append(text)
+            self.city_names.append(text)
 
     def __plot_elevations(self, elevations_gdf: gpd.GeoDataFrame):
         if (elevations_gdf.empty):
             return
+        #todo edit
         elevations_gdf[StyleKey.ICON_SIZE] = elevations_gdf[StyleKey.ICON_SIZE] * \
-            self.map_object_scaling_factor
+            (np.sqrt(3) / 4) * (self.map_object_scaling_factor ** 2) # icons size is in area of triangle -todo edit 
         elevations_gdf[StyleKey.ICON_EDGE] = elevations_gdf[StyleKey.ICON_EDGE] * \
-            self.map_object_scaling_factor
+             self.map_object_scaling_factor
         elevations_gdf[StyleKey.OUTLINE_WIDTH] = elevations_gdf[StyleKey.OUTLINE_WIDTH] * \
             self.map_object_scaling_factor
-        # elevations_gdf.plot(ax=self.ax, marker=elevations_gdf[StyleKey.ICON], color=elevations_gdf[StyleKey.ICON_COLOR], markersize=elevations_gdf[StyleKey.ICON_SIZE], label='Points')
-        # Add annotations for each point
-       
         for idx, row in elevations_gdf.iterrows():
             x, y = row.geometry.x, row.geometry.y
+
+            # peak_name = self.ax.annotate(row['name'], (x, y), textcoords="offset points", xytext=(0, 300 * self.map_object_scaling_factor), ha='center', color=row[StyleKey.COLOR],
+            #     path_effects=[patheffects.withStroke(linewidth=row[StyleKey.OUTLINE_WIDTH], foreground=row[StyleKey.EDGE_COLOR])], fontsize=row[StyleKey.FONT_SIZE])
+            # peak_ele = self.ax.annotate(row['ele'], (x, y), textcoords="offset points", xytext=(0, -300 * self.map_object_scaling_factor - row[StyleKey.ICON_SIZE]), ha='center', color=row[StyleKey.COLOR],
+            #     path_effects=[patheffects.withStroke(linewidth=row[StyleKey.OUTLINE_WIDTH], foreground=row[StyleKey.EDGE_COLOR])], fontsize=row[StyleKey.FONT_SIZE])
+
+            # move text to top and bottom of the icon
+            #todo edit with icon size
+            xy_axes = self.ax.transData.transform((x, y))
+            xy_name = self.ax.transData.inverted().transform((xy_axes[0], xy_axes[1] + 300 * self.map_object_scaling_factor))
+            xy_ele = self.ax.transData.inverted().transform((xy_axes[0], xy_axes[1] - 350 * self.map_object_scaling_factor - row[StyleKey.ICON_SIZE]))
+            peak_name = self.ax.text(xy_name[0], xy_name[1], row['name'], color=row[StyleKey.COLOR], ha='center',
+                                     path_effects=[patheffects.withStroke(linewidth=row[StyleKey.OUTLINE_WIDTH], foreground=row[StyleKey.EDGE_COLOR])], fontsize=row[StyleKey.FONT_SIZE])
+            peak_ele = self.ax.text(xy_ele[0], xy_ele[1], row['ele'], color=row[StyleKey.COLOR], ha='center',
+                                    path_effects=[patheffects.withStroke(linewidth=row[StyleKey.OUTLINE_WIDTH], foreground=row[StyleKey.EDGE_COLOR])], fontsize=row[StyleKey.FONT_SIZE])
+            
             self.ax.scatter(x, y, marker=row[StyleKey.ICON], color=row[StyleKey.ICON_COLOR], s=row[StyleKey.ICON_SIZE],
                             edgecolor=row[StyleKey.EDGE_COLOR], linewidth=row[StyleKey.ICON_EDGE])
-            #todo add text to elevation
-            #todo dynamic xy text offset - also text to function - anotate vs text
-            self.ax.annotate(row['name'], (x, y), textcoords="offset points", xytext=(0, 300 * self.map_object_scaling_factor), ha='center', color=row[StyleKey.COLOR],
-                path_effects=[patheffects.withStroke(linewidth=row[StyleKey.OUTLINE_WIDTH], foreground=row[StyleKey.EDGE_COLOR])], fontsize=row[StyleKey.FONT_SIZE])
-            self.ax.annotate(row['ele'], (x, y), textcoords="offset points", xytext=(0, -300 * self.map_object_scaling_factor - row[StyleKey.ICON_SIZE]), ha='center', color=row[StyleKey.COLOR],
-                path_effects=[patheffects.withStroke(linewidth=row[StyleKey.OUTLINE_WIDTH], foreground=row[StyleKey.EDGE_COLOR])], fontsize=row[StyleKey.FONT_SIZE])
-            # self.ax.text(x, y, "test", fontsize=200*self.map_object_scaling_factor, ha='center', color='blue')  # Annotate above the triangle
+         
+
+            # self.other_text.append(peak_name)
+            # self.other_text.append(peak_ele)
 
     @time_measurement_decorator("nodePlot")
     def plot_nodes(self, nodes_gdf: gpd.GeoDataFrame, wrap_len: int | None):
         all_columns_present: bool = all(col in nodes_gdf.columns for col in [
-                                  StyleKey.FONT_SIZE, StyleKey.OUTLINE_WIDTH, StyleKey.COLOR, StyleKey.EDGE_COLOR])
+            StyleKey.FONT_SIZE, StyleKey.OUTLINE_WIDTH, StyleKey.COLOR, StyleKey.EDGE_COLOR])
         if (nodes_gdf.empty or not all_columns_present):
             return
-        
+
         # todo checks for att
         nodes_gdf[StyleKey.FONT_SIZE] = nodes_gdf[StyleKey.FONT_SIZE] * \
             self.map_object_scaling_factor
@@ -135,9 +149,9 @@ class Plotter:
                     edge_lines_gdf[StyleKey.LINEWIDTH] * \
                     edge_lines_gdf[StyleKey.EDGE_WIDTH_RATIO]
                 edge_lines_gdf.plot(ax=self.ax, color=edge_lines_gdf[StyleKey.EDGE_COLOR],
-                                   linewidth=edge_lines_gdf[StyleKey.LINEWIDTH],
-                                   alpha=edge_lines_gdf[StyleKey.ALPHA],
-                                   path_effects=[patheffects.Stroke(capstyle="butt", joinstyle='round')])
+                                    linewidth=edge_lines_gdf[StyleKey.LINEWIDTH],
+                                    alpha=edge_lines_gdf[StyleKey.ALPHA],
+                                    path_effects=[patheffects.Stroke(capstyle="butt", joinstyle='round')])
 
     def __plot_highways(self, highways_gdf: gpd.GeoDataFrame, plotEdges: bool = False):
         if (highways_gdf.empty):
@@ -238,14 +252,14 @@ class Plotter:
             return
         ways_gdf[StyleKey.LINEWIDTH] = ways_gdf[StyleKey.LINEWIDTH] * \
             self.map_object_scaling_factor * ways_width_multiplier
-            
+
         bridges_gdf, rest_gdf = GdfUtils.filter_gdf_column_values(
             ways_gdf, 'bridge', ['yes'], compl=True)
         waterways_gdf, rest_gdf = GdfUtils.filter_gdf_column_values(
             rest_gdf, 'waterway', compl=True)
         highways_gdf, rest_gdf = GdfUtils.filter_gdf_column_values(
             rest_gdf, 'highway', compl=True)
-        railways_gdf= GdfUtils.filter_gdf_column_values(
+        railways_gdf = GdfUtils.filter_gdf_column_values(
             rest_gdf, 'railway')
 
         self.__plot_waterways(waterways_gdf)
@@ -282,9 +296,8 @@ class Plotter:
 
     @time_measurement_decorator("gpxsPlot")
     def plot_gpxs(self, gpxs_gdf: gpd.GeoDataFrame, line_width_multiplier: float):
-       
 
-        if(gpxs_gdf.empty):
+        if (gpxs_gdf.empty):
             return
         # gpxs_gdf.plot(ax=self.ax, color="red", linewidth=20 *
         #               self.map_object_scaling_factor)
@@ -292,8 +305,8 @@ class Plotter:
         gpxs_gdf[StyleKey.LINEWIDTH] = gpxs_gdf[StyleKey.LINEWIDTH] * \
             self.map_object_scaling_factor * line_width_multiplier
         gpxs_gdf.plot(ax=self.ax, color=gpxs_gdf[StyleKey.COLOR], linewidth=gpxs_gdf[StyleKey.LINEWIDTH],
-                          linestyle=gpxs_gdf[StyleKey.LINESTYLE], alpha=gpxs_gdf[StyleKey.ALPHA],
-                          path_effects=[patheffects.Stroke(capstyle="round", joinstyle='round')])
+                      linestyle=gpxs_gdf[StyleKey.LINESTYLE], alpha=gpxs_gdf[StyleKey.ALPHA],
+                      path_effects=[patheffects.Stroke(capstyle="round", joinstyle='round')])
 
     @time_measurement_decorator("adjusting")
     def adjust_texts(self, text_bounds_overflow_threshold: float):
@@ -305,11 +318,17 @@ class Plotter:
         #         bbox_polygon = geometry.box(text_Bbox.x0, text_Bbox.y0, text_Bbox.x1, text_Bbox.y1)
         #         if(not GdfUtils.is_polygon_inside_polygon_threshold(bbox_polygon, self.reqired_area_polygon, text_bounds_overflow_threshold * 0.8)):
         #             text.remove()
-        # adjust_text(self.ax.texts, force_text = 0.2)
-        # todo only for city, for points differently - first adjust city names and than all but without move?
-        adjust_text(self.text_to_adjust, force_text=0.2)
+        
+        # adjust_text(
+        #     self.other_text,
+        #     only_move={"texts": "y"},
+        #     avoid_self=False,
+        # )
+        if(self.other_text):
+            adjust_text(self.city_names, force_text=0.2, objects=self.other_text)
+        else:
+            adjust_text(self.city_names, force_text=0.2)
         # text force
-        # adjust_text(self.ax.texts, force_text = 0.25, avoid_self = False)
         # remove overflown texts after adjusting
         if (text_bounds_overflow_threshold > 0):
             r: RendererAgg = self.fig.canvas.get_renderer()

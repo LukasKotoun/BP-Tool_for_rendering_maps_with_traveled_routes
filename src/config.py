@@ -5,7 +5,8 @@ from common.map_enums import *
 # --------------------------------------------------------------map area--------------------------------------------------------------
 # OSM_INPUT_FILE_NAMES: str = ['../osm_files/vys.osm.pbf','../osm_files/jihmor.osm.pbf']
 # OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/vysJihE.osm.pbf'
-OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/trebic_vic.osm.pbf'
+# OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/trebic_vic.osm.pbf'
+OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/brno.osm.pbf'
 # extract
 OSM_WANT_EXTRACT_AREA: bool = False
 # set if want osm file cutting using osmium command line tool (need to be uinstalled), If not set to None
@@ -18,8 +19,8 @@ PERCENTAGE_PADDING = 0
 
 # AREA: WantedArea = [(-18.14143,65.68868),(-18.08538,65.68868),(-18.08538,65.67783),(-18.14143,65.67783)] #island
 # AREA: WantedArea = [(6.94872,4.84293),(6.99314,4.84293),(6.99314,4.81603),(6.94872,4.81603)] #afrika
-# AREA: WantedArea = "Třebíč, Česko"
-AREA: WantedArea = [(15.7396182,49.3111173), (16.0273871,49.3028839), (16.0266146,49.1439064), (15.6712219,49.1928600)] #trebic 
+AREA: WantedArea = "Brno, Česko"
+# AREA: WantedArea = [(15.7396182,49.3111173), (16.0273871,49.3028839), (16.0266146,49.1439064), (15.6712219,49.1928600)] #trebic 
 # AREA: WantedArea = ["Vysočina, Česko", "Jihomoravský kraj, Česko"]
 PAPER_DIMENSIONS: PaperSize | tuple[float | None, float | None] = PaperSize.A4.dimensions
 # PAPER_DIMENSIONS = (400, None)
@@ -188,7 +189,7 @@ natural_styles_nodes: FeaturesCategoryStyle = {
 NODES_STYLES: FeaturesCategoriesStyles = {
     # color is color of text, EDGE_COLOR is outline color
     'place': (place_styles, {StyleKey.COLOR: '#000000', StyleKey.EDGE_COLOR: '#FFFFFF'}),
-    'natural': (natural_styles_nodes, {StyleKey.COLOR: '#000000', StyleKey.EDGE_COLOR: '#FFFFFF', StyleKey.ICON_SIZE: 300, StyleKey.ICON_COLOR: "red"}),
+    'natural': (natural_styles_nodes, {StyleKey.COLOR: '#000000', StyleKey.EDGE_COLOR: '#FFFFFF', StyleKey.ICON_SIZE: 300**2, StyleKey.ICON_COLOR: "red"}),
 }
 
 # -------------------ways-------------------  
