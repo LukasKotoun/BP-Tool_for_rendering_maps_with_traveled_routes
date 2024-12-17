@@ -8,7 +8,6 @@ import osmnx as ox
 import pygeoops
 
 from modules.utils import Utils
-from geopy.distance import geodesic
 
 from common.map_enums import WorldSides, StyleKey
 from common.custom_types import BoundsDict, DimensionsTuple, Point, WantedArea
@@ -103,30 +102,6 @@ class GdfUtils:
                 WorldSides.SOUTH: bounds[1],
                 WorldSides.EAST: bounds[2],
                 WorldSides.NORTH: bounds[3]}
-
-    @staticmethod
-    def get_dimensions_m(bounds: BoundsDict) -> DimensionsTuple:
-        northern = (bounds[WorldSides.NORTH],
-                    (bounds[WorldSides.WEST] + bounds[WorldSides.EAST]) / 2)
-        southern = (bounds[WorldSides.SOUTH],
-                    (bounds[WorldSides.WEST] + bounds[WorldSides.EAST]) / 2)
-        eastern = ((bounds[WorldSides.NORTH] +
-                   bounds[WorldSides.SOUTH]) / 2, bounds[WorldSides.EAST])
-        western = ((bounds[WorldSides.NORTH] +
-                   bounds[WorldSides.SOUTH]) / 2, bounds[WorldSides.WEST])
-        width = geodesic(eastern, western).meters
-        height = geodesic(northern, southern).meters
-        return width, height
-
-    @staticmethod
-    def get_dimensions_m_gdf(gdf: gpd.GeoDataFrame) -> DimensionsTuple:
-        bounds = GdfUtils.get_bounds_gdf(gdf)
-        return GdfUtils.get_dimensions_m(bounds)
-
-    @staticmethod
-    def get_dimensions_m_polygon(polygon: gpd.GeoDataFrame) -> DimensionsTuple:
-        bounds = GdfUtils.get_polygon_bounds(polygon)
-        return GdfUtils.get_dimensions_m(bounds)
 
     @staticmethod
     def get_dimensions_gdf(gdf: gpd.GeoDataFrame) -> DimensionsTuple:

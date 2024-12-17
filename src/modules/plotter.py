@@ -106,6 +106,7 @@ class Plotter:
             xy_axes = self.ax.transData.transform((x, y))
             xy_name = self.ax.transData.inverted().transform((xy_axes[0], xy_axes[1] + 300 * self.map_object_scaling_factor))
             xy_ele = self.ax.transData.inverted().transform((xy_axes[0], xy_axes[1] - 350 * self.map_object_scaling_factor - row[StyleKey.ICON_SIZE]))
+            
             peak_name = self.ax.text(xy_name[0], xy_name[1], row['name'], color=row[StyleKey.COLOR], ha='center',
                                      path_effects=[patheffects.withStroke(linewidth=row[StyleKey.OUTLINE_WIDTH], foreground=row[StyleKey.EDGE_COLOR])], fontsize=row[StyleKey.FONT_SIZE])
             peak_ele = self.ax.text(xy_ele[0], xy_ele[1], row['ele'], color=row[StyleKey.COLOR], ha='center',
@@ -114,9 +115,9 @@ class Plotter:
             self.ax.scatter(x, y, marker=row[StyleKey.ICON], color=row[StyleKey.ICON_COLOR], s=row[StyleKey.ICON_SIZE],
                             edgecolor=row[StyleKey.EDGE_COLOR], linewidth=row[StyleKey.ICON_EDGE])
          
-
             # self.other_text.append(peak_name)
             # self.other_text.append(peak_ele)
+            # second aproach - create annotation and get cordinates and than create text from it and use that text to adjusting
 
     @time_measurement_decorator("nodePlot")
     def plot_nodes(self, nodes_gdf: gpd.GeoDataFrame, wrap_len: int | None):
@@ -135,6 +136,7 @@ class Plotter:
             rest_gdf, 'natural', ['peak'])
         self.__plot_elevations(rest_gdf)
 
+    #? create function filter_for_line_edges....
     def __plot_line_edges(self, lines_gdf):
         if (lines_gdf.empty):
             return

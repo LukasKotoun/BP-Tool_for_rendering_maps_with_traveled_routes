@@ -188,15 +188,21 @@ class OsmDataParser(osmium.SimpleHandler):
                 return
 
     @time_measurement_decorator("gdf creating")
-    def create_gdf(self, fromEpsg: int, toEpsg: int | None = None):
+    def create_gdf(self, fromEpsg: int, toEpsg: int | None = None) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame, gpd.GeoDataFrame]:
 
-        nodes_gdf = GdfUtils.create_gdf_from_geometry_and_attributes(self.nodes_geometry, self.nodes_tags, fromEpsg)
-        ways_gdf = GdfUtils.create_gdf_from_geometry_and_attributes(self.ways_geometry, self.ways_tags, fromEpsg)
-        areas_gdf = GdfUtils.create_gdf_from_geometry_and_attributes(self.areas_geometry, self.areas_tags, fromEpsg)
-        
-        GdfUtils.change_columns_to_categorical(nodes_gdf, [key for key, _ in self.wanted_nodes.items()])
-        GdfUtils.change_columns_to_categorical(ways_gdf, [key for key, _ in self.wanted_ways.items()])
-        GdfUtils.change_columns_to_categorical(areas_gdf, [key for key, _ in self.wanted_areas.items()])
+        nodes_gdf = GdfUtils.create_gdf_from_geometry_and_attributes(
+            self.nodes_geometry, self.nodes_tags, fromEpsg)
+        ways_gdf = GdfUtils.create_gdf_from_geometry_and_attributes(
+            self.ways_geometry, self.ways_tags, fromEpsg)
+        areas_gdf = GdfUtils.create_gdf_from_geometry_and_attributes(
+            self.areas_geometry, self.areas_tags, fromEpsg)
+
+        GdfUtils.change_columns_to_categorical(
+            nodes_gdf, [key for key, _ in self.wanted_nodes.items()])
+        GdfUtils.change_columns_to_categorical(
+            ways_gdf, [key for key, _ in self.wanted_ways.items()])
+        GdfUtils.change_columns_to_categorical(
+            areas_gdf, [key for key, _ in self.wanted_areas.items()])
 
         # print(nodes_gdf.memory_usage(deep=True))
         # print(ways_gdf.memory_usage(deep=True))
