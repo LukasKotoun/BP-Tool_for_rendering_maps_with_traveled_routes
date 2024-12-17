@@ -199,7 +199,8 @@ class StyleAssigner:
             colors_used - used number of colors from pallet
         """
         if (max_color_count is None):
-            max_color_count = Utils.count_missing_values(keys, existing_styles, StyleKey.COLOR)
+            max_color_count = Utils.count_missing_values(
+                keys, existing_styles, StyleKey.COLOR)
         if (colors_used is None):
             colors_used = 0
 
@@ -218,6 +219,10 @@ class StyleAssigner:
                         existing_styles[key] = {
                             StyleKey.COLOR: cmap(colors_used)}
                         colors_used += 1
+                    elif (StyleKey.COLOR not in existing_styles[key].keys()):
+                        existing_styles[key].update(
+                            {StyleKey.COLOR: cmap(colors_used)})
+                        colors_used += 1
             else:
                 norm = plt.Normalize(vmin=0,
                                      vmax=max_color_count)
@@ -225,6 +230,10 @@ class StyleAssigner:
                     if key not in existing_styles:
                         existing_styles[key] = {
                             StyleKey.COLOR: cmap(norm(colors_used))}
+                        colors_used += 1
+                    elif (StyleKey.COLOR not in existing_styles[key].keys()):
+                        existing_styles[key].update(
+                            {StyleKey.COLOR: cmap(norm(colors_used))})
                         colors_used += 1
 
         elif (mode == ColorMode.SHADE):
