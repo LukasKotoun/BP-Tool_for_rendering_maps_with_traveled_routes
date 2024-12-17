@@ -5,7 +5,7 @@ import pandas as pd
 from geopandas import GeoDataFrame
 from modules.gdf_utils import GdfUtils
 
-from common.map_enums import StyleKey
+from common.map_enums import StyleKey, ColorMode
 from common.custom_types import FeaturesCategoriesStyles, WantedCategories, FeatureStyles, FeaturesCategoryStyle
 
 # element or static or map element and gpx...?
@@ -46,7 +46,7 @@ class StyleAssigner:
         warnings.warn(
             "_get_styles_for_map_feature: some map FeaturesCategory does not have any style in FeaturesCategoriesStyles")
         # osm data feature is not in any features category avilable in avilable_styles
-        # if that occure assign styles from global styles and assign only wanted
+        #todo check mandatory vs general - usage 
         return self.general_default_styles
 
     # def __replace_none_with_na(self, data): # and empty string?
@@ -116,17 +116,12 @@ class StyleAssigner:
         Returns:
             GeoDataFrame: Gdf with assigned styles to features
         """
-        # todo remove wanted styles - will be all
 
         if (gdf.empty):
             return gdf
         # get only useful styles    (all styles inside will be assigned), it makes assigning quicker
         available_styles, new_styles= self._filter_category_styles(
             wanted_features_categories)
-
-        print(available_styles)
-        print("\n")
-
         if (not available_styles):
             warnings.warn("assign_styles_to_gdf: avilable styles are empty")
         # create list of all used stylekeys in aviailable styles    
@@ -164,12 +159,15 @@ class StyleAssigner:
         return styled_gdf
 
     # call this function on 2 modes only, on mode where want to use one static color it is not necessary - color will be in default styles or mandatory styles (should be created based on UI)
-    # def assign_dynamic_colors(keys: list[str], existing_styles: FeaturesCategoryStyle, mode: enum, color_or_pallet: str, colors_used: int = None) -> FeaturesCategoryStyle:
-    #     """Extend existing_styles with keys that are not in existing_styles and are in keys.
+    @staticmethod
+    def assign_dynamic_colors(keys: list[str], existing_styles: FeaturesCategoryStyle, mode: ColorMode, color_or_pallet: str, colors_used: int = None):
+        """Extend existing_styles with keys that are not in existing_styles and are in keys.
 
-    #         keys - dict key be in resulting dict as keys
-    #         mode - wheter to add colors from pallete or one color shades
-    #         color_or_pallet - name of pallet or color to shade use
-    #         colors_used - used number of colors from pallet
-    #     """
-    #     pass
+            keys - dict key be in resulting dict as keys
+            mode - wheter to add colors from pallete or one color shades
+            color_or_pallet - name of pallet or color to shade use
+            colors_used - used number of colors from pallet
+        """
+        existing_styles["test"] = {StyleKey.COLOR: "asd"}
+
+        pass

@@ -1,6 +1,11 @@
 from enum import Enum
 from typing import Literal
 
+class ColorMode(Enum):
+    DEFAULT = 1
+    SINGLE = 2
+    SHADE = 3
+    PALLET = 4
 
 class StyleKey(Enum):
     COLOR = 1
@@ -20,7 +25,6 @@ class StyleKey(Enum):
     ICON_EDGE = 14
     ICON_SIZE = 15
 
-
 class AreaBounds(Enum):
     NONE = 1
     COMBINED = 2
@@ -38,7 +42,6 @@ class WorldSides(Enum):
     EAST = 'east'
     NORTH = 'north'
     SOUTH = 'south'
-
 
 class PaperSize(Enum):
     A0: tuple[Literal[841], Literal[1189]] = (841, 1189)

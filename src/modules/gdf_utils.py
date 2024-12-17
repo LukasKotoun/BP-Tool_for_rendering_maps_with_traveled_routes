@@ -132,8 +132,10 @@ class GdfUtils:
             geometry=geometry), crs=f"EPSG:{fromEpsg}")
 
     @staticmethod
-    def create_empty_gdf() -> gpd.GeoDataFrame:
-        return gpd.GeoDataFrame()
+    def create_empty_gdf(*columns) -> gpd.GeoDataFrame:
+        columns = list(columns)
+        columns.append("geometry")
+        return gpd.GeoDataFrame(columns=columns, geometry="geometry")
 
 
     
@@ -184,6 +186,7 @@ class GdfUtils:
             return gdf.to_crs(epsg=toEpsg)
         return gpd.GeoDataFrame(geometry=[gdf.to_crs(epsg=toEpsg).geometry.unary_union], crs=f"EPSG:{toEpsg}")
 
+    #todo change from list
     @staticmethod
     def combine_gdfs(gdfs: list[gpd.GeoDataFrame]) -> gpd.GeoDataFrame:
         if (len(gdfs) == 1):
@@ -206,7 +209,12 @@ class GdfUtils:
             return gdf.sort_values(by=column_name, ascending=ascending, na_position=na_position, kind="mergesort").reset_index(drop=True)
         warnings.warn("Cannot sort - unexisting column name")
         return gdf
-
+    
+    def change_epsg(gdf: gpd.GeoDataFrame, toEpsg: int) -> gpd.GeoDataFrame:
+        if(gdf.empty):
+            return gdf.set_crs(epsg=toEpsg)
+        return gdf.to_crs(epsg=toEpsg)
+    
     # ------------Bool operations------------
     @staticmethod
     def is_polygon_inside_bounds(area_bounds: BoundsDict, polygon: Polygon) -> bool:
@@ -226,7 +234,7 @@ class GdfUtils:
         intersection_area: float = inner.intersection(outer).area
         percentage_inside: float = intersection_area / bbox_area
         return percentage_inside >= threshold
-
+    
     # ------------Filtering------------
     # @staticmethod
     # def create_condition(gdf: gpd.GeoDataFrame, att_name: str, att_values: list[str] = []) -> pd.Series:

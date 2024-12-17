@@ -5,8 +5,8 @@ from common.map_enums import *
 # --------------------------------------------------------------map area--------------------------------------------------------------
 # OSM_INPUT_FILE_NAMES: str = ['../osm_files/vys.osm.pbf','../osm_files/jihmor.osm.pbf']
 # OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/vysJihE.osm.pbf'
-# OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/trebic_vic.osm.pbf'
-OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/brno.osm.pbf'
+OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/trebic_vic.osm.pbf'
+# OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/brno.osm.pbf'
 # extract
 OSM_WANT_EXTRACT_AREA: bool = False
 # set if want osm file cutting using osmium command line tool (need to be uinstalled), If not set to None
@@ -19,10 +19,12 @@ PERCENTAGE_PADDING = 0
 
 # AREA: WantedArea = [(-18.14143,65.68868),(-18.08538,65.68868),(-18.08538,65.67783),(-18.14143,65.67783)] #island
 # AREA: WantedArea = [(6.94872,4.84293),(6.99314,4.84293),(6.99314,4.81603),(6.94872,4.81603)] #afrika
-AREA: WantedArea = "Brno, Česko"
-# AREA: WantedArea = [(15.7396182,49.3111173), (16.0273871,49.3028839), (16.0266146,49.1439064), (15.6712219,49.1928600)] #trebic 
+# AREA: WantedArea = "Brno, Česko"
+AREA: WantedArea = [(15.7396182, 49.3111173), (16.0273871, 49.3028839),
+                    (16.0266146, 49.1439064), (15.6712219, 49.1928600)]  # trebic
 # AREA: WantedArea = ["Vysočina, Česko", "Jihomoravský kraj, Česko"]
-PAPER_DIMENSIONS: PaperSize | tuple[float | None, float | None] = PaperSize.A4.dimensions
+PAPER_DIMENSIONS: PaperSize | tuple[float |
+                                    None, float | None] = PaperSize.A4.dimensions
 # PAPER_DIMENSIONS = (400, None)
 # set own dimensions. If one is left as 'None' it will be automaticaly calculated using area size
 # PAPER_DIMENSIONS = (1100, None)
@@ -76,32 +78,41 @@ OUTER_GIVEN_SMALLER_PAPER_DIMENSION = True
 # set how will resulted paper be oriented, AUTOMATIC is Recommended
 OUTER_WANTED_ORIENTATION = MapOrientation.AUTOMATIC
 
-# expand
+# expand area
 OUTER_EXPAND_AREA_MODE = ExpandArea.FIT_PAPER_SIZE
 OUTER_CUSTOM_EXPAND_AREA: WantedArea | None = "Česko"
 
 # --------------------------------------------------------------gpx settings--------------------------------------------------------------
 
 GPX_FOLDER: str = '../gpxs/trebic'
-
-#?can be created automaticali from: {"FOLDER NAME": "COLOR", "FOLDER NAME": "COLOR"}" - in gui
-
+FOLDER_COLOR_MODE: ColorMode = ColorMode.PALLET
+FOLDER_COLOR_PALLET: str = "viridis"
+ROOT_FILES_COLOR_MODE: ColorMode = ColorMode.PALLET
+FOLDER_COLOR_PALLET: str = "viridis"
+# ? none means that it will not be printed (edge or facecolor (not normal color in ways)), "" will be like that is not in that? - or better to be just removed
 # -------------------gpx styles by folder-------------------
 folders_styles: FeaturesCategoryStyle = {
-    'pěšky' : {StyleKey.COLOR: "Blue"},
-    'Kolo testování' : {StyleKey.COLOR: "Red"},
-    'Kolo' : {StyleKey.COLOR: "Purple"}
+    'pěšky': {StyleKey.COLOR: "Blue"},
+    'Kolo testování': {StyleKey.COLOR: "Red"},
+    'Kolo': {StyleKey.COLOR: "Purple"}
 }
 
+root_files_styles: FeaturesCategoryStyle = {
+    "Grilovačka.gpx": {StyleKey.COLOR: "Green"},
+}
+
+
 GPXS_STYLES: FeaturesCategoriesStyles = {
+    # for files in root by fileName
+    'fileName': (root_files_styles, {StyleKey.COLOR: 'Orange', StyleKey.LINEWIDTH: 200, StyleKey.ALPHA: 0.7,  StyleKey.ZINDEX: 0}),
+    # for files in subfolders folder
     'folder': (folders_styles, {StyleKey.COLOR: 'Red', StyleKey.LINEWIDTH: 200, StyleKey.ALPHA: 0.7,  StyleKey.ZINDEX: 0}),
 }
 
-# styles that must be assigned to all gpxs 
+# styles that must be assigned to all gpxs
 GPXS_MANDATORY_STYLES: FeatureStyles = {
-    StyleKey.COLOR: 'Red', StyleKey.ALPHA: 1.0, StyleKey.LINESTYLE: "-"
+    StyleKey.COLOR: 'Green', StyleKey.ALPHA: 1.0, StyleKey.LINESTYLE: "-"
 }
-
 
 
 # --------------filters for map elements--------------
@@ -112,17 +123,20 @@ WAYS_ADDITIONAL_COLUMNS = ['bridge', 'layer']
 wanted_nodes: WantedCategories = {
     # 'place': {'city', 'town', 'village'}
     # 'place': {'town'}
-    'place': {'city', 'town', 'village'}, 
+    'place': {'city', 'town', 'village'},
     'natural': {'peak'}
 }
 
 
 # todo automatic wanted objects setup using map and pdf ratio automatic_filters_creating_factor - own class ()
 
-# set wanted categories to all gpxs with folder -> 
+# set wanted categories to all gpxs with folder ->
 # switching/workaround from styling map elements by category to styling GPX routes by folder
-GPX_CATEGORIES: WantedCategories = {
+GPX_FOLDERS_CATEGORIES: WantedCategories = {
     'folder': set({}),
+}
+GPX_ROOT_FILES_CATEGORIES: WantedCategories = {
+    'fileName': set({}),
 }
 
 unwanted_nodes_tags: UnwantedTags = {
@@ -169,7 +183,7 @@ GENERAL_DEFAULT_STYLES: FeatureStyles = {StyleKey.COLOR: '#EDEDE0',  StyleKey.ZI
 
 # ? appka asi taky tímhle stylem? pokud bude chtít vlastní nastavení styl (např pro šířku) - (nemá automatické nastavování - to má pouze které výběr....)
 
-# -------------------nodes-------------------  
+# -------------------nodes-------------------
 # styles that must be assigned to all node features
 NODES_MANDATORY_STYLES: FeatureStyles = {
     StyleKey.COLOR: '#000000', StyleKey.FONT_SIZE: 50, StyleKey.EDGE_COLOR: '#FFFFFF',
@@ -183,7 +197,8 @@ place_styles: FeaturesCategoryStyle = {  # todo OUTLINE_WIDTH to edge size ratio
 }
 
 natural_styles_nodes: FeaturesCategoryStyle = {
-    'peak': {StyleKey.ICON: "^", StyleKey.ICON_COLOR: "#7f3016", StyleKey.ICON_EDGE: 20, StyleKey.OUTLINE_WIDTH: 50, StyleKey.FONT_SIZE: 400} #? textOutlineWitdh
+    # ? textOutlineWitdh
+    'peak': {StyleKey.ICON: "^", StyleKey.ICON_COLOR: "#7f3016", StyleKey.ICON_EDGE: 20, StyleKey.OUTLINE_WIDTH: 50, StyleKey.FONT_SIZE: 400}
 }
 
 NODES_STYLES: FeaturesCategoriesStyles = {
@@ -192,7 +207,7 @@ NODES_STYLES: FeaturesCategoriesStyles = {
     'natural': (natural_styles_nodes, {StyleKey.COLOR: '#000000', StyleKey.EDGE_COLOR: '#FFFFFF', StyleKey.ICON_SIZE: 300**2, StyleKey.ICON_COLOR: "red"}),
 }
 
-# -------------------ways-------------------  
+# -------------------ways-------------------
 # styles that must be assigned to all way features
 WAY_MANDATORY_STYLES: FeatureStyles = {
     StyleKey.COLOR: '#EDEDE0', StyleKey.ALPHA: 1.0, StyleKey.LINEWIDTH: 1, StyleKey.LINESTYLE: '-',
@@ -230,7 +245,7 @@ WAYS_STYLES: FeaturesCategoriesStyles = {
     'railway': (railway_styles, {StyleKey.COLOR: '#FFFFFF', StyleKey.ZINDEX: 2, StyleKey.LINEWIDTH: 8}),
 }
 
-# -------------------areas-------------------  
+# -------------------areas-------------------
 # styles that must be assigned to all area features
 AREA_MANDATORY_STYLES: FeatureStyles = {
     StyleKey.COLOR: '#EDEDE0', StyleKey.ALPHA: 1.0
@@ -268,7 +283,6 @@ AREAS_STYLES: FeaturesCategoriesStyles = {
     'water': ({}, {StyleKey.COLOR: '#8FB8DB', StyleKey.ZINDEX: 1}),
     'boundary': ({}, {StyleKey.EDGE_COLOR: '#97BB72', StyleKey.LINEWIDTH: 80, StyleKey.LINESTYLE: '-', StyleKey.ZINDEX: 1, StyleKey.ALPHA: 0.85})
 }
-
 
 
 # ------------constants--------------

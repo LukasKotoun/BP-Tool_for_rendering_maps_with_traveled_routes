@@ -10,7 +10,7 @@ from modules.gdf_utils import GdfUtils
 class GpxManager:
     def __init__(self, gpx_folder: str, epsg: int):
         self.gpx_folder: str = gpx_folder
-        self.gpxs_gdf = gpd.GeoDataFrame()
+        self.gpxs_gdf = GdfUtils.create_empty_gdf('fileName', 'folder')
         self.parse_gpxs_gdf(epsg)
         
     def parse_gpxs_gdf(self, toEpsg: int) -> gpd.GeoDataFrame:
@@ -41,9 +41,15 @@ class GpxManager:
         if (self.gpxs_gdf.empty):
             return self.gpxs_gdf
         
-        GdfUtils.change_columns_to_categorical(self.gpxs_gdf, ['name', 'folder'])
+        GdfUtils.change_columns_to_categorical(self.gpxs_gdf, ['fileName', 'folder'])
                 
         if (toEpsg is None):
             return self.gpxs_gdf
         else:
             return self.gpxs_gdf.to_crs(epsg=toEpsg)
+        
+    def get_gpxs_gdf_splited(self) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]:
+
+        GdfUtils.change_columns_to_categorical(self.gpxs_gdf, ['fileName', 'folder'])
+        
+        return GdfUtils.filter_gdf_column_values(self.gpxs_gdf, 'folder', [''], compl=True)

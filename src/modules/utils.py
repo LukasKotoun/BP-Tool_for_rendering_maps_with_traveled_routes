@@ -177,3 +177,15 @@ class Utils:
             paper_dimensions_mm[0] + paper_dimensions_mm[1])
 
         return paper_scaling_factor / map_scaling_factor
+
+    # @staticmethod
+    # def get_direct_folders_name(root_folder_path: str) -> list[str]:
+    #     """_summary_
+
+    #     Args:
+    #         root_folder_path (str): _description_
+
+    #     Returns:
+    #         list[str]: _description_
+    #     """
+    #     pass

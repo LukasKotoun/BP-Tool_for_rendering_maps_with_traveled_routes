@@ -167,18 +167,16 @@ def main():
     def apply_file():
         osm_file_parser.apply_file(osm_file_name)
     apply_file()
-    # ------------Working in display EPSG------------
 
+    # ------------Working in display EPSG------------
     nodes_gdf, ways_gdf, areas_gdf = osm_file_parser.create_gdf(
         EPSG_OSM, EPSG_DISPLAY)
     osm_file_parser.clear_gdf()
-    if (not map_area_gdf.empty):
-        map_area_gdf = map_area_gdf.to_crs(f"epsg:{EPSG_DISPLAY}")
-    if (not boundary_map_area_gdf.empty):
-        boundary_map_area_gdf = boundary_map_area_gdf.to_crs(
-            f"epsg:{EPSG_DISPLAY}")
 
-    # todo check if area is inside osm to function
+    map_area_gdf = GdfUtils.change_epsg(map_area_gdf, EPSG_DISPLAY)
+    boundary_map_area_gdf = GdfUtils.change_epsg(
+        boundary_map_area_gdf, EPSG_DISPLAY)
+
     whole_map_gdf = GdfUtils.create_polygon_from_gdf_bounds(
         ways_gdf, areas_gdf)
     reqired_area_polygon = GdfUtils.create_polygon_from_gdf(map_area_gdf)
@@ -195,9 +193,9 @@ def main():
     # get only places with name
     nodes_gdf = GdfUtils.filter_gdf_related_columns_values(
         nodes_gdf, 'place', [], ['name'], [])
-    #todosplit to importatnt and not important height points and filter out without name
+
     nodes_gdf = GdfUtils.filter_gdf_related_columns_values(
-        nodes_gdf, 'natural', ['peak'], ['name', 'ele'], []) # add name, ele
+        nodes_gdf, 'natural', ['peak'], ['name', 'ele'], [])
     # function(algorithm) to get only usefull peeks + again back to nodes gdf
     # ------------style elements------------
     nodes_style_assigner = StyleAssigner(
@@ -217,20 +215,29 @@ def main():
 
     # todo check if gpx go somewhere outside reqired_area - add warning
 
+    gpx_manager = GpxManager(GPX_FOLDER, EPSG_DISPLAY)
+    root_files_gpxs_gdf, folder_gpxs_gdf = gpx_manager.get_gpxs_gdf_splited()
+    # assign dynamic colors to root files and folders styles if wanted
+    if (ROOT_FILES_COLOR_MODE == ColorMode.PALLET or ROOT_FILES_COLOR_MODE == ColorMode.SHADE):
+        root_files = list(root_files_gpxs_gdf['fileName'].unique())
+        StyleAssigner.assign_dynamic_colors(
+            root_files, root_files_styles, FOLDER_COLOR_MODE, FOLDER_COLOR_PALLET, 0)
+
+    if (FOLDER_COLOR_MODE == ColorMode.PALLET or FOLDER_COLOR_MODE == ColorMode.SHADE):
+        folders = list(folder_gpxs_gdf['folder'].unique())
+        StyleAssigner.assign_dynamic_colors(
+            folders, folders_styles, FOLDER_COLOR_MODE, FOLDER_COLOR_PALLET, 0)
+
     gpxs_style_assigner = StyleAssigner(
         GPXS_STYLES, GENERAL_DEFAULT_STYLES, GPXS_MANDATORY_STYLES)
-    gpx_manager = GpxManager(GPX_FOLDER, EPSG_DISPLAY)
-    gpxs_gdf = gpx_manager.get_gpxs_gdf()
-
-
-
-
-    
-
-    gpxs_gdf: gpd.GeoDataFrame = gpxs_style_assigner.assign_styles(gpxs_gdf, GPX_FOLDERS_CATEGORIES)
+    # assign styles to gpxs
+    root_files_gpxs_gdf: gpd.GeoDataFrame = gpxs_style_assigner.assign_styles(
+        root_files_gpxs_gdf, GPX_ROOT_FILES_CATEGORIES)
+    folder_gpxs_gdf: gpd.GeoDataFrame = gpxs_style_assigner.assign_styles(
+        folder_gpxs_gdf, GPX_FOLDERS_CATEGORIES)
+    gpxs_gdf = GdfUtils.combine_gdfs([root_files_gpxs_gdf, folder_gpxs_gdf])
 
     # ------------plot------------
-
     plotter = Plotter(map_area_gdf, paper_dimensions_mm,
                       map_object_scaling_factor)
     plotter.init_plot(
