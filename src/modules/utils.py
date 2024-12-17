@@ -178,6 +178,14 @@ class Utils:
 
         return paper_scaling_factor / map_scaling_factor
 
+    @staticmethod
+    def count_missing_values(keys: list[str], styles: FeaturesCategoryStyle, missing_style: StyleKey) -> int:
+        count = 0
+        for key in keys:
+            if key not in styles or missing_style not in styles[key].keys():
+                count += 1
+        return count
+
     # @staticmethod
     # def get_direct_folders_name(root_folder_path: str) -> list[str]:
     #     """_summary_

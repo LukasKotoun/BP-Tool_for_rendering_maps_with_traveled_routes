@@ -8,6 +8,7 @@ from modules.gdf_utils import GdfUtils
 import matplotlib.pyplot as plt
 from matplotlib.colors import to_rgba
 
+from modules.utils import Utils
 from common.map_enums import StyleKey, ColorMode
 from common.custom_types import FeaturesCategoriesStyles, WantedCategories, FeatureStyles, FeaturesCategoryStyle
 
@@ -198,7 +199,7 @@ class StyleAssigner:
             colors_used - used number of colors from pallet
         """
         if (max_color_count is None):
-            max_color_count = len(set(keys) - existing_styles.keys())
+            max_color_count = Utils.count_missing_values(keys, existing_styles, StyleKey.COLOR)
         if (colors_used is None):
             colors_used = 0
 

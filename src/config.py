@@ -85,25 +85,24 @@ OUTER_CUSTOM_EXPAND_AREA: WantedArea | None = "Česko"
 # --------------------------------------------------------------gpx settings--------------------------------------------------------------
 
 GPX_FOLDER: str = '../gpxs/trebic'
-ROOT_FILES_COLOR_MODE: ColorMode = ColorMode.SHADE
-# ROOT_FILES_COLOR_OR_PALLET: str = "Blue"
-ROOT_FILES_COLOR_OR_PALLET: str = (0, 0, 1, 1)
-ROOT_FILES_COLOR_DIS_PALLET = False
+ROOT_FILES_COLOR_MODE: ColorMode = ColorMode.PALETTE
+ROOT_FILES_COLOR_OR_PALLET: str = "Set2"
+ROOT_FILES_COLOR_DIS_PALLET = True
 
 FOLDER_COLOR_MODE: ColorMode = ColorMode.PALETTE
-FOLDER_COLOR_OR_PALLET: str = "viridis"
-FOLDER_COLOR_DIS_PALLET = False
+FOLDER_COLOR_OR_PALLET: str = "Set2"
+FOLDER_COLOR_DIS_PALLET = True
 
 # ? none means that it will not be printed (edge or facecolor (not normal color in ways)), "" will be like that is not in that? - or better to be just removed
 # -------------------gpx styles by folder-------------------
 folders_styles: FeaturesCategoryStyle = {
     # 'pěšky': {StyleKey.COLOR: "Blue"},
-    # 'Kolo testování': {StyleKey.COLOR: "Red"},
+    'Kolo testování': {StyleKey.COLOR: "Red", StyleKey.LINEWIDTH: 200,StyleKey.ALPHA: 0.7},
     # 'Kolo': {StyleKey.COLOR: "Purple"}
 }
 
 root_files_styles: FeaturesCategoryStyle = {
-    # "Grilovačka.gpx": {StyleKey.COLOR: "Green"},
+    "Grilovačka.gpx": {StyleKey.COLOR: "Red"},
 }
 
 
