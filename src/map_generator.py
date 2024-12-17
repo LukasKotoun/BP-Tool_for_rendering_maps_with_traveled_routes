@@ -157,7 +157,38 @@ def main():
         else:
             osm_file_name = OSM_INPUT_FILE_NAMES
 
-    # can use also outer paper size and area
+    # ------------Working in display EPSG------------
+    gpx_manager = GpxManager(GPX_FOLDER, EPSG_DISPLAY)
+    root_files_gpxs_gdf, folder_gpxs_gdf = gpx_manager.get_gpxs_gdf_splited()
+    root_files = list(root_files_gpxs_gdf['fileName'].unique())
+    folders = list(folder_gpxs_gdf['folder'].unique())
+
+    # assign dynamic colors to root files and folders styles if wanted
+    same_pallet: bool = ((FOLDER_COLOR_MODE == ColorMode.PALETTE or FOLDER_COLOR_MODE == ColorMode.SHADE)
+                         and FOLDER_COLOR_MODE == ROOT_FILES_COLOR_MODE and FOLDER_COLOR_OR_PALLET == ROOT_FILES_COLOR_OR_PALLET)
+    used_colors = 0
+    max_colors = len(set(root_files) - root_files_styles.keys()) + \
+        len(set(folders) - folders_styles.keys()) if same_pallet else None
+    if (ROOT_FILES_COLOR_MODE == ColorMode.PALETTE or ROOT_FILES_COLOR_MODE == ColorMode.SHADE):
+        used_colors = StyleAssigner.assign_dynamic_colors(
+            root_files, root_files_styles, ROOT_FILES_COLOR_MODE, ROOT_FILES_COLOR_OR_PALLET, ROOT_FILES_COLOR_DIS_PALLET, max_colors)
+
+    if (FOLDER_COLOR_MODE == ColorMode.PALETTE or FOLDER_COLOR_MODE == ColorMode.SHADE):
+        used_colors = used_colors if same_pallet else 0
+        StyleAssigner.assign_dynamic_colors(
+            folders, folders_styles, FOLDER_COLOR_MODE, FOLDER_COLOR_OR_PALLET, FOLDER_COLOR_DIS_PALLET, max_colors, used_colors)
+    print(root_files_styles)
+    print(folders_styles)
+
+    gpxs_style_assigner = StyleAssigner(
+        GPXS_STYLES, GENERAL_DEFAULT_STYLES, GPXS_MANDATORY_STYLES)
+    # assign styles to gpxs
+    root_files_gpxs_gdf: gpd.GeoDataFrame = gpxs_style_assigner.assign_styles(
+        root_files_gpxs_gdf, GPX_ROOT_FILES_CATEGORIES)
+    folder_gpxs_gdf: gpd.GeoDataFrame = gpxs_style_assigner.assign_styles(
+        folder_gpxs_gdf, GPX_FOLDERS_CATEGORIES)
+    gpxs_gdf = GdfUtils.combine_gdfs([root_files_gpxs_gdf, folder_gpxs_gdf])
+
     osm_file_parser = OsmDataParser(
         wanted_nodes, wanted_ways, wanted_areas,
         unwanted_nodes_tags, unwanted_ways_tags, unwanted_areas_tags,
@@ -168,7 +199,6 @@ def main():
         osm_file_parser.apply_file(osm_file_name)
     apply_file()
 
-    # ------------Working in display EPSG------------
     nodes_gdf, ways_gdf, areas_gdf = osm_file_parser.create_gdf(
         EPSG_OSM, EPSG_DISPLAY)
     osm_file_parser.clear_gdf()
@@ -196,12 +226,10 @@ def main():
 
     nodes_gdf = GdfUtils.filter_gdf_related_columns_values(
         nodes_gdf, 'natural', ['peak'], ['name', 'ele'], [])
-    # function(algorithm) to get only usefull peeks + again back to nodes gdf
     # ------------style elements------------
     nodes_style_assigner = StyleAssigner(
         NODES_STYLES, GENERAL_DEFAULT_STYLES, NODES_MANDATORY_STYLES)
     nodes_gdf = nodes_style_assigner.assign_styles(nodes_gdf, wanted_nodes,)
-
     ways_style_assigner = StyleAssigner(
         WAYS_STYLES, GENERAL_DEFAULT_STYLES, WAY_MANDATORY_STYLES)
     ways_gdf = ways_style_assigner.assign_styles(ways_gdf, wanted_ways)
@@ -212,30 +240,6 @@ def main():
     ways_gdf = GdfUtils.sort_gdf_by_column(ways_gdf, "layer")
     ways_gdf = GdfUtils.sort_gdf_by_column(ways_gdf, StyleKey.ZINDEX)
     areas_gdf = GdfUtils.sort_gdf_by_column(areas_gdf, StyleKey.ZINDEX)
-
-    # todo check if gpx go somewhere outside reqired_area - add warning
-
-    gpx_manager = GpxManager(GPX_FOLDER, EPSG_DISPLAY)
-    root_files_gpxs_gdf, folder_gpxs_gdf = gpx_manager.get_gpxs_gdf_splited()
-    # assign dynamic colors to root files and folders styles if wanted
-    if (ROOT_FILES_COLOR_MODE == ColorMode.PALLET or ROOT_FILES_COLOR_MODE == ColorMode.SHADE):
-        root_files = list(root_files_gpxs_gdf['fileName'].unique())
-        StyleAssigner.assign_dynamic_colors(
-            root_files, root_files_styles, FOLDER_COLOR_MODE, FOLDER_COLOR_PALLET, 0)
-
-    if (FOLDER_COLOR_MODE == ColorMode.PALLET or FOLDER_COLOR_MODE == ColorMode.SHADE):
-        folders = list(folder_gpxs_gdf['folder'].unique())
-        StyleAssigner.assign_dynamic_colors(
-            folders, folders_styles, FOLDER_COLOR_MODE, FOLDER_COLOR_PALLET, 0)
-
-    gpxs_style_assigner = StyleAssigner(
-        GPXS_STYLES, GENERAL_DEFAULT_STYLES, GPXS_MANDATORY_STYLES)
-    # assign styles to gpxs
-    root_files_gpxs_gdf: gpd.GeoDataFrame = gpxs_style_assigner.assign_styles(
-        root_files_gpxs_gdf, GPX_ROOT_FILES_CATEGORIES)
-    folder_gpxs_gdf: gpd.GeoDataFrame = gpxs_style_assigner.assign_styles(
-        folder_gpxs_gdf, GPX_FOLDERS_CATEGORIES)
-    gpxs_gdf = GdfUtils.combine_gdfs([root_files_gpxs_gdf, folder_gpxs_gdf])
 
     # ------------plot------------
     plotter = Plotter(map_area_gdf, paper_dimensions_mm,
@@ -250,7 +254,6 @@ def main():
 
     plotter.adjust_texts(TEXT_BOUNDS_OVERFLOW_THRESHOLD)
 
-    # if want is false and preview is true area will be on whole paper (required area is calculated) - clip overflown ways
     if (WANT_AREA_CLIPPING or WANT_PREVIEW):
         plotter.clip(EPSG_DISPLAY, GdfUtils.create_polygon_from_gdf_bounds(
             nodes_gdf, ways_gdf, areas_gdf))

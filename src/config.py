@@ -85,20 +85,25 @@ OUTER_CUSTOM_EXPAND_AREA: WantedArea | None = "Česko"
 # --------------------------------------------------------------gpx settings--------------------------------------------------------------
 
 GPX_FOLDER: str = '../gpxs/trebic'
-FOLDER_COLOR_MODE: ColorMode = ColorMode.PALLET
-FOLDER_COLOR_PALLET: str = "viridis"
-ROOT_FILES_COLOR_MODE: ColorMode = ColorMode.PALLET
-FOLDER_COLOR_PALLET: str = "viridis"
+ROOT_FILES_COLOR_MODE: ColorMode = ColorMode.SHADE
+# ROOT_FILES_COLOR_OR_PALLET: str = "Blue"
+ROOT_FILES_COLOR_OR_PALLET: str = (0, 0, 1, 1)
+ROOT_FILES_COLOR_DIS_PALLET = False
+
+FOLDER_COLOR_MODE: ColorMode = ColorMode.PALETTE
+FOLDER_COLOR_OR_PALLET: str = "viridis"
+FOLDER_COLOR_DIS_PALLET = False
+
 # ? none means that it will not be printed (edge or facecolor (not normal color in ways)), "" will be like that is not in that? - or better to be just removed
 # -------------------gpx styles by folder-------------------
 folders_styles: FeaturesCategoryStyle = {
-    'pěšky': {StyleKey.COLOR: "Blue"},
-    'Kolo testování': {StyleKey.COLOR: "Red"},
-    'Kolo': {StyleKey.COLOR: "Purple"}
+    # 'pěšky': {StyleKey.COLOR: "Blue"},
+    # 'Kolo testování': {StyleKey.COLOR: "Red"},
+    # 'Kolo': {StyleKey.COLOR: "Purple"}
 }
 
 root_files_styles: FeaturesCategoryStyle = {
-    "Grilovačka.gpx": {StyleKey.COLOR: "Green"},
+    # "Grilovačka.gpx": {StyleKey.COLOR: "Green"},
 }
 
 
@@ -130,14 +135,7 @@ wanted_nodes: WantedCategories = {
 
 # todo automatic wanted objects setup using map and pdf ratio automatic_filters_creating_factor - own class ()
 
-# set wanted categories to all gpxs with folder ->
-# switching/workaround from styling map elements by category to styling GPX routes by folder
-GPX_FOLDERS_CATEGORIES: WantedCategories = {
-    'folder': set({}),
-}
-GPX_ROOT_FILES_CATEGORIES: WantedCategories = {
-    'fileName': set({}),
-}
+
 
 unwanted_nodes_tags: UnwantedTags = {
 
@@ -295,3 +293,12 @@ EPSG_DISPLAY = 3857
 OBJECT_MULTIPLIER = 1
 AREAS_EDGE_WIDTH_MULTIPLIER = 1
 WAYS_WIDTH_MULTIPLIER = 1
+
+# set wanted categories to all gpxs with folder ->
+# switching/workaround from styling map elements by category to styling GPX routes by folder
+GPX_FOLDERS_CATEGORIES: WantedCategories = {
+    'folder': set({}),
+}
+GPX_ROOT_FILES_CATEGORIES: WantedCategories = {
+    'fileName': set({}),
+}

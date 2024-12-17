@@ -8,14 +8,14 @@ from modules.gdf_utils import GdfUtils
 
 
 class GpxManager:
-    def __init__(self, gpx_folder: str, epsg: int):
+    def __init__(self, gpx_folder: str, toEpsg: int):
         self.gpx_folder: str = gpx_folder
         self.gpxs_gdf = GdfUtils.create_empty_gdf('fileName', 'folder')
-        self.parse_gpxs_gdf(epsg)
-        
+        self.parse_gpxs_gdf(toEpsg)
+
     def parse_gpxs_gdf(self, toEpsg: int) -> gpd.GeoDataFrame:
         gpx_list: list[gpd.GeoDataFrame] = []
-        
+
         for root, dirs, files in os.walk(self.gpx_folder):
             for file in files:
                 if not file.endswith('.gpx'):
@@ -23,33 +23,36 @@ class GpxManager:
                 # get file path with name of last folder before file
                 file_path: str = os.path.join(root, file)
                 relative_path: str = os.path.relpath(root, self.gpx_folder)
-                last_folder: str = os.path.basename(relative_path) if relative_path != "." else ""
-                
-                gpx_gdf: gpd.GeoDataFrame = (gpd.read_file(file_path, layer='tracks'))
+                last_folder: str = os.path.basename(
+                    relative_path) if relative_path != "." else ""
+
+                gpx_gdf: gpd.GeoDataFrame = (
+                    gpd.read_file(file_path, layer='tracks'))
                 gpx_gdf['fileName'] = file
                 gpx_gdf['folder'] = unicodedata.normalize('NFC', last_folder)
                 gpx_list.append(gpx_gdf.to_crs(epsg=toEpsg))
-            
-        if(gpx_list):
-            #GdfUtils.combine_gdfs 
+
+        if (gpx_list):
+            # GdfUtils.combine_gdfs
             self.gpxs_gdf = GdfUtils.combine_gdfs(gpx_list)
         else:
             warnings.warn(f"No GPX files found in {self.gpx_folder}")
-    
 
-    def get_gpxs_gdf(self, toEpsg: int = None) -> gpd.GeoDataFrame:
-        if (self.gpxs_gdf.empty):
-            return self.gpxs_gdf
-        
-        GdfUtils.change_columns_to_categorical(self.gpxs_gdf, ['fileName', 'folder'])
-                
-        if (toEpsg is None):
+    def get_gpxs_gdf(self, inEpsg: int = None) -> gpd.GeoDataFrame:
+        # if (self.gpxs_gdf.empty):
+        #     return self.gpxs_gdf
+
+        GdfUtils.change_columns_to_categorical(
+            self.gpxs_gdf, ['fileName', 'folder'])
+
+        if (inEpsg is None):
             return self.gpxs_gdf
         else:
-            return self.gpxs_gdf.to_crs(epsg=toEpsg)
-        
-    def get_gpxs_gdf_splited(self) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]:
+            return GdfUtils.change_epsg(self.gpxs_gdf, inEpsg)
 
-        GdfUtils.change_columns_to_categorical(self.gpxs_gdf, ['fileName', 'folder'])
-        
+    def get_gpxs_gdf_splited(self, inEpsg: int = None) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]:
+
+        GdfUtils.change_columns_to_categorical(
+            self.gpxs_gdf, ['fileName', 'folder'])
         return GdfUtils.filter_gdf_column_values(self.gpxs_gdf, 'folder', [''], compl=True)
+     

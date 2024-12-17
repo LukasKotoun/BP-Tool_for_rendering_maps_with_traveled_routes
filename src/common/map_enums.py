@@ -5,7 +5,7 @@ class ColorMode(Enum):
     DEFAULT = 1
     SINGLE = 2
     SHADE = 3
-    PALLET = 4
+    PALETTE = 4
 
 class StyleKey(Enum):
     COLOR = 1

@@ -2,8 +2,11 @@ import warnings
 from common.common_helpers import time_measurement_decorator
 
 import pandas as pd
+import numpy as np
 from geopandas import GeoDataFrame
 from modules.gdf_utils import GdfUtils
+import matplotlib.pyplot as plt
+from matplotlib.colors import to_rgba
 
 from common.map_enums import StyleKey, ColorMode
 from common.custom_types import FeaturesCategoriesStyles, WantedCategories, FeatureStyles, FeaturesCategoryStyle
@@ -46,7 +49,7 @@ class StyleAssigner:
         warnings.warn(
             "_get_styles_for_map_feature: some map FeaturesCategory does not have any style in FeaturesCategoriesStyles")
         # osm data feature is not in any features category avilable in avilable_styles
-        #todo check mandatory vs general - usage 
+        # todo check mandatory vs general - usage
         return self.general_default_styles
 
     # def __replace_none_with_na(self, data): # and empty string?
@@ -93,7 +96,7 @@ class StyleAssigner:
                     }
                 else:
                     # get style for all features in category #(list is empty, all features from this category will be plotted)
-                    ## (if concrete style for some feateru is not defined it will no be added (it only reduce not add))
+                    # (if concrete style for some feateru is not defined it will no be added (it only reduce not add))
 
                     features_category_styles_filtered: FeaturesCategoryStyle = features_category_style
                 # store filtered features category styles with features category default styles
@@ -120,12 +123,11 @@ class StyleAssigner:
         if (gdf.empty):
             return gdf
         # get only useful styles    (all styles inside will be assigned), it makes assigning quicker
-        available_styles, new_styles= self._filter_category_styles(
+        available_styles, new_styles = self._filter_category_styles(
             wanted_features_categories)
         if (not available_styles):
             warnings.warn("assign_styles_to_gdf: avilable styles are empty")
-        # create list of all used stylekeys in aviailable styles    
-
+        # create list of all used stylekeys in aviailable styles
 
         # get styles to every map feature in gdf
         styles_columns = gdf.apply(lambda map_feature: self._get_styles_for_map_feature(
@@ -158,16 +160,83 @@ class StyleAssigner:
 
         return styled_gdf
 
+    @staticmethod
+    def generate_shades_of_color(base_color, num_shades, min_factor=0.3, max_factor=0.7) -> list[tuple[float, float, float, float]]:
+        """
+        Generate a range of shades from a base color by adjusting the brightness.
+
+        Parameters:
+        - base_color: The base color in any valid Matplotlib color format (e.g., 'red', '#FF0000', or RGB tuple).
+        - min_factor: The minimum factor for the brightness (0.0 is completely dark, 1.0 is original color).
+        - max_factor: The maximum factor for the brightness (1.0 is the original color, values > 1.0 are brighter).
+        - num_shades: The number of shades to generate in the range.
+
+        Returns:
+        - A list of colors representing different shades of the base color. 
+        """
+        rgba = to_rgba(base_color)
+        if (num_shades == 1):
+            return [rgba]
+
+        colors = []
+        for i in np.linspace(max_factor, min_factor, num_shades):
+            # scale all components of color by factor except alpha
+            shaded_color = tuple(
+                [i * c if idx < 3 else c for idx, c in enumerate(rgba)])
+            colors.append(shaded_color)
+        return colors
+
     # call this function on 2 modes only, on mode where want to use one static color it is not necessary - color will be in default styles or mandatory styles (should be created based on UI)
     @staticmethod
-    def assign_dynamic_colors(keys: list[str], existing_styles: FeaturesCategoryStyle, mode: ColorMode, color_or_pallet: str, colors_used: int = None):
+    def assign_dynamic_colors(keys: list[str], existing_styles: FeaturesCategoryStyle, mode: ColorMode,
+                              color_or_pallet: str, dis_pallet=False, max_color_count: int = None, colors_used: int = None) -> int:
         """Extend existing_styles with keys that are not in existing_styles and are in keys.
 
             keys - dict key be in resulting dict as keys
-            mode - wheter to add colors from pallete or one color shades
+            mode - wheter to add colors from PALETTE or one color shades
             color_or_pallet - name of pallet or color to shade use
             colors_used - used number of colors from pallet
         """
-        existing_styles["test"] = {StyleKey.COLOR: "asd"}
+        if (max_color_count is None):
+            max_color_count = len(set(keys) - existing_styles.keys())
+        if (colors_used is None):
+            colors_used = 0
 
-        pass
+        if (mode == ColorMode.PALETTE):
+            try:
+                cmap = plt.get_cmap(color_or_pallet)
+            except ValueError:
+                warnings.warn(
+                    f"Palette '{color_or_pallet}' does not exist. Using 'tab10' instead.")
+                cmap = plt.get_cmap("tab10")
+                dis_pallet = True
+
+            if (dis_pallet):
+                for key in keys:
+                    if key not in existing_styles:
+                        existing_styles[key] = {
+                            StyleKey.COLOR: cmap(colors_used)}
+                        colors_used += 1
+            else:
+                norm = plt.Normalize(vmin=0,
+                                     vmax=max_color_count)
+                for key in keys:
+                    if key not in existing_styles:
+                        existing_styles[key] = {
+                            StyleKey.COLOR: cmap(norm(colors_used))}
+                        colors_used += 1
+
+        elif (mode == ColorMode.SHADE):
+            colors = StyleAssigner.generate_shades_of_color(
+                color_or_pallet, max_color_count, 0.2, 0.8)
+            for key in keys:
+                if key not in existing_styles:
+                    existing_styles[key] = {
+                        StyleKey.COLOR: colors[colors_used]}
+                    colors_used += 1
+        else:
+            warnings.warn(
+                "assign_dynamic_colors: mode is not supported, no colors were assigned")
+            return 0
+
+        return colors_used
