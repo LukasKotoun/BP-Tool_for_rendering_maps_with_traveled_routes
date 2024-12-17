@@ -202,23 +202,14 @@ def main():
     # ------------style elements------------
     nodes_style_assigner = StyleAssigner(
         NODES_STYLES, GENERAL_DEFAULT_STYLES, NODES_MANDATORY_STYLES)
-    nodes_gdf = nodes_style_assigner.assign_styles(nodes_gdf, wanted_nodes,
-                                                   [StyleKey.COLOR, StyleKey.FONT_SIZE, StyleKey.OUTLINE_WIDTH,
-                                                    StyleKey.EDGE_COLOR, StyleKey.ICON_COLOR, StyleKey.ICON_SIZE,
-                                                    StyleKey.ICON, StyleKey.ICON_EDGE])
+    nodes_gdf = nodes_style_assigner.assign_styles(nodes_gdf, wanted_nodes,)
 
     ways_style_assigner = StyleAssigner(
         WAYS_STYLES, GENERAL_DEFAULT_STYLES, WAY_MANDATORY_STYLES)
-    ways_gdf = ways_style_assigner.assign_styles(ways_gdf, wanted_ways,
-                                                 [StyleKey.COLOR, StyleKey.ZINDEX, StyleKey.LINEWIDTH,
-                                                  StyleKey.LINESTYLE, StyleKey.ALPHA, StyleKey.EDGE_COLOR,
-                                                  StyleKey.BRIDGE_COLOR, StyleKey.BRIDGE_EDGE_COLOR,
-                                                  StyleKey.EDGE_WIDTH_RATIO, StyleKey.BRIDGE_WIDTH_RATIO])
+    ways_gdf = ways_style_assigner.assign_styles(ways_gdf, wanted_ways)
     areas_style_assigner = StyleAssigner(
         AREAS_STYLES, GENERAL_DEFAULT_STYLES, AREA_MANDATORY_STYLES)
-    areas_gdf = areas_style_assigner.assign_styles(areas_gdf, wanted_areas,
-                                                   [StyleKey.COLOR, StyleKey.EDGE_COLOR, StyleKey.ZINDEX,
-                                                    StyleKey.LINEWIDTH, StyleKey.ALPHA, StyleKey.LINESTYLE])
+    areas_gdf = areas_style_assigner.assign_styles(areas_gdf, wanted_areas)
 
     ways_gdf = GdfUtils.sort_gdf_by_column(ways_gdf, "layer")
     ways_gdf = GdfUtils.sort_gdf_by_column(ways_gdf, StyleKey.ZINDEX)
@@ -231,9 +222,12 @@ def main():
     gpx_manager = GpxManager(GPX_FOLDER, EPSG_DISPLAY)
     gpxs_gdf = gpx_manager.get_gpxs_gdf()
 
-    gpxs_gdf: gpd.GeoDataFrame = gpxs_style_assigner.assign_styles(gpxs_gdf, GPX_CATEGORIES,
-                                                                   [StyleKey.COLOR, StyleKey.ZINDEX, StyleKey.LINEWIDTH,
-                                                                    StyleKey.LINESTYLE, StyleKey.ALPHA, StyleKey.EDGE_COLOR])
+
+
+
+    
+
+    gpxs_gdf: gpd.GeoDataFrame = gpxs_style_assigner.assign_styles(gpxs_gdf, GPX_FOLDERS_CATEGORIES)
 
     # ------------plot------------
 
