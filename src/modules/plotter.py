@@ -339,7 +339,7 @@ class Plotter:
                     self.ax.transData.inverted())
                 bbox_polygon = geometry.box(
                     text_Bbox.x0, text_Bbox.y0, text_Bbox.x1, text_Bbox.y1)
-                if (not GdfUtils.is_polygon_inside_polygon_threshold(bbox_polygon, self.reqired_area_polygon, text_bounds_overflow_threshold)):
+                if (not GdfUtils.is_geometry_inside_geometry_threshold(bbox_polygon, self.reqired_area_polygon, text_bounds_overflow_threshold)):
                     text.remove()
 
     def clip(self, epsg: int, whole_map_polygon: Polygon, reqired_area_gdf: gpd.GeoDataFrame | None = None, clipped_area_color: str = 'white'):
@@ -351,7 +351,7 @@ class Plotter:
             reqired_area_polygon = self.reqired_area_polygon
 
         clipping_polygon = whole_map_polygon.difference(reqired_area_polygon)
-        if (not GdfUtils.is_polygon_inside_polygon(clipping_polygon, whole_map_polygon)):
+        if (not GdfUtils.is_geometry_inside_geometry(clipping_polygon, whole_map_polygon)):
             return
 
         # clipping_polygon = geometry.MultiPolygon([clipping_polygon]) - epsg in constructor

@@ -98,7 +98,6 @@ def main():
             # store comined areas (after row combination)
             boundary_map_area_gdf: gpd.GeoDataFrame = map_area_gdf.copy()
 
-    # # Rozdělení custom a non custom expand - před get paper dimension, fit paper expand po výpočtu paper dimensions podle základní oblasti - a poté při expandu počítat s
     # #------------expand area custom (before get paper dimension)------------
     if (EXPAND_AREA_MODE == ExpandArea.CUSTOM_AREA):
         map_area_gdf = GdfUtils.expand_area(None, EPSG_OSM, EPSG_CALC, PAPER_DIMENSIONS,
@@ -158,21 +157,30 @@ def main():
             osm_file_name = OSM_INPUT_FILE_NAMES
 
     # ------------Working in display EPSG------------
+    map_area_gdf = GdfUtils.change_epsg(map_area_gdf, EPSG_DISPLAY)
+    boundary_map_area_gdf = GdfUtils.change_epsg(
+        boundary_map_area_gdf, EPSG_DISPLAY)
+    reqired_area_polygon = GdfUtils.create_polygon_from_gdf(map_area_gdf)
+
+    # ------------gpxs------------
     gpx_manager = GpxManager(GPX_FOLDER, EPSG_DISPLAY)
     root_files_gpxs_gdf, folder_gpxs_gdf = gpx_manager.get_gpxs_gdf_splited()
+
+    if (not GdfUtils.are_gdf_geometry_inside_geometry(root_files_gpxs_gdf, reqired_area_polygon)
+       or not GdfUtils.are_gdf_geometry_inside_geometry(folder_gpxs_gdf, reqired_area_polygon)):
+        warnings.warn("Some gpx files are not whole inside selected map area.")
+
     root_files = list(root_files_gpxs_gdf['fileName'].unique())
     folders = list(folder_gpxs_gdf['folder'].unique())
-    
-    
-
 
     # assign dynamic colors to root files and folders styles if wanted
     same_pallet: bool = ((FOLDER_COLOR_MODE == ColorMode.PALETTE or FOLDER_COLOR_MODE == ColorMode.SHADE)
                          and FOLDER_COLOR_MODE == ROOT_FILES_COLOR_MODE and FOLDER_COLOR_OR_PALLET == ROOT_FILES_COLOR_OR_PALLET)
     used_colors = 0
     max_colors = Utils.count_missing_values(root_files, root_files_styles, StyleKey.COLOR) + \
-        Utils.count_missing_values(folders, folders_styles, StyleKey.COLOR) if same_pallet else None
-        
+        Utils.count_missing_values(
+            folders, folders_styles, StyleKey.COLOR) if same_pallet else None
+
     if (ROOT_FILES_COLOR_MODE == ColorMode.PALETTE or ROOT_FILES_COLOR_MODE == ColorMode.SHADE):
         used_colors = StyleAssigner.assign_dynamic_colors(
             root_files, root_files_styles, ROOT_FILES_COLOR_MODE, ROOT_FILES_COLOR_OR_PALLET, ROOT_FILES_COLOR_DIS_PALLET, max_colors)
@@ -190,7 +198,7 @@ def main():
     folder_gpxs_gdf: gpd.GeoDataFrame = gpxs_style_assigner.assign_styles(
         folder_gpxs_gdf, GPX_FOLDERS_CATEGORIES)
     gpxs_gdf = GdfUtils.combine_gdfs([root_files_gpxs_gdf, folder_gpxs_gdf])
-
+    # ------------osm file------------
     osm_file_parser = OsmDataParser(
         wanted_nodes, wanted_ways, wanted_areas,
         unwanted_nodes_tags, unwanted_ways_tags, unwanted_areas_tags,
@@ -205,15 +213,10 @@ def main():
         EPSG_OSM, EPSG_DISPLAY)
     osm_file_parser.clear_gdf()
 
-    map_area_gdf = GdfUtils.change_epsg(map_area_gdf, EPSG_DISPLAY)
-    boundary_map_area_gdf = GdfUtils.change_epsg(
-        boundary_map_area_gdf, EPSG_DISPLAY)
-
     whole_map_gdf = GdfUtils.create_polygon_from_gdf_bounds(
         ways_gdf, areas_gdf)
-    reqired_area_polygon = GdfUtils.create_polygon_from_gdf(map_area_gdf)
     # check if area is inside osm file
-    if (not GdfUtils.is_polygon_inside_polygon(reqired_area_polygon, whole_map_gdf)):
+    if (not GdfUtils.is_geometry_inside_geometry(reqired_area_polygon, whole_map_gdf)):
         warnings.warn(
             "Selected area map is not whole inside given osm.pbf file.")
     # ------------filter some elements out - before styles adding------------

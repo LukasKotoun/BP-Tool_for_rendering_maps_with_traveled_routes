@@ -1,7 +1,7 @@
 import warnings
 
 from shapely import geometry
-from shapely.geometry.polygon import Polygon
+from shapely.geometry import Polygon, GeometryCollection
 import geopandas as gpd
 import pandas as pd
 import osmnx as ox
@@ -113,8 +113,8 @@ class GdfUtils:
         bounds = GdfUtils.get_polygon_bounds(polygon)
         return Utils.get_dimensions(bounds)
 
-   
     # ------------creating------------
+
     @staticmethod
     def create_polygon_from_bounds(area_bounds: BoundsDict) -> Polygon:
         return Polygon([
@@ -137,8 +137,6 @@ class GdfUtils:
         columns.append("geometry")
         return gpd.GeoDataFrame(columns=columns, geometry="geometry")
 
-
-    
     @staticmethod
     def create_gdf_from_bounds(area_bounds: BoundsDict, fromEpsg: int, toEpsg: int | None = None) -> gpd.GeoDataFrame:
         return GdfUtils.create_gdf_from_polygon(GdfUtils.create_polygon_from_bounds(area_bounds), fromEpsg, toEpsg)
@@ -171,22 +169,21 @@ class GdfUtils:
                     pd.concat(gdfs, ignore_index=True), crs=gdfs[0].crs).to_crs(epsg=toEpsg)
             return combined_gdf.unary_union
 
-
     # ------------editing gdf------------
+
     @staticmethod
     def change_columns_to_categorical(gdf: gpd.GeoDataFrame, columns: list) -> gpd.GeoDataFrame:
         for column in columns:
             if (column in gdf):
                 gdf[column] = gdf[column].astype("category")
 
-    
     @staticmethod
     def combine_rows_gdf(gdf: gpd.GeoDataFrame, toEpsg: int) -> gpd.GeoDataFrame:
         if (len(gdf) == 1):
             return gdf.to_crs(epsg=toEpsg)
         return gpd.GeoDataFrame(geometry=[gdf.to_crs(epsg=toEpsg).geometry.unary_union], crs=f"EPSG:{toEpsg}")
 
-    #todo change from list
+    # todo change from list
     @staticmethod
     def combine_gdfs(gdfs: list[gpd.GeoDataFrame]) -> gpd.GeoDataFrame:
         if (len(gdfs) == 1):
@@ -209,32 +206,32 @@ class GdfUtils:
             return gdf.sort_values(by=column_name, ascending=ascending, na_position=na_position, kind="mergesort").reset_index(drop=True)
         warnings.warn("Cannot sort - unexisting column name")
         return gdf
-    
+
     def change_epsg(gdf: gpd.GeoDataFrame, toEpsg: int) -> gpd.GeoDataFrame:
-        if(gdf.empty):
+        if (gdf.empty):
             return gdf.set_crs(epsg=toEpsg)
         return gdf.to_crs(epsg=toEpsg)
-    
+
     # ------------Bool operations------------
     @staticmethod
-    def is_polygon_inside_bounds(area_bounds: BoundsDict, polygon: Polygon) -> bool:
-        return GdfUtils.is_polygon_inside_polygon(GdfUtils.create_polygon_from_bounds(area_bounds), polygon)
+    def is_geometry_inside_bounds(area_bounds: BoundsDict, polygon: GeometryCollection) -> bool:
+        return GdfUtils.is_geometry_inside_geometry(GdfUtils.create_polygon_from_bounds(area_bounds), polygon)
 
     @staticmethod
-    def is_polygon_inside_polygon(inner: Polygon, outer: Polygon) -> bool:
+    def are_gdf_geometry_inside_geometry(gdf: gpd.GeoDataFrame, polygon: GeometryCollection) -> bool:
+        return gdf['geometry'].within(polygon).all()
+
+    @staticmethod
+    def is_geometry_inside_geometry(inner: GeometryCollection, outer: GeometryCollection) -> bool:
         return outer.contains(inner)
 
     @staticmethod
-    def is_point_inside_polygon(point: geometry.point.Point, polygon: Polygon) -> bool:
-        return polygon.contains(point)
-
-    @staticmethod
-    def is_polygon_inside_polygon_threshold(inner: Polygon, outer: Polygon, threshold: float = 0.95) -> bool:
+    def is_geometry_inside_geometry_threshold(inner: GeometryCollection, outer: GeometryCollection, threshold: float = 0.95) -> bool:
         bbox_area: float = inner.area
         intersection_area: float = inner.intersection(outer).area
         percentage_inside: float = intersection_area / bbox_area
         return percentage_inside >= threshold
-    
+
     # ------------Filtering------------
     # @staticmethod
     # def create_condition(gdf: gpd.GeoDataFrame, att_name: str, att_values: list[str] = []) -> pd.Series:
