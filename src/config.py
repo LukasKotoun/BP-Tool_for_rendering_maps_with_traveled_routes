@@ -285,7 +285,7 @@ AREAS_STYLES: FeaturesCategoriesStyles = {
     'landuse': (landuse_styles, {StyleKey.COLOR: '#EDEDE0'}),
     'water': ({}, {StyleKey.COLOR: '#8FB8DB', StyleKey.ZINDEX: 1}),
     'leisure': (leisure_styles, {StyleKey.COLOR: '#EDEDE0', StyleKey.LINEWIDTH: 8}),
-    'natural': (landuse_styles, {StyleKey.COLOR: '#B7DEA6'}),
+    'natural': (natural_styles, {StyleKey.COLOR: '#B7DEA6'}),
     'boundary': ({}, {StyleKey.EDGE_COLOR: '#97BB72', StyleKey.LINEWIDTH: 80, StyleKey.LINESTYLE: '-', StyleKey.ZINDEX: 1, StyleKey.ALPHA: 0.85})
 }
 
