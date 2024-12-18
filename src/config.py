@@ -86,31 +86,31 @@ OUTER_CUSTOM_EXPAND_AREA: WantedArea | None = "Česko"
 
 GPX_FOLDER: str = '../gpxs/trebic'
 ROOT_FILES_COLOR_MODE: ColorMode = ColorMode.PALETTE
-ROOT_FILES_COLOR_OR_PALLET: str = "Set2"
+ROOT_FILES_COLOR_OR_PALLET: str = "Set1"
 ROOT_FILES_COLOR_DIS_PALLET = True
 
 FOLDER_COLOR_MODE: ColorMode = ColorMode.PALETTE
-FOLDER_COLOR_OR_PALLET: str = "Set2"
+FOLDER_COLOR_OR_PALLET: str = "Set1"
 FOLDER_COLOR_DIS_PALLET = True
 
 # ? none means that it will not be printed (edge or facecolor (not normal color in ways)), "" will be like that is not in that? - or better to be just removed
 # -------------------gpx styles by folder-------------------
-folders_styles: FeaturesCategoryStyle = {
-    # 'pěšky': {StyleKey.COLOR: "Blue"},
-    'Kolo testování': {StyleKey.COLOR: "Red", StyleKey.LINEWIDTH: 200,StyleKey.ALPHA: 0.7},
-    # 'Kolo': {StyleKey.COLOR: "Purple"}
-}
+
 
 root_files_styles: FeaturesCategoryStyle = {
     "Grilovačka.gpx": {StyleKey.COLOR: "Red"},
 }
-
+folders_styles: FeaturesCategoryStyle = {
+    # 'pěšky': {StyleKey.COLOR: "Blue"},
+    'Kolo testování': { StyleKey.LINEWIDTH: 200,StyleKey.ALPHA: 0.7},
+    # 'Kolo': {StyleKey.COLOR: "Purple"}
+}
 
 GPXS_STYLES: FeaturesCategoriesStyles = {
     # for files in root by fileName
     'fileName': (root_files_styles, {StyleKey.COLOR: 'Orange', StyleKey.LINEWIDTH: 200, StyleKey.ALPHA: 0.7,  StyleKey.ZINDEX: 0}),
     # for files in subfolders folder
-    'folder': (folders_styles, {StyleKey.COLOR: 'Red', StyleKey.LINEWIDTH: 200, StyleKey.ALPHA: 0.7,  StyleKey.ZINDEX: 0}),
+    'folder': (folders_styles, {StyleKey.COLOR: 'Orange', StyleKey.LINEWIDTH: 200, StyleKey.ALPHA: 0.7,  StyleKey.ZINDEX: 0}),
 }
 
 # styles that must be assigned to all gpxs
@@ -162,6 +162,7 @@ wanted_areas: WantedCategories = {
     # # 'landuse': ['forest', 'residential', 'farmland', 'meadow', 'grass'],
     'landuse': {'forest', 'residential', 'commercial', 'retail', 'industrial', 'farmland', 'meadow', 'grass'},
     'leisure': {'park', 'pitch', 'garden', 'golf_course', 'nature_reserve', 'playground', 'stadium', 'swimming_pool', 'sports_centre'},
+    'natural': {'wood', 'water', 'scrub', 'heath'},
     # # 'leisure': ['park', 'pitch', 'garden', 'golf_course', 'nature_reserve'],
     'water': set({}),
     # todo in automatic this should be to turnoff/on
@@ -272,12 +273,19 @@ building_styles: FeaturesCategoryStyle = {
     'house': {StyleKey.COLOR: 'grey', StyleKey.ZINDEX: 1},
 }
 
+natural_styles: FeaturesCategoryStyle = {
+    'wood': {StyleKey.COLOR: '#9FC98D'},
+    'water': {StyleKey.COLOR: '#8FB8DB', StyleKey.ZINDEX: 1},
+    'scrub': {StyleKey.COLOR: '#B7DEA6'},
+    'heath': {StyleKey.COLOR: '#B7DEA6'},
+}
+
 AREAS_STYLES: FeaturesCategoriesStyles = {
-    'building': (building_styles, {StyleKey.COLOR: '#B7DEA6', StyleKey.ZINDEX: 1}),
-    'leisure': (leisure_styles, {StyleKey.COLOR: '#EDEDE0', StyleKey.LINEWIDTH: 8}),
-    'natural': (landuse_styles, {StyleKey.COLOR: '#B7DEA6'}),
+    # 'building': (building_styles, {StyleKey.COLOR: '#B7DEA6', StyleKey.ZINDEX: 1}),
     'landuse': (landuse_styles, {StyleKey.COLOR: '#EDEDE0'}),
     'water': ({}, {StyleKey.COLOR: '#8FB8DB', StyleKey.ZINDEX: 1}),
+    'leisure': (leisure_styles, {StyleKey.COLOR: '#EDEDE0', StyleKey.LINEWIDTH: 8}),
+    'natural': (landuse_styles, {StyleKey.COLOR: '#B7DEA6'}),
     'boundary': ({}, {StyleKey.EDGE_COLOR: '#97BB72', StyleKey.LINEWIDTH: 80, StyleKey.LINESTYLE: '-', StyleKey.ZINDEX: 1, StyleKey.ALPHA: 0.85})
 }
 
