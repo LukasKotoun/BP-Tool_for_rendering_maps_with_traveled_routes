@@ -127,33 +127,15 @@ def main():
          map_area_gdf) = calc_preview(map_area_gdf, paper_dimensions_mm)
         # todo automatic creationg of wanted elements and linewidths - factor or directly giving paper size and area dimensions
     else:
-        # todo automatic creationg of wanted elements and linewidths - factor or directly giving paper size and area dimensions
         area_zoom_preview = None
-        # calc map factor for creating automatic array with wanted elements
-        # todo map_object_scaling_automatic_filters_creating = Utils.calc_map_object_scaling_factor(map_area_dimensions, paper_dimensions_mm)
-        # map_pdf_ratio_auto_filter = sum(Utils.calc_ratios(paper_dimensions_mm, map_area_dimensions))/2
         # in meteres for same proportion keeping
         map_object_scaling_factor = (Utils.calc_map_object_scaling_factor(map_area_dimensions,
                                                                           paper_dimensions_mm)
                                      * OBJECT_MULTIPLIER)
-    print(map_object_scaling_factor)
-
-    def nonlinear_map(x):
-        a = 0.15
-        b = -0.8257
-        return a * x**b
-    # for *4 scaling factor
-    def nonlinear_map2(x):
-        a = 1.894
-        b = -0.8257
-        return a * x**b
+        
+    # todo a and b from constatns in config and different for ways, and bounds (maby points)
+    map_object_scaling_factor *= Utils.calc_scaling_factor_multiplier(map_object_scaling_factor, 1, 500)
     
-
-    test2 = nonlinear_map(map_object_scaling_factor)
-    print(test2)
-    map_object_scaling_factor *= max(test2, 1)
-        # map_object_scaling_factor = 1
-
     # ------------get elements from osm file------------
     if (OSM_WANT_EXTRACT_AREA):
         if (OSM_OUTPUT_FILE_NAME is None):

@@ -160,8 +160,18 @@ class Utils:
 
         return area_bounds
 
+    def calc_scaling_factor_multiplier(x, min_val, max_val, a=1.894, b=-0.8257):  # -> Any:
+        # a and b derived from points f(0.4)=1 and f(0.0004)=300
+        # a = 0.15
+        a = 0.212
+        b = -0.7953
+        # a = 0.385
+        # b = -0.7953
+        y = a * x**b
+        return max(min(y, max_val), min_val)
+
     @staticmethod
-    def calc_map_object_scaling_factor(map_dimensions_m, paper_dimensions_mm):
+    def calc_map_object_scaling_factor(map_dimensions_m, paper_dimensions_mm, multiply_factor=1):
         """_summary_
 
         Args:
@@ -175,7 +185,6 @@ class Utils:
         map_scaling_factor = (map_dimensions_m[0] + map_dimensions_m[1])
         paper_scaling_factor = (
             paper_dimensions_mm[0] + paper_dimensions_mm[1])
-
         return paper_scaling_factor / map_scaling_factor
 
     @staticmethod

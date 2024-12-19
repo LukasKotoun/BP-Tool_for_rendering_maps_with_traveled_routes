@@ -5,29 +5,44 @@ from common.map_enums import *
 # --------------------------------------------------------------map area--------------------------------------------------------------
 # OSM_INPUT_FILE_NAMES: str = ['../osm_files/vys.osm.pbf','../osm_files/jihmor.osm.pbf']
 # OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/vysJihE.osm.pbf'
-OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/trebic_vic.osm.pbf'
+OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/trebic.osm.pbf'
 # OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/brno.osm.pbf'
 # extract
 OSM_WANT_EXTRACT_AREA: bool = False
 # set if want osm file cutting using osmium command line tool (need to be uinstalled), If not set to None
-OSM_OUTPUT_FILE_NAME: None | str = '../osm_files/trebic_vic.osm.pbf'
+OSM_OUTPUT_FILE_NAME: None | str = '../osm_files/hv.osm.pbf'
 
-OUTPUT_PDF_NAME: str = '../pdfs/divočina'
+OUTPUT_PDF_NAME: str = '../pdfs/divočina2'
 # with fill or false cliping is recomended 0
 # padding from page borders NOTE: must have same settings as the resulting one when generating for large format printing
 PERCENTAGE_PADDING = 0
 
 # AREA: WantedArea = [(-18.14143,65.68868),(-18.08538,65.68868),(-18.08538,65.67783),(-18.14143,65.67783)] #island
 # AREA: WantedArea = [(6.94872,4.84293),(6.99314,4.84293),(6.99314,4.81603),(6.94872,4.81603)] #afrika
-# AREA: WantedArea = "Brno, Česko"
-AREA: WantedArea = [(15.7396182, 49.3111173), (16.0273871, 49.3028839),
-                    (16.0266146, 49.1439064), (15.6712219, 49.1928600)]  # trebic
-# AREA: WantedArea = ["Vysočina, Česko", "Jihomoravský kraj, Česko"]
+# AREA: WantedArea = "Horní vilémovice, Česko"
+# AREA: WantedArea = "Česko"
+# AREA: WantedArea = [(15.8784350,49.2926919), (15.8852585,49.2925274), (15.8845263, 49.2894905), (15.8769732, 49.2896681)] # zoom 18 (inf - 0.13* 1 
+# AREA: WantedArea = [(15.86797,49.30036), (15.89574,49.30038), (15.89571, 49.28466), (15.86797, 49.28444)] # zoom 17 - 0.13-0.1 * 1.5
+# AREA: WantedArea = [(15.86797,49.30036), (15.89574,49.30038), (15.89571, 49.28466), (15.86797, 49.28444)] # zoom 16 - 0.1-0.06 * 2
+# AREA: WantedArea = [(15.85353,49.30649), (15.90876,49.30660), (15.90846, 49.27511), (15.85331, 49.27455)] # zoom 15 - 
+# AREA: WantedArea = [(15.771692,49.346707), (15.991242,49.347326), (15.992636, 49.221204), (15.770450, 49.219111)] # zoom 14 - 
+# AREA: WantedArea = [(15.771692,49.346707), (15.991242,49.347326), (15.992636, 49.221204), (15.770450, 49.219111)] # zoom 13 - 
+# AREA: WantedArea = [(15.771692,49.346707), (15.991242,49.347326), (15.992636, 49.221204), (15.770450, 49.219111)] # zoom 12 - 
+# AREA: WantedArea = [(15.771692,49.346707), (15.991242,49.347326), (15.992636, 49.221204), (15.770450, 49.219111)] # zoom 11 - 
+AREA: WantedArea = [(14.5122769,49.9189048), (16.7593887,49.9184627), (16.7593378, 48.8638096), (14.5141625, 48.8825185)] # zoom 10 - 
+# AREA: WantedArea = [(12.9395476,50.8278038), (17.4318749,50.8064127), (17.4281868,48.7534708), (12.9522022, 48.7996803)] # zoom 9 - 
+# AREA: WantedArea = [(10.7711036,51.9150971), (19.7678764,51.8786709), (19.7610689, 47.7784321), (10.9928686, 47.9098377)] # zoom 8 - 
+# AREA: WantedArea = [(1.978792,55.788072), (30.252955,55.874256),(30.177249, 39.428847), (2.704960, 39.183520) ] # zoom 6 - 
+
+
+# AREA: WantedArea = [(15.7396182, 49.3111173), (16.0273871, 49.3028839),
+#                     (16.0266146, 49.1439064), (15.6712219, 49.1928600)]  # trebic
+# AREA: WantedArea = ["Česko", "Německo", "Polsko", "Rakousko", "Slovensko"]
 PAPER_DIMENSIONS: PaperSize | tuple[float |
-                                    None, float | None] = PaperSize.A4.dimensions
+                              None, float | None] = PaperSize.A4.dimensions
 # PAPER_DIMENSIONS = (400, None)
 # set own dimensions. If one is left as 'None' it will be automaticaly calculated using area size
-# PAPER_DIMENSIONS = (1100, None)
+# PAPER_DIMENSIONS = (3000, None)
 # what side of paper was set (smaller true bigger false) - only if only one side in custom dimension was set to None
 GIVEN_SMALLER_PAPER_DIMENSION: bool = True
 # set how will resulted paper be oriented, AUTOMATIC is Recommended
@@ -36,7 +51,7 @@ WANTED_ORIENTATION: MapOrientation = MapOrientation.AUTOMATIC
 # FIT_PAPER_SIZE recomended with PERCENTAGE_PADDING 0
 EXPAND_AREA_MODE = ExpandArea.FIT_PAPER_SIZE
 # polygon or country name - custom area must be bigger than normal
-CUSTOM_EXPAND_AREA: WantedArea | None = ["Třebíč, Česko"]
+CUSTOM_EXPAND_AREA: WantedArea | None = [(12.9395476,50.8278038), (17.4318749,50.8064127), (17.4281868,48.7534708), (12.9522022, 48.7996803)]
 
 # bounds
 # COMBINED - one bound around area, SEPARATED - separated bounds around every area in AREA variable
@@ -84,7 +99,8 @@ OUTER_CUSTOM_EXPAND_AREA: WantedArea | None = "Česko"
 
 # --------------------------------------------------------------gpx settings--------------------------------------------------------------
 
-GPX_FOLDER: str = '../gpxs/trebic'
+
+GPX_FOLDER: str = './pdfs'
 ROOT_FILES_COLOR_MODE: ColorMode = ColorMode.PALETTE
 ROOT_FILES_COLOR_OR_PALLET: str = "Set1"
 ROOT_FILES_COLOR_DIS_PALLET = True
@@ -127,8 +143,8 @@ WAYS_ADDITIONAL_COLUMNS = ['bridge', 'layer']
 wanted_nodes: WantedCategories = {
     # 'place': {'city', 'town', 'village'}
     # 'place': {'town'}
-    'place': {'city', 'town', 'village'},
-    'natural': {'peak'}
+    # 'place': {'city', 'town', 'village'},
+    # 'natural': {'peak'}
 }
 
 
@@ -166,8 +182,8 @@ wanted_areas: WantedCategories = {
     # # 'leisure': ['park', 'pitch', 'garden', 'golf_course', 'nature_reserve'],
     'water': set({}),
     # todo in automatic this should be to turnoff/on
-    'boundary': {'national_park'}
-    # todo add natural - water
+    'boundary': {'national_park'},
+    'building':{'house','residential'}
     # 'water': ['river','lake','reservoir'],
 }
 unwanted_areas_tags: UnwantedTags = {
@@ -271,6 +287,7 @@ leisure_styles: FeaturesCategoryStyle = {
 
 building_styles: FeaturesCategoryStyle = {
     'house': {StyleKey.COLOR: 'grey', StyleKey.ZINDEX: 1},
+    'residential': {StyleKey.COLOR: 'grey', StyleKey.ZINDEX: 1},
 }
 
 natural_styles: FeaturesCategoryStyle = {
@@ -281,7 +298,7 @@ natural_styles: FeaturesCategoryStyle = {
 }
 
 AREAS_STYLES: FeaturesCategoriesStyles = {
-    # 'building': (building_styles, {StyleKey.COLOR: '#B7DEA6', StyleKey.ZINDEX: 1}),
+    'building': (building_styles, {StyleKey.COLOR: '#B7DEA6', StyleKey.ZINDEX: 1}),
     'landuse': (landuse_styles, {StyleKey.COLOR: '#EDEDE0'}),
     'water': ({}, {StyleKey.COLOR: '#8FB8DB', StyleKey.ZINDEX: 1}),
     'leisure': (leisure_styles, {StyleKey.COLOR: '#EDEDE0', StyleKey.LINEWIDTH: 8}),
