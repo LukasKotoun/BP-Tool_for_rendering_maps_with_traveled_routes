@@ -20,8 +20,7 @@ class OsmDataPreprocessor:
             return temp_geojson.name
 
     def __merge_osm_files(self, input_tmp_files: list[str], osm_output_file):
-        command = ['osmium', 'merge'] + input_tmp_files + \
-            ['--overwrite', '-o', osm_output_file]
+        command = ['osmium', 'merge'] + input_tmp_files + ['--overwrite', '-o', osm_output_file]
         subprocess.run(command, check=True)
 
     def __extract_area(self, osm_input_file: str, osm_output_file: str, temp_geojson_path: str) -> str:

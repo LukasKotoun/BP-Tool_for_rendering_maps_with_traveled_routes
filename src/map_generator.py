@@ -136,6 +136,23 @@ def main():
         map_object_scaling_factor = (Utils.calc_map_object_scaling_factor(map_area_dimensions,
                                                                           paper_dimensions_mm)
                                      * OBJECT_MULTIPLIER)
+    print(map_object_scaling_factor)
+
+    def nonlinear_map(x):
+        a = 0.15
+        b = -0.8257
+        return a * x**b
+    # for *4 scaling factor
+    def nonlinear_map2(x):
+        a = 1.894
+        b = -0.8257
+        return a * x**b
+    
+
+    test2 = nonlinear_map(map_object_scaling_factor)
+    print(test2)
+    map_object_scaling_factor *= max(test2, 1)
+        # map_object_scaling_factor = 1
 
     # ------------get elements from osm file------------
     if (OSM_WANT_EXTRACT_AREA):
