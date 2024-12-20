@@ -132,10 +132,11 @@ def main():
         map_object_scaling_factor = (Utils.calc_map_object_scaling_factor(map_area_dimensions,
                                                                           paper_dimensions_mm)
                                      * OBJECT_MULTIPLIER)
-        
+
     # todo a and b from constatns in config and different for ways, and bounds (maby points)
-    map_object_scaling_factor *= Utils.calc_scaling_factor_multiplier(map_object_scaling_factor, 1, 500)
-    
+    map_object_scaling_factor *= Utils.calc_scaling_factor_multiplier(
+        map_object_scaling_factor, 1, 500)
+
     # ------------get elements from osm file------------
     if (OSM_WANT_EXTRACT_AREA):
         if (OSM_OUTPUT_FILE_NAME is None):
@@ -168,6 +169,9 @@ def main():
     if (not GdfUtils.are_gdf_geometry_inside_geometry(root_files_gpxs_gdf, reqired_area_polygon)
        or not GdfUtils.are_gdf_geometry_inside_geometry(folder_gpxs_gdf, reqired_area_polygon)):
         warnings.warn("Some gpx files are not whole inside selected map area.")
+
+    #! can have this - the width changing and dynamic styling will be in function that will not add new styles
+    #! but it need to be first, the styles will be different type than this used styles - DynamicFeatureCategoryStyle
 
     root_files = list(root_files_gpxs_gdf['fileName'].unique())
     folders = list(folder_gpxs_gdf['folder'].unique())

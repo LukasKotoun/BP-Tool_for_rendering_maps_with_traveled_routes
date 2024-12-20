@@ -118,6 +118,22 @@ class Utils:
     @staticmethod
     def calc_bounds_to_fill_paper_with_ratio(center_point: Point, pdf_dim: DimensionsTuple,
                                              bigger_area_dim: DimensionsTuple, bigger_pdf_dim: DimensionsTuple) -> BoundsDict:
+        """Calculate bounds of area to fill paper with ratio (bigger area/bigger pdf dimensions) for area preview. 
+        
+            Calc bounds that will have center in center_point and will fill whole paper.
+            Function will first calculated new dimensions that will match bigger pdf ratios and one side will fill pdf side.
+            This dimensions will be adjusted by function adjust_bounds_to_fill_paper to fill whole paper by expanding the remaining side to fill pdf paper.
+
+
+        Args:
+            center_point (Point): center points of final bounds (best in mercator projection)
+            pdf_dim (DimensionsTuple): currect pdf dim that will be created
+            bigger_area_dim (DimensionsTuple): area that will be used to calculate ratio (best in mercator projection)
+            bigger_pdf_dim (DimensionsTuple): pdf that will be used to calculate ratio
+
+        Returns:
+            BoundsDict: Bounds that will fill whole paper
+        """
         pdf_to_area_ratio_bigger = Utils.calc_ratios(
             bigger_area_dim, bigger_pdf_dim)
         # Calc from eqation  = bigger_area_dim / bigger_pdf_dim
@@ -135,7 +151,17 @@ class Utils:
 
     @staticmethod
     def adjust_bounds_to_fill_paper(area_bounds: BoundsDict, pdf_dim: DimensionsTuple) -> BoundsDict:
+        """Adjust one side of bounds (that dont will that dimension of paper) to fill whole paper.
+        
+            Function will adjust one side of bounds to fill whole paper by expanding the remaining side to fill pdf paper.
+            It will calculate aspect ratio of bounds and paper and than adjust the side that is shorter than paper side.
+        Args:
+            area_bounds (BoundsDict): Bounds where one bound will fill one paper dimension (best in mercator projection)
+            pdf_dim (DimensionsTuple): Paper dimension to fill
 
+        Returns:
+            BoundsDict: Bounds that will fill whole paper
+        """
         width, height = Utils.get_dimensions(area_bounds)
         # width / height
         paper_aspect_ratio = pdf_dim[0] / pdf_dim[1]
