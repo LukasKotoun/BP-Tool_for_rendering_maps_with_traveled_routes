@@ -193,11 +193,14 @@ class StyleAssigner:
                               color_or_pallet: str, dis_pallet=False, max_color_count: int = None, colors_used: int = None) -> int:
         """Extend existing_styles with keys that are not in existing_styles and are in keys.
 
-            keys - dict key be in resulting dict as keys
+            keys - dict with all keys that are needed in resulting dict as keys
+            existing_styles - dict with styles already explicit written for gpxs
             mode - wheter to add colors from PALETTE or one color shades
             color_or_pallet - name of pallet or color to shade use
+            max_color_count - number of colors that will be used from continues pallet or shades (for linear assigment)
             colors_used - used number of colors from pallet
         """
+        # if not given (different styling for root and folders), calculate how many colors are missing
         if (max_color_count is None):
             max_color_count = Utils.count_missing_values(
                 keys, existing_styles, StyleKey.COLOR)
@@ -206,6 +209,7 @@ class StyleAssigner:
 
         if (mode == ColorMode.PALETTE):
             try:
+                # pallet = color_or_pallet
                 cmap = plt.get_cmap(color_or_pallet)
             except ValueError:
                 warnings.warn(
@@ -223,6 +227,7 @@ class StyleAssigner:
                         existing_styles[key].update(
                             {StyleKey.COLOR: cmap(colors_used)})
                         colors_used += 1
+            # continues
             else:
                 norm = plt.Normalize(vmin=0,
                                      vmax=max_color_count)
@@ -235,14 +240,20 @@ class StyleAssigner:
                         existing_styles[key].update(
                             {StyleKey.COLOR: cmap(norm(colors_used))})
                         colors_used += 1
-
+                        
+        #todo test existing style without color on shade
         elif (mode == ColorMode.SHADE):
+            # color = color_or_pallet
             colors = StyleAssigner.generate_shades_of_color(
-                color_or_pallet, max_color_count, 0.2, 0.8)
+                color_or_pallet, max_color_count, 0.2, 0.8) #? maybe add min and max factor as parameter
             for key in keys:
                 if key not in existing_styles:
                     existing_styles[key] = {
                         StyleKey.COLOR: colors[colors_used]}
+                    colors_used += 1
+                elif (StyleKey.COLOR not in existing_styles[key].keys()):
+                    existing_styles[key].update(
+                        {StyleKey.COLOR: colors[colors_used]})
                     colors_used += 1
         else:
             warnings.warn(

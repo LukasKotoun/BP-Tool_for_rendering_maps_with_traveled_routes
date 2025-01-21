@@ -170,8 +170,10 @@ def main():
        or not GdfUtils.are_gdf_geometry_inside_geometry(folder_gpxs_gdf, reqired_area_polygon)):
         warnings.warn("Some gpx files are not whole inside selected map area.")
 
-    #! can have this - the width changing and dynamic styling will be in function that will not add new styles
-    #! but it need to be first, the styles will be different type than this used styles - DynamicFeatureCategoryStyle
+    #! the width changing and dynamic styling will be in function
+    #! DynamicFeatureCategoryStyle - styles with different values for some zoom level
+    #! from DynamicFeatureCategoryStyle will be created FeaturesCategoriesStyleS for current zoom
+    #! but it need to be first
 
     root_files = list(root_files_gpxs_gdf['fileName'].unique())
     folders = list(folder_gpxs_gdf['folder'].unique())
@@ -179,19 +181,21 @@ def main():
     # assign dynamic colors to root files and folders styles if wanted
     same_pallet: bool = ((FOLDER_COLOR_MODE == ColorMode.PALETTE or FOLDER_COLOR_MODE == ColorMode.SHADE)
                          and FOLDER_COLOR_MODE == ROOT_FILES_COLOR_MODE and FOLDER_COLOR_OR_PALLET == ROOT_FILES_COLOR_OR_PALLET)
-    used_colors = 0
-    max_colors = Utils.count_missing_values(root_files, root_files_styles, StyleKey.COLOR) + \
+    used_colors_count = 0
+    max_colors_count = (Utils.count_missing_values(root_files, root_files_styles, StyleKey.COLOR) + \
         Utils.count_missing_values(
-            folders, folders_styles, StyleKey.COLOR) if same_pallet else None
+            folders, folders_styles, StyleKey.COLOR)) if same_pallet else None
 
+    # assing colors to root files from pallet or shade + count number of used colors
     if (ROOT_FILES_COLOR_MODE == ColorMode.PALETTE or ROOT_FILES_COLOR_MODE == ColorMode.SHADE):
-        used_colors = StyleAssigner.assign_dynamic_colors(
-            root_files, root_files_styles, ROOT_FILES_COLOR_MODE, ROOT_FILES_COLOR_OR_PALLET, ROOT_FILES_COLOR_DIS_PALLET, max_colors)
-
+        used_colors_count = StyleAssigner.assign_dynamic_colors(
+            root_files, root_files_styles, ROOT_FILES_COLOR_MODE, ROOT_FILES_COLOR_OR_PALLET, ROOT_FILES_COLOR_DIS_PALLET, max_colors_count, 0)
+        
+    # assing colors to folders from pallet or shade + use count of used colors from root files if same pallet or shade
     if (FOLDER_COLOR_MODE == ColorMode.PALETTE or FOLDER_COLOR_MODE == ColorMode.SHADE):
-        used_colors = used_colors if same_pallet else 0
+        used_colors_count = used_colors_count if same_pallet else 0
         StyleAssigner.assign_dynamic_colors(
-            folders, folders_styles, FOLDER_COLOR_MODE, FOLDER_COLOR_OR_PALLET, FOLDER_COLOR_DIS_PALLET, max_colors, used_colors)
+            folders, folders_styles, FOLDER_COLOR_MODE, FOLDER_COLOR_OR_PALLET, FOLDER_COLOR_DIS_PALLET, max_colors_count, used_colors_count)
 
     gpxs_style_assigner = StyleAssigner(
         GPXS_STYLES, GENERAL_DEFAULT_STYLES, GPXS_MANDATORY_STYLES)

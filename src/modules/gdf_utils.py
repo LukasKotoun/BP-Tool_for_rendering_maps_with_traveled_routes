@@ -191,7 +191,8 @@ class GdfUtils:
         return pd.concat(gdfs, ignore_index=True)  # concat to one gdf
 
     @staticmethod
-    def expand_area(area_gdf: gpd.GeoDataFrame | None, fromEpsg: int, toEpsg: int | None = None, pdf_dim: DimensionsTuple | None = None, custom_area: WantedArea | None = None):
+    def expand_area(area_gdf: gpd.GeoDataFrame | None, fromEpsg: int, toEpsg: int | None = None, pdf_dim: DimensionsTuple | None = None,
+                    custom_area: WantedArea | None = None):
         if (custom_area is not None):  # custom expand area to one row in gdf
             return GdfUtils.combine_rows_gdf(GdfUtils.get_whole_area_gdf(custom_area, fromEpsg, toEpsg), toEpsg)
         else:  # fit paper - expand by area bounds to rectangle
