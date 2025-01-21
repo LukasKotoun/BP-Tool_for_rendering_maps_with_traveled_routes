@@ -72,5 +72,6 @@ class OsmDataPreprocessor:
             finally:
                 for tmp_file in extracted_files_names:
                     os.remove(tmp_file)
+                    
         os.remove(temp_geojson_path)
         return self.osm_output_file

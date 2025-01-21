@@ -25,22 +25,20 @@ PERCENTAGE_PADDING = 0
 # AREA: WantedArea = [(15.86797,49.30036), (15.89574,49.30038), (15.89571, 49.28466), (15.86797, 49.28444)] # zoom 17 - 0.13-0.1 * 1.5
 # AREA: WantedArea = [(15.86797,49.30036), (15.89574,49.30038), (15.89571, 49.28466), (15.86797, 49.28444)] # zoom 16 - 0.1-0.06 * 2
 # AREA: WantedArea = [(15.85353,49.30649), (15.90876,49.30660), (15.90846, 49.27511), (15.85331, 49.27455)] # zoom 15 - 
-# AREA: WantedArea = [(15.771692,49.346707), (15.991242,49.347326), (15.992636, 49.221204), (15.770450, 49.219111)] # zoom 14 - 
-# AREA: WantedArea = [(15.771692,49.346707), (15.991242,49.347326), (15.992636, 49.221204), (15.770450, 49.219111)] # zoom 13 - 
+# AREA: WantedArea = [(15.771692,49.346707), (15.991242, 49.347326), (15.992636, 49.221204), (15.770450, 49.219111)] # zoom 14 - 
+AREA: WantedArea = [(15.771692,49.346707), (15.991242,49.347326), (15.992636, 49.221204), (15.770450, 49.219111)] # zoom 13 - 
 # AREA: WantedArea = [(15.771692,49.346707), (15.991242,49.347326), (15.992636, 49.221204), (15.770450, 49.219111)] # zoom 12 - 
 # AREA: WantedArea = [(15.771692,49.346707), (15.991242,49.347326), (15.992636, 49.221204), (15.770450, 49.219111)] # zoom 11 - 
-AREA: WantedArea = [(14.5122769,49.9189048), (16.7593887,49.9184627), (16.7593378, 48.8638096), (14.5141625, 48.8825185)] # zoom 10 - 
+# AREA: WantedArea = [(14.5122769,49.9189048), (16.7593887,49.9184627), (16.7593378, 48.8638096), (14.5141625, 48.8825185)] # zoom 10 - 
 # AREA: WantedArea = [(12.9395476,50.8278038), (17.4318749,50.8064127), (17.4281868,48.7534708), (12.9522022, 48.7996803)] # zoom 9 - 
 # AREA: WantedArea = [(10.7711036,51.9150971), (19.7678764,51.8786709), (19.7610689, 47.7784321), (10.9928686, 47.9098377)] # zoom 8 - 
 # AREA: WantedArea = [(1.978792,55.788072), (30.252955,55.874256),(30.177249, 39.428847), (2.704960, 39.183520) ] # zoom 6 - 
-
 
 # AREA: WantedArea = [(15.7396182, 49.3111173), (16.0273871, 49.3028839),
 #                     (16.0266146, 49.1439064), (15.6712219, 49.1928600)]  # trebic
 # AREA: WantedArea = ["Česko", "Německo", "Polsko", "Rakousko", "Slovensko"]
 PAPER_DIMENSIONS: PaperSize | tuple[float |
                               None, float | None] = PaperSize.A4.dimensions
-# PAPER_DIMENSIONS = (400, None)
 # set own dimensions. If one is left as 'None' it will be automaticaly calculated using area size
 # PAPER_DIMENSIONS = (3000, None)
 # what side of paper was set (smaller true bigger false) - only if only one side in custom dimension was set to None
@@ -59,9 +57,7 @@ AREA_BOUNDARY = AreaBounds.NONE
 EXPAND_AREA_BOUNDS_PLOT = False
 AREA_BOUNDARY_LINEWIDTH = 70
 
-# clipping
-# if true it will plot only given AREA (recomended) if False it will plot whole osm file with AREA in center
-WANT_AREA_CLIPPING = True
+
 
 # --------------------------------------------------------------names settings--------------------------------------------------------------
 # city text
@@ -86,7 +82,7 @@ WANT_PREVIEW: bool = False
 # area for that you are creating smaller preview (bigger than normal area)
 OUTER_AREA: WantedArea = "Vysočina, Česko"
 
-OUTER_PAPER_DIMENSIONS = PaperSize.A0.dimensions  # real paper size
+OUTER_PAPER_DIMENSIONS = PaperSize.A3.dimensions  # real paper size
 # OUTER_PAPER_DIMENSIONS = (300, None) # or set own #if one is left none if will be automaticaly calculated by area size
 # what side of paper was set (smaller true bigger false)(only if only one side in custom dimension was set)
 OUTER_GIVEN_SMALLER_PAPER_DIMENSION = True
@@ -96,6 +92,10 @@ OUTER_WANTED_ORIENTATION = MapOrientation.AUTOMATIC
 # expand area
 OUTER_EXPAND_AREA_MODE = ExpandArea.FIT_PAPER_SIZE
 OUTER_CUSTOM_EXPAND_AREA: WantedArea | None = "Česko"
+
+# clipping - if used without preview than replaced by fit_paper_size and default should be true
+# if true it will plot only given AREA (recomended) if False it will plot whole osm file with AREA in center
+WANT_AREA_CLIPPING = False
 
 # --------------------------------------------------------------gpx settings--------------------------------------------------------------
 

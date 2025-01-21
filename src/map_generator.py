@@ -47,7 +47,9 @@ def calc_preview(map_area_gdf, paper_dimensions_mm):
     # todo map_object_scaling_automatic_filters_creating = Utils.calc_map_object_scaling_factor(outer_map_area_dimensions, outer_paper_dimensions_mm)
     # map_pdf_ratio_auto_filter = sum(Utils.calc_ratios(outer_paper_dimensions_mm, outer_map_area_dimensions))/2
     # ?? to doc - need because it will clip by required area - and that will be some big area in not clipping (cant use only first approach)
+    # ?? req area je potom velká jako pdf stránka (přes celou stránku) a ne jako puvodně chtěná oblast a tedy by k žádnému zaříznutí nedošlo
     if (not WANT_AREA_CLIPPING):
+        # všechny prvky i když to bude menší než papír - např. cesty mimo required area
         area_zoom_preview = None
         # calc bounds so area_zoom_preview will be 1 and will fill whole paper
         paper_fill_bounds = Utils.calc_bounds_to_fill_paper_with_ratio(map_area_gdf.unary_union.centroid,
@@ -57,6 +59,7 @@ def calc_preview(map_area_gdf, paper_dimensions_mm):
         map_area_gdf = GdfUtils.create_gdf_from_bounds(
             paper_fill_bounds, EPSG_CALC)
     else:
+        # oříznuté okraje když to bude menší než papír
         map_area_dimensions = GdfUtils.get_dimensions_gdf(map_area_gdf)
         # if want clipping than instead of bounds calculation use zoom/unzoom - with using paper_fill_bounds it cant be clipped
         area_zoom_preview = Utils.calc_zoom_for_smaller_area(
@@ -70,15 +73,9 @@ def calc_preview(map_area_gdf, paper_dimensions_mm):
 @time_measurement_decorator("main")
 def main():
     # ------------input validation------------
-    # validation all inputs and combinations on start to prevent exception after long time of processing and rendering
-    # some class input data checker
-    # and run function to make checks
-    # todo check some reqired constants
     # todo check file validity - if osm files exits
-    # todo check missing styles (create array of reqired styles for every category), and by wanted categories (landues, water) check if have all required styles (check only for default category styles) (in instance of style assigner)
+
     # ------------get map area and calc paper sizes, and calc preview
-    # todo get_area_gdfs and take list of string and lists. and resulted gdf concatenate to one and that return
-    # todo to func checkOsmFilesAndNormalize - if files is list but with len 1 convert to string
 
     if (isinstance(OSM_INPUT_FILE_NAMES, list) and len(OSM_INPUT_FILE_NAMES) > 1 and OSM_WANT_EXTRACT_AREA == False):
         print("Multiple files feature (list of osm files) is avilable only with option OSM_WANT_EXTRACT_AREA")
@@ -125,10 +122,11 @@ def main():
         else:
             boundary_map_area_gdf = map_area_gdf.copy()
 
+
     if (WANT_PREVIEW):
         (area_zoom_preview, map_object_scaling_factor,
-         map_area_gdf) = calc_preview(map_area_gdf, paper_dimensions_mm)
-        # todo automatic creationg of wanted elements and linewidths - factor or directly giving paper size and area dimensions
+            map_area_gdf) = calc_preview(map_area_gdf, paper_dimensions_mm)
+        # todo automatic creation of wanted elements and linewidths - factor or directly giving paper size and area dimensions
     else:
         area_zoom_preview = None
         # in meteres for same proportion keeping
@@ -207,6 +205,8 @@ def main():
     folder_gpxs_gdf: gpd.GeoDataFrame = gpxs_style_assigner.assign_styles(
         folder_gpxs_gdf, GPX_FOLDERS_CATEGORIES)
     gpxs_gdf = GdfUtils.combine_gdfs([root_files_gpxs_gdf, folder_gpxs_gdf])
+
+    
     # ------------osm file------------
     osm_file_parser = OsmDataParser(
         wanted_nodes, wanted_ways, wanted_areas,
@@ -228,6 +228,8 @@ def main():
     if (not GdfUtils.is_geometry_inside_geometry(reqired_area_polygon, whole_map_gdf)):
         warnings.warn(
             "Selected area map is not whole inside given osm.pbf file.")
+
+        
     # ------------filter some elements out - before styles adding------------
     # only for some ways categories
     # ways_gdf = GdfUtils.filter_short_ways(ways_gdf, 10)
@@ -240,6 +242,8 @@ def main():
 
     nodes_gdf = GdfUtils.filter_gdf_related_columns_values(
         nodes_gdf, 'natural', ['peak'], ['name', 'ele'], [])
+
+    
     # ------------style elements------------
     nodes_style_assigner = StyleAssigner(
         NODES_STYLES, GENERAL_DEFAULT_STYLES, NODES_MANDATORY_STYLES)

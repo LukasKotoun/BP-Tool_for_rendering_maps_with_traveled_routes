@@ -424,7 +424,6 @@ class GdfUtils:
                                       compl: bool = False) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame] | gpd.GeoDataFrame:
         """Return gdf with rows where every column specified in 'col_names' contains any of the values in 'col_values'.
         If 'neg' is used, return gdf with rows that dont have any of values specified in 'col_values' in any of 'col_names'.
-        If neg is used return gdf with rows that dont have any of values specified in 'col_values' in any of 'col_names'.
 
         Example of usage:
             - To select all rows that have '-' or pd.NA in columns 1 and 2

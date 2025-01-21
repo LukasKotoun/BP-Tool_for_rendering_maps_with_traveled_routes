@@ -142,8 +142,10 @@ class Plotter:
             return
         if (StyleKey.EDGE_COLOR in lines_gdf and StyleKey.LINESTYLE in lines_gdf
            and StyleKey.EDGE_WIDTH_RATIO in lines_gdf):
+            # filter rows without values on linestyle and edge color
             edge_lines_gdf = GdfUtils.filter_gdf_columns_values_AND(
                 lines_gdf, [StyleKey.EDGE_COLOR, StyleKey.EDGE_WIDTH_RATIO])
+            # filter out all lines that have other than solid line
             edge_lines_gdf = GdfUtils.filter_gdf_column_values(
                 edge_lines_gdf, StyleKey.LINESTYLE, [pd.NA, '-'])
             if (not edge_lines_gdf.empty):
@@ -235,6 +237,7 @@ class Plotter:
             railways_gdf = GdfUtils.filter_gdf_column_values(
                 rest_gdf, 'railway')
             self.__plot_waterways(waterways_gdf)
+            # filter out all highways that have other than solid line
             highways_gdf = GdfUtils.filter_gdf_column_values(
                 highways_gdf, StyleKey.LINESTYLE, [pd.NA, 'none', '-'])
             self.__plot_highways(highways_gdf, False)
@@ -254,7 +257,7 @@ class Plotter:
             return
         ways_gdf[StyleKey.LINEWIDTH] = ways_gdf[StyleKey.LINEWIDTH] * \
             self.map_object_scaling_factor * ways_width_multiplier
-
+        # todo add option to plot bridges as only normal ways but ordered by layer (maybe plot all in layers?)
         bridges_gdf, rest_gdf = GdfUtils.filter_gdf_column_values(
             ways_gdf, 'bridge', ['yes'], compl=True)
         waterways_gdf, rest_gdf = GdfUtils.filter_gdf_column_values(
