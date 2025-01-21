@@ -83,9 +83,12 @@ def main():
     if (isinstance(OSM_INPUT_FILE_NAMES, list) and len(OSM_INPUT_FILE_NAMES) > 1 and OSM_WANT_EXTRACT_AREA == False):
         print("Multiple files feature (list of osm files) is avilable only with option OSM_WANT_EXTRACT_AREA")
         return
-
-    map_area_gdf = GdfUtils.get_whole_area_gdf(AREA, EPSG_OSM, EPSG_CALC)
-
+    # if are for preview is not specified, use whole area
+    if(WANT_PREVIEW and AREA == None):
+        map_area_gdf = GdfUtils.get_whole_area_gdf(OUTER_AREA, EPSG_OSM, EPSG_CALC)
+    else:
+        map_area_gdf = GdfUtils.get_whole_area_gdf(AREA, EPSG_OSM, EPSG_CALC)
+        
     # ------------store bounds to plot and combine area rows in gdf to 1 row------------
     boundary_map_area_gdf = GdfUtils.create_empty_gdf()  # default dont plot
     if (AREA_BOUNDARY == AreaBounds.SEPARATED):
@@ -133,7 +136,9 @@ def main():
                                                                           paper_dimensions_mm)
                                      * OBJECT_MULTIPLIER)
 
-    # todo a and b from constatns in config and different for ways, and bounds (maby points)
+    #! the width changing and dynamic styling will be in function
+    #! DynamicFeatureCategoryStyle - styles with different values for some zoom level
+    # todo a and b from constatns in config and different for ways, and bounds (mabye points)
     map_object_scaling_factor *= Utils.calc_scaling_factor_multiplier(
         map_object_scaling_factor, 1, 500)
 
@@ -170,10 +175,7 @@ def main():
        or not GdfUtils.are_gdf_geometry_inside_geometry(folder_gpxs_gdf, reqired_area_polygon)):
         warnings.warn("Some gpx files are not whole inside selected map area.")
 
-    #! the width changing and dynamic styling will be in function
-    #! DynamicFeatureCategoryStyle - styles with different values for some zoom level
-    #! from DynamicFeatureCategoryStyle will be created FeaturesCategoriesStyleS for current zoom
-    #! but it need to be first
+
 
     root_files = list(root_files_gpxs_gdf['fileName'].unique())
     folders = list(folder_gpxs_gdf['folder'].unique())
