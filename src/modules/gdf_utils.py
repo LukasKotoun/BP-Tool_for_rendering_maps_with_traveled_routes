@@ -172,7 +172,7 @@ class GdfUtils:
     # ------------editing gdf------------
 
     @staticmethod
-    def change_columns_to_categorical(gdf: gpd.GeoDataFrame, columns: list) -> gpd.GeoDataFrame:
+    def change_columns_to_categorical(gdf: gpd.GeoDataFrame, columns: list) -> None:
         for column in columns:
             if (column in gdf):
                 gdf[column] = gdf[column].astype("category")
@@ -213,6 +213,43 @@ class GdfUtils:
             return gdf.set_crs(epsg=toEpsg)
         return gdf.to_crs(epsg=toEpsg)
 
+    @staticmethod #does not work if area is inside of aother area - use or not use - by gap
+    @time_measurement_decorator("inacurrate")
+    def remove_common_boundary_inaccuracy(boundary_gdf: gpd.GeoDataFrame) -> None:
+        """Remove common boundary inaccuracy in given GeoDataFrame 
+        by shifting the common border of the one area to the neigbour area.
+
+        Args:
+            boundary_gdf (gpd.GeoDataFrame): Gdf with boundaries.
+        """
+        # # by shifting area...
+        # boundary_gdf['area'] = boundary_gdf.geometry.area 
+        # boundary_gdf = boundary_gdf.sort_values(by='area', ascending=True)  
+        # # from smallest to biggest area
+        # for i, area1 in boundary_gdf.iterrows():
+        #     for j, area2 in boundary_gdf.iterrows():
+        #         if i >= j:
+        #             continue
+        #         # find the shared border
+        #         common_border = area1.geometry.intersection(area2.geometry)
+        #         if not common_border.is_empty:
+        #             # shift area2's border to the area1's border
+        #             adjusted_area2 = area2.geometry.difference(common_border)
+        #             precise_area2 = adjusted_area2.union(common_border)
+
+        #             boundary_gdf.loc[j, "geometry"] = adjusted_area2
+
+        # work by createing from 2 seperated areas row with combined area and one row with original area
+        # remove small gaps between areas
+        boundary_gdf["geometry"] = boundary_gdf["geometry"].buffer(0)
+        for i, row in boundary_gdf.iterrows():
+            # find areas that share a boundary with row
+            neighbors = boundary_gdf[boundary_gdf.geometry.touches(row.geometry)]
+            for _, neighbor in neighbors.iterrows():
+                # merge the border of the current area and neighbor
+                merged_border = row.geometry.union(neighbor.geometry)
+                boundary_gdf.at[i, 'geometry'] = merged_border
+                    
     # ------------Bool operations------------
     @staticmethod
     def is_geometry_inside_bounds(area_bounds: BoundsDict, polygon: GeometryCollection) -> bool:
@@ -504,5 +541,5 @@ class GdfUtils:
             gdf_merged_diss['geometry'], min_branch_length=aggreagate_distance * 10)
         gdf_merged_diss = gdf_merged_diss.explode(
             column='geometry', ignore_index=True)
-        gdf_merged_diss = gdf_merged_diss.to_crs(epsg=gdf.crs)
+        # gdf_merged_diss = gdf_merged_diss.to_crs(epsg=gdf.crs.epsg)
         return gdf_merged_diss

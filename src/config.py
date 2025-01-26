@@ -12,7 +12,7 @@ OSM_WANT_EXTRACT_AREA: bool = False
 # set if want osm file cutting using osmium command line tool (need to be uinstalled), If not set to None
 OSM_OUTPUT_FILE_NAME: None | str = '../osm_files/hv.osm.pbf'
 
-OUTPUT_PDF_NAME: str = '../pdfs/divočina2'
+OUTPUT_PDF_NAME: str = '../pdfs/divočina4'
 # with fill or false cliping is recomended 0
 # padding from page borders NOTE: must have same settings as the resulting one when generating for large format printing
 PERCENTAGE_PADDING = 0
@@ -26,7 +26,7 @@ PERCENTAGE_PADDING = 0
 # AREA: WantedArea = [(15.86797,49.30036), (15.89574,49.30038), (15.89571, 49.28466), (15.86797, 49.28444)] # zoom 16 - 0.1-0.06 * 2
 # AREA: WantedArea = [(15.85353,49.30649), (15.90876,49.30660), (15.90846, 49.27511), (15.85331, 49.27455)] # zoom 15 - 
 # AREA: WantedArea = [(15.771692,49.346707), (15.991242, 49.347326), (15.992636, 49.221204), (15.770450, 49.219111)] # zoom 14 - 
-AREA: WantedArea = [(15.771692,49.346707), (15.991242,49.347326), (15.992636, 49.221204), (15.770450, 49.219111)] # zoom 13 - 
+# AREA: WantedArea = [(15.771692,49.346707), (15.991242,49.347326), (15.992636, 49.221204), (15.770450, 49.219111)] # zoom 13 - 
 # AREA: WantedArea = [(15.771692,49.346707), (15.991242,49.347326), (15.992636, 49.221204), (15.770450, 49.219111)] # zoom 12 - 
 # AREA: WantedArea = [(15.771692,49.346707), (15.991242,49.347326), (15.992636, 49.221204), (15.770450, 49.219111)] # zoom 11 - 
 # AREA: WantedArea = [(14.5122769,49.9189048), (16.7593887,49.9184627), (16.7593378, 48.8638096), (14.5141625, 48.8825185)] # zoom 10 - 
@@ -37,10 +37,12 @@ AREA: WantedArea = [(15.771692,49.346707), (15.991242,49.347326), (15.992636, 49
 # AREA: WantedArea = [(15.7396182, 49.3111173), (16.0273871, 49.3028839),
 #                     (16.0266146, 49.1439064), (15.6712219, 49.1928600)]  # trebic
 # AREA: WantedArea = ["Česko", "Německo", "Polsko", "Rakousko", "Slovensko"]
-PAPER_DIMENSIONS: PaperSize | tuple[float |
-                              None, float | None] = PaperSize.A4.dimensions
+# AREA: WantedArea = ["Česko","Vysočina, Česko", "Jihomoravský kraj, Česko"]
+AREA: WantedArea = ["Česko", "Třebíč, Česko", "Okřešice, Česko"]
+# PAPER_DIMENSIONS: PaperSize | tuple[float |
+                            #   None, float | None] = PaperSize.A0.dimensions
 # set own dimensions. If one is left as 'None' it will be automaticaly calculated using area size
-# PAPER_DIMENSIONS = (3000, None)
+PAPER_DIMENSIONS = (3000, None)
 # what side of paper was set (smaller true bigger false) - only if only one side in custom dimension was set to None
 GIVEN_SMALLER_PAPER_DIMENSION: bool = True
 # set how will resulted paper be oriented, AUTOMATIC is Recommended
@@ -53,7 +55,7 @@ CUSTOM_EXPAND_AREA: WantedArea | None = [(12.9395476,50.8278038), (17.4318749,50
 
 # bounds
 # COMBINED - one bound around area, SEPARATED - separated bounds around every area in AREA variable
-AREA_BOUNDARY = AreaBounds.NONE
+AREA_BOUNDARY = AreaBounds.SEPARATED
 EXPAND_AREA_BOUNDS_PLOT = False
 AREA_BOUNDARY_LINEWIDTH = 70
 

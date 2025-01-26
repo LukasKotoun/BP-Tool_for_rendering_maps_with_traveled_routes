@@ -276,7 +276,12 @@ def main():
         plotter.clip(EPSG_DISPLAY, GdfUtils.create_polygon_from_gdf_bounds(
             nodes_gdf, ways_gdf, areas_gdf))
 
+
+    
+
+
     if (boundary_map_area_gdf is not None and not boundary_map_area_gdf.empty):
+        # GdfUtils.remove_common_boundary_inaccuracy(boundary_map_area_gdf)
         plotter.plot_area_boundary(area_gdf=boundary_map_area_gdf.to_crs(
             epsg=EPSG_DISPLAY), linewidth=AREA_BOUNDARY_LINEWIDTH)
 
