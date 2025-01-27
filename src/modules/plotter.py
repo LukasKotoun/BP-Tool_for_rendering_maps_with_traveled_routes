@@ -244,7 +244,11 @@ class Plotter:
             self.__plot_railways(
                 railways_gdf, 2 * self.map_object_scaling_factor, 15 * self.map_object_scaling_factor)
 
-        bridges_gdf = GdfUtils.sort_gdf_by_column(bridges_gdf, "layer")
+        if ('layer' in bridges_gdf.columns):
+            GdfUtils.change_columns_to_numeric(bridges_gdf, ['layer'])
+            bridges_gdf['layer'] = bridges_gdf['layer'].fillna(0)  # convert NaN/None to 0
+            bridges_gdf = GdfUtils.sort_gdf_by_column(bridges_gdf, "layer")
+
         for layer, bridge_layer_gdf in bridges_gdf.groupby("layer"):
             plot_bridges_edges(bridge_layer_gdf.copy())
             plot_bridges_center(bridge_layer_gdf.copy())

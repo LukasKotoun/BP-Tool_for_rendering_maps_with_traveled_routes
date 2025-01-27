@@ -137,9 +137,10 @@ def main():
     #! the width changing and dynamic styling will be in function
     #! DynamicFeatureCategoryStyle - styles with different values for some zoom level
     # todo a and b from constatns in config and different for ways, and bounds (mabye points)
+
     map_object_scaling_factor *= Utils.calc_scaling_factor_multiplier(
         map_object_scaling_factor, 1, 500)
-
+    
     # ------------get elements from osm file------------
     if (OSM_WANT_EXTRACT_AREA):
         if (OSM_OUTPUT_FILE_NAME is None):
@@ -236,12 +237,16 @@ def main():
 
     nodes_gdf = GdfUtils.filter_gdf_rows_inside_gdf_area(
         nodes_gdf, map_area_gdf)
-    # get only places with name
+    # filter out place without name
     nodes_gdf = GdfUtils.filter_gdf_related_columns_values(
         nodes_gdf, 'place', [], ['name'], [])
-
+    # filter out peak without name and ele
     nodes_gdf = GdfUtils.filter_gdf_related_columns_values(
         nodes_gdf, 'natural', ['peak'], ['name', 'ele'], [])
+    # round ele to whole number
+    GdfUtils.change_columns_to_numeric(nodes_gdf, ['ele'])
+    if('ele' in nodes_gdf.columns):
+        nodes_gdf['ele'] = nodes_gdf['ele'].round(0).astype('Int64')
 
     
     # ------------style elements------------
@@ -277,11 +282,9 @@ def main():
             nodes_gdf, ways_gdf, areas_gdf))
 
 
-    
-
 
     if (boundary_map_area_gdf is not None and not boundary_map_area_gdf.empty):
-        # GdfUtils.remove_common_boundary_inaccuracy(boundary_map_area_gdf)
+        # GdfUtils.remove_common_boundary_inaccuracy(boundary_map_area_gdf) # maybe turn off/on in settings
         plotter.plot_area_boundary(area_gdf=boundary_map_area_gdf.to_crs(
             epsg=EPSG_DISPLAY), linewidth=AREA_BOUNDARY_LINEWIDTH)
 

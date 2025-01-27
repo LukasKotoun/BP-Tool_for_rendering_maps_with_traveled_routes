@@ -183,6 +183,12 @@ class GdfUtils:
             return gdf.to_crs(epsg=toEpsg)
         return gpd.GeoDataFrame(geometry=[gdf.to_crs(epsg=toEpsg).geometry.unary_union], crs=f"EPSG:{toEpsg}")
 
+    @staticmethod
+    def change_columns_to_numeric(gdf: gpd.GeoDataFrame, columns: list[str]) -> None:
+        for column in columns:
+            if (column in gdf):
+                gdf[column] = pd.to_numeric(gdf[column], errors='coerce')
+
     # todo change from list
     @staticmethod
     def combine_gdfs(gdfs: list[gpd.GeoDataFrame]) -> gpd.GeoDataFrame:
@@ -237,10 +243,10 @@ class GdfUtils:
         #             adjusted_area2 = area2.geometry.difference(common_border)
         #             precise_area2 = adjusted_area2.union(common_border)
 
-        #             boundary_gdf.loc[j, "geometry"] = adjusted_area2
+                    # boundary_gdf.loc[j, "geometry"] = adjusted_area2
 
         # work by createing from 2 seperated areas row with combined area and one row with original area
-        # remove small gaps between areas
+        # # remove small gaps between areas
         boundary_gdf["geometry"] = boundary_gdf["geometry"].buffer(0)
         for i, row in boundary_gdf.iterrows():
             # find areas that share a boundary with row
