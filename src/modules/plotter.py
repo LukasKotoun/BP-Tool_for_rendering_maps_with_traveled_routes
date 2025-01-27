@@ -155,7 +155,8 @@ class Plotter:
                 edge_lines_gdf.plot(ax=self.ax, color=edge_lines_gdf[StyleKey.EDGE_COLOR],
                                     linewidth=edge_lines_gdf[StyleKey.LINEWIDTH],
                                     alpha=edge_lines_gdf[StyleKey.ALPHA],
-                                    path_effects=[patheffects.Stroke(capstyle="butt", joinstyle='round')])
+                                    # path_effects=[patheffects.Stroke(capstyle="butt", joinstyle='round')])
+                                    path_effects=[patheffects.Stroke(capstyle="round", joinstyle='round')])
 
     def __plot_highways(self, highways_gdf: gpd.GeoDataFrame, plotEdges: bool = False):
         if (highways_gdf.empty):
