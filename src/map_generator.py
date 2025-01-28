@@ -263,7 +263,8 @@ def main():
     ways_gdf = GdfUtils.sort_gdf_by_column(ways_gdf, "layer")
     ways_gdf = GdfUtils.sort_gdf_by_column(ways_gdf, StyleKey.ZINDEX)
     areas_gdf = GdfUtils.sort_gdf_by_column(areas_gdf, StyleKey.ZINDEX)
-
+    # todo for ordering in plotting
+    # areas_gdf['area'] = areas_gdf.geometry.area 
     # ------------plot------------
     plotter = Plotter(map_area_gdf, paper_dimensions_mm,
                       map_object_scaling_factor)
@@ -275,19 +276,17 @@ def main():
     plotter.plot_nodes(nodes_gdf, TEXT_WRAP_NAMES_LEN)
     plotter.plot_gpxs(gpxs_gdf, 1)
 
+    if (boundary_map_area_gdf is not None and not boundary_map_area_gdf.empty):
+            # GdfUtils.remove_common_boundary_inaccuracy(boundary_map_area_gdf) # maybe turn off/on in settings
+            plotter.plot_area_boundary(area_gdf=boundary_map_area_gdf.to_crs(
+                epsg=EPSG_DISPLAY), linewidth=AREA_BOUNDARY_LINEWIDTH)
+
     plotter.adjust_texts(TEXT_BOUNDS_OVERFLOW_THRESHOLD)
 
     if (WANT_AREA_CLIPPING or WANT_PREVIEW):
         plotter.clip(EPSG_DISPLAY, GdfUtils.create_polygon_from_gdf_bounds(
             nodes_gdf, ways_gdf, areas_gdf))
-
-
-
-    if (boundary_map_area_gdf is not None and not boundary_map_area_gdf.empty):
-        # GdfUtils.remove_common_boundary_inaccuracy(boundary_map_area_gdf) # maybe turn off/on in settings
-        plotter.plot_area_boundary(area_gdf=boundary_map_area_gdf.to_crs(
-            epsg=EPSG_DISPLAY), linewidth=AREA_BOUNDARY_LINEWIDTH)
-
+   
     plotter.generate_pdf(OUTPUT_PDF_NAME)
     # plotter.show_plot()
 

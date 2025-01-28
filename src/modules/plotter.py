@@ -191,6 +191,7 @@ class Plotter:
                     angle=-90, capstyle="round",  spacing=tram_second_line_spacing, length=0.2),
                 patheffects.withTickedStroke(angle=90, capstyle="round", spacing=tram_second_line_spacing, length=0.2)])
 
+
         if (not rails_gdf.empty and StyleKey.EDGE_COLOR in rails_gdf):
             rails_gdf.plot(ax=self.ax, color=rails_gdf[StyleKey.EDGE_COLOR],
                            linewidth=rails_gdf[StyleKey.LINEWIDTH] +
@@ -239,6 +240,7 @@ class Plotter:
                 rest_gdf, 'railway')
             self.__plot_waterways(waterways_gdf)
             # filter out all highways that have other than solid line
+            # todo - filter not solid lines but use new column to filter by - whether to plot on or not 
             highways_gdf = GdfUtils.filter_gdf_column_values(
                 highways_gdf, StyleKey.LINESTYLE, [pd.NA, 'none', '-'])
             self.__plot_highways(highways_gdf, False)
@@ -262,20 +264,28 @@ class Plotter:
             return
         ways_gdf[StyleKey.LINEWIDTH] = ways_gdf[StyleKey.LINEWIDTH] * \
             self.map_object_scaling_factor * ways_width_multiplier
-        # todo add option to plot bridges as only normal ways but ordered by layer (maybe plot all in layers?)
-        bridges_gdf, rest_gdf = GdfUtils.filter_gdf_column_values(
+            
+        if ('layer' in ways_gdf.columns):
+            GdfUtils.change_columns_to_numeric(ways_gdf, ['layer'])
+            ways_gdf['layer'] = ways_gdf['layer'].fillna(0)  # convert NaN/None to 0
+            ways_gdf = GdfUtils.sort_gdf_by_column(ways_gdf, "layer")  # todo - je potřeba řadit?
+        #?? filter to plot bridges where bridge is yes and column to print bridge is true - given in settings
+        bridges_gdf, rests_gdf = GdfUtils.filter_gdf_column_values(
             ways_gdf, 'bridge', ['yes'], compl=True)
-        waterways_gdf, rest_gdf = GdfUtils.filter_gdf_column_values(
-            rest_gdf, 'waterway', compl=True)
-        highways_gdf, rest_gdf = GdfUtils.filter_gdf_column_values(
-            rest_gdf, 'highway', compl=True)
-        railways_gdf = GdfUtils.filter_gdf_column_values(
-            rest_gdf, 'railway')
+      
+        for layer, rest_gdf in rests_gdf.groupby("layer"):
+            waterways_gdf, rest_gdf = GdfUtils.filter_gdf_column_values(
+                rest_gdf, 'waterway', compl=True)
+            highways_gdf, rest_gdf = GdfUtils.filter_gdf_column_values(
+                rest_gdf, 'highway', compl=True)
+            railways_gdf = GdfUtils.filter_gdf_column_values(
+                rest_gdf, 'railway')
 
-        self.__plot_waterways(waterways_gdf)
-        self.__plot_highways(highways_gdf, True)
-        self.__plot_railways(
-            railways_gdf, 2 * self.map_object_scaling_factor, 15 * self.map_object_scaling_factor)
+            self.__plot_waterways(waterways_gdf)
+            self.__plot_highways(highways_gdf, True)
+            self.__plot_railways(
+                railways_gdf, 2 * self.map_object_scaling_factor, 15 * self.map_object_scaling_factor)
+        
         self.__plot_bridges(bridges_gdf)
 
     @time_measurement_decorator("areaPlot")
