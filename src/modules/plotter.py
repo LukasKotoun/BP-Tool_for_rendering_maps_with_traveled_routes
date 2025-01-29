@@ -77,7 +77,7 @@ class Plotter:
             x = geom.x
             y = geom.y
             # weight='bold'
-            # todo to func?
+            # todo to function
             text = self.ax.text(
                 x, y, wraped_name, fontsize=fontsize, ha='center', va='center', zorder=4, color=color,
                 path_effects=[patheffects.withStroke(linewidth=outline_width, foreground=edge_color)])
@@ -86,9 +86,9 @@ class Plotter:
     def __plot_elevations(self, elevations_gdf: gpd.GeoDataFrame):
         if (elevations_gdf.empty):
             return
-        #todo edit
+        
         elevations_gdf[StyleKey.ICON_SIZE] = elevations_gdf[StyleKey.ICON_SIZE] * \
-            (np.sqrt(3) / 4) * (self.map_object_scaling_factor ** 2) # icons size is in area of triangle -todo edit 
+            (np.sqrt(3) / 4) * (self.map_object_scaling_factor ** 2) # icons size is in area of triangle - todo - in size calc function
         elevations_gdf[StyleKey.ICON_EDGE] = elevations_gdf[StyleKey.ICON_EDGE] * \
              self.map_object_scaling_factor
         elevations_gdf[StyleKey.OUTLINE_WIDTH] = elevations_gdf[StyleKey.OUTLINE_WIDTH] * \
@@ -96,17 +96,19 @@ class Plotter:
         for idx, row in elevations_gdf.iterrows():
             x, y = row.geometry.x, row.geometry.y
 
+            #annotation aproach - does not work with adjust text lib
+                # second aproach - create annotation and get cordinates and than create text from it 
+                # and use that text to adjusting but it will be invisible
             # peak_name = self.ax.annotate(row['name'], (x, y), textcoords="offset points", xytext=(0, 300 * self.map_object_scaling_factor), ha='center', color=row[StyleKey.COLOR],
             #     path_effects=[patheffects.withStroke(linewidth=row[StyleKey.OUTLINE_WIDTH], foreground=row[StyleKey.EDGE_COLOR])], fontsize=row[StyleKey.FONT_SIZE])
             # peak_ele = self.ax.annotate(row['ele'], (x, y), textcoords="offset points", xytext=(0, -300 * self.map_object_scaling_factor - row[StyleKey.ICON_SIZE]), ha='center', color=row[StyleKey.COLOR],
             #     path_effects=[patheffects.withStroke(linewidth=row[StyleKey.OUTLINE_WIDTH], foreground=row[StyleKey.EDGE_COLOR])], fontsize=row[StyleKey.FONT_SIZE])
 
             # move text to top and bottom of the icon
-            #todo edit with icon size
             xy_axes = self.ax.transData.transform((x, y))
             xy_name = self.ax.transData.inverted().transform((xy_axes[0], xy_axes[1] + 300 * self.map_object_scaling_factor))
             xy_ele = self.ax.transData.inverted().transform((xy_axes[0], xy_axes[1] - 350 * self.map_object_scaling_factor - row[StyleKey.ICON_SIZE]))
-            
+            #todo check if name or ele exists
             peak_name = self.ax.text(xy_name[0], xy_name[1], row['name'], color=row[StyleKey.COLOR], ha='center',
                                      path_effects=[patheffects.withStroke(linewidth=row[StyleKey.OUTLINE_WIDTH], foreground=row[StyleKey.EDGE_COLOR])], fontsize=row[StyleKey.FONT_SIZE])
             peak_ele = self.ax.text(xy_ele[0], xy_ele[1], row['ele'], color=row[StyleKey.COLOR], ha='center',
@@ -117,8 +119,8 @@ class Plotter:
          
             # self.other_text.append(peak_name)
             # self.other_text.append(peak_ele)
-            # second aproach - create annotation and get cordinates and than create text from it and use that text to adjusting
-
+            
+ 
     @time_measurement_decorator("nodePlot")
     def plot_nodes(self, nodes_gdf: gpd.GeoDataFrame, wrap_len: int | None):
         all_columns_present: bool = all(col in nodes_gdf.columns for col in [
@@ -193,6 +195,7 @@ class Plotter:
 
 
         if (not rails_gdf.empty and StyleKey.EDGE_COLOR in rails_gdf):
+            # todo print by pathEffects - prevent from all one color in case of multiple lines over each other
             rails_gdf.plot(ax=self.ax, color=rails_gdf[StyleKey.EDGE_COLOR],
                            linewidth=rails_gdf[StyleKey.LINEWIDTH] +
                            rail_bg_width_offset,
@@ -267,43 +270,52 @@ class Plotter:
             
         if ('layer' in ways_gdf.columns):
             GdfUtils.change_columns_to_numeric(ways_gdf, ['layer'])
-            ways_gdf['layer'] = ways_gdf['layer'].fillna(0)  # convert NaN/None to 0
-            ways_gdf = GdfUtils.sort_gdf_by_column(ways_gdf, "layer")  # todo - je potřeba řadit?
+            ways_gdf['layer'] = ways_gdf['layer'].fillna(0)
+            
         #?? filter to plot bridges where bridge is yes and column to print bridge is true - given in settings
-        bridges_gdf, rests_gdf = GdfUtils.filter_gdf_column_values(
-            ways_gdf, 'bridge', ['yes'], compl=True)
-      
-        for layer, rest_gdf in rests_gdf.groupby("layer"):
-            waterways_gdf, rest_gdf = GdfUtils.filter_gdf_column_values(
-                rest_gdf, 'waterway', compl=True)
-            highways_gdf, rest_gdf = GdfUtils.filter_gdf_column_values(
-                rest_gdf, 'highway', compl=True)
-            railways_gdf = GdfUtils.filter_gdf_column_values(
-                rest_gdf, 'railway')
-
+        bridges_gdf, rest_gdf = GdfUtils.filter_gdf_column_values(
+             ways_gdf, 'bridge', ['yes'], compl=True)
+        
+        rest_gdf = GdfUtils.filter_gdf_column_values(
+             rest_gdf, 'tunnel', ['yes'], neg=True)
+        
+      # seřadit podle layer, poté vykreslit všechny hrany a nakonec všechny cesty
+        waterways_gdf, rest_gdf = GdfUtils.filter_gdf_column_values(
+            rest_gdf, 'waterway', compl=True)
+        
+        for layer, group_gdf in waterways_gdf.groupby("layer"):
             self.__plot_waterways(waterways_gdf)
-            self.__plot_highways(highways_gdf, True)
+
+        for layer, group_gdf in rest_gdf.groupby("layer"):
+            self.__plot_line_edges(group_gdf)
+
+        for layer, group_gdf in rest_gdf.groupby("layer"):
+            highways_gdf = GdfUtils.filter_gdf_column_values(
+                group_gdf, 'highway')
+            railways_gdf = GdfUtils.filter_gdf_column_values(
+                group_gdf, 'railway')
+            
+            self.__plot_highways(highways_gdf) # todo send with edges types
             self.__plot_railways(
                 railways_gdf, 2 * self.map_object_scaling_factor, 15 * self.map_object_scaling_factor)
-        
+            
         self.__plot_bridges(bridges_gdf)
 
     @time_measurement_decorator("areaPlot")
     def plot_areas(self, areas_gdf: gpd.GeoDataFrame, areas_bounds_multiplier: float):
         if (areas_gdf.empty):
             return
-        # [pd.NA, 'none'] - get all that dont have nan or 'none' (if does not have that column will return true for everything - need check if have that column)
         # plot face
         if (StyleKey.COLOR in areas_gdf):
             face_areas_gdf = GdfUtils.filter_gdf_column_values(
-                areas_gdf, StyleKey.COLOR, [pd.NA], True)
+                areas_gdf, StyleKey.COLOR, [])
             if (not face_areas_gdf.empty and StyleKey.COLOR in face_areas_gdf):
                 face_areas_gdf.plot(
                     ax=self.ax, color=face_areas_gdf[StyleKey.COLOR], alpha=face_areas_gdf[StyleKey.ALPHA])
         # plot bounds
         if (StyleKey.EDGE_COLOR in areas_gdf):
             edge_areas_gdf = GdfUtils.filter_gdf_column_values(
-                areas_gdf, StyleKey.EDGE_COLOR, [pd.NA], True)
+                areas_gdf, StyleKey.EDGE_COLOR, [])
             if (not edge_areas_gdf.empty and StyleKey.EDGE_COLOR in edge_areas_gdf and
                StyleKey.LINEWIDTH in edge_areas_gdf):
                 edge_areas_gdf[StyleKey.LINEWIDTH] = edge_areas_gdf[StyleKey.LINEWIDTH] * \
@@ -344,6 +356,8 @@ class Plotter:
         #     only_move={"texts": "y"},
         #     avoid_self=False,
         # )
+        # remove text that is over other text
+        # todo remove text that is over other text 
         if(self.other_text):
             adjust_text(self.city_names, force_text=0.2, objects=self.other_text)
         else:

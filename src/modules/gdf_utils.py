@@ -425,10 +425,10 @@ class GdfUtils:
                                           compl: bool = False) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame] | gpd.GeoDataFrame:
         """Filter rows in a GeoDataFrame (gdf) where the specified `col_name` contains some of the values in `col_values` and apply 
         the `__filter_gdf_columns_values_AND_condition` function on the `related_col_names` and `related_col_values`.
-        Rows that do not match `col_values` in `col_name` remain unfiltered in the gdf.
+        Rows that do not match `col_values` in `col_name` remain unfiltered (unchanged) in the gdf.
 
         Example of usage:
-            - Want all places that have name 
+            - Want all places that have name
                 filter_gdf_related_columns_values(gdf, 'place', [], ['name'], [])
             - Want all cities that dont have name 
                 filter_gdf_related_columns_values(gdf, 'place', ['city'], ['name'], [pd.NA])
@@ -461,6 +461,12 @@ class GdfUtils:
 
         return GdfUtils.return_filtered(gdf, condition, False, compl)
 
+
+    @staticmethod
+    def filter_gdf_columns_value(): 
+        #todo - create function that will filter gdf that in each column in list have value from same position in other list
+        # for example: filter_gdf_columns_value(gdf, [1, 2], ['a', 'b']) will return gdf with rows that have 'a' in column 1 and 'b' in column 2
+        pass
     @staticmethod
     def filter_gdf_columns_values_AND(gdf: gpd.GeoDataFrame, col_names: list[str],
                                       col_values: list = [], neg: bool = False,

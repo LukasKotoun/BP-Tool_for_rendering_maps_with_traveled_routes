@@ -5,14 +5,14 @@ from common.map_enums import *
 # --------------------------------------------------------------map area--------------------------------------------------------------
 # OSM_INPUT_FILE_NAMES: str = ['../osm_files/vys.osm.pbf','../osm_files/jihmor.osm.pbf']
 # OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/vysJihE.osm.pbf'
-OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/trebic.osm.pbf'
+OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/brno.osm.pbf'
 # OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/brno.osm.pbf'
 # extract
 OSM_WANT_EXTRACT_AREA: bool = False
 # set if want osm file cutting using osmium command line tool (need to be uinstalled), If not set to None
 OSM_OUTPUT_FILE_NAME: None | str = '../osm_files/hv.osm.pbf'
 
-OUTPUT_PDF_NAME: str = '../pdfs/divočina4'
+OUTPUT_PDF_NAME: str = '../pdfs/divocina2'
 # with fill or false cliping is recomended 0
 # padding from page borders NOTE: must have same settings as the resulting one when generating for large format printing
 PERCENTAGE_PADDING = 0
@@ -38,11 +38,12 @@ PERCENTAGE_PADDING = 0
 #                     (16.0266146, 49.1439064), (15.6712219, 49.1928600)]  # trebic
 # AREA: WantedArea = ["Česko", "Německo", "Polsko", "Rakousko", "Slovensko"]
 # AREA: WantedArea = ["Česko","Vysočina, Česko", "Jihomoravský kraj, Česko"]
-AREA: WantedArea = ["Česko", "Třebíč, Česko", "Okřešice, Česko"]
-# PAPER_DIMENSIONS: PaperSize | tuple[float |
-                            #   None, float | None] = PaperSize.A0.dimensions
+AREA: WantedArea = ["Brno, Česko"]
+
+PAPER_DIMENSIONS: PaperSize | tuple[float |
+                              None, float | None] = PaperSize.A4.dimensions
 # set own dimensions. If one is left as 'None' it will be automaticaly calculated using area size
-PAPER_DIMENSIONS = (3000, None)
+# PAPER_DIMENSIONS = (3000, None)
 # what side of paper was set (smaller true bigger false) - only if only one side in custom dimension was set to None
 GIVEN_SMALLER_PAPER_DIMENSION: bool = True
 # set how will resulted paper be oriented, AUTOMATIC is Recommended
@@ -57,7 +58,7 @@ CUSTOM_EXPAND_AREA: WantedArea | None = [(12.9395476,50.8278038), (17.4318749,50
 # COMBINED - one bound around area, SEPARATED - separated bounds around every area in AREA variable
 AREA_BOUNDARY = AreaBounds.SEPARATED
 EXPAND_AREA_BOUNDS_PLOT = False
-AREA_BOUNDARY_LINEWIDTH = 70
+AREA_BOUNDARY_LINEWIDTH = 1
 
 
 
@@ -80,12 +81,12 @@ TEXT_BOUNDS_OVERFLOW_THRESHOLD = 0.97
 
 # --------------------------------------------------------------preview--------------------------------------------------------------
 # NOTE: must have same settings as the resulting one when generating for large format printing
-WANT_PREVIEW: bool = False
+WANT_PREVIEW: bool = True
 # area for that you are creating smaller preview (bigger than normal area)
-OUTER_AREA: WantedArea = "Vysočina, Česko"
+OUTER_AREA: WantedArea = "Česko"
 
-OUTER_PAPER_DIMENSIONS = PaperSize.A3.dimensions  # real paper size
-# OUTER_PAPER_DIMENSIONS = (300, None) # or set own #if one is left none if will be automaticaly calculated by area size
+# OUTER_PAPER_DIMENSIONS = PaperSize.A3.dimensions  # real paper size
+OUTER_PAPER_DIMENSIONS = (1000, None) # or set own #if one is left none if will be automaticaly calculated by area size
 # what side of paper was set (smaller true bigger false)(only if only one side in custom dimension was set)
 OUTER_GIVEN_SMALLER_PAPER_DIMENSION = True
 # set how will resulted paper be oriented, AUTOMATIC is Recommended
@@ -140,7 +141,7 @@ GPXS_MANDATORY_STYLES: FeatureStyles = {
 # --------------filters for map elements--------------
 # columns that are used for ploting nodes name for city, ele for elevation points
 NODES_ADDITIONAL_COLUMNS = ['name', 'ele']
-WAYS_ADDITIONAL_COLUMNS = ['bridge', 'layer']
+WAYS_ADDITIONAL_COLUMNS = ['bridge', 'layer', 'tunnel']
 # wanted_ways: WantedFeatures
 wanted_nodes: WantedCategories = {
     # 'place': {'city', 'town', 'village'}
@@ -160,10 +161,10 @@ unwanted_nodes_tags: UnwantedTags = {
 
 wanted_ways: WantedCategories = {
     'waterway': set({}),
-    # 'highway': ['motorway', 'trunk','primary', 'secondary'],
-    'highway': {'motorway', 'trunk', 'primary', 'secondary', 'tertiary', 'unclassified', 'residential', 'path', 'footway'},
+    'highway': ['motorway', 'trunk','primary', 'secondary'],
+    # 'highway': {'motorway', 'trunk', 'primary', 'secondary', 'tertiary', 'unclassified', 'residential', 'path', 'footway'},
     # 'highway':[],
-    'railway': {'rail'}
+    # 'railway': {'rail'}
 }
 
 unwanted_ways_tags: UnwantedTags = {
@@ -179,13 +180,14 @@ unwanted_ways_tags: UnwantedTags = {
 wanted_areas: WantedCategories = {
     # # 'landuse': ['forest', 'residential', 'farmland', 'meadow', 'grass'],
     'landuse': {'forest', 'residential', 'commercial', 'retail', 'industrial', 'farmland', 'meadow', 'grass'},
-    'leisure': {'park', 'pitch', 'garden', 'golf_course', 'nature_reserve', 'playground', 'stadium', 'swimming_pool', 'sports_centre'},
+    # 'leisure': {'park', 'pitch', 'garden', 'golf_course', 'nature_reserve', 'playground', 'stadium', 'swimming_pool', 'sports_centre'},
+    'leisure': {'park', 'pitch', 'garden', 'golf_course', 'playground', 'stadium', 'swimming_pool', 'sports_centre'},
     'natural': {'wood', 'water', 'scrub', 'heath'},
     # # 'leisure': ['park', 'pitch', 'garden', 'golf_course', 'nature_reserve'],
     'water': set({}),
-    # todo in automatic this should be to turnoff/on
-    'boundary': {'national_park'},
-    'building':{'house','residential'}
+    # todo in automatic this should be to turnoff/on - 
+    # 'boundary': {'national_park'},
+    # 'building':{'house','residential'}
     # 'water': ['river','lake','reservoir'],
 }
 unwanted_areas_tags: UnwantedTags = {
@@ -197,7 +199,6 @@ GENERAL_DEFAULT_STYLES: FeatureStyles = {StyleKey.COLOR: '#EDEDE0',  StyleKey.ZI
                                          StyleKey.LINEWIDTH: 1, StyleKey.LINESTYLE: '-',
                                          StyleKey.ALPHA: 1, StyleKey.EDGE_COLOR: None}
 
-# ? appka asi taky tímhle stylem? pokud bude chtít vlastní nastavení styl (např pro šířku) - (nemá automatické nastavování - to má pouze které výběr....)
 
 # -------------------nodes-------------------
 # styles that must be assigned to all node features
