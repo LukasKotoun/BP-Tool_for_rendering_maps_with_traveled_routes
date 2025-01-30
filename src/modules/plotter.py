@@ -9,8 +9,10 @@ import numpy as np
 from shapely import geometry
 from shapely.geometry.polygon import Polygon
 from shapely.geometry.linestring import LineString
+from shapely.geometry.multilinestring import MultiLineString
 import textwrap
 from adjustText import adjust_text
+from shapely.ops import linemerge, unary_union
 
 from config import *
 from modules.utils import Utils
@@ -195,12 +197,38 @@ class Plotter:
 
 
         if (not rails_gdf.empty and StyleKey.EDGE_COLOR in rails_gdf):
-            # todo print by pathEffects - prevent from all one color in case of multiple lines over each other
+            # # todo try different approach - quciker
+            # edge_c = rails_gdf[StyleKey.EDGE_COLOR]
+            # color = rails_gdf[StyleKey.COLOR]
+            # linewidth1 = rails_gdf[StyleKey.LINEWIDTH] + rail_bg_width_offset
+            # linewidth2 = rails_gdf[StyleKey.LINEWIDTH]
+            # alpha = rails_gdf[StyleKey.ALPHA]
+            # linestyle = rails_gdf[StyleKey.LINESTYLE]
+            # for geom in rails_gdf.geometry:
+            #     # here take data from gdf
+            #     if isinstance(geom, MultiLineString):
+            #         for line in geom.geoms:  # Extract each LineString
+            #             gpd.GeoSeries(line).plot(ax=self.ax, color=edge_c,
+            #                linewidth=linewidth1,
+            #                alpha=alpha, path_effects=[
+            #     patheffects.Stroke(capstyle="projecting", joinstyle='round')])
+                        
+            #             gpd.GeoSeries(line).plot(ax=self.ax, color=color, linewidth=linewidth2,
+            #                alpha=alpha, linestyle=linestyle)
+            #     else:
+            #         gpd.GeoSeries(geom).plot(ax=self.ax, color=edge_c,
+            #                linewidth=linewidth1,
+            #                alpha=alpha, path_effects=[
+            #         patheffects.Stroke(capstyle="projecting", joinstyle='round')])
+                        
+            #         gpd.GeoSeries(geom).plot(ax=self.ax, color=color, linewidth=linewidth2,
+            #                alpha=alpha, linestyle=linestyle)
+                    
             rails_gdf.plot(ax=self.ax, color=rails_gdf[StyleKey.EDGE_COLOR],
-                           linewidth=rails_gdf[StyleKey.LINEWIDTH] +
-                           rail_bg_width_offset,
-                           alpha=rails_gdf[StyleKey.ALPHA], path_effects=[
-                patheffects.Stroke(capstyle="projecting", joinstyle='round')])
+                            linewidth=rails_gdf[StyleKey.LINEWIDTH] +
+                            rail_bg_width_offset,
+                            alpha=rails_gdf[StyleKey.ALPHA], path_effects=[
+                    patheffects.Stroke(capstyle="projecting", joinstyle='round')])
 
             rails_gdf.plot(ax=self.ax, color=rails_gdf[StyleKey.COLOR], linewidth=rails_gdf[StyleKey.LINEWIDTH],
                            alpha=rails_gdf[StyleKey.ALPHA], linestyle=rails_gdf[StyleKey.LINESTYLE])
@@ -279,7 +307,7 @@ class Plotter:
         rest_gdf = GdfUtils.filter_gdf_column_values(
              rest_gdf, 'tunnel', ['yes'], neg=True)
         
-      # seřadit podle layer, poté vykreslit všechny hrany a nakonec všechny cesty
+      # Zoom like 13 and bigger
         waterways_gdf, rest_gdf = GdfUtils.filter_gdf_column_values(
             rest_gdf, 'waterway', compl=True)
         
@@ -288,7 +316,7 @@ class Plotter:
 
         for layer, group_gdf in rest_gdf.groupby("layer"):
             self.__plot_line_edges(group_gdf)
-
+        # without bridge drawing (middle zoom remove railway bridges)
         for layer, group_gdf in rest_gdf.groupby("layer"):
             highways_gdf = GdfUtils.filter_gdf_column_values(
                 group_gdf, 'highway')
@@ -298,7 +326,12 @@ class Plotter:
             self.__plot_highways(highways_gdf) # todo send with edges types
             self.__plot_railways(
                 railways_gdf, 2 * self.map_object_scaling_factor, 15 * self.map_object_scaling_factor)
-            
+        # railways_gdf = GdfUtils.filter_gdf_column_values(
+        #         ways_gdf, 'railway')
+        # railways_gdf.loc[0, "geometry"] = linemerge(unary_union(railways_gdf.geometry))
+        # railways_gdf = railways_gdf.iloc[:1].reset_index(drop=True)
+        # self.__plot_railways(
+        #     railways_gdf, 2 * self.map_object_scaling_factor, 15 * self.map_object_scaling_factor)
         self.__plot_bridges(bridges_gdf)
 
     @time_measurement_decorator("areaPlot")

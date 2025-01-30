@@ -211,7 +211,7 @@ def main():
     # ------------osm file------------
     osm_file_parser = OsmDataParser(
         wanted_nodes, wanted_ways, wanted_areas,
-        unwanted_nodes_tags, unwanted_ways_tags, unwanted_areas_tags,
+        unwanted_nodes_tags, unwanted_ways_tags, unwanted_areas_tags, area_additional_columns=AREA_ADDITIONAL_COLUMNS,
         node_additional_columns=NODES_ADDITIONAL_COLUMNS, way_additional_columns=WAYS_ADDITIONAL_COLUMNS)
 
     @time_measurement_decorator("apply file")

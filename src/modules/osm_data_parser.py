@@ -44,7 +44,7 @@ class OsmDataParser(osmium.SimpleHandler):
             Node], str] = osmium.geom.WKTFactory().create_point
         self.geom_factory_linestring: Callable[[
             Way], str] = osmium.geom.WKTFactory().create_linestring
-        self.geom_factory_polygon: Callable[[
+        self.geom_factory_multipolygon: Callable[[
             Area], str] = osmium.geom.WKTFactory().create_multipolygon
         self.wkt_loads_func: Callable[[str],
                                       Point | LineString | Polygon] = wkt.loads
@@ -174,7 +174,7 @@ class OsmDataParser(osmium.SimpleHandler):
             try:
                 # convert osmium area to wkt str format and than to shapely polygon/multipolygon geometry
                 shapely_geometry: Polygon = self.wkt_loads_func(
-                    self.geom_factory_polygon(area))
+                    self.geom_factory_multipolygon(area))
                 filtered_tags = {tag_key: tag_value for tag_key,
                                  tag_value in area.tags if tag_key in self.area_columns}
                 self.areas_geometry.append(shapely_geometry)

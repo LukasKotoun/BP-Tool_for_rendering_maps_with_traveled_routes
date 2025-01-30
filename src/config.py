@@ -12,7 +12,7 @@ OSM_WANT_EXTRACT_AREA: bool = False
 # set if want osm file cutting using osmium command line tool (need to be uinstalled), If not set to None
 OSM_OUTPUT_FILE_NAME: None | str = '../osm_files/hv.osm.pbf'
 
-OUTPUT_PDF_NAME: str = '../pdfs/divocina2'
+OUTPUT_PDF_NAME: str = '../pdfs/divocina'
 # with fill or false cliping is recomended 0
 # padding from page borders NOTE: must have same settings as the resulting one when generating for large format printing
 PERCENTAGE_PADDING = 0
@@ -81,7 +81,7 @@ TEXT_BOUNDS_OVERFLOW_THRESHOLD = 0.97
 
 # --------------------------------------------------------------preview--------------------------------------------------------------
 # NOTE: must have same settings as the resulting one when generating for large format printing
-WANT_PREVIEW: bool = True
+WANT_PREVIEW: bool = False
 # area for that you are creating smaller preview (bigger than normal area)
 OUTER_AREA: WantedArea = "Česko"
 
@@ -142,6 +142,7 @@ GPXS_MANDATORY_STYLES: FeatureStyles = {
 # columns that are used for ploting nodes name for city, ele for elevation points
 NODES_ADDITIONAL_COLUMNS = ['name', 'ele']
 WAYS_ADDITIONAL_COLUMNS = ['bridge', 'layer', 'tunnel']
+AREA_ADDITIONAL_COLUMNS = []
 # wanted_ways: WantedFeatures
 wanted_nodes: WantedCategories = {
     # 'place': {'city', 'town', 'village'}
@@ -160,17 +161,17 @@ unwanted_nodes_tags: UnwantedTags = {
 }
 
 wanted_ways: WantedCategories = {
-    'waterway': set({}),
-    'highway': ['motorway', 'trunk','primary', 'secondary'],
+    # 'waterway': set({}),
+    # 'highway': ['motorway', 'trunk','primary', 'secondary'],
     # 'highway': {'motorway', 'trunk', 'primary', 'secondary', 'tertiary', 'unclassified', 'residential', 'path', 'footway'},
     # 'highway':[],
-    # 'railway': {'rail'}
+    'railway': {'rail'}
 }
 
 unwanted_ways_tags: UnwantedTags = {
     # 'highway':['coridor','via_ferrata','crossing','traffic_island','proposed','construction' ],
     'railway': {
-        'service': ['yard'],
+        'service': ['yard'], # spur, siding 
         'tunnel': ['building_passage'],
     }
     # {'railway':""}:{'service':['yard'],'tunnel': ['building_passage']}
@@ -178,17 +179,17 @@ unwanted_ways_tags: UnwantedTags = {
 
 
 wanted_areas: WantedCategories = {
-    # # 'landuse': ['forest', 'residential', 'farmland', 'meadow', 'grass'],
-    'landuse': {'forest', 'residential', 'commercial', 'retail', 'industrial', 'farmland', 'meadow', 'grass'},
-    # 'leisure': {'park', 'pitch', 'garden', 'golf_course', 'nature_reserve', 'playground', 'stadium', 'swimming_pool', 'sports_centre'},
-    'leisure': {'park', 'pitch', 'garden', 'golf_course', 'playground', 'stadium', 'swimming_pool', 'sports_centre'},
-    'natural': {'wood', 'water', 'scrub', 'heath'},
-    # # 'leisure': ['park', 'pitch', 'garden', 'golf_course', 'nature_reserve'],
-    'water': set({}),
-    # todo in automatic this should be to turnoff/on - 
-    # 'boundary': {'national_park'},
-    # 'building':{'house','residential'}
-    # 'water': ['river','lake','reservoir'],
+#     # # 'landuse': ['forest', 'residential', 'farmland', 'meadow', 'grass'],
+#     'landuse': {'forest', 'residential', 'commercial', 'retail', 'industrial', 'farmland', 'meadow', 'grass'},
+#     # 'leisure': {'park', 'pitch', 'garden', 'golf_course', 'nature_reserve', 'playground', 'stadium', 'swimming_pool', 'sports_centre'},
+#     'leisure': {'park', 'pitch', 'garden', 'golf_course', 'playground', 'stadium', 'swimming_pool', 'sports_centre'},
+#     'natural': {'wood', 'water', 'scrub', 'heath'},
+#     # # 'leisure': ['park', 'pitch', 'garden', 'golf_course', 'nature_reserve'],
+#     'water': set({}),
+#     # todo in automatic this should be to turnoff/on - 
+#     # 'boundary': {'national_park'},
+#     # 'building':{'house','residential'}
+#     # 'water': ['river','lake','reservoir'],
 }
 unwanted_areas_tags: UnwantedTags = {
 }
@@ -248,7 +249,7 @@ highway_styles: FeaturesCategoryStyle = {
 railway_styles: FeaturesCategoryStyle = {
     'rail': {StyleKey.COLOR: '#FFFFFF', StyleKey.ZINDEX: 1, StyleKey.LINEWIDTH: 10,
              StyleKey.BRIDGE_EDGE_COLOR: '#5D5D5D', StyleKey.BRIDGE_COLOR: "#FFFFFF",
-             StyleKey.EDGE_COLOR: '#5D5D5D', StyleKey.BRIDGE_WIDTH_RATIO: 1.7, StyleKey.LINESTYLE: (2.5, (5, 5))},
+             StyleKey.EDGE_COLOR: '#5D5D5D', StyleKey.BRIDGE_WIDTH_RATIO: 1.7, StyleKey.LINESTYLE: (0, (5, 5))},
     'tram': {StyleKey.COLOR: '#404040', StyleKey.ZINDEX: 10, StyleKey.LINEWIDTH: 4, StyleKey.ALPHA: 0.6},
     'tram_stop': {StyleKey.COLOR: '#404040', StyleKey.ZINDEX: 1, StyleKey.LINEWIDTH: 4},
 }
