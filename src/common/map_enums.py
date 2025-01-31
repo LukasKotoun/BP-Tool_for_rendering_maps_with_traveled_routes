@@ -25,6 +25,10 @@ class StyleKey(Enum):
     ICON_EDGE = 14
     ICON_SIZE = 15
 
+class StyleType(Enum):
+    DEFAULT = 1
+    ZOOM = 2
+
 class AreaBounds(Enum):
     NONE = 1
     COMBINED = 2

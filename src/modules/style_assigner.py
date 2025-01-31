@@ -161,6 +161,12 @@ class StyleAssigner:
 
         return styled_gdf
 
+    def assign_styles_new():
+        pass
+    @staticmethod
+    def create_styles_from_dynamic():
+        pass
+    # todo move to FE
     @staticmethod
     def generate_shades_of_color(base_color, num_shades, min_factor=0.3, max_factor=0.7) -> list[tuple[float, float, float, float]]:
         """
@@ -187,6 +193,7 @@ class StyleAssigner:
             colors.append(shaded_color)
         return colors
 
+    # todo move to FE
     # call this function on 2 modes only, on mode where want to use one static color it is not necessary - color will be in default styles or mandatory styles (should be created based on UI)
     @staticmethod
     def assign_dynamic_colors(keys: list[str], existing_styles: FeaturesCategoryStyle, mode: ColorMode,
@@ -241,7 +248,6 @@ class StyleAssigner:
                             {StyleKey.COLOR: cmap(norm(colors_used))})
                         colors_used += 1
                         
-        #todo test existing style without color on shade
         elif (mode == ColorMode.SHADE):
             # color = color_or_pallet
             colors = StyleAssigner.generate_shades_of_color(

@@ -21,18 +21,18 @@ PERCENTAGE_PADDING = 0
 # AREA: WantedArea = [(6.94872,4.84293),(6.99314,4.84293),(6.99314,4.81603),(6.94872,4.81603)] #afrika
 # AREA: WantedArea = "Horní vilémovice, Česko"
 # AREA: WantedArea = "Česko"
-# AREA: WantedArea = [(15.8784350,49.2926919), (15.8852585,49.2925274), (15.8845263, 49.2894905), (15.8769732, 49.2896681)] # zoom 18 (inf - 0.13* 1 
+# AREA: WantedArea = [(15.8784350,49.2926919), (15.8852585,49.2925274), (15.8845263, 49.2894905), (15.8769732, 49.2896681)] # zoom 18 (inf - 0.13* 1
 # AREA: WantedArea = [(15.86797,49.30036), (15.89574,49.30038), (15.89571, 49.28466), (15.86797, 49.28444)] # zoom 17 - 0.13-0.1 * 1.5
 # AREA: WantedArea = [(15.86797,49.30036), (15.89574,49.30038), (15.89571, 49.28466), (15.86797, 49.28444)] # zoom 16 - 0.1-0.06 * 2
-# AREA: WantedArea = [(15.85353,49.30649), (15.90876,49.30660), (15.90846, 49.27511), (15.85331, 49.27455)] # zoom 15 - 
-# AREA: WantedArea = [(15.771692,49.346707), (15.991242, 49.347326), (15.992636, 49.221204), (15.770450, 49.219111)] # zoom 14 - 
-# AREA: WantedArea = [(15.771692,49.346707), (15.991242,49.347326), (15.992636, 49.221204), (15.770450, 49.219111)] # zoom 13 - 
-# AREA: WantedArea = [(15.771692,49.346707), (15.991242,49.347326), (15.992636, 49.221204), (15.770450, 49.219111)] # zoom 12 - 
-# AREA: WantedArea = [(15.771692,49.346707), (15.991242,49.347326), (15.992636, 49.221204), (15.770450, 49.219111)] # zoom 11 - 
-# AREA: WantedArea = [(14.5122769,49.9189048), (16.7593887,49.9184627), (16.7593378, 48.8638096), (14.5141625, 48.8825185)] # zoom 10 - 
-# AREA: WantedArea = [(12.9395476,50.8278038), (17.4318749,50.8064127), (17.4281868,48.7534708), (12.9522022, 48.7996803)] # zoom 9 - 
-# AREA: WantedArea = [(10.7711036,51.9150971), (19.7678764,51.8786709), (19.7610689, 47.7784321), (10.9928686, 47.9098377)] # zoom 8 - 
-# AREA: WantedArea = [(1.978792,55.788072), (30.252955,55.874256),(30.177249, 39.428847), (2.704960, 39.183520) ] # zoom 6 - 
+# AREA: WantedArea = [(15.85353,49.30649), (15.90876,49.30660), (15.90846, 49.27511), (15.85331, 49.27455)] # zoom 15 -
+# AREA: WantedArea = [(15.771692,49.346707), (15.991242, 49.347326), (15.992636, 49.221204), (15.770450, 49.219111)] # zoom 14 -
+# AREA: WantedArea = [(15.771692,49.346707), (15.991242,49.347326), (15.992636, 49.221204), (15.770450, 49.219111)] # zoom 13 -
+# AREA: WantedArea = [(15.771692,49.346707), (15.991242,49.347326), (15.992636, 49.221204), (15.770450, 49.219111)] # zoom 12 -
+# AREA: WantedArea = [(15.771692,49.346707), (15.991242,49.347326), (15.992636, 49.221204), (15.770450, 49.219111)] # zoom 11 -
+# AREA: WantedArea = [(14.5122769,49.9189048), (16.7593887,49.9184627), (16.7593378, 48.8638096), (14.5141625, 48.8825185)] # zoom 10 -
+# AREA: WantedArea = [(12.9395476,50.8278038), (17.4318749,50.8064127), (17.4281868,48.7534708), (12.9522022, 48.7996803)] # zoom 9 -
+# AREA: WantedArea = [(10.7711036,51.9150971), (19.7678764,51.8786709), (19.7610689, 47.7784321), (10.9928686, 47.9098377)] # zoom 8 -
+# AREA: WantedArea = [(1.978792,55.788072), (30.252955,55.874256),(30.177249, 39.428847), (2.704960, 39.183520) ] # zoom 6 -
 
 # AREA: WantedArea = [(15.7396182, 49.3111173), (16.0273871, 49.3028839),
 #                     (16.0266146, 49.1439064), (15.6712219, 49.1928600)]  # trebic
@@ -41,7 +41,7 @@ PERCENTAGE_PADDING = 0
 AREA: WantedArea = ["Brno, Česko"]
 
 PAPER_DIMENSIONS: PaperSize | tuple[float |
-                              None, float | None] = PaperSize.A4.dimensions
+                                    None, float | None] = PaperSize.A4.dimensions
 # set own dimensions. If one is left as 'None' it will be automaticaly calculated using area size
 # PAPER_DIMENSIONS = (3000, None)
 # what side of paper was set (smaller true bigger false) - only if only one side in custom dimension was set to None
@@ -52,14 +52,14 @@ WANTED_ORIENTATION: MapOrientation = MapOrientation.AUTOMATIC
 # FIT_PAPER_SIZE recomended with PERCENTAGE_PADDING 0
 EXPAND_AREA_MODE = ExpandArea.FIT_PAPER_SIZE
 # polygon or country name - custom area must be bigger than normal
-CUSTOM_EXPAND_AREA: WantedArea | None = [(12.9395476,50.8278038), (17.4318749,50.8064127), (17.4281868,48.7534708), (12.9522022, 48.7996803)]
+CUSTOM_EXPAND_AREA: WantedArea | None = [(12.9395476, 50.8278038), (
+    17.4318749, 50.8064127), (17.4281868, 48.7534708), (12.9522022, 48.7996803)]
 
 # bounds
 # COMBINED - one bound around area, SEPARATED - separated bounds around every area in AREA variable
 AREA_BOUNDARY = AreaBounds.SEPARATED
 EXPAND_AREA_BOUNDS_PLOT = False
 AREA_BOUNDARY_LINEWIDTH = 1
-
 
 
 # --------------------------------------------------------------names settings--------------------------------------------------------------
@@ -81,12 +81,13 @@ TEXT_BOUNDS_OVERFLOW_THRESHOLD = 0.97
 
 # --------------------------------------------------------------preview--------------------------------------------------------------
 # NOTE: must have same settings as the resulting one when generating for large format printing
-WANT_PREVIEW: bool = False
+WANT_PREVIEW: bool = True
 # area for that you are creating smaller preview (bigger than normal area)
 OUTER_AREA: WantedArea = "Česko"
 
 # OUTER_PAPER_DIMENSIONS = PaperSize.A3.dimensions  # real paper size
-OUTER_PAPER_DIMENSIONS = (1000, None) # or set own #if one is left none if will be automaticaly calculated by area size
+# or set own #if one is left none if will be automaticaly calculated by area size
+OUTER_PAPER_DIMENSIONS = (1000, None)
 # what side of paper was set (smaller true bigger false)(only if only one side in custom dimension was set)
 OUTER_GIVEN_SMALLER_PAPER_DIMENSION = True
 # set how will resulted paper be oriented, AUTOMATIC is Recommended
@@ -115,13 +116,17 @@ FOLDER_COLOR_DIS_PALLET = True
 # ? none means that it will not be printed (edge or facecolor (not normal color in ways)), "" will be like that is not in that? - or better to be just removed
 # -------------------gpx styles by folder-------------------
 
-
+# todo styles for gpx will be assigned on fronted and will be sended to backend in format like
+# ([(file, fileName)], {styleKey: value, styleKey: value}), or if usage of general styles ([(file, fileName), (category, ~)], {styleKey: value, styleKey: value}),
+# ([(category, categoryName)], {styleKey: value, styleKey: value}) or  ([(category, categoryName), (file, ~)], {styleKey: value, styleKey: value})
+# gpx will be recived from FE a turned to gdf and then styled by backend using sent styles
 root_files_styles: FeaturesCategoryStyle = {
     "Grilovačka.gpx": {StyleKey.COLOR: "Red"},
 }
+
 folders_styles: FeaturesCategoryStyle = {
     # 'pěšky': {StyleKey.COLOR: "Blue"},
-    'Kolo testování': { StyleKey.LINEWIDTH: 200,StyleKey.ALPHA: 0.7},
+    'Kolo testování': {StyleKey.LINEWIDTH: 200, StyleKey.ALPHA: 0.7},
     # 'Kolo': {StyleKey.COLOR: "Purple"}
 }
 
@@ -155,7 +160,6 @@ wanted_nodes: WantedCategories = {
 # todo automatic wanted objects setup using map and pdf ratio automatic_filters_creating_factor - own class ()
 
 
-
 unwanted_nodes_tags: UnwantedTags = {
 
 }
@@ -170,26 +174,26 @@ wanted_ways: WantedCategories = {
 
 unwanted_ways_tags: UnwantedTags = {
     # 'highway':['coridor','via_ferrata','crossing','traffic_island','proposed','construction' ],
-    'railway': {
-        'service': ['yard'], # spur, siding 
-        'tunnel': ['building_passage'],
-    }
+    # 'railway': {
+    #     'service': ['yard', 'spur'], # spur, siding
+    #     'tunnel': ['building_passage'],
+    # }
     # {'railway':""}:{'service':['yard'],'tunnel': ['building_passage']}
 }
 
 
 wanted_areas: WantedCategories = {
-#     # # 'landuse': ['forest', 'residential', 'farmland', 'meadow', 'grass'],
-#     'landuse': {'forest', 'residential', 'commercial', 'retail', 'industrial', 'farmland', 'meadow', 'grass'},
-#     # 'leisure': {'park', 'pitch', 'garden', 'golf_course', 'nature_reserve', 'playground', 'stadium', 'swimming_pool', 'sports_centre'},
-#     'leisure': {'park', 'pitch', 'garden', 'golf_course', 'playground', 'stadium', 'swimming_pool', 'sports_centre'},
-#     'natural': {'wood', 'water', 'scrub', 'heath'},
-#     # # 'leisure': ['park', 'pitch', 'garden', 'golf_course', 'nature_reserve'],
-#     'water': set({}),
-#     # todo in automatic this should be to turnoff/on - 
-#     # 'boundary': {'national_park'},
-#     # 'building':{'house','residential'}
-#     # 'water': ['river','lake','reservoir'],
+    #     # # 'landuse': ['forest', 'residential', 'farmland', 'meadow', 'grass'],
+    #     'landuse': {'forest', 'residential', 'commercial', 'retail', 'industrial', 'farmland', 'meadow', 'grass'},
+    #     # 'leisure': {'park', 'pitch', 'garden', 'golf_course', 'nature_reserve', 'playground', 'stadium', 'swimming_pool', 'sports_centre'},
+    #     'leisure': {'park', 'pitch', 'garden', 'golf_course', 'playground', 'stadium', 'swimming_pool', 'sports_centre'},
+    #     'natural': {'wood', 'water', 'scrub', 'heath'},
+    #     # # 'leisure': ['park', 'pitch', 'garden', 'golf_course', 'nature_reserve'],
+    #     'water': set({}),
+    #     # todo in automatic this should be to turnoff/on -
+    #     # 'boundary': {'national_park'},
+    #     # 'building':{'house','residential'}
+    #     # 'water': ['river','lake','reservoir'],
 }
 unwanted_areas_tags: UnwantedTags = {
 }
@@ -233,6 +237,25 @@ WAY_MANDATORY_STYLES: FeatureStyles = {
     StyleKey.BRIDGE_EDGE_COLOR: "#7D7D7D"
 }
 
+# highway_styles_tunnels: FeaturesCategoryStyle = {
+#     'motorway': {StyleKey.COLOR: '#8cd25f', StyleKey.ZINDEX: 7, StyleKey.LINEWIDTH: 32, StyleKey.EDGE_COLOR: "#5E9346"..},
+# }
+
+# highway_styles: FeaturesCategoryStyle = [
+#     ([('highway', 'motorway')], {StyleKey.COLOR: '#8cd25f', StyleKey.ZINDEX: 7, StyleKey.LINEWIDTH: 32, StyleKey.EDGE_COLOR: "#5E9346"}),
+#     ([('highway', 'trunk')], {StyleKey.COLOR: '#FDC364', StyleKey.ZINDEX: 6, StyleKey.LINEWIDTH: 26, StyleKey.EDGE_COLOR: "#E19532"}),
+#     ([('highway', 'primary')], {StyleKey.COLOR: '#FDC364', StyleKey.ZINDEX: 5, StyleKey.LINEWIDTH: 22, StyleKey.EDGE_COLOR: "#E19532"}),
+#     ([('highway', 'secondary')], {StyleKey.COLOR: '#F7ED60', StyleKey.ZINDEX: 4, StyleKey.LINEWIDTH: 20, StyleKey.EDGE_COLOR: "#c1b42a"}),
+#     ([('highway', 'tertiary')], {StyleKey.COLOR: '#FFFFFF', StyleKey.ZINDEX: 3, StyleKey.LINEWIDTH: 16}),
+#     ([('highway', 'unclassified')], {StyleKey.COLOR: '#FFFFFF'}),
+#     ([('highway', 'road')], {StyleKey.COLOR: '#FFFFFF'}),
+#     ([('highway', 'footway')], {StyleKey.COLOR: '#8f8364', StyleKey.LINESTYLE: "--", StyleKey.EDGE_COLOR: None, StyleKey.BRIDGE_COLOR: "#FFFFFF"}),
+#     ([('highway', 'steps')], {StyleKey.COLOR: '#8f8364', StyleKey.LINESTYLE: "--", StyleKey.EDGE_COLOR: None}),
+#     ([('highway', 'path')], {StyleKey.COLOR: '#8f8364', StyleKey.LINESTYLE: "--", StyleKey.EDGE_COLOR: None, StyleKey.BRIDGE_COLOR: "#FFFFFF"}),
+#     ([('highway', 'residential')], {StyleKey.COLOR: '#FFFFFF'})
+# ]
+
+
 highway_styles: FeaturesCategoryStyle = {
     'motorway': {StyleKey.COLOR: '#8cd25f', StyleKey.ZINDEX: 7, StyleKey.LINEWIDTH: 32, StyleKey.EDGE_COLOR: "#5E9346"},
     'trunk': {StyleKey.COLOR: '#FDC364', StyleKey.ZINDEX: 6, StyleKey.LINEWIDTH: 26, StyleKey.EDGE_COLOR: "#E19532"},
@@ -241,11 +264,21 @@ highway_styles: FeaturesCategoryStyle = {
     'tertiary': {StyleKey.COLOR: '#FFFFFF', StyleKey.ZINDEX: 3, StyleKey.LINEWIDTH: 16},
     'unclassified': {StyleKey.COLOR: '#FFFFFF'},
     'road': {StyleKey.COLOR: '#FFFFFF'},
-    'footway': {StyleKey.COLOR: '#8f8364', StyleKey.LINESTYLE: "--", StyleKey.BRIDGE_COLOR: "#FFFFFF"},
-    'steps': {StyleKey.COLOR: '#8f8364', StyleKey.LINESTYLE: "--"},
-    'path': {StyleKey.COLOR: '#8f8364', StyleKey.LINESTYLE: "--", StyleKey.BRIDGE_COLOR: "#FFFFFF"},
+    'footway': {StyleKey.COLOR: '#8f8364', StyleKey.LINESTYLE: "--", StyleKey.EDGE_COLOR: None, StyleKey.BRIDGE_COLOR: "#FFFFFF"},
+    'steps': {StyleKey.COLOR: '#8f8364', StyleKey.LINESTYLE: "--", StyleKey.EDGE_COLOR: None},
+    'path': {StyleKey.COLOR: '#8f8364', StyleKey.LINESTYLE: "--", StyleKey.EDGE_COLOR: None, StyleKey.BRIDGE_COLOR: "#FFFFFF"},
     'residential': {StyleKey.COLOR: '#FFFFFF'}
 }
+
+# railway_styles: FeaturesCategoryStyle = [
+#     ([('railway', 'rail')], { StyleKey.COLOR: '#FFFFFF', StyleKey.ZINDEX: 1, StyleKey.LINEWIDTH: 10,
+#             StyleKey.BRIDGE_EDGE_COLOR: '#5D5D5D', StyleKey.BRIDGE_COLOR: "#FFFFFF",
+#             StyleKey.EDGE_COLOR: '#5D5D5D', StyleKey.BRIDGE_WIDTH_RATIO: 1.7, StyleKey.LINESTYLE: (0, (5, 5))}),
+#     ([('railway', 'tram')], {StyleKey.COLOR: '#404040', StyleKey.ZINDEX: 10, StyleKey.LINEWIDTH: 4, StyleKey.ALPHA: 0.6}),
+#     ([('railway', 'tram_stop')], {StyleKey.COLOR: '#404040', StyleKey.ZINDEX: 1, StyleKey.LINEWIDTH: 4}),
+# ]
+
+
 railway_styles: FeaturesCategoryStyle = {
     'rail': {StyleKey.COLOR: '#FFFFFF', StyleKey.ZINDEX: 1, StyleKey.LINEWIDTH: 10,
              StyleKey.BRIDGE_EDGE_COLOR: '#5D5D5D', StyleKey.BRIDGE_COLOR: "#FFFFFF",
@@ -253,6 +286,7 @@ railway_styles: FeaturesCategoryStyle = {
     'tram': {StyleKey.COLOR: '#404040', StyleKey.ZINDEX: 10, StyleKey.LINEWIDTH: 4, StyleKey.ALPHA: 0.6},
     'tram_stop': {StyleKey.COLOR: '#404040', StyleKey.ZINDEX: 1, StyleKey.LINEWIDTH: 4},
 }
+
 
 
 WAYS_STYLES: FeaturesCategoriesStyles = {
