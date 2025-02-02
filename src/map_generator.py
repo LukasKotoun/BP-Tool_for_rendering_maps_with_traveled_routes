@@ -137,10 +137,11 @@ def main():
     #! the width changing and dynamic styling will be in function
     #! DynamicFeatureCategoryStyle - styles with different values for some zoom level
     # todo a and b from constatns in config and different for ways, and bounds (mabye points)
-
+    print(Utils.calc_scaling_factor_multiplier( 
+        map_object_scaling_factor, 1, 500))
     map_object_scaling_factor *= Utils.calc_scaling_factor_multiplier(
         map_object_scaling_factor, 1, 500)
-    
+    # map_object_scaling_factor *= 13
     # ------------get elements from osm file------------
     if (OSM_WANT_EXTRACT_AREA):
         if (OSM_OUTPUT_FILE_NAME is None):
@@ -259,12 +260,19 @@ def main():
     areas_style_assigner = StyleAssigner(
         AREAS_STYLES, GENERAL_DEFAULT_STYLES, AREA_MANDATORY_STYLES)
     areas_gdf = areas_style_assigner.assign_styles(areas_gdf, wanted_areas)
-
+    
+    if ('layer' in ways_gdf.columns):
+        GdfUtils.change_columns_to_numeric(ways_gdf, ['layer'])
+        ways_gdf['layer'] = ways_gdf['layer'].fillna(0)
+            
     ways_gdf = GdfUtils.sort_gdf_by_column(ways_gdf, "layer")
     ways_gdf = GdfUtils.sort_gdf_by_column(ways_gdf, StyleKey.ZINDEX)
     areas_gdf = GdfUtils.sort_gdf_by_column(areas_gdf, StyleKey.ZINDEX)
+    
     # todo for ordering in plotting
     # areas_gdf['area'] = areas_gdf.geometry.area 
+
+    
     # ------------plot------------
     plotter = Plotter(map_area_gdf, paper_dimensions_mm,
                       map_object_scaling_factor)

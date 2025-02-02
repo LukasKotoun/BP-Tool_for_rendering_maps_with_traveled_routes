@@ -8,22 +8,37 @@ class ColorMode(Enum):
     PALETTE = 4
 
 class StyleKey(Enum):
+    # general
     COLOR = 1
     ALPHA = 2
     ZINDEX = 3
-    LINEWIDTH = 4
+    #lines
+    WIDTH = 4
     LINESTYLE = 5
-    EDGE_COLOR = 7  # nastavit asi jako text outline width a color
-    EDGE_WIDTH_RATIO = 11
+    EDGE_COLOR = 6
+    EDGE_WIDTH_RATIO = 7
+    EDGE_LINESTYLE = 8
+    #   bridges
     BRIDGE_COLOR = 9
-    BRIDGE_WIDTH_RATIO = 12
-    BRIDGE_EDGE_COLOR = 10
-    FONT_SIZE = 6
-    OUTLINE_WIDTH = 8
-    ICON = 16
-    ICON_COLOR = 13
-    ICON_EDGE = 14
-    ICON_SIZE = 15
+    BRIDGE_WIDTH_RATIO = 10
+    BRIDGE_EDGE_COLOR = 11
+    BRIDGE_EDGE_WIDTH_RATIO = 12
+    #points
+    ICON = 13
+
+    #text
+    TEXT_FONT_SIZE = 14
+    TEXT_OUTLINE_WIDHT_RATIO = 16
+    
+    # calculated - cant be set by user
+    # calculated like TEXT_FONT_SIZE * TEXT_OUTLINE_WIDHT_RATIO
+    TEXT_OUTLINE_WIDTH = 17
+    # calculated like WIDTH + WIDTH * EDGE_WIDTH_RATIO
+    EDGEWIDTH = 18
+    # calculated like
+    BRIDGE_WIDTH = 19
+    # calculated like WIDTH + WIDTH * (BRIDGE_WIDTH_RATIO * EDGE_WIDTH_RATIO)
+    BRIDGE_EDGE_WIDTH = 20
 
 class StyleType(Enum):
     DEFAULT = 1
