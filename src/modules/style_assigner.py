@@ -170,15 +170,12 @@ class StyleAssigner:
             filtered_rows: pd.Series = GdfUtils.create_rows_filter(gdf, conditons)
             for key, value in styles.items():
                 if isinstance(value, tuple): 
-                    # write tuple to one column cell
-                    gdf_tmp = GdfUtils.create_empty_gdf()
-                    gdf_tmp['tmp'] = [value]*filtered_rows.sum()
-                    gdf.loc[filtered_rows, key] = gdf_tmp['tmp'].values
+                    # write whole tuple to one column cell. Dont need to match index to filtered_rows, it will be assinged by value
+                    tmp = pd.Series([value] * filtered_rows.sum())  
+                    gdf.loc[filtered_rows, key] = tmp.values
                 else: 
                     gdf.loc[filtered_rows, key] = value
             new_styles.update(styles.keys())
-            
-            ## gdf.loc[filterd_rows, list(styles.keys())] = list(styles.values())
             
         # convert object columns to pandas category
         categorical_list = []
