@@ -5,7 +5,7 @@ from common.map_enums import *
 # --------------------------------------------------------------map area--------------------------------------------------------------
 # OSM_INPUT_FILE_NAMES: str = ['../osm_files/vys.osm.pbf','../osm_files/jihmor.osm.pbf']
 # OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/vysJihE.osm.pbf'
-OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/brno.osm.pbf'
+OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/trebic.osm.pbf'
 # OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/brno.osm.pbf'
 # extract
 OSM_WANT_EXTRACT_AREA: bool = False
@@ -40,7 +40,8 @@ PERCENTAGE_PADDING = 0
 # AREA: WantedArea = ["Česko", "Německo", "Polsko", "Rakousko", "Slovensko"]
 # AREA: WantedArea = ["Česko","Vysočina, Česko", "Jihomoravský kraj, Česko"]
 # AREA: WantedArea = ["Brno, Česko"]
-AREA: WantedArea = ["Brno, Česko"]
+# AREA: WantedArea = ["Horní Vilémovice, Česko"]
+AREA: WantedArea = ["Třebíč, Česko"]
 
 PAPER_DIMENSIONS: PaperSize | tuple[float |
                                     None, float | None] = PaperSize.A4.dimensions
@@ -84,9 +85,10 @@ TEXT_BOUNDS_OVERFLOW_THRESHOLD = 0.97
 
 # --------------------------------------------------------------preview--------------------------------------------------------------
 # NOTE: must have same settings as the resulting one when generating for large format printing
-WANT_PREVIEW: bool = True
+WANT_PREVIEW: bool = False
 # area for that you are creating smaller preview (bigger than normal area)
-OUTER_AREA: WantedArea = "Česko"
+OUTER_AREA: WantedArea = "Slovensko"
+# OUTER_AREA: WantedArea = "Česko"
 # OUTER_AREA: WantedArea = [(15.7396182, 49.3111173), (16.0273871, 49.3028839),
 #                     (16.0266146, 49.1439064), (15.6712219, 49.1928600)]
 
@@ -110,11 +112,11 @@ WANT_AREA_CLIPPING = False
 
 
 GPX_FOLDER: str = '../gpxs/trebic'
-ROOT_FILES_COLOR_MODE: ColorMode = ColorMode.PALETTE
+ROOT_FILES_COLOR_MODE: ColorMode = ColorMode.DEFAULT
 ROOT_FILES_COLOR_OR_PALLET: str = "Set1"
 ROOT_FILES_COLOR_DIS_PALLET = True
 
-FOLDER_COLOR_MODE: ColorMode = ColorMode.PALETTE
+FOLDER_COLOR_MODE: ColorMode = ColorMode.DEFAULT
 FOLDER_COLOR_OR_PALLET: str = "Set1"
 FOLDER_COLOR_DIS_PALLET = True
 
@@ -122,31 +124,33 @@ FOLDER_COLOR_DIS_PALLET = True
 # -------------------gpx styles by folder-------------------
 
 # todo styles for gpx will be assigned on fronted and will be sended to backend in format like
-# ([(file, fileName)], {styleKey: value, styleKey: value}), or if usage of general styles ([(file, fileName), (category, ~)], {styleKey: value, styleKey: value}),
-# ([(category, categoryName)], {styleKey: value, styleKey: value}) or  ([(category, categoryName), (file, ~)], {styleKey: value, styleKey: value})
 # gpx will be recived from FE a turned to gdf and then styled by backend using sent styles
-root_files_styles: FeaturesCategoryStyle = {
-    "Grilovačka.gpx": {StyleKey.COLOR: "Red"},
-}
+root_files_styles: ElementStyles = [
+    ([('fileName', 'Grilovačka.gpx')], {StyleKey.COLOR: "Red"}),
+]
 
-folders_styles: FeaturesCategoryStyle = {
-    'pěšky': {StyleKey.COLOR: "Blue"},
-    'Kolo testování': {StyleKey.WIDTH: 40, StyleKey.ALPHA: 0.7},
-    'Kolo': {StyleKey.COLOR: "Purple"}
-}
+folders_styles: ElementStyles = [
+    ([('folder', 'pěšky')], {StyleKey.COLOR: "Blue"}),
+    ([('folder', 'Kolo testování')], {StyleKey.WIDTH: 40, StyleKey.ALPHA: 0.7}),
+    ([('folder', 'Kolo')], {StyleKey.COLOR: "Purple"}),
+]
 
-GPXS_STYLES: FeaturesCategoriesStyles = {
-    # for files in root by fileName
-    'fileName': (root_files_styles, {StyleKey.COLOR: 'Orange', StyleKey.WIDTH: 40, StyleKey.ALPHA: 0.7,  StyleKey.ZINDEX: 0}),
-    # for files in subfolders folder
-    'folder': (folders_styles, {StyleKey.COLOR: 'Orange', StyleKey.WIDTH: 40, StyleKey.ALPHA: 0.7,  StyleKey.ZINDEX: 0}),
-}
 
-# styles that must be assigned to all gpxs
-GPXS_MANDATORY_STYLES: FeatureStyles = {
-    StyleKey.COLOR: 'Green', StyleKey.ALPHA: 1.0, StyleKey.LINESTYLE: "-"
-}
+gpxs_styles_default: ElementStyles = [
+    ([('fileName', '')], {StyleKey.COLOR: 'Orange', StyleKey.WIDTH: 40, StyleKey.ALPHA: 0.7,  StyleKey.ZINDEX: 0}),
+    ([('folder', '')], {StyleKey.COLOR: 'Orange', StyleKey.WIDTH: 40, StyleKey.ALPHA: 0.7,  StyleKey.ZINDEX: 0}),
+]
 
+gpxs_mandatory_styles: ElementStyles = [
+    ([], {StyleKey.COLOR: 'Green', StyleKey.ALPHA: 1.0, StyleKey.LINESTYLE: "-"})
+]
+
+GPXS_STYLES: ElementStyles =[
+    *folders_styles, # folder must be first - folder have only some byt file name have all
+    *root_files_styles,
+    *gpxs_styles_default,
+    *gpxs_mandatory_styles
+]
 
 # --------------filters for map elements--------------
 # columns that are used for ploting nodes name for city, ele for elevation points
@@ -171,8 +175,8 @@ unwanted_nodes_tags: UnwantedTags = {
 
 wanted_ways: WantedCategories = {
     'waterway': set({}),
-    'highway': ['motorway', 'trunk','primary', 'secondary'],
-    # 'highway': {'motorway', 'trunk', 'primary', 'secondary', 'tertiary', 'unclassified', 'residential', 'path', 'footway'},
+    # 'highway': ['motorway', 'trunk','primary', 'secondary'],
+    'highway': {'motorway', 'trunk', 'primary', 'secondary', 'tertiary', 'unclassified', 'residential', 'path', 'footway'},
     # 'highway':[],
     'railway': {'rail'}
 }
@@ -198,7 +202,6 @@ wanted_areas: WantedCategories = {
         'natural': {'wood', 'water', 'scrub', 'heath'},
         # # 'leisure': ['park', 'pitch', 'garden', 'golf_course', 'nature_reserve'],
         'water': set({}),
-        # todo in automatic this should be to turnoff/on -
         'boundary': {'national_park'},
         # 'building':{'house','residential'}
         # 'water': ['river','lake','reservoir'],
@@ -206,153 +209,202 @@ wanted_areas: WantedCategories = {
 unwanted_areas_tags: UnwantedTags = {
 }
 
+# todo change to ElementStylesDynamic and create function to convert from it to this - same filter but dict is created from this and specific zooms
 # ------------styles--------------
-# there must be all somewhere used styles, if not program can crash todo
-GENERAL_DEFAULT_STYLES: FeatureStyles = {StyleKey.COLOR: '#EDEDE0',  StyleKey.ZINDEX: 0,
-                                         StyleKey.WIDTH: 1, StyleKey.LINESTYLE: '-',
-                                         StyleKey.ALPHA: 1, StyleKey.EDGE_COLOR: None, StyleKey.EDGE_LINESTYLE: '-'}
-
-
+# GENERAL_DEFAULT_STYLES: FeatureStyles = {StyleKey.COLOR: '#EDEDE0',  StyleKey.ZINDEX: 0,
+#                                          StyleKey.WIDTH: 1, StyleKey.LINESTYLE: '-',
+#                                          StyleKey.ALPHA: 1, StyleKey.EDGE_COLOR: None, StyleKey.EDGE_LINESTYLE: '-'}
 # -------------------nodes-------------------
 # styles that must be assigned to all node features
-NODES_MANDATORY_STYLES: FeatureStyles = {
-    StyleKey.COLOR: '#000000', StyleKey.TEXT_FONT_SIZE: 50, StyleKey.EDGE_COLOR: '#FFFFFF',
-    StyleKey.TEXT_OUTLINE_WIDTH: 5,
-}
+nodes_mandatory_styles: ElementStyles = [
+    ([], {
+        StyleKey.COLOR: '#000000', StyleKey.TEXT_FONT_SIZE: 50, 
+        StyleKey.EDGE_COLOR: '#FFFFFF', StyleKey.TEXT_OUTLINE_WIDTH: 5
+    })
+]
 
-place_styles: FeaturesCategoryStyle = {  # todo OUTLINE_WIDTH to EDGE_WIDTH_RATIO and fontsize to width 
-    'city': {StyleKey.TEXT_FONT_SIZE: 2500 * CITY_CITY_SIZE_MULTIPLIER, StyleKey.TEXT_OUTLINE_WIDTH: 270 * CITY_CITY_SIZE_MULTIPLIER},
-    'town': {StyleKey.TEXT_FONT_SIZE: 1500 * CITY_TOWN_SIZE_MULTIPLIER, StyleKey.TEXT_OUTLINE_WIDTH: 170 * CITY_TOWN_SIZE_MULTIPLIER},
-    'village': {StyleKey.TEXT_FONT_SIZE: 550 * CITY_VILLAGE_SIZE_MULTIPLIER, StyleKey.TEXT_OUTLINE_WIDTH: 110 * CITY_VILLAGE_SIZE_MULTIPLIER}
-}
+place_styles: ElementStyles = [
+    ([('place', 'city')], {
+        StyleKey.TEXT_FONT_SIZE: 2500 * CITY_CITY_SIZE_MULTIPLIER, 
+        StyleKey.TEXT_OUTLINE_WIDTH: 270 * CITY_CITY_SIZE_MULTIPLIER
+    }),
+    ([('place', 'town')], {
+        StyleKey.TEXT_FONT_SIZE: 1500 * CITY_TOWN_SIZE_MULTIPLIER, 
+        StyleKey.TEXT_OUTLINE_WIDTH: 170 * CITY_TOWN_SIZE_MULTIPLIER
+    }),
+    ([('place', 'village')], {
+        StyleKey.TEXT_FONT_SIZE: 550 * CITY_VILLAGE_SIZE_MULTIPLIER, 
+        StyleKey.TEXT_OUTLINE_WIDTH: 110 * CITY_VILLAGE_SIZE_MULTIPLIER
+    }),
+]
 
-natural_styles_nodes: FeaturesCategoryStyle = {
-    # ? textOutlineWitdh
-    'peak': {StyleKey.ICON: "^", StyleKey.COLOR: "#7f3016", StyleKey.EDGEWIDTH: 20, StyleKey.TEXT_OUTLINE_WIDTH: 50, StyleKey.TEXT_FONT_SIZE: 400}
-}
+natural_styles_nodes: ElementStyles = [
+    ([('natural', 'peak')], {
+        StyleKey.ICON: "^", StyleKey.COLOR: "#7f3016", 
+        StyleKey.EDGEWIDTH: 20, StyleKey.TEXT_OUTLINE_WIDTH: 50, 
+        StyleKey.TEXT_FONT_SIZE: 400
+    }),
+]
 
-NODES_STYLES: FeaturesCategoriesStyles = {
-    # color is color of text, EDGE_COLOR is outline color
-    'place': (place_styles, {StyleKey.COLOR: '#000000', StyleKey.EDGE_COLOR: '#FFFFFF'}),
-    'natural': (natural_styles_nodes, {StyleKey.COLOR: '#000000', StyleKey.EDGE_COLOR: '#FFFFFF', StyleKey.WIDTH: 300**2, StyleKey.COLOR: "red"}),
-}
+
+nodes_styles_default: ElementStyles = [
+    ([('place', '')], {
+        StyleKey.COLOR: '#000000', StyleKey.EDGE_COLOR: '#FFFFFF'
+    }),
+    ([('natural', '')], {
+        StyleKey.COLOR: "red", StyleKey.EDGE_COLOR: '#FFFFFF', 
+        StyleKey.WIDTH: 300**2
+    }),
+]
+
+NODES_STYLES: ElementStyles = [
+    *natural_styles_nodes,
+    *place_styles,
+    *nodes_styles_default,
+    *nodes_mandatory_styles
+]
 
 # -------------------ways-------------------
 # styles that must be assigned to all way features
-WAY_MANDATORY_STYLES: FeatureStyles = {
-    StyleKey.COLOR: '#EDEDE0', StyleKey.ALPHA: 1.0, StyleKey.WIDTH: 1, StyleKey.LINESTYLE: '-',
-    StyleKey.EDGE_WIDTH_RATIO: 0.3, StyleKey.BRIDGE_WIDTH_RATIO: 0, StyleKey.BRIDGE_EDGE_WIDTH_RATIO: 0.3, StyleKey.BRIDGE_COLOR: "#FFFFFF",
-    StyleKey.BRIDGE_EDGE_COLOR: "#7D7D7D", StyleKey.EDGE_COLOR: None, StyleKey.EDGE_LINESTYLE: '-'
-}
+ways_mandatory_styles: ElementStyles = [
+    ([], {
+        StyleKey.COLOR: '#EDEDE0', StyleKey.ALPHA: 1.0, StyleKey.WIDTH: 1, StyleKey.LINESTYLE: '-',
+        StyleKey.EDGE_WIDTH_RATIO: 0.3, StyleKey.BRIDGE_WIDTH_RATIO: 0, StyleKey.BRIDGE_EDGE_WIDTH_RATIO: 0.3, 
+        StyleKey.BRIDGE_COLOR: "#FFFFFF", StyleKey.BRIDGE_EDGE_COLOR: "#7D7D7D", 
+        StyleKey.EDGE_COLOR: None, StyleKey.EDGE_LINESTYLE: '-'
+    })
+]
 
-# highway_styles_tunnels: FeaturesCategoryStyle = {
-#     'motorway': {StyleKey.COLOR: '#8cd25f', StyleKey.ZINDEX: 7, StyleKey.WIDTH: 32, StyleKey.EDGE_COLOR: "#5E9346"..},
-# }
+# # highway_styles_tunnels: FeaturesCategoryStyle = {
+# #     'motorway': {StyleKey.COLOR: '#8cd25f', StyleKey.ZINDEX: 7, StyleKey.WIDTH: 32, StyleKey.EDGE_COLOR: "#5E9346"..},
+# # }
 
-# highway_styles: FeaturesCategoryStyle = [
-#     ([('highway', 'motorway')], {StyleKey.COLOR: '#8cd25f', StyleKey.ZINDEX: 7, StyleKey.WIDTH: 32, StyleKey.EDGE_COLOR: "#5E9346"}),
-#     ([('highway', 'trunk')], {StyleKey.COLOR: '#FDC364', StyleKey.ZINDEX: 6, StyleKey.WIDTH: 26, StyleKey.EDGE_COLOR: "#E19532"}),
-#     ([('highway', 'primary')], {StyleKey.COLOR: '#FDC364', StyleKey.ZINDEX: 5, StyleKey.WIDTH: 22, StyleKey.EDGE_COLOR: "#E19532"}),
-#     ([('highway', 'secondary')], {StyleKey.COLOR: '#F7ED60', StyleKey.ZINDEX: 4, StyleKey.WIDTH: 20, StyleKey.EDGE_COLOR: "#c1b42a"}),
-#     ([('highway', 'tertiary')], {StyleKey.COLOR: '#FFFFFF', StyleKey.ZINDEX: 3, StyleKey.WIDTH: 16}),
-#     ([('highway', 'unclassified')], {StyleKey.COLOR: '#FFFFFF'}),
-#     ([('highway', 'road')], {StyleKey.COLOR: '#FFFFFF'}),
-#     ([('highway', 'footway')], {StyleKey.COLOR: '#8f8364', StyleKey.LINESTYLE: "--", StyleKey.EDGE_COLOR: None, StyleKey.BRIDGE_COLOR: "#FFFFFF"}),
-#     ([('highway', 'steps')], {StyleKey.COLOR: '#8f8364', StyleKey.LINESTYLE: "--", StyleKey.EDGE_COLOR: None}),
-#     ([('highway', 'path')], {StyleKey.COLOR: '#8f8364', StyleKey.LINESTYLE: "--", StyleKey.EDGE_COLOR: None, StyleKey.BRIDGE_COLOR: "#FFFFFF"}),
-#     ([('highway', 'residential')], {StyleKey.COLOR: '#FFFFFF'})
-# ]
+highway_styles: ElementStyles = [
+    ([('highway', 'motorway')], {StyleKey.COLOR: '#8cd25f', StyleKey.ZINDEX: 7, StyleKey.WIDTH: 32, StyleKey.EDGE_COLOR: "#5E9346"}),
+    ([('highway', 'trunk')], {StyleKey.COLOR: '#FDC364', StyleKey.ZINDEX: 6, StyleKey.WIDTH: 26, StyleKey.EDGE_COLOR: "#E19532"}),
+    ([('highway', 'primary')], {StyleKey.COLOR: '#FDC364', StyleKey.ZINDEX: 5, StyleKey.WIDTH: 22, StyleKey.EDGE_COLOR: "#E19532"}),
+    ([('highway', 'secondary')], {StyleKey.COLOR: '#F7ED60', StyleKey.ZINDEX: 4, StyleKey.WIDTH: 20, StyleKey.EDGE_COLOR: "#c1b42a"}),
+    ([('highway', 'tertiary')], {StyleKey.COLOR: '#FFFFFF', StyleKey.ZINDEX: 3, StyleKey.WIDTH: 16}),
+    ([('highway', 'unclassified')], {StyleKey.COLOR: '#FFFFFF'}),
+    ([('highway', 'road')], {StyleKey.COLOR: '#FFFFFF'}),
+    ([('highway', 'footway')], {StyleKey.COLOR: '#FFFFFF', StyleKey.BRIDGE_COLOR: "#FFFFFF"}),
+    ([('highway', 'steps')], {StyleKey.COLOR: '#8f8364', StyleKey.LINESTYLE: "--", StyleKey.EDGE_COLOR: None}),
+    ([('highway', 'path')], {StyleKey.COLOR: '#8f8364', StyleKey.LINESTYLE: "--", StyleKey.EDGE_COLOR: None, StyleKey.BRIDGE_COLOR: "#FFFFFF"}),
+    ([('highway', 'track')], {StyleKey.COLOR: '#8f8364', StyleKey.LINESTYLE: "--", StyleKey.EDGE_COLOR: None, StyleKey.BRIDGE_COLOR: "#FFFFFF"}),
+    ([('highway', 'residential')], {StyleKey.COLOR: '#FFFFFF'}),
+]
 
-
-highway_styles: FeaturesCategoryStyle = {
-    'motorway': {StyleKey.COLOR: '#8cd25f', StyleKey.ZINDEX: 7, StyleKey.WIDTH: 32, StyleKey.EDGE_COLOR: "#5E9346"},
-    'trunk': {StyleKey.COLOR: '#FDC364', StyleKey.ZINDEX: 6, StyleKey.WIDTH: 26, StyleKey.EDGE_COLOR: "#E19532"},
-    'primary': {StyleKey.COLOR: '#FDC364', StyleKey.ZINDEX: 5, StyleKey.WIDTH: 22, StyleKey.EDGE_COLOR: "#E19532"},
-    'secondary': {StyleKey.COLOR: '#F7ED60', StyleKey.ZINDEX: 4, StyleKey.WIDTH: 20, StyleKey.EDGE_COLOR: "#c1b42a"},
-    'tertiary': {StyleKey.COLOR: '#FFFFFF', StyleKey.ZINDEX: 3, StyleKey.WIDTH: 16},
-    'unclassified': {StyleKey.COLOR: '#FFFFFF'},
-    'road': {StyleKey.COLOR: '#FFFFFF'},
-    'footway': {StyleKey.COLOR: '#8f8364', StyleKey.LINESTYLE: "--", StyleKey.EDGE_COLOR: None, StyleKey.BRIDGE_COLOR: "#FFFFFF"},
-    'steps': {StyleKey.COLOR: '#8f8364', StyleKey.LINESTYLE: "--", StyleKey.EDGE_COLOR: None},
-    'path': {StyleKey.COLOR: '#8f8364', StyleKey.LINESTYLE: "--", StyleKey.EDGE_COLOR: None, StyleKey.BRIDGE_COLOR: "#FFFFFF"},
-    'residential': {StyleKey.COLOR: '#FFFFFF'}
-}
-
-# railway_styles: FeaturesCategoryStyle = [
-#     ([('railway', 'rail')], { StyleKey.COLOR: '#FFFFFF', StyleKey.ZINDEX: 1, StyleKey.WIDTH: 10,
-#             StyleKey.BRIDGE_EDGE_COLOR: '#5D5D5D', StyleKey.BRIDGE_COLOR: "#FFFFFF",
-#             StyleKey.EDGE_COLOR: '#5D5D5D', StyleKey.BRIDGE_WIDTH_RATIO: 1.7, StyleKey.LINESTYLE: (0, (5, 5))}),
-#     ([('railway', 'tram')], {StyleKey.COLOR: '#404040', StyleKey.ZINDEX: 10, StyleKey.WIDTH: 4, StyleKey.ALPHA: 0.6}),
-#     ([('railway', 'tram_stop')], {StyleKey.COLOR: '#404040', StyleKey.ZINDEX: 1, StyleKey.WIDTH: 4}),
-# ]
+railway_styles: ElementStyles = [
+    ([('railway', 'rail')], {
+        StyleKey.COLOR: '#FFFFFF', StyleKey.ZINDEX: 1, StyleKey.WIDTH: 10,
+        StyleKey.BRIDGE_EDGE_COLOR: '#5D5D5D', StyleKey.BRIDGE_COLOR: "#FFFFFF",
+        StyleKey.EDGE_COLOR: '#5D5D5D', StyleKey.BRIDGE_WIDTH_RATIO: 1.7, 
+        StyleKey.BRIDGE_EDGE_WIDTH_RATIO: 0.4,  # todo control after function to calculating width
+        StyleKey.LINESTYLE: (0, (5, 5))
+    }),
+    ([('railway', 'tram')], {
+        StyleKey.COLOR: '#404040', StyleKey.ZINDEX: 10, StyleKey.WIDTH: 4, 
+        StyleKey.ALPHA: 0.6
+    }),
+    ([('railway', 'tram_stop')], {
+        StyleKey.COLOR: '#404040', StyleKey.ZINDEX: 1, StyleKey.WIDTH: 4
+    })
+]
 
 
-railway_styles: FeaturesCategoryStyle = {
-    'rail': {StyleKey.COLOR: '#FFFFFF', StyleKey.ZINDEX: 1, StyleKey.WIDTH: 10,
-             StyleKey.BRIDGE_EDGE_COLOR: '#5D5D5D', StyleKey.BRIDGE_COLOR: "#FFFFFF",
-             StyleKey.EDGE_COLOR: '#5D5D5D', StyleKey.BRIDGE_WIDTH_RATIO: 1.7, StyleKey.BRIDGE_EDGE_WIDTH_RATIO: 0.4, #todo control after function to calculating width
-             StyleKey.LINESTYLE: (0, (5, 5))},
-    'tram': {StyleKey.COLOR: '#404040', StyleKey.ZINDEX: 10, StyleKey.WIDTH: 4, StyleKey.ALPHA: 0.6},
-    'tram_stop': {StyleKey.COLOR: '#404040', StyleKey.ZINDEX: 1, StyleKey.WIDTH: 4},
-}
+ways_styles_default: ElementStyles = [
+
+    ([('highway', '')], {
+        StyleKey.COLOR: '#FFFFFF', StyleKey.BRIDGE_EDGE_COLOR: "#7D7D7D",
+        StyleKey.ZINDEX: 1, StyleKey.WIDTH: 8, StyleKey.EDGE_COLOR: "#B0A78D"
+    }),
+    ([('railway', '')], {
+        StyleKey.COLOR: '#FFFFFF', StyleKey.ZINDEX: 2, StyleKey.WIDTH: 8
+    }),
+    ([('waterway', '')], {
+        StyleKey.COLOR: '#8FB8DB', StyleKey.WIDTH: 8, 
+        StyleKey.ZINDEX: 0, StyleKey.EDGE_COLOR: None
+    }),
+]
 
 
-
-WAYS_STYLES: FeaturesCategoriesStyles = {
-    'waterway': ({}, {StyleKey.COLOR: '#8FB8DB', StyleKey.WIDTH: 8, StyleKey.ZINDEX: 0, StyleKey.EDGE_COLOR: None}),
-    'highway': (highway_styles, {StyleKey.COLOR: '#FFFFFF',
-                                 StyleKey.BRIDGE_EDGE_COLOR: "#7D7D7D",
-                                 StyleKey.ZINDEX: 1, StyleKey.WIDTH: 8, StyleKey.EDGE_COLOR: "#B0A78D"}),
-    'railway': (railway_styles, {StyleKey.COLOR: '#FFFFFF', StyleKey.ZINDEX: 2, StyleKey.WIDTH: 8}),
-}
+WAYS_STYLES: ElementStyles = [
+    *highway_styles,
+    *railway_styles,
+    *ways_styles_default,
+    *ways_mandatory_styles
+]
 
 # -------------------areas-------------------
 # styles that must be assigned to all area features
-AREA_MANDATORY_STYLES: FeatureStyles = {
-    StyleKey.COLOR: '#EDEDE0', StyleKey.ALPHA: 1.0
-}
-landuse_styles: FeaturesCategoryStyle = {
-    'farmland': {StyleKey.COLOR: '#EDEDE0'},
-    'forest': {StyleKey.COLOR: '#9FC98D'},
-    'meadow': {StyleKey.COLOR: '#B7DEA6'},
-    'grass': {StyleKey.COLOR: '#B7DEA6', StyleKey.ZINDEX: 1},
-    'residential': {StyleKey.COLOR: '#E2D4AF'},
-    'industrial': {StyleKey.COLOR: '#DFDBD1'},
-    'basin': {StyleKey.COLOR: '#8FB8DB', StyleKey.ZINDEX: 1},
-    'salt_pond': {StyleKey.COLOR: '#8FB8DB', StyleKey.ZINDEX: 1},
-}
+area_mandatory_styles: ElementStyles = [
+    ([], {
+        StyleKey.COLOR: '#EDEDE0', StyleKey.ALPHA: 1.0
+    })
+]
+landuse_styles: ElementStyles = [
+    ([('landuse', 'farmland')], {StyleKey.COLOR: '#EDEDE0'}),
+    ([('landuse', 'forest')], {StyleKey.COLOR: '#9FC98D'}),
+    ([('landuse', 'meadow')], {StyleKey.COLOR: '#B7DEA6'}),
+    ([('landuse', 'grass')], {StyleKey.COLOR: '#B7DEA6', StyleKey.ZINDEX: 1}),
+    ([('landuse', 'residential')], {StyleKey.COLOR: '#E2D4AF'}),
+    ([('landuse', 'industrial')], {StyleKey.COLOR: '#DFDBD1'}),
+    ([('landuse', 'basin')], {StyleKey.COLOR: '#8FB8DB', StyleKey.ZINDEX: 1}),
+    ([('landuse', 'salt_pond')], {StyleKey.COLOR: '#8FB8DB', StyleKey.ZINDEX: 1}),
+]
 
-leisure_styles: FeaturesCategoryStyle = {
-    'swimming_pool': {StyleKey.COLOR: '#8FB8DB', StyleKey.ZINDEX: 1},
-    'golf_curse': {StyleKey.COLOR: '#DCE9B9'},
-    'playground': {StyleKey.COLOR: '#DCE9B9'},
-    'pitch': {StyleKey.COLOR: '#DCE9B9', StyleKey.ZINDEX: 1},
-    'sports_centre': {StyleKey.COLOR: '#9FC98D'},
-    'nature_reserve': {StyleKey.COLOR: None, StyleKey.EDGE_COLOR: '#97BB72', StyleKey.WIDTH: 80,
-                       StyleKey.ZINDEX: 1, StyleKey.ALPHA: 0.85, StyleKey.EDGE_LINESTYLE: '-'}
-}
+# todo ....
 
-building_styles: FeaturesCategoryStyle = {
-    'house': {StyleKey.COLOR: 'grey', StyleKey.ZINDEX: 1},
-    'residential': {StyleKey.COLOR: 'grey', StyleKey.ZINDEX: 1},
-}
+leisure_styles: ElementStyles = [
+    ([('leisure', 'swimming_pool')], {StyleKey.COLOR: '#8FB8DB', StyleKey.ZINDEX: 1}),
+    ([('leisure', 'golf_course')], {StyleKey.COLOR: '#DCE9B9'}),
+    ([('leisure', 'playground')], {StyleKey.COLOR: '#DCE9B9'}),
+    ([('leisure', 'pitch')], {StyleKey.COLOR: '#DCE9B9', StyleKey.ZINDEX: 1}),
+    ([('leisure', 'sports_centre')], {StyleKey.COLOR: '#9FC98D'}),
+    ([('leisure', 'nature_reserve')], {StyleKey.COLOR: None, StyleKey.EDGE_COLOR: '#97BB72', 
+                                       StyleKey.WIDTH: 80, StyleKey.ZINDEX: 1, 
+                                       StyleKey.ALPHA: 0.85, StyleKey.EDGE_LINESTYLE: '-'})
+]
 
-natural_styles: FeaturesCategoryStyle = {
-    'wood': {StyleKey.COLOR: '#9FC98D'},
-    'water': {StyleKey.COLOR: '#8FB8DB', StyleKey.ZINDEX: 1},
-    'scrub': {StyleKey.COLOR: '#B7DEA6'},
-    'heath': {StyleKey.COLOR: '#B7DEA6'},
-}
+building_styles: ElementStyles = [
+    ([('building', 'house')], {StyleKey.COLOR: 'grey', StyleKey.ZINDEX: 1}),
+    ([('building', 'residential')], {StyleKey.COLOR: 'grey', StyleKey.ZINDEX: 1}),
+]
 
-AREAS_STYLES: FeaturesCategoriesStyles = {
-    'building': (building_styles, {StyleKey.COLOR: '#B7DEA6', StyleKey.ZINDEX: 1}),
-    'landuse': (landuse_styles, {StyleKey.COLOR: '#EDEDE0'}),
-    'water': ({}, {StyleKey.COLOR: '#8FB8DB', StyleKey.ZINDEX: 1}),
-    'leisure': (leisure_styles, {StyleKey.COLOR: '#EDEDE0', StyleKey.WIDTH: 8}),
-    'natural': (natural_styles, {StyleKey.COLOR: '#B7DEA6'}),
-    'boundary': ({}, {StyleKey.COLOR: None, StyleKey.EDGE_COLOR: '#97BB72', StyleKey.WIDTH: 80, StyleKey.EDGE_LINESTYLE: '-', StyleKey.ZINDEX: 1, StyleKey.ALPHA: 0.85})
-}
+natural_styles: ElementStyles = [
+    ([('natural', 'wood')], {StyleKey.COLOR: '#9FC98D'}),
+    ([('natural', 'water')], {StyleKey.COLOR: '#8FB8DB', StyleKey.ZINDEX: 1}),
+    ([('natural', 'scrub')], {StyleKey.COLOR: '#B7DEA6'}),
+    ([('natural', 'heath')], {StyleKey.COLOR: '#B7DEA6'}),
+]
 
+area_styles_default: ElementStyles = [
+    ([('building', '')], {StyleKey.COLOR: '#B7DEA6', StyleKey.ZINDEX: 1}),
+    ([('landuse', '')],  {StyleKey.COLOR: '#EDEDE0'}),
+    ([('water', '')], {StyleKey.COLOR: '#8FB8DB', StyleKey.ZINDEX: 1}),
+    ([('leisure', '')], {StyleKey.COLOR: '#EDEDE0', StyleKey.WIDTH: 8}),
+    ([('natural', '')], {StyleKey.COLOR: '#B7DEA6'}),
+    ([('boundary', '')], {
+        StyleKey.COLOR: None, StyleKey.EDGE_COLOR: '#97BB72',
+        StyleKey.WIDTH: 80, StyleKey.EDGE_LINESTYLE: '-',
+        StyleKey.ZINDEX: 1, StyleKey.ALPHA: 0.85
+    })
+]
+
+AREAS_STYLES: ElementStyles = [
+    *natural_styles, 
+    *building_styles,
+    *landuse_styles,
+    *leisure_styles,
+    *area_styles_default,
+    *area_mandatory_styles
+]
+
+STYLES: dict[str, ElementStyles]   = {
+    'nodes': NODES_STYLES,
+    'ways': WAYS_STYLES,
+    'areas': AREAS_STYLES
+}
 
 # ------------constants--------------
 

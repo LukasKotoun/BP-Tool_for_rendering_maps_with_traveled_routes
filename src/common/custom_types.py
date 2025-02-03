@@ -17,3 +17,11 @@ CategoryFilters = list[tuple[str, str]]
 FeatureCategoriesStyles = tuple[CategoryFilters, FeatureStyles]
 FeatureCategoriesStylesDynamic = tuple[CategoryFilters, FeatureStyleDynamics]
 
+
+Styles = dict[StyleKey, str | int | float]
+StyleZooms = dict[str, Styles]
+StylesDynamic = dict[StyleType, Styles | StyleZooms]
+RowsConditions = list[tuple([str, str | list[str]])]
+ElementStyles = tuple[RowsConditions, Styles]
+ElementStylesDynamic = tuple[RowsConditions, StylesDynamic]
+

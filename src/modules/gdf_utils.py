@@ -10,8 +10,8 @@ import pygeoops
 from modules.utils import Utils
 
 from common.map_enums import WorldSides, StyleKey
-from common.custom_types import BoundsDict, DimensionsTuple, Point, WantedArea
-from common.common_helpers import time_measurement_decorator
+from common.custom_types import BoundsDict, DimensionsTuple, Point, WantedArea, RowsConditions
+from common.common_helpers import time_measurement
 
 
 class GdfUtils:
@@ -53,7 +53,7 @@ class GdfUtils:
             return reqired_area_gdf.to_crs(epsg=toEpsg)
 
     @staticmethod
-    @time_measurement_decorator("spojeni")
+    @time_measurement("spojeni")
     def get_whole_area_gdf(whole_area: WantedArea, fromEpsg: int, toEpsg: int | None = None) -> gpd.GeoDataFrame:
         if (isinstance(whole_area, str) or (isinstance(whole_area, list) and len(whole_area) == 1)  # normal area
                 or (isinstance(whole_area, list) and all(isinstance(item, tuple) and len(item) == 2 for item in whole_area))):
@@ -220,7 +220,7 @@ class GdfUtils:
         return gdf.to_crs(epsg=toEpsg)
 
     @staticmethod #does not work if area is inside of aother area - use or not use - by gap
-    @time_measurement_decorator("inacurrate")
+    @time_measurement("inacurrate")
     def remove_common_boundary_inaccuracy(boundary_gdf: gpd.GeoDataFrame) -> None:
         """Remove common boundary inaccuracy in given GeoDataFrame 
         by shifting the common border of the one area to the neigbour area.
@@ -292,6 +292,9 @@ class GdfUtils:
     #         pd.Series[bool]: condition for given gdf.
     #     """
 
+  
+
+    
     @staticmethod
     def __filter_gdf_columns_values_AND_condition(gdf: gpd.GeoDataFrame, col_names: list[str],
                                                   col_values: list = [], neg: bool = False) -> pd.Series:
@@ -388,6 +391,55 @@ class GdfUtils:
                     condition = gdf.index < 0
         return condition
 
+    def create_rows_filter(gdf: gpd.GeoDataFrame, conditions: RowsConditions) -> pd.Series:
+        filter_mask = pd.Series([True] * len(gdf))
+        for column_name, column_value in conditions:
+            if column_name not in gdf.columns:
+                # handle missing columns
+                if(isinstance(column_value, list)):
+                    # If any value in the list start with "~", the columns can be skipped
+                    if any(str(v).startswith("~") for v in column_value):
+                        continue
+                    else:
+                        # If none of the values start with "~", the column must exists
+                        filter_mask &= False  
+                        break
+                elif column_value.startswith("~"):  # not equal to value after ~ or NA
+                    continue
+                else:  # column should equal the value or should not be NA (but column doesn't exist)
+                    filter_mask &= False  
+                    break
+                
+            else:
+                if isinstance(column_value, list):
+                    condition_mask = pd.Series([False] * len(gdf))  # start with all rows excluded
+                    if not column_value:
+                        # If the list is empty, the column should not be NA
+                        condition_mask |= gdf[column_name].notna()
+                    else:
+                        for value in column_value:
+                            if value == "":  # Not NA
+                                condition_mask |= gdf[column_name].notna()
+                            elif value == "~":  # Column should be NA
+                                condition_mask |= gdf[column_name].isna()
+                            elif value.startswith("~"):  # Not equal to value after ~
+                                condition_mask |= (gdf[column_name] != value[1:])
+                            else:  # Column equal the value
+                                condition_mask |= (gdf[column_name] == value)
+                        filter_mask &= condition_mask
+                        
+                else:   
+                    if column_value == '':  # Not NA
+                        filter_mask &= gdf[column_name].notna()
+                    elif column_value.startswith("~"):
+                        if column_value == "~":  # column should be NA
+                            filter_mask &= gdf[column_name].isna()
+                        else:  # column should not equal the value after ~
+                            filter_mask &= (gdf[column_name] != column_value[1:])
+                    else:  # column should equal the value
+                        filter_mask &= (gdf[column_name] == column_value)
+        return filter_mask
+    
     @staticmethod
     def return_filtered(gdf: gpd.GeoDataFrame, condition: pd.Series, neg: bool = False,
                         compl: bool = False):
@@ -504,7 +556,7 @@ class GdfUtils:
 
     @staticmethod
     # todo use one filter creation and than add with 'and' all ways that are longer, that will leave false with all that i want...
-    @time_measurement_decorator("short ways filter")
+    @time_measurement("short ways filter")
     def filter_short_ways(gdf: gpd.GeoDataFrame, toEpsg: int, min_lenght: float = 2) -> gpd.GeoDataFrame:
 
         gdf_mercator_projected = gdf.to_crs(epsg=toEpsg)

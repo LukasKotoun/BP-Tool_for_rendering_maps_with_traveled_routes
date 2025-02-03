@@ -9,7 +9,8 @@ from modules.osm_data_parser import OsmDataParser
 from modules.style_assigner import StyleAssigner
 from modules.plotter import Plotter
 from modules.gpx_manager import GpxManager
-from common.common_helpers import time_measurement_decorator
+from common.common_helpers import time_measurement
+import pandas as pd
 
 
 def calc_preview(map_area_gdf, paper_dimensions_mm):
@@ -70,7 +71,7 @@ def calc_preview(map_area_gdf, paper_dimensions_mm):
     return area_zoom_preview, map_object_scaling_factor, map_area_gdf
 
 
-@time_measurement_decorator("main")
+@time_measurement("main")
 def main():
     # ------------input validation------------
     # todo check file validity - if osm files exits
@@ -169,53 +170,55 @@ def main():
 
     # ------------gpxs------------
     gpx_manager = GpxManager(GPX_FOLDER, EPSG_DISPLAY)
-    root_files_gpxs_gdf, folder_gpxs_gdf = gpx_manager.get_gpxs_gdf_splited()
-
-    if (not GdfUtils.are_gdf_geometry_inside_geometry(root_files_gpxs_gdf, reqired_area_polygon)
-       or not GdfUtils.are_gdf_geometry_inside_geometry(folder_gpxs_gdf, reqired_area_polygon)):
+    # root_files_gpxs_gdf, folder_gpxs_gdf = gpx_manager.get_gpxs_gdf_splited()
+    gpxs_gdf = gpx_manager.get_gpxs_gdf()
+    if (not GdfUtils.are_gdf_geometry_inside_geometry(gpxs_gdf, reqired_area_polygon)):
         warnings.warn("Some gpx files are not whole inside selected map area.")
+    # if (not GdfUtils.are_gdf_geometry_inside_geometry(root_files_gpxs_gdf, reqired_area_polygon)
+    #    or not GdfUtils.are_gdf_geometry_inside_geometry(folder_gpxs_gdf, reqired_area_polygon)):
+    #     warnings.warn("Some gpx files are not whole inside selected map area.")
+   
 
 
 
-    root_files = list(root_files_gpxs_gdf['fileName'].unique())
-    folders = list(folder_gpxs_gdf['folder'].unique())
+    # todo to FE - and send in settings to BE and on BE check settings validity
+    # root_files = list(root_files_gpxs_gdf['fileName'].unique())
+    # folders = list(folder_gpxs_gdf['folder'].unique())
+    # # assign dynamic colors to root files and folders styles if wanted
+    # same_pallet: bool = ((FOLDER_COLOR_MODE == ColorMode.PALETTE or FOLDER_COLOR_MODE == ColorMode.SHADE)
+    #                      and FOLDER_COLOR_MODE == ROOT_FILES_COLOR_MODE and FOLDER_COLOR_OR_PALLET == ROOT_FILES_COLOR_OR_PALLET)
+    # used_colors_count = 0
+    # max_colors_count = (Utils.count_missing_values(root_files, root_files_styles, StyleKey.COLOR) + \
+    #     Utils.count_missing_values(
+    #         folders, folders_styles, StyleKey.COLOR)) if same_pallet else None
 
-    # assign dynamic colors to root files and folders styles if wanted
-    same_pallet: bool = ((FOLDER_COLOR_MODE == ColorMode.PALETTE or FOLDER_COLOR_MODE == ColorMode.SHADE)
-                         and FOLDER_COLOR_MODE == ROOT_FILES_COLOR_MODE and FOLDER_COLOR_OR_PALLET == ROOT_FILES_COLOR_OR_PALLET)
-    used_colors_count = 0
-    max_colors_count = (Utils.count_missing_values(root_files, root_files_styles, StyleKey.COLOR) + \
-        Utils.count_missing_values(
-            folders, folders_styles, StyleKey.COLOR)) if same_pallet else None
-
-    # assing colors to root files from pallet or shade + count number of used colors
-    if (ROOT_FILES_COLOR_MODE == ColorMode.PALETTE or ROOT_FILES_COLOR_MODE == ColorMode.SHADE):
-        used_colors_count = StyleAssigner.assign_dynamic_colors(
-            root_files, root_files_styles, ROOT_FILES_COLOR_MODE, ROOT_FILES_COLOR_OR_PALLET, ROOT_FILES_COLOR_DIS_PALLET, max_colors_count, 0)
+    # # assing colors to root files from pallet or shade + count number of used colors
+    # if (ROOT_FILES_COLOR_MODE == ColorMode.PALETTE or ROOT_FILES_COLOR_MODE == ColorMode.SHADE):
+    #     used_colors_count = StyleAssigner.assign_dynamic_colors(
+    #         root_files, root_files_styles, ROOT_FILES_COLOR_MODE, ROOT_FILES_COLOR_OR_PALLET, ROOT_FILES_COLOR_DIS_PALLET, max_colors_count, 0)
         
-    # assing colors to folders from pallet or shade + use count of used colors from root files if same pallet or shade
-    if (FOLDER_COLOR_MODE == ColorMode.PALETTE or FOLDER_COLOR_MODE == ColorMode.SHADE):
-        used_colors_count = used_colors_count if same_pallet else 0
-        StyleAssigner.assign_dynamic_colors(
-            folders, folders_styles, FOLDER_COLOR_MODE, FOLDER_COLOR_OR_PALLET, FOLDER_COLOR_DIS_PALLET, max_colors_count, used_colors_count)
-
-    gpxs_style_assigner = StyleAssigner(
-        GPXS_STYLES, GENERAL_DEFAULT_STYLES, GPXS_MANDATORY_STYLES)
+    # # assing colors to folders from pallet or shade + use count of used colors from root files if same pallet or shade
+    # if (FOLDER_COLOR_MODE == ColorMode.PALETTE or FOLDER_COLOR_MODE == ColorMode.SHADE):
+    #     used_colors_count = used_colors_count if same_pallet else 0
+    #     StyleAssigner.assign_dynamic_colors(
+    #         folders, folders_styles, FOLDER_COLOR_MODE, FOLDER_COLOR_OR_PALLET, FOLDER_COLOR_DIS_PALLET, max_colors_count, used_colors_count)
+    # gpxs_style_assigner = StyleAssigner(
+    #     GPXS_STYLES, GENERAL_DEFAULT_STYLES, GPXS_MANDATORY_STYLES)
     # assign styles to gpxs
-    root_files_gpxs_gdf: gpd.GeoDataFrame = gpxs_style_assigner.assign_styles(
-        root_files_gpxs_gdf, GPX_ROOT_FILES_CATEGORIES)
-    folder_gpxs_gdf: gpd.GeoDataFrame = gpxs_style_assigner.assign_styles(
-        folder_gpxs_gdf, GPX_FOLDERS_CATEGORIES)
-    gpxs_gdf = GdfUtils.combine_gdfs([root_files_gpxs_gdf, folder_gpxs_gdf])
+    # root_files_gpxs_gdf: gpd.GeoDataFrame = gpxs_style_assigner.assign_styles(
+        # root_files_gpxs_gdf, GPX_ROOT_FILES_CATEGORIES)
+    # folder_gpxs_gdf: gpd.GeoDataFrame = gpxs_style_assigner.assign_styles(
+        # folder_gpxs_gdf, GPX_FOLDERS_CATEGORIES)
+    # gpxs_gdf = GdfUtils.combine_gdfs([root_files_gpxs_gdf, folder_gpxs_gdf])
 
-    
+    StyleAssigner.assign_styles(gpxs_gdf, GPXS_STYLES)
     # ------------osm file------------
     osm_file_parser = OsmDataParser(
         wanted_nodes, wanted_ways, wanted_areas,
         unwanted_nodes_tags, unwanted_ways_tags, unwanted_areas_tags, area_additional_columns=AREA_ADDITIONAL_COLUMNS,
         node_additional_columns=NODES_ADDITIONAL_COLUMNS, way_additional_columns=WAYS_ADDITIONAL_COLUMNS)
 
-    @time_measurement_decorator("apply file")
+    @time_measurement("apply file")
     def apply_file():
         osm_file_parser.apply_file(osm_file_name)
     apply_file()
@@ -251,16 +254,20 @@ def main():
 
     
     # ------------style elements------------
-    nodes_style_assigner = StyleAssigner(
-        NODES_STYLES, GENERAL_DEFAULT_STYLES, NODES_MANDATORY_STYLES)
-    nodes_gdf = nodes_style_assigner.assign_styles(nodes_gdf, wanted_nodes,)
-    ways_style_assigner = StyleAssigner(
-        WAYS_STYLES, GENERAL_DEFAULT_STYLES, WAY_MANDATORY_STYLES)
-    ways_gdf = ways_style_assigner.assign_styles(ways_gdf, wanted_ways)
-    areas_style_assigner = StyleAssigner(
-        AREAS_STYLES, GENERAL_DEFAULT_STYLES, AREA_MANDATORY_STYLES)
-    areas_gdf = areas_style_assigner.assign_styles(areas_gdf, wanted_areas)
-    
+    # nodes_style_assigner = StyleAssigner(
+    #     NODES_STYLES, GENERAL_DEFAULT_STYLES, NODES_MANDATORY_STYLES)
+    # nodes_gdf = nodes_style_assigner.assign_styles(nodes_gdf, wanted_nodes)
+    # ways_style_assigner = StyleAssigner(
+    #     WAYS_STYLES, GENERAL_DEFAULT_STYLES, WAY_MANDATORY_STYLES)
+    # ways_gdf = ways_style_assigner.assign_styles(ways_gdf, wanted_ways)
+    # areas_style_assigner = StyleAssigner(
+    #     AREAS_STYLES, GENERAL_DEFAULT_STYLES, AREA_MANDATORY_STYLES)
+    # areas_gdf = areas_style_assigner.assign_styles(areas_gdf, wanted_areas)
+    StyleAssigner.assign_styles(nodes_gdf, STYLES['nodes'])
+    StyleAssigner.assign_styles(ways_gdf, STYLES['ways'])
+    StyleAssigner.assign_styles(areas_gdf, STYLES['areas'])
+
+        
     if ('layer' in ways_gdf.columns):
         GdfUtils.change_columns_to_numeric(ways_gdf, ['layer'])
         ways_gdf['layer'] = ways_gdf['layer'].fillna(0)

@@ -17,7 +17,7 @@ from shapely.ops import linemerge, unary_union
 from config import *
 from modules.utils import Utils
 from modules.gdf_utils import GdfUtils
-from common.common_helpers import time_measurement_decorator
+from common.common_helpers import time_measurement
 
 
 class Plotter:
@@ -123,7 +123,7 @@ class Plotter:
             # self.other_text.append(peak_ele)
             
  
-    @time_measurement_decorator("nodePlot")
+    @time_measurement("nodePlot")
     def plot_nodes(self, nodes_gdf: gpd.GeoDataFrame, wrap_len: int | None):
         all_columns_present: bool = all(col in nodes_gdf.columns for col in [
             StyleKey.TEXT_FONT_SIZE, StyleKey.TEXT_OUTLINE_WIDTH, StyleKey.COLOR, StyleKey.EDGE_COLOR])
@@ -167,7 +167,7 @@ class Plotter:
             return
         if (plotEdges):
             self.__plot_line_edges(highways_gdf)
-
+        
         highways_gdf.plot(ax=self.ax, color=highways_gdf[StyleKey.COLOR], linewidth=highways_gdf[StyleKey.WIDTH],
                           linestyle=highways_gdf[StyleKey.LINESTYLE], alpha=highways_gdf[StyleKey.ALPHA],
                           path_effects=[patheffects.Stroke(capstyle="round", joinstyle='round')])
@@ -177,6 +177,7 @@ class Plotter:
             return
         if (plotEdges):
             self.__plot_line_edges(waterways_gdf)
+
         waterways_gdf.plot(ax=self.ax, color=waterways_gdf[StyleKey.COLOR], linewidth=waterways_gdf[StyleKey.WIDTH],
                            linestyle=waterways_gdf[StyleKey.LINESTYLE], alpha=waterways_gdf[StyleKey.ALPHA],
                            path_effects=[patheffects.Stroke(capstyle="round", joinstyle='round')])
@@ -303,7 +304,7 @@ class Plotter:
             plot_bridges_center(bridge_layer_gdf.copy())
             plot_ways_on_bridges(bridge_layer_gdf.copy())
 
-    @time_measurement_decorator("wayplot")
+    @time_measurement("wayplot")
     def plot_ways(self, ways_gdf: gpd.GeoDataFrame, ways_width_multiplier: float):
         if (ways_gdf.empty or StyleKey.WIDTH not in ways_gdf
            or StyleKey.COLOR not in ways_gdf):
@@ -317,8 +318,8 @@ class Plotter:
         bridges_gdf, rest_gdf = GdfUtils.filter_gdf_column_values(
              ways_gdf, 'bridge', ['yes'], compl=True)
         
-        rest_gdf = GdfUtils.filter_gdf_column_values(
-             rest_gdf, 'tunnel', ['yes'], neg=True)
+        # rest_gdf = GdfUtils.filter_gdf_column_values(
+        #      rest_gdf, 'tunnel', ['yes'], neg=True)
         
       # Zoom like 13 and bigger
         waterways_gdf, rest_gdf = GdfUtils.filter_gdf_column_values(
@@ -347,7 +348,7 @@ class Plotter:
         #     railways_gdf, 2 * self.map_object_scaling_factor, 15 * self.map_object_scaling_factor)
         self.__plot_bridges(bridges_gdf)
 
-    @time_measurement_decorator("areaPlot")
+    @time_measurement("areaPlot")
     def plot_areas(self, areas_gdf: gpd.GeoDataFrame, areas_bounds_multiplier: float):
         if (areas_gdf.empty):
             return
@@ -370,7 +371,7 @@ class Plotter:
                 linestyle=edge_areas_gdf[StyleKey.EDGE_LINESTYLE],
                 path_effects=[patheffects.Stroke(capstyle="round", joinstyle='round')])
 
-    @time_measurement_decorator("gpxsPlot")
+    @time_measurement("gpxsPlot")
     def plot_gpxs(self, gpxs_gdf: gpd.GeoDataFrame, line_width_multiplier: float):
 
         if (gpxs_gdf.empty):
@@ -391,7 +392,7 @@ class Plotter:
                       linestyle=gpxs_gdf[StyleKey.LINESTYLE], alpha=gpxs_gdf[StyleKey.ALPHA],
                       path_effects=[patheffects.Stroke(capstyle="round", joinstyle='round')])
 
-    @time_measurement_decorator("adjusting")
+    @time_measurement("adjusting")
     def adjust_texts(self, text_bounds_overflow_threshold: float):
         # #remove overflown texts before adjusting, smaller threshold - can be adjusted
         # if(not allow_text_bounds_overflow):

@@ -9,7 +9,7 @@ from osmium.osm.types import TagList, Node, Way, Area
 from shapely.geometry import Point, LineString, Polygon
 from modules.gdf_utils import GdfUtils
 
-from common.common_helpers import time_measurement_decorator
+from common.common_helpers import time_measurement
 from common.custom_types import WantedCategories, UnwantedTags
 
 
@@ -187,7 +187,7 @@ class OsmDataParser(osmium.SimpleHandler):
                     f"Error in area function - osm file processing: {e}")
                 return
 
-    @time_measurement_decorator("gdf creating")
+    @time_measurement("gdf creating")
     def create_gdf(self, fromEpsg: int, toEpsg: int | None = None) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame, gpd.GeoDataFrame]:
 
         nodes_gdf = GdfUtils.create_gdf_from_geometry_and_attributes(

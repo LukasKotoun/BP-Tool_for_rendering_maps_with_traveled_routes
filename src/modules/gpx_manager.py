@@ -24,12 +24,12 @@ class GpxManager:
                 file_path: str = os.path.join(root, file)
                 relative_path: str = os.path.relpath(root, self.gpx_folder)
                 last_folder: str = os.path.basename(
-                    relative_path) if relative_path != "." else ""
+                    relative_path) if relative_path != "." else None
 
                 gpx_gdf: gpd.GeoDataFrame = (
                     gpd.read_file(file_path, layer='tracks'))
-                gpx_gdf['fileName'] = file
-                gpx_gdf['folder'] = unicodedata.normalize('NFC', last_folder)
+                gpx_gdf['fileName'] = unicodedata.normalize('NFC',file)
+                gpx_gdf['folder'] = unicodedata.normalize('NFC', last_folder) if last_folder else None
                 gpx_list.append(gpx_gdf.to_crs(epsg=toEpsg))
 
         if (gpx_list):
@@ -44,7 +44,6 @@ class GpxManager:
 
         GdfUtils.change_columns_to_categorical(
             self.gpxs_gdf, ['fileName', 'folder'])
-
         if (inEpsg is None):
             return self.gpxs_gdf
         else:
@@ -54,5 +53,5 @@ class GpxManager:
 
         GdfUtils.change_columns_to_categorical(
             self.gpxs_gdf, ['fileName', 'folder'])
-        return GdfUtils.filter_gdf_column_values(self.gpxs_gdf, 'folder', [''], compl=True)
+        return GdfUtils.filter_gdf_column_values(self.gpxs_gdf, 'folder', [], neg=True, compl=True)
      

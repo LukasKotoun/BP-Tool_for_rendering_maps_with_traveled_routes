@@ -1,7 +1,7 @@
 import time
 
 
-def time_measurement_decorator(timer_name: str):
+def time_measurement(timer_name: str):
     def wrapper(func):
         def inner(*args, **kwargs):
             start_time: float = time.time()
