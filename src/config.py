@@ -211,9 +211,9 @@ unwanted_areas_tags: UnwantedTags = {
 
 # todo change to ElementStylesDynamic and create function to convert from it to this - same filter but dict is created from this and specific zooms
 # ------------styles--------------
-# GENERAL_DEFAULT_STYLES: FeatureStyles = {StyleKey.COLOR: '#EDEDE0',  StyleKey.ZINDEX: 0,
-#                                          StyleKey.WIDTH: 1, StyleKey.LINESTYLE: '-',
-#                                          StyleKey.ALPHA: 1, StyleKey.EDGE_COLOR: None, StyleKey.EDGE_LINESTYLE: '-'}
+GENERAL_DEFAULT_STYLES: FeatureStyles = {StyleKey.COLOR: '#EDEDE0',  StyleKey.ZINDEX: 0,
+                                        StyleKey.WIDTH: 1, StyleKey.LINESTYLE: '-',
+                                          StyleKey.ALPHA: 1, StyleKey.EDGE_COLOR: None, StyleKey.EDGE_LINESTYLE: '-'}
 # -------------------nodes-------------------
 # styles that must be assigned to all node features
 nodes_mandatory_styles: ElementStyles = [
