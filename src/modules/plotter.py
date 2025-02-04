@@ -20,6 +20,7 @@ from modules.gdf_utils import GdfUtils
 from common.common_helpers import time_measurement
 
 
+
 class Plotter:
 
     MM_TO_INCH = 25.4
@@ -89,8 +90,8 @@ class Plotter:
         if (elevations_gdf.empty):
             return
         
-        elevations_gdf[StyleKey.WIDTH] = elevations_gdf[StyleKey.WIDTH] * \
-            (np.sqrt(3) / 4) * (self.map_object_scaling_factor ** 2) # icons size is in area of triangle - todo - in size calc function
+        # elevations_gdf[StyleKey.WIDTH] = elevations_gdf[StyleKey.WIDTH] * \
+        #     (np.sqrt(3) / 4) * (self.map_object_scaling_factor ** 2) # icons size is in area of triangle - todo - in size calc function
         elevations_gdf[StyleKey.EDGEWIDTH] = elevations_gdf[StyleKey.EDGEWIDTH] * \
              self.map_object_scaling_factor 
         elevations_gdf[StyleKey.TEXT_OUTLINE_WIDTH] = elevations_gdf[StyleKey.TEXT_OUTLINE_WIDTH] * \
@@ -107,22 +108,23 @@ class Plotter:
             #     path_effects=[patheffects.withStroke(linewidth=row[StyleKey.TEXT_OUTLINE_WIDTH], foreground=row[StyleKey.EDGE_COLOR])], fontsize=row[StyleKey.TEXT_FONT_SIZE])
 
             # move text to top and bottom of the icon
-            xy_axes = self.ax.transData.transform((x, y))
-            xy_name = self.ax.transData.inverted().transform((xy_axes[0], xy_axes[1] + 300 * self.map_object_scaling_factor))
-            xy_ele = self.ax.transData.inverted().transform((xy_axes[0], xy_axes[1] - 350 * self.map_object_scaling_factor - row[StyleKey.WIDTH]))
-            #todo check if name or ele exists
-            peak_name = self.ax.text(xy_name[0], xy_name[1], row['name'], color=row[StyleKey.COLOR], ha='center',
-                                     path_effects=[patheffects.withStroke(linewidth=row[StyleKey.TEXT_OUTLINE_WIDTH], foreground=row[StyleKey.EDGE_COLOR])], fontsize=row[StyleKey.TEXT_FONT_SIZE])
-            peak_ele = self.ax.text(xy_ele[0], xy_ele[1], row['ele'], color=row[StyleKey.COLOR], ha='center',
-                                    path_effects=[patheffects.withStroke(linewidth=row[StyleKey.TEXT_OUTLINE_WIDTH], foreground=row[StyleKey.EDGE_COLOR])], fontsize=row[StyleKey.TEXT_FONT_SIZE])
+            # xy_axes = self.ax.transData.transform((x, y))
+            # xy_name = self.ax.transData.inverted().transform((xy_axes[0], xy_axes[1] + 300 * self.map_object_scaling_factor))
+            # xy_ele = self.ax.transData.inverted().transform((xy_axes[0], xy_axes[1] - 350 * self.map_object_scaling_factor - row[StyleKey.WIDTH]))
+            # #todo check if name or ele exists
+            # peak_name = self.ax.text(xy_name[0], xy_name[1], row['name'], color=row[StyleKey.COLOR], ha='center',
+            #                          path_effects=[patheffects.withStroke(linewidth=row[StyleKey.TEXT_OUTLINE_WIDTH], foreground=row[StyleKey.EDGE_COLOR])], fontsize=row[StyleKey.TEXT_FONT_SIZE])
+            # peak_ele = self.ax.text(xy_ele[0], xy_ele[1], row['ele'], color=row[StyleKey.COLOR], ha='center',
+            #                         path_effects=[patheffects.withStroke(linewidth=row[StyleKey.TEXT_OUTLINE_WIDTH], foreground=row[StyleKey.EDGE_COLOR])], fontsize=row[StyleKey.TEXT_FONT_SIZE])
             
-            self.ax.scatter(x, y, marker=row[StyleKey.ICON], color=row[StyleKey.COLOR], s=row[StyleKey.WIDTH],
-                            edgecolor=row[StyleKey.EDGE_COLOR], linewidth=row[StyleKey.EDGEWIDTH])
-         
+            # self.ax.scatter(x, y, marker=row[StyleKey.ICON], color=row[StyleKey.COLOR], s=row[StyleKey.WIDTH],
+            #                 edgecolor=row[StyleKey.EDGE_COLOR], linewidth=row[StyleKey.EDGEWIDTH])
+            plt.plot(x, y, marker=row[StyleKey.ICON], mfc=row[StyleKey.COLOR], ms=row[StyleKey.WIDTH],
+                                        mec=row[StyleKey.EDGE_COLOR], mew=row[StyleKey.EDGEWIDTH])
             # self.other_text.append(peak_name)
             # self.other_text.append(peak_ele)
+
             
- 
     @time_measurement("nodePlot")
     def plot_nodes(self, nodes_gdf: gpd.GeoDataFrame, wrap_len: int | None):
         all_columns_present: bool = all(col in nodes_gdf.columns for col in [
@@ -201,41 +203,41 @@ class Plotter:
             
             # # todo if edge color is none then plot quicker (filter)
             # # todo if pattern is 
-            # edge_c = rails_gdf[StyleKey.EDGE_COLOR]
-            # color = rails_gdf[StyleKey.COLOR]
-            # linewidth1 = rails_gdf[StyleKey.WIDTH] + rail_bg_width_offset
-            # linewidth2 = rails_gdf[StyleKey.WIDTH]
-            # alpha = rails_gdf[StyleKey.ALPHA]
-            # linestyle = rails_gdf[StyleKey.LINESTYLE]
-            # for geom in rails_gdf.geometry:
-            #     # here take data from gdf
-            #     if isinstance(geom, MultiLineString):
-            #         for line in geom.geoms:  # Extract each LineString
-            #             gpd.GeoSeries(line).plot(ax=self.ax, color=edge_c,
-            #                linewidth=linewidth1,
-            #                alpha=alpha, path_effects=[
-            #     patheffects.Stroke(capstyle="projecting", joinstyle='round')])
+            edge_c = rails_gdf[StyleKey.EDGE_COLOR]
+            color = rails_gdf[StyleKey.COLOR]
+            linewidth1 = rails_gdf[StyleKey.WIDTH] + rail_bg_width_offset
+            linewidth2 = rails_gdf[StyleKey.WIDTH]
+            alpha = rails_gdf[StyleKey.ALPHA]
+            linestyle = rails_gdf[StyleKey.LINESTYLE]
+            for geom in rails_gdf.geometry:
+                # here take data from gdf
+                if isinstance(geom, MultiLineString):
+                    for line in geom.geoms:  # Extract each LineString
+                        gpd.GeoSeries(line).plot(ax=self.ax, color=edge_c,
+                           linewidth=linewidth1,
+                           alpha=alpha, path_effects=[
+                patheffects.Stroke(capstyle="projecting", joinstyle='round')])
                         
-            #             gpd.GeoSeries(line).plot(ax=self.ax, color=color, linewidth=linewidth2,
-            #                alpha=alpha, linestyle=linestyle)
-            #     else:
-            #         gpd.GeoSeries(geom).plot(ax=self.ax, color=edge_c,
-            #                linewidth=linewidth1,
-            #                alpha=alpha, path_effects=[
-            #         patheffects.Stroke(capstyle="projecting", joinstyle='round')])
-                        
-            #         gpd.GeoSeries(geom).plot(ax=self.ax, color=color, linewidth=linewidth2,
-            #                alpha=alpha, linestyle=linestyle)
-                    
-            rails_gdf.plot(ax=self.ax, color=rails_gdf[StyleKey.EDGE_COLOR],
-                            linestyle=rails_gdf[StyleKey.EDGE_LINESTYLE],
-                            linewidth=rails_gdf[StyleKey.WIDTH] +
-                            rail_bg_width_offset, # todo edge width ratio 
-                            alpha=rails_gdf[StyleKey.ALPHA], path_effects=[
+                        gpd.GeoSeries(line).plot(ax=self.ax, color=color, linewidth=linewidth2,
+                           alpha=alpha, linestyle=linestyle)
+                else:
+                    gpd.GeoSeries(geom).plot(ax=self.ax, color=edge_c,
+                           linewidth=linewidth1,
+                           alpha=alpha, path_effects=[
                     patheffects.Stroke(capstyle="projecting", joinstyle='round')])
+                        
+                    gpd.GeoSeries(geom).plot(ax=self.ax, color=color, linewidth=linewidth2,
+                           alpha=alpha, linestyle=linestyle)
+                    
+            # rails_gdf.plot(ax=self.ax, color=rails_gdf[StyleKey.EDGE_COLOR],
+            #                 linestyle=rails_gdf[StyleKey.EDGE_LINESTYLE],
+            #                 linewidth=rails_gdf[StyleKey.WIDTH] +
+            #                 rail_bg_width_offset, # todo edge width ratio 
+            #                 alpha=rails_gdf[StyleKey.ALPHA], path_effects=[
+            #         patheffects.Stroke(capstyle="projecting", joinstyle='round')])
 
-            rails_gdf.plot(ax=self.ax, color=rails_gdf[StyleKey.COLOR], linewidth=rails_gdf[StyleKey.WIDTH],
-                           alpha=rails_gdf[StyleKey.ALPHA], linestyle=rails_gdf[StyleKey.LINESTYLE])
+            # rails_gdf.plot(ax=self.ax, color=rails_gdf[StyleKey.COLOR], linewidth=rails_gdf[StyleKey.WIDTH],
+            #                alpha=rails_gdf[StyleKey.ALPHA], linestyle=rails_gdf[StyleKey.LINESTYLE])
 
     def __plot_bridges(self, bridges_gdf: gpd.GeoDataFrame):
         if (bridges_gdf.empty):
@@ -315,8 +317,8 @@ class Plotter:
 
         rest_gdf  = ways_gdf.copy() 
         #?? filter to plot bridges where bridge is yes and column to print bridge is true - given in settings
-        bridges_gdf, rest_gdf = GdfUtils.filter_gdf_column_values(
-             ways_gdf, 'bridge', ['yes'], compl=True)
+        # bridges_gdf, rest_gdf = GdfUtils.filter_gdf_column_values(
+        #      ways_gdf, 'bridge', ['yes'], compl=True)
         
         # rest_gdf = GdfUtils.filter_gdf_column_values(
         #      rest_gdf, 'tunnel', ['yes'], neg=True)
@@ -327,26 +329,27 @@ class Plotter:
         
         for layer, group_gdf in waterways_gdf.groupby("layer"):
             self.__plot_waterways(waterways_gdf)
-
+        railways_gdf, rest_gdf = GdfUtils.filter_gdf_column_values(
+            rest_gdf, 'railway', compl=True)
         for layer, group_gdf in rest_gdf.groupby("layer"):
             self.__plot_line_edges(group_gdf)
         # without bridge drawing (middle zoom remove railway bridges)
         for layer, group_gdf in rest_gdf.groupby("layer"):
             highways_gdf = GdfUtils.filter_gdf_column_values(
                 group_gdf, 'highway')
-            railways_gdf = GdfUtils.filter_gdf_column_values(
-                group_gdf, 'railway')
             
             self.__plot_highways(highways_gdf) # todo send with edges types
-            self.__plot_railways(
-                railways_gdf, 2 * self.map_object_scaling_factor, 15 * self.map_object_scaling_factor)
-        # railways_gdf = GdfUtils.filter_gdf_column_values(
-        #         ways_gdf, 'railway')
-        # railways_gdf.loc[0, "geometry"] = linemerge(unary_union(railways_gdf.geometry))
-        # railways_gdf = railways_gdf.iloc[:1].reset_index(drop=True)
+        
         # self.__plot_railways(
         #     railways_gdf, 2 * self.map_object_scaling_factor, 15 * self.map_object_scaling_factor)
-        self.__plot_bridges(bridges_gdf)
+        
+        # railways_gdf = GdfUtils.filter_gdf_column_values(
+        #         ways_gdf, 'railway')
+        railways_gdf.loc[0, "geometry"] = linemerge(unary_union(railways_gdf.geometry))
+        railways_gdf = railways_gdf.iloc[:1].reset_index(drop=True)
+        self.__plot_railways(
+            railways_gdf, 2 * self.map_object_scaling_factor, 15 * self.map_object_scaling_factor)
+        # self.__plot_bridges(bridges_gdf)
 
     @time_measurement("areaPlot")
     def plot_areas(self, areas_gdf: gpd.GeoDataFrame, areas_bounds_multiplier: float):

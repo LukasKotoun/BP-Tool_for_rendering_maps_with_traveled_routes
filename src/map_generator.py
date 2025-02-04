@@ -25,9 +25,9 @@ def calc_preview(map_area_gdf, paper_dimensions_mm):
     """
 
     outer_area_gdf = GdfUtils.get_whole_area_gdf(
-        OUTER_AREA, EPSG_OSM, EPSG_CALC)
+        OUTER_AREA, EPSG_OSM, EPSG_DISPLAY)
     if (OUTER_EXPAND_AREA_MODE == ExpandArea.CUSTOM_AREA):
-        outer_area_gdf = GdfUtils.expand_area(None, EPSG_OSM, EPSG_CALC, None,
+        outer_area_gdf = GdfUtils.expand_area(None, EPSG_OSM, EPSG_DISPLAY, None,
                                               OUTER_CUSTOM_EXPAND_AREA)
 
     outer_map_area_dimensions = GdfUtils.get_dimensions_gdf(outer_area_gdf)
@@ -37,12 +37,12 @@ def calc_preview(map_area_gdf, paper_dimensions_mm):
                                                               OUTER_WANTED_ORIENTATION)
 
     if (OUTER_EXPAND_AREA_MODE == ExpandArea.FIT_PAPER_SIZE):
-        outer_area_gdf = GdfUtils.expand_area(outer_area_gdf, EPSG_CALC, None, outer_paper_dimensions_mm,
+        outer_area_gdf = GdfUtils.expand_area(outer_area_gdf, EPSG_DISPLAY, None, outer_paper_dimensions_mm,
                                               None)
         outer_map_area_dimensions = GdfUtils.get_dimensions_gdf(outer_area_gdf)
-
-    map_object_scaling_factor = (Utils.calc_map_object_scaling_factor(outer_map_area_dimensions,
-                                                                      outer_paper_dimensions_mm)
+        
+    map_object_scaling_factor = (Utils.calc_map_object_scaling_factor(GdfUtils.get_dimensions_gdf(
+            GdfUtils.change_epsg(outer_area_gdf, EPSG_CALC)), outer_paper_dimensions_mm)
                                  * OBJECT_MULTIPLIER)
     # calc map factor for creating automatic array with wanted elements - for preview area (without area_zoom_preview)
     # todo map_object_scaling_automatic_filters_creating = Utils.calc_map_object_scaling_factor(outer_map_area_dimensions, outer_paper_dimensions_mm)
@@ -58,7 +58,7 @@ def calc_preview(map_area_gdf, paper_dimensions_mm):
                                                                        outer_paper_dimensions_mm)
         # area will be changing -> create copy for bounds plotting
         map_area_gdf = GdfUtils.create_gdf_from_bounds(
-            paper_fill_bounds, EPSG_CALC)
+            paper_fill_bounds, EPSG_DISPLAY)
     else:
         # oříznuté okraje když to bude menší než papír
         map_area_dimensions = GdfUtils.get_dimensions_gdf(map_area_gdf)
@@ -83,25 +83,25 @@ def main():
         return
     # if are for preview is not specified, use whole area
     if(WANT_PREVIEW and AREA == None):
-        map_area_gdf = GdfUtils.get_whole_area_gdf(OUTER_AREA, EPSG_OSM, EPSG_CALC)
+        map_area_gdf = GdfUtils.get_whole_area_gdf(OUTER_AREA, EPSG_OSM, EPSG_DISPLAY)
     else:
-        map_area_gdf = GdfUtils.get_whole_area_gdf(AREA, EPSG_OSM, EPSG_CALC)
+        map_area_gdf = GdfUtils.get_whole_area_gdf(AREA, EPSG_OSM, EPSG_DISPLAY)
         
     # ------------store bounds to plot and combine area rows in gdf to 1 row------------
     boundary_map_area_gdf = GdfUtils.create_empty_gdf()  # default dont plot
     if (AREA_BOUNDARY == AreaBounds.SEPARATED):
         # store separated areas (before gdf row merge)
         boundary_map_area_gdf = map_area_gdf.copy()
-        map_area_gdf = GdfUtils.combine_rows_gdf(map_area_gdf, EPSG_CALC)
+        map_area_gdf = GdfUtils.combine_rows_gdf(map_area_gdf, EPSG_DISPLAY)
     else:
-        map_area_gdf = GdfUtils.combine_rows_gdf(map_area_gdf, EPSG_CALC)
+        map_area_gdf = GdfUtils.combine_rows_gdf(map_area_gdf, EPSG_DISPLAY)
         if (AREA_BOUNDARY == AreaBounds.COMBINED):
             # store comined areas (after row combination)
             boundary_map_area_gdf: gpd.GeoDataFrame = map_area_gdf.copy()
 
     # #------------expand area custom (before get paper dimension)------------
     if (EXPAND_AREA_MODE == ExpandArea.CUSTOM_AREA):
-        map_area_gdf = GdfUtils.expand_area(None, EPSG_OSM, EPSG_CALC, PAPER_DIMENSIONS,
+        map_area_gdf = GdfUtils.expand_area(None, EPSG_OSM, EPSG_DISPLAY, PAPER_DIMENSIONS,
                                             CUSTOM_EXPAND_AREA)
 
     # ------------get paper dimension (size and orientation)------------
@@ -111,7 +111,7 @@ def main():
 
     # ------------expand area custom (before get paper dimension)------------
     if (EXPAND_AREA_MODE == ExpandArea.FIT_PAPER_SIZE):
-        map_area_gdf = GdfUtils.expand_area(map_area_gdf, EPSG_CALC, None, paper_dimensions_mm,
+        map_area_gdf = GdfUtils.expand_area(map_area_gdf, EPSG_DISPLAY, None, paper_dimensions_mm,
                                             None)
         map_area_dimensions = GdfUtils.get_dimensions_gdf(map_area_gdf)
 
@@ -130,10 +130,14 @@ def main():
         # todo automatic creation of wanted elements and linewidths - factor or directly giving paper size and area dimensions
     else:
         area_zoom_preview = None
-        # in meteres for same proportion keeping
-        map_object_scaling_factor = (Utils.calc_map_object_scaling_factor(map_area_dimensions,
-                                                                          paper_dimensions_mm)
+        map_object_scaling_factor = (Utils.calc_map_object_scaling_factor(GdfUtils.get_dimensions_gdf(
+            GdfUtils.change_epsg(map_area_gdf, EPSG_CALC)),paper_dimensions_mm)
                                      * OBJECT_MULTIPLIER)
+
+        # in meteres for same proportion keeping
+        # map_object_scaling_factor = (Utils.calc_map_object_scaling_factor(map_area_dimensions,
+        #                                                                   paper_dimensions_mm)
+        #                              * OBJECT_MULTIPLIER)
 
     #! the width changing and dynamic styling will be in function
     #! DynamicFeatureCategoryStyle - styles with different values for some zoom level

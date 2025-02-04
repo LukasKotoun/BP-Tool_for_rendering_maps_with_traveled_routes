@@ -164,6 +164,8 @@ class StyleAssigner:
     @staticmethod
     @time_measurement("styles assign")
     def assign_styles(gdf: GeoDataFrame, conditons_styles: ElementStyles, dont_categorize: list[str] = [])  -> None:
+        if(gdf.empty):
+            return
         new_styles: StyleKey = set()
         # assign styles from most general to most specific by writing to columns in styles
         for conditons, styles in reversed(conditons_styles): # assing from least specific to most specific

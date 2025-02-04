@@ -5,12 +5,12 @@ from common.map_enums import *
 # --------------------------------------------------------------map area--------------------------------------------------------------
 # OSM_INPUT_FILE_NAMES: str = ['../osm_files/vys.osm.pbf','../osm_files/jihmor.osm.pbf']
 # OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/vysJihE.osm.pbf'
-OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/trebic.osm.pbf'
+OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/hv.osm.pbf'
 # OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/brno.osm.pbf'
 # extract
 OSM_WANT_EXTRACT_AREA: bool = False
 # set if want osm file cutting using osmium command line tool (need to be uinstalled), If not set to None
-OSM_OUTPUT_FILE_NAME: None | str = '../osm_files/brno1100Prev.osm.pbf'
+OSM_OUTPUT_FILE_NAME: None | str = '../osm_files/okresice.osm.pbf'
 
 OUTPUT_PDF_NAME: str = '../pdfs/divocina'
 # with fill or false cliping is recomended 0
@@ -38,15 +38,18 @@ PERCENTAGE_PADDING = 0
 # AREA: WantedArea = [[(15.7396182, 49.3111173), (16.0273871, 49.3028839),
 #                     (16.0266146, 49.1439064), (15.6712219, 49.1928600)]]  # trebic
 # AREA: WantedArea = ["Česko", "Německo", "Polsko", "Rakousko", "Slovensko"]
+# AREA: WantedArea = ["Česko", "Německo", "Slovensko"]
 # AREA: WantedArea = ["Česko","Vysočina, Česko", "Jihomoravský kraj, Česko"]
-# AREA: WantedArea = ["Brno, Česko"]
+AREA: WantedArea = ["Brno, Česko"]
 # AREA: WantedArea = ["Horní Vilémovice, Česko"]
-AREA: WantedArea = ["Třebíč, Česko"]
+# AREA: WantedArea = ["Okřešice, Česko"]
+# AREA: WantedArea = ["Třebíč, Česko"]
+# AREA: WantedArea = ["Texas, USA"]
+# AREA: WantedArea = ["Vysočina, Česko"]
 
-PAPER_DIMENSIONS: PaperSize | tuple[float |
-                                    None, float | None] = PaperSize.A4.dimensions
+PAPER_DIMENSIONS: PaperSize | tuple[float | None, float | None] = PaperSize.A4.dimensions
 # set own dimensions. If one is left as 'None' it will be automaticaly calculated using area size
-# PAPER_DIMENSIONS = (3000, None)
+# PAPER_DIMENSIONS = (1000, None)
 # PAPER_DIMENSIONS = (200, 200)
 # what side of paper was set (smaller true bigger false) - only if only one side in custom dimension was set to None
 GIVEN_SMALLER_PAPER_DIMENSION: bool = True
@@ -61,7 +64,7 @@ CUSTOM_EXPAND_AREA: WantedArea | None = [[(15.7396182, 49.3111173), (16.0273871,
 
 # bounds
 # COMBINED - one bound around area, SEPARATED - separated bounds around every area in AREA variable
-AREA_BOUNDARY = AreaBounds.NONE
+AREA_BOUNDARY = AreaBounds.SEPARATED
 EXPAND_AREA_BOUNDS_PLOT = False
 AREA_BOUNDARY_LINEWIDTH = 30
 
@@ -87,14 +90,14 @@ TEXT_BOUNDS_OVERFLOW_THRESHOLD = 0.97
 # NOTE: must have same settings as the resulting one when generating for large format printing
 WANT_PREVIEW: bool = False
 # area for that you are creating smaller preview (bigger than normal area)
-OUTER_AREA: WantedArea = "Slovensko"
-# OUTER_AREA: WantedArea = "Česko"
+# OUTER_AREA: WantedArea = "Vysočina, Česko"
+OUTER_AREA: WantedArea = "Česko"
 # OUTER_AREA: WantedArea = [(15.7396182, 49.3111173), (16.0273871, 49.3028839),
 #                     (16.0266146, 49.1439064), (15.6712219, 49.1928600)]
 
-# OUTER_PAPER_DIMENSIONS = PaperSize.A0.dimensions  # real paper size
+OUTER_PAPER_DIMENSIONS = PaperSize.A2.dimensions  # real paper size
 # or set own #if one is left none if will be automaticaly calculated by area size
-OUTER_PAPER_DIMENSIONS = (1100, None)
+# OUTER_PAPER_DIMENSIONS = (1100, None)
 # what side of paper was set (smaller true bigger false)(only if only one side in custom dimension was set)
 OUTER_GIVEN_SMALLER_PAPER_DIMENSION = True
 # set how will resulted paper be oriented, AUTOMATIC is Recommended
@@ -111,7 +114,7 @@ WANT_AREA_CLIPPING = False
 # --------------------------------------------------------------gpx settings--------------------------------------------------------------
 
 
-GPX_FOLDER: str = '../gpxs/trebic'
+GPX_FOLDER: str = '../gpx/trebic'
 ROOT_FILES_COLOR_MODE: ColorMode = ColorMode.DEFAULT
 ROOT_FILES_COLOR_OR_PALLET: str = "Set1"
 ROOT_FILES_COLOR_DIS_PALLET = True
@@ -160,9 +163,10 @@ AREA_ADDITIONAL_COLUMNS = []
 # wanted_ways: WantedFeatures
 wanted_nodes: WantedCategories = {
     # 'place': {'city'},
-    'place': {'city', 'town'}
+    # 'place': {'city', 'town'},
     # 'place': {'city', 'town', 'village'},
-    # 'natural': {'peak'}
+    # 'place': {'village'},
+    'natural': {'peak'}
 }
 
 
@@ -175,8 +179,9 @@ unwanted_nodes_tags: UnwantedTags = {
 
 wanted_ways: WantedCategories = {
     'waterway': set({}),
+    'highway': ['motorway', 'trunk','primary', 'secondary', 'tertiary'],
     # 'highway': ['motorway', 'trunk','primary', 'secondary'],
-    'highway': {'motorway', 'trunk', 'primary', 'secondary', 'tertiary', 'unclassified', 'residential', 'path', 'footway'},
+    # 'highway': {'motorway', 'trunk', 'primary', 'secondary', 'tertiary', 'unclassified', 'residential', 'path', 'footway'},
     # 'highway':[],
     'railway': {'rail'}
 }
@@ -203,7 +208,7 @@ wanted_areas: WantedCategories = {
         # # 'leisure': ['park', 'pitch', 'garden', 'golf_course', 'nature_reserve'],
         'water': set({}),
         'boundary': {'national_park'},
-        # 'building':{'house','residential'}
+        'building':{'house','residential'}
         # 'water': ['river','lake','reservoir'],
 }
 unwanted_areas_tags: UnwantedTags = {
@@ -232,17 +237,32 @@ place_styles: ElementStyles = [
         StyleKey.TEXT_FONT_SIZE: 1500 * CITY_TOWN_SIZE_MULTIPLIER, 
         StyleKey.TEXT_OUTLINE_WIDTH: 170 * CITY_TOWN_SIZE_MULTIPLIER
     }),
+    # ([('place', 'village')], {
+    #     StyleKey.TEXT_FONT_SIZE: 15 * CITY_VILLAGE_SIZE_MULTIPLIER, 
+    #     StyleKey.TEXT_OUTLINE_WIDTH: 0 * CITY_VILLAGE_SIZE_MULTIPLIER
+    # }),
     ([('place', 'village')], {
         StyleKey.TEXT_FONT_SIZE: 550 * CITY_VILLAGE_SIZE_MULTIPLIER, 
         StyleKey.TEXT_OUTLINE_WIDTH: 110 * CITY_VILLAGE_SIZE_MULTIPLIER
     }),
 ]
+# !!! icon from svg
+# # # from svgpath2mpl import parse_path
+# # # finis = parse_path("M 100,10 L 40,198 L 190,78 L 10,78 L 160,198 z")
+# # # finis = parse_path("M 0,0 L 0,100 L 100,100 L 100,0 z")
+# # # def center_path(p):
+# # #     p.vertices -= p.vertices.mean(axis=0)
+# # #     return p
 
+# # # test = {
+# # #     "d": 112,
+# # #     "marker": center_path(parse_path("M 100,10 L 40,198 L 190,78 L 10,78 L 160,198 z"))
+# # # }
 natural_styles_nodes: ElementStyles = [
     ([('natural', 'peak')], {
         StyleKey.ICON: "^", StyleKey.COLOR: "#7f3016", 
-        StyleKey.EDGEWIDTH: 20, StyleKey.TEXT_OUTLINE_WIDTH: 50, 
-        StyleKey.TEXT_FONT_SIZE: 400
+        StyleKey.EDGEWIDTH: 0.2, StyleKey.TEXT_OUTLINE_WIDTH: 50, 
+        StyleKey.TEXT_FONT_SIZE: 400, StyleKey.WIDTH: 3.6
     }),
 ]
 
@@ -252,9 +272,11 @@ nodes_styles_default: ElementStyles = [
         StyleKey.COLOR: '#000000', StyleKey.EDGE_COLOR: '#FFFFFF'
     }),
     ([('natural', '')], {
-        StyleKey.COLOR: "red", StyleKey.EDGE_COLOR: '#FFFFFF', 
-        StyleKey.WIDTH: 300**2
     }),
+    # ([('natural', '')], {
+    #     StyleKey.COLOR: "red", StyleKey.EDGE_COLOR: '#FFFFFF', 
+    #     StyleKey.WIDTH: 300**2
+    # }),
 ]
 
 NODES_STYLES: ElementStyles = [
@@ -410,7 +432,10 @@ STYLES: dict[str, ElementStyles]   = {
 
 # world 3857
 EPSG_OSM = 4326
-EPSG_CALC = 3857  # cz and sk - 5514, , europe 25833
+# mercato to all ploting and calc paper and map scaling factor of elements and special funcion for map scale
+# map scaling factor of elements should be in same as map will be displayed to maintain same scale
+# EPSG_CALC = 25833  
+EPSG_CALC = 3857  # europe 25833 - calculating map scale and scaling factor
 EPSG_DISPLAY = 3857
 # todo table with epsg
 OBJECT_MULTIPLIER = 1
