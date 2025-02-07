@@ -5,12 +5,12 @@ from common.map_enums import *
 # --------------------------------------------------------------map area--------------------------------------------------------------
 # OSM_INPUT_FILE_NAMES: str = ['../osm_files/vys.osm.pbf','../osm_files/jihmor.osm.pbf']
 # OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/vysJihE.osm.pbf'
-OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/hv.osm.pbf'
+OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/angolaM.osm.pbf'
 # OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/brno.osm.pbf'
 # extract
 OSM_WANT_EXTRACT_AREA: bool = False
 # set if want osm file cutting using osmium command line tool (need to be uinstalled), If not set to None
-OSM_OUTPUT_FILE_NAME: None | str = '../osm_files/okresice.osm.pbf'
+OSM_OUTPUT_FILE_NAME: None | str = '../osm_files/angolaM.osm.pbf'
 
 OUTPUT_PDF_NAME: str = '../pdfs/divocina'
 # with fill or false cliping is recomended 0
@@ -19,6 +19,9 @@ PERCENTAGE_PADDING = 0
 
 # AREA: WantedArea = [(-18.14143,65.68868),(-18.08538,65.68868),(-18.08538,65.67783),(-18.14143,65.67783)] #island
 # AREA: WantedArea = [(6.94872,4.84293),(6.99314,4.84293),(6.99314,4.81603),(6.94872,4.81603)] #afrika
+# AREA: WantedArea = [(13.2198495,-8.8130580),(13.2614774,-8.8139062),(13.2616062,-8.8439302),(13.2181329,-8.8424460)] #angola - mesto 5km
+# AREA: WantedArea = [(13.2020960,-8.7766815),(13.2020370,-8.8766827),(13.3099288, -8.8775122), (13.3082471,-8.7782667)] # angol- 11.85 - z14 - square
+AREA: WantedArea = [(15.7937669,49.2511294),(15.7940459,49.1851468),(15.9009507, 49.1847962), (15.9003445,49.2499564)] # tr - 7.8 - z14 - square
 # AREA: WantedArea = "Horní vilémovice, Česko"
 # AREA: WantedArea = "Česko"
 # AREA: WantedArea = [(15.8784350,49.2926919), (15.8852585,49.2925274), (15.8845263, 49.2894905), (15.8769732, 49.2896681)] # zoom 18 (inf - 0.13* 1
@@ -40,17 +43,20 @@ PERCENTAGE_PADDING = 0
 # AREA: WantedArea = ["Česko", "Německo", "Polsko", "Rakousko", "Slovensko"]
 # AREA: WantedArea = ["Česko", "Německo", "Slovensko"]
 # AREA: WantedArea = ["Česko","Vysočina, Česko", "Jihomoravský kraj, Česko"]
-AREA: WantedArea = ["Brno, Česko"]
+# AREA: WantedArea = ["Brno, Česko"]
+# AREA: WantedArea = ["Česko"]
 # AREA: WantedArea = ["Horní Vilémovice, Česko"]
 # AREA: WantedArea = ["Okřešice, Česko"]
 # AREA: WantedArea = ["Třebíč, Česko"]
+# AREA: WantedArea = ["Okres Třebíč, Česko", "Třebíč, Česko", "Okres Jihlava, Česko"]
+# AREA: WantedArea = ["Třebíč, Česko", "Vladislav, Česko"]
 # AREA: WantedArea = ["Texas, USA"]
 # AREA: WantedArea = ["Vysočina, Česko"]
 
-PAPER_DIMENSIONS: PaperSize | tuple[float | None, float | None] = PaperSize.A4.dimensions
+# PAPER_DIMENSIONS: PaperSize | tuple[float | None, float | None] = PaperSize.A4.dimensions
 # set own dimensions. If one is left as 'None' it will be automaticaly calculated using area size
 # PAPER_DIMENSIONS = (1000, None)
-# PAPER_DIMENSIONS = (200, 200)
+PAPER_DIMENSIONS = (300, 300)
 # what side of paper was set (smaller true bigger false) - only if only one side in custom dimension was set to None
 GIVEN_SMALLER_PAPER_DIMENSION: bool = True
 # set how will resulted paper be oriented, AUTOMATIC is Recommended
@@ -64,7 +70,7 @@ CUSTOM_EXPAND_AREA: WantedArea | None = [[(15.7396182, 49.3111173), (16.0273871,
 
 # bounds
 # COMBINED - one bound around area, SEPARATED - separated bounds around every area in AREA variable
-AREA_BOUNDARY = AreaBounds.SEPARATED
+AREA_BOUNDARY = AreaBounds.NONE
 EXPAND_AREA_BOUNDS_PLOT = False
 AREA_BOUNDARY_LINEWIDTH = 30
 
@@ -90,12 +96,12 @@ TEXT_BOUNDS_OVERFLOW_THRESHOLD = 0.97
 # NOTE: must have same settings as the resulting one when generating for large format printing
 WANT_PREVIEW: bool = False
 # area for that you are creating smaller preview (bigger than normal area)
-# OUTER_AREA: WantedArea = "Vysočina, Česko"
-OUTER_AREA: WantedArea = "Česko"
+OUTER_AREA: WantedArea = "Vysočina, Česko"
+# OUTER_AREA: WantedArea = "Česko"
 # OUTER_AREA: WantedArea = [(15.7396182, 49.3111173), (16.0273871, 49.3028839),
 #                     (16.0266146, 49.1439064), (15.6712219, 49.1928600)]
 
-OUTER_PAPER_DIMENSIONS = PaperSize.A2.dimensions  # real paper size
+OUTER_PAPER_DIMENSIONS = PaperSize.A4.dimensions  # real paper size
 # or set own #if one is left none if will be automaticaly calculated by area size
 # OUTER_PAPER_DIMENSIONS = (1100, None)
 # what side of paper was set (smaller true bigger false)(only if only one side in custom dimension was set)
@@ -109,12 +115,12 @@ OUTER_CUSTOM_EXPAND_AREA: WantedArea | None = "Česko"
  
 # clipping - if used without preview than replaced by fit_paper_size and default should be true
 # if true it will plot only given AREA (recomended) if False it will plot whole osm file with AREA in center
-WANT_AREA_CLIPPING = False
+WANT_AREA_CLIPPING = True
 
 # --------------------------------------------------------------gpx settings--------------------------------------------------------------
 
 
-GPX_FOLDER: str = '../gpx/trebic'
+GPX_FOLDER: str = '../gpxs/trebic2'
 ROOT_FILES_COLOR_MODE: ColorMode = ColorMode.DEFAULT
 ROOT_FILES_COLOR_OR_PALLET: str = "Set1"
 ROOT_FILES_COLOR_DIS_PALLET = True
@@ -140,7 +146,7 @@ folders_styles: ElementStyles = [
 
 
 gpxs_styles_default: ElementStyles = [
-    ([('fileName', '')], {StyleKey.COLOR: 'Orange', StyleKey.WIDTH: 40, StyleKey.ALPHA: 0.7,  StyleKey.ZINDEX: 0}),
+    ([('fileName', '')], {StyleKey.COLOR: 'Red', StyleKey.WIDTH: 40, StyleKey.ALPHA: 0.7,  StyleKey.ZINDEX: 0}),
     ([('folder', '')], {StyleKey.COLOR: 'Orange', StyleKey.WIDTH: 40, StyleKey.ALPHA: 0.7,  StyleKey.ZINDEX: 0}),
 ]
 
@@ -307,6 +313,7 @@ highway_styles: ElementStyles = [
     ([('highway', 'primary')], {StyleKey.COLOR: '#FDC364', StyleKey.ZINDEX: 5, StyleKey.WIDTH: 22, StyleKey.EDGE_COLOR: "#E19532"}),
     ([('highway', 'secondary')], {StyleKey.COLOR: '#F7ED60', StyleKey.ZINDEX: 4, StyleKey.WIDTH: 20, StyleKey.EDGE_COLOR: "#c1b42a"}),
     ([('highway', 'tertiary')], {StyleKey.COLOR: '#FFFFFF', StyleKey.ZINDEX: 3, StyleKey.WIDTH: 16}),
+    # ([('highway', 'tertiary')], {StyleKey.COLOR: '#FFFFFF', StyleKey.ZINDEX: 3, StyleKey.WIDTH: 5}),
     ([('highway', 'unclassified')], {StyleKey.COLOR: '#FFFFFF'}),
     ([('highway', 'road')], {StyleKey.COLOR: '#FFFFFF'}),
     ([('highway', 'footway')], {StyleKey.COLOR: '#FFFFFF', StyleKey.BRIDGE_COLOR: "#FFFFFF"}),

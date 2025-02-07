@@ -40,9 +40,9 @@ def calc_preview(map_area_gdf, paper_dimensions_mm):
         outer_area_gdf = GdfUtils.expand_area(outer_area_gdf, EPSG_DISPLAY, None, outer_paper_dimensions_mm,
                                               None)
         outer_map_area_dimensions = GdfUtils.get_dimensions_gdf(outer_area_gdf)
-        
-    map_object_scaling_factor = (Utils.calc_map_object_scaling_factor(GdfUtils.get_dimensions_gdf(
-            GdfUtils.change_epsg(outer_area_gdf, EPSG_CALC)), outer_paper_dimensions_mm)
+    # outer_map_area_bounds = GdfUtils.get_bounds_gdf(GdfUtils.change_epsg(outer_area_gdf, EPSG_OSM)) # real scale cacl
+    # map_scale = Utils.get_scale(outer_map_area_bounds, outer_paper_dimensions_mm)
+    map_object_scaling_factor = (Utils.calc_map_object_scaling_factor(outer_map_area_dimensions, outer_paper_dimensions_mm)
                                  * OBJECT_MULTIPLIER)
     # calc map factor for creating automatic array with wanted elements - for preview area (without area_zoom_preview)
     # todo map_object_scaling_automatic_filters_creating = Utils.calc_map_object_scaling_factor(outer_map_area_dimensions, outer_paper_dimensions_mm)
@@ -123,29 +123,34 @@ def main():
         else:
             boundary_map_area_gdf = map_area_gdf.copy()
 
-
     if (WANT_PREVIEW):
         (area_zoom_preview, map_object_scaling_factor,
             map_area_gdf) = calc_preview(map_area_gdf, paper_dimensions_mm)
         # todo automatic creation of wanted elements and linewidths - factor or directly giving paper size and area dimensions
     else:
         area_zoom_preview = None
-        map_object_scaling_factor = (Utils.calc_map_object_scaling_factor(GdfUtils.get_dimensions_gdf(
-            GdfUtils.change_epsg(map_area_gdf, EPSG_CALC)),paper_dimensions_mm)
-                                     * OBJECT_MULTIPLIER)
-
-        # in meteres for same proportion keeping
+        # map_object_scaling_factor = (Utils.calc_map_object_scaling_factor(GdfUtils.get_dimensions_gdf(
+        #     GdfUtils.change_epsg(map_area_gdf, EPSG_CALC)), paper_dimensions_mm)
+        #                              * OBJECT_MULTIPLIER)
+        #! map scale in real size
+        # map_area_bounds = GdfUtils.get_bounds_gdf(GdfUtils.change_epsg(map_area_gdf, EPSG_OSM))
+        # map_scale = Utils.get_scale(map_area_bounds, paper_dimensions_mm)
+        
+        # # in meteres for same proportion keeping
         # map_object_scaling_factor = (Utils.calc_map_object_scaling_factor(map_area_dimensions,
         #                                                                   paper_dimensions_mm)
         #                              * OBJECT_MULTIPLIER)
+        #! scaling factor and for zoom calc in webmercato
+        map_object_scaling_factor = (Utils.calc_map_object_scaling_factor(map_area_dimensions,
+                                                                           paper_dimensions_mm)
+                                      * OBJECT_MULTIPLIER)
 
-    #! the width changing and dynamic styling will be in function
-    #! DynamicFeatureCategoryStyle - styles with different values for some zoom level
-    # todo a and b from constatns in config and different for ways, and bounds (mabye points)
     print(Utils.calc_scaling_factor_multiplier( 
         map_object_scaling_factor, 1, 500))
+    
     map_object_scaling_factor *= Utils.calc_scaling_factor_multiplier(
         map_object_scaling_factor, 1, 500)
+    # map_object_scaling_factor = 1
     # map_object_scaling_factor *= 13
     # ------------get elements from osm file------------
     if (OSM_WANT_EXTRACT_AREA):

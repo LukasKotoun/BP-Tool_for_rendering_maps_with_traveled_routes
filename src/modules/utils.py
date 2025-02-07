@@ -4,6 +4,7 @@ from shapely.geometry import Point
 from config import *
 from common.custom_types import DimensionsTuple, OptDimensionsTuple
 
+from pyproj import Geod
 
 class Utils:
     @staticmethod
@@ -211,8 +212,33 @@ class Utils:
         map_scaling_factor = (map_dimensions_m[0] + map_dimensions_m[1])
         paper_scaling_factor = (
             paper_dimensions_mm[0] + paper_dimensions_mm[1])
+        map_scaling_factor2 = min(paper_dimensions_mm[0]/map_dimensions_m[0],paper_dimensions_mm[1]/ map_dimensions_m[1])
+        print(map_scaling_factor2)
+        print(paper_scaling_factor/map_scaling_factor)
         return paper_scaling_factor / map_scaling_factor
 
+    @staticmethod
+    def get_distance(point1: Point, point2: Point):
+        geod = Geod(ellps="WGS84")
+        _, _, distance_m = geod.inv(point1[1], point1[0], point2[1], point2[0])
+        return distance_m    
+        # return map_scaling_factor
+
+    @staticmethod
+    def get_scale(map_bounds, paper_dimensions_mm):
+        midx = (map_bounds[WorldSides.NORTH] + map_bounds[WorldSides.SOUTH]) / 2  # Use middle longitude for vertical distance
+
+        height = Utils.get_distance((map_bounds[WorldSides.NORTH], map_bounds[WorldSides.WEST]), (map_bounds[WorldSides.SOUTH], map_bounds[WorldSides.WEST]))
+        width = Utils.get_distance((midx, map_bounds[WorldSides.WEST]), (midx, map_bounds[WorldSides.EAST]))
+         # Calculate the scale for width and height
+        scale_width = width / paper_dimensions_mm[0]
+        scale_height = height / paper_dimensions_mm[1]
+
+        # Use the larger scale to ensure the entire area fits on the paper
+        scale = max(scale_width, scale_height)
+
+        return scale
+        
     @staticmethod
     def count_missing_values(keys: list[str], styles: FeaturesCategoryStyle, missing_style: StyleKey) -> int:
         count = 0
