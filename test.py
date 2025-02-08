@@ -225,7 +225,7 @@
 # plt.gca().set_aspect('equal', adjustable='box')  # Maintain aspect ratio
 # plt.show()
 
-# @time_measurement_decorator("spliting")
+# @time_measurement("spliting")
 # def split_lines_into_segments(gdf, segment_length):
 #     """
 #     Split each LineString in a GeoDataFrame into segments of a specified length.
@@ -465,7 +465,7 @@
 # data = {
 #     'id': [1, 2, 3, 4],
 #     'geometry': [Point(0, 0), Point(1, 1), Point(2, 2), Point(3, 3)],
-#     'value': [10, 20, None, 40]  # Some rows have missing values
+#     'value': [10, 20, None, 40]
 # }
 # gdf = gpd.GeoDataFrame(data, crs="EPSG:4326")
 
@@ -473,181 +473,308 @@
 # print("Original GeoDataFrame:")
 # print(gdf)
 
-# # Filter rows (e.g., where 'id' is greater than 2)
+# # Define the styles dictionary with mixed types
+# styles = {
+#     'width_ratio': 0.4,  # Float
+#     'linestyle': (0, (5, 5)),  # Tuple
+#     'color': 'red',  # String
+#     'priority': 1  # Integer
+# }
+
+# # Define the filtered rows (e.g., where 'id' is greater than 2)
 # filtered_rows = gdf['id'] > 2
 
-# # Dictionary with column names and values to assign
-# new_values = {
-#     'value': 100,  # Assign 100 to the 'value' column
-#     'new_column': 'new_value',  # Assign 'new_value' to the 'new_column' column
-#     'another_column': 123  # Assign 123 to the 'another_column' column
-# }
-# gdf.loc[filtered_rows, list(new_values.keys())] = list(new_values.values())
-# print("\nUpdated GeoDataFrame:")
-# print(gdf)
-
-# filtered_rows = gdf['id'] > 3
-# # Assign the dictionary values to the filtered rows
-# new_values = {
-#     'value': 10,  # Assign 100 to the 'value' column
-#     'new_column': 'new_valdue',  # Assign 'new_value' to the 'new_column' column
-#     'another_column': None  # Assign 123 to the 'another_column' column
-# }
-# gdf.loc[filtered_rows, list(new_values.keys())] = list(new_values.values())
+# # Assign styles to the filtered rows
+# for key, value in styles.items():
+#     if isinstance(value, (str, int, float)):  # Handle strings, integers, and floats
+#         gdf.loc[filtered_rows, key] = value
+#     elif isinstance(value, tuple):  # Handle tuples
+#         gdf.loc[filtered_rows, key] = [value] * filtered_rows.sum()
 
 # # Print the updated GeoDataFrame
 # print("\nUpdated GeoDataFrame:")
 # print(gdf)
 
-
-#! filter creating
-# import geopandas as gpd
+# import numpy as np
 # import pandas as pd
-# from shapely.geometry import Point
+
+
+# df = pd.DataFrame({'team': ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'],
+#                    'points': [18, 22, 19, 14, 14, 11, 20, 28],
+#                    'assists': [5, 7, 7, 9, 12, 9, 9, 4]})
+# t = (1,(5,4))
+# df['points_assists'] = [t]*len(df)
+
+
+
+# import geopandas as gpd
+# import matplotlib.pyplot as plt
+# from shapely.geometry import LineString, Polygon, LinearRing
 # import numpy as np
 
-# # Example: Create a GeoDataFrame
-# data = {
-#     'id': ["1", "2", "3", "4"],
-#     'geometry': [Point(0, 0), Point(1, 1), Point(2, 2), Point(3, 3)],
-#     'value': ["10", "20", np.nan, "40"],  # Some rows have missing values
-#     'category': ['A', 'B', 'C', 'A']
-# }
-# gdf = gpd.GeoDataFrame(data, crs="EPSG:4326")
-
-# # Print the original GeoDataFrame
-# print("Original GeoDataFrame:")
-# print(gdf)
-
-# #! can filter only string values
-# # Define the list of tuples for filtering
-# filter_conditions = [
-#     ('value', ''),
-#     ('category', 'C'),
-#     ('id', '~2'),
-#     ('value', '~40')
-# ]
-
-# # Function to create a filter based on the list of tuples
-# def create_filter(gdf, conditions):
+# def determine_side(geom: Polygon, splitter: LineString) -> str:
 #     """
-#     Creates a filter for a GeoDataFrame based on a list of tuples.
-
+#     Given a polygon (geom) that was produced by splitting with a LineString (splitter),
+#     determine whether the geom lies to the left or right of the splitter.
+    
+#     The method:
+#       1. Extracts the first and last point of the splitter (p0 and pN).
+#       2. Obtains a representative point from the geom.
+#       3. Constructs a LinearRing using [p0, aside_point, pN, p0].
+#       4. Uses ring.is_ccw:
+#          - If True, the aside point is to the left of the directed splitter.
+#          - If False, it is to the right.
+    
 #     Parameters:
-#         gdf (GeoDataFrame): The GeoDataFrame to filter.
-#         conditions (list of tuples): List of (column_name, column_value) tuples.
-
+#       geom: A Polygon from the splitting result.
+#       splitter: The LineString that was used to split the original geometry.
+    
 #     Returns:
-#         pd.Series: A boolean mask for filtering the GeoDataFrame.
+#       A string "left" or "right" indicating on which side of the splitter the geom lies.
 #     """
-#     filter_mask = pd.Series([True] * len(gdf))  # Start with all rows included
+#     # 1. Get the endpoints of the splitter.
+#     coords = list(splitter.coords)
+#     p0 = coords[0]
+#     pN = coords[-1]
+    
+#     # 2. Get a representative point from the geometry.
+#     # Using representative_point() ensures the point lies within the geom.
+#     aside_point = geom.representative_point()
+    
+#     # 3. Form a LinearRing using the splitter endpoints and the aside point.
+#     # The order of points is important. Here we use [p0, aside_point, pN, p0].
+#     ring_coords = [p0, (aside_point.x, aside_point.y), pN, p0]
+#     ring = LinearRing(ring_coords)
+    
+#     # 4. Determine side based on the ring orientation.
+#     # If ring.is_ccw is True, the aside_point is to the left of the directed line.
+#     if ring.is_ccw:
+#         return "left"
+#     else:
+#         return "right"
 
-#     for column_name, column_value in conditions:
-#         if column_value == "":  # Not NA
-#             filter_mask &= gdf[column_name].notna()
-#         elif column_value.startswith("~"):  # Not equal to value after ~
-#             if column_value == "~":  # Column should be NA
-#                 filter_mask &= gdf[column_name].isna()
-#             else:  # Column should not equal the value after ~
-#                 print((gdf[column_name] != column_value[1:]))
-#                 filter_mask &= (gdf[column_name] != column_value[1:])
-#         else:  # Column should equal the value
-#             filter_mask &= (gdf[column_name] == column_value)
+# # =============================================================================
+# # Example Usage
+# # =============================================================================
 
-#     return filter_mask
+# # Define a splitting line (directed from its first to its last coordinate)
+# # splitter = LineString([(0, 0), (10, 0)])
+# splitter = LineString([(10, 0), (0, 0)])
 
-# # Apply the filter
-# filter_mask = create_filter(gdf, filter_conditions)
-# print(filter_mask)
-# filtered_gdf = gdf[filter_mask]
-# # Print the filtered GeoDataFrame
-# print("\nFiltered GeoDataFrame:")
-# print(filtered_gdf)
-from enum import Enum
+# # Create two polygons that result from splitting an area by the splitter.
+# # In this example, one polygon lies above the splitter and one below.
+# poly_above = Polygon([(-1, 1), (11, 1), (11, 5), (-1, 5), (-1, 1)])
+# poly_below = Polygon([(-1, -5), (11, -5), (11, -1), (-1, -1), (-1, -5)])
 
-#! data testing
+# # Determine on which side each polygon lies relative to the splitter.
+# side_above = determine_side(poly_above, splitter)
+# side_below = determine_side(poly_below, splitter)
 
+# print("poly_above is on the", side_above, "side of the splitter")
+# print("poly_below is on the", side_below, "side of the splitter")
 
-class StyleKey(Enum):
-    COLOR = 1
-    ALPHA = 2
-    ZINDEX = 3
-    LINEWIDTH = 4
-    LINESTYLE = 5
-    EDGE_COLOR = 7  # nastavit asi jako text outline width a color
-    EDGE_WIDTH_RATIO = 11
-    BRIDGE_COLOR = 9
-    BRIDGE_WIDTH_RATIO = 12
-    BRIDGE_EDGE_COLOR = 10
-    FONT_SIZE = 6
-    OUTLINE_WIDTH = 8
-    ICON = 16
-    ICON_COLOR = 13
-    ICON_EDGE = 14
-    ICON_SIZE = 15
-    DEFAULT = 17
-    ZOOM = 18
-class StyleType(Enum):
-    DEFAULT = 17
-    ZOOM = 18
+# # =============================================================================
+# # Plotting the Result
+# # =============================================================================
 
-# highway_styles = {
-#     [('highway', 'motorway')]: {StyleKey.COLOR: '#8cd25f', StyleKey.ZINDEX: 7, StyleKey.LINEWIDTH: 32, StyleKey.EDGE_COLOR: "#5E9346"},
-#     [('highway', 'trunk')]: {StyleKey.COLOR: '#FDC364', StyleKey.ZINDEX: 6, StyleKey.LINEWIDTH: 26, StyleKey.EDGE_COLOR: "#E19532"},
-#     [('highway', 'primary')]: {StyleKey.COLOR: '#FDC364', StyleKey.ZINDEX: 5, StyleKey.LINEWIDTH: 22, StyleKey.EDGE_COLOR: "#E19532"},
-#     [('highway', 'secondary')]: {StyleKey.COLOR: '#F7ED60', StyleKey.ZINDEX: 4, StyleKey.LINEWIDTH: 20, StyleKey.EDGE_COLOR: "#c1b42a"},
-#     [('highway', 'tertiary')]: {StyleKey.COLOR: '#FFFFFF', StyleKey.ZINDEX: 3, StyleKey.LINEWIDTH: 16},
-#     [('highway', 'unclassified')]: {StyleKey.COLOR: '#FFFFFF'},
-#     [('highway', 'road')]: {StyleKey.COLOR: '#FFFFFF'},
-#     [('highway', 'footway')]: {StyleKey.COLOR: '#8f8364', StyleKey.LINESTYLE: "--", StyleKey.EDGE_COLOR: None, StyleKey.BRIDGE_COLOR: "#FFFFFF"},
-#     [('highway', 'steps')]: {StyleKey.COLOR: '#8f8364', StyleKey.LINESTYLE: "--", StyleKey.EDGE_COLOR: None},
-#     [('highway', 'path')]: {StyleKey.COLOR: '#8f8364', StyleKey.LINESTYLE: "--", StyleKey.EDGE_COLOR: None, StyleKey.BRIDGE_COLOR: "#FFFFFF"},
-#     [('highway', 'residential')]: {StyleKey.COLOR: '#FFFFFF'}
-# }
+# # Convert the geometries to GeoDataFrames for plotting.
+# gdf_above = gpd.GeoDataFrame(geometry=[poly_above], crs="EPSG:4326")
+# gdf_below = gpd.GeoDataFrame(geometry=[poly_below], crs="EPSG:4326")
+# gdf_splitter = gpd.GeoDataFrame(geometry=[splitter], crs="EPSG:4326")
 
-# railway_styles = {
-#     [('railway', 'rail')]: { StyleKey.COLOR: '#FFFFFF', StyleKey.ZINDEX: 1, StyleKey.LINEWIDTH: 10,
-#             StyleKey.BRIDGE_EDGE_COLOR: '#5D5D5D', StyleKey.BRIDGE_COLOR: "#FFFFFF",
-#             StyleKey.EDGE_COLOR: '#5D5D5D', StyleKey.BRIDGE_WIDTH_RATIO: 1.7, StyleKey.LINESTYLE: (0, (5, 5))},
-#     [('railway', 'tram')]: {StyleKey.COLOR: '#404040', StyleKey.ZINDEX: 10, StyleKey.LINEWIDTH: 4, StyleKey.ALPHA: 0.6},
-#     [('railway', 'tram_stop')]: {StyleKey.COLOR: '#404040', StyleKey.ZINDEX: 1, StyleKey.LINEWIDTH: 4},
-# }
-
-    # **highway_styles,
-    # **railway_styles,
+# fig, ax = plt.subplots(figsize=(8, 6))
+# gdf_above.plot(ax=ax, color="lightgreen", edgecolor="black", label=f"Above ({side_above})")
+# gdf_below.plot(ax=ax, color="lightcoral", edgecolor="black", label=f"Below ({side_below})")
+# gdf_splitter.plot(ax=ax, color="blue", linewidth=2, label="Splitter")
+# ax.set_title("Determining the Side Relative to the Splitter")
+# ax.legend()
+# ax.set_axis_off()
+# plt.show()
 
 
-FeatureStyles = dict[StyleKey, str | int | float]
-FeatureStyleZooms = dict[str, FeatureStyles]
-FeatureStyleDynamics = dict[StyleType, FeatureStyles | FeatureStyleZooms]
-CategoryFilters = list[tuple([str, str])]
-FeatureCategoriesStyles = tuple[CategoryFilters, FeatureStyles]
-FeatureCategoriesStylesDynamic = tuple[CategoryFilters, FeatureStyleDynamics]
+# import geopandas as gpd
+# import matplotlib.pyplot as plt
+# from shapely.geometry import Polygon, LineString, LinearRing
+# from shapely.ops import split
+# import numpy as np
+
+# def determine_side(geom: Polygon, splitter: LineString) -> str:
+#     """
+#     Given a polygon (resulting from a split) and the splitting line,
+#     determine whether the polygon lies to the left or right of the splitter.
+    
+#     The splitter’s direction is defined from its first coordinate (p0) to its last (pN).
+#     We form a LinearRing using [p0, aside_point, pN, p0] and use its orientation:
+#       - If ring.is_ccw is True, the aside point is on the left side.
+#       - Otherwise, it is on the right.
+    
+#     Parameters:
+#       geom: The polygon (a Shapely Polygon) to test.
+#       splitter: The splitting line (a Shapely LineString).
+      
+#     Returns:
+#       A string: "left" or "right".
+#     """
+#     # 1. Get the endpoints of the splitter.
+#     coords = list(splitter.coords)
+#     p0 = np.array(coords[0])
+#     pN = np.array(coords[-1])
+    
+#     # 2. Obtain a representative point from the geometry
+#     #    (guaranteed to lie within the polygon).
+#     aside_point = geom.representative_point()
+    
+#     # 3. Form a LinearRing using [p0, aside_point, pN, p0].
+#     ring_coords = [tuple(p0), (aside_point.x, aside_point.y), tuple(pN), tuple(p0)]
+#     ring = LinearRing(ring_coords)
+    
+#     # 4. Check the orientation:
+#     #    If ring.is_ccw is True, the aside_point lies to the left of the directed splitter.
+#     if ring.is_ccw:
+#         return "left"
+#     else:
+#         return "right"
+
+# # ------------------------------------------------------------------
+# # Example: Create a U‑shaped polygon that will be split into three pieces.
+# # ------------------------------------------------------------------
+# # The U‑shaped polygon is defined by the following coordinates.
+# # (Imagine a U shape that goes from (0,0) → (5,0) → (5,4) → (4,4) → (4,2)
+# #  → (1,2) → (1,4) → (0,4) → back to (0,0).)
+# u_polygon_coords = [(0,0), (5,0), (5,4), (4,4), (4,2), (1,2), (1,4), (0,4), (0,0)]
+# u_polygon = Polygon(u_polygon_coords)
+
+# # Define a horizontal splitting line that cuts through the U shape.
+# # We choose a line from (-1,3) to (6,3) so that it crosses the U-shape in several points.
+# # splitter = LineString([(-1, 3), (6, 3)])
+# splitter = LineString([(6, 3),(-1, 3) ])
+
+# # ------------------------------------------------------------------
+# # Split the polygon using the splitter.
+# # ------------------------------------------------------------------
+# split_result = split(u_polygon, splitter)
+
+# # Print how many polygons resulted from the split.
+# print("Number of polygons after splitting:", len(split_result.geoms))
+
+# # For each resulting polygon, determine whether it is to the left or right of the splitter.
+# for i, poly in enumerate(split_result.geoms):
+#     print(poly)
+#     side = determine_side(poly, splitter)
+#     print(f"Polygon {i} is on the {side} side of the splitter.")
+
+# # ------------------------------------------------------------------
+# # Plotting the original polygon, the splitter, and the resulting pieces.
+# # ------------------------------------------------------------------
+# # Create GeoDataFrames for easier plotting.
+# gdf_u = gpd.GeoDataFrame(geometry=[u_polygon], crs="EPSG:4326")
+# gdf_split = gpd.GeoDataFrame(geometry=list(split_result.geoms), crs="EPSG:4326")
+# gdf_splitter = gpd.GeoDataFrame(geometry=[splitter], crs="EPSG:4326")
+# fig, ax = plt.subplots(figsize=(8, 8))
+
+# # Plot the original U-shaped polygon (as an outline).
+# gdf_u.boundary.plot(ax=ax, color="black", linestyle="--", label="Original U-Polygon")
+# # Plot the split pieces with different colors.
+# gdf_split.plot(ax=ax, cmap="Set2", edgecolor="black", alpha=0.7, legend=True)
+# # Plot the splitter.
+# gdf_splitter.plot(ax=ax, color="red", linewidth=2, label="Splitter")
+
+# ax.set_title("Splitting a U-shaped Polygon into 3 Parts\nand Determining Side Relative to the Splitter")
+# ax.set_axis_off()
+# plt.legend()
+# plt.show()
 
 
 
-# StyleDict = Dict[str, Dict[str, Any]]  # e.g., StyleKey.DEFAULT, StyleKey.ZOOM
-# StyleEntry = Tuple[List[Tuple[str, str]] , StyleDict]  # List of tuples for categories, and a dict for styles
+from shapely.geometry import Polygon, LineString
+from shapely.ops import split
+
+# Define a polygon
+polygon = Polygon([(0, 0), (4, 0), (4, 4), (0, 4)])
+
+# Define a splitting line
+splitter = LineString([(2, -1), (2, 5)])
+t = split(polygon, splitter)
+print(t)
+
+rew = t.geoms[0].intersection(splitter) 
+same = t.geoms[1].intersection(splitter)
+rewPol = t.geoms[0]
+samePol = t.geoms[1]
+print(rewPol)
+print(same)
+
+def test(l1,l2):
+    line = l2.intersection(l1)
+    if line.is_empty or not hasattr(line, "coords"):  
+        return False  # Handle empty or non-LineString cases
+    return True if line.coords[0] == l1.coords[0] and line.coords[-1] == l1.coords[-1] else False
+if( not (test(rewPol.intersection(splitter),splitter))):
+  rewPol2 = Polygon(list(rewPol.exterior.coords)[::-1])
+  print(rewPol2)
+if( not (test(samePol.intersection(splitter),splitter))):
+  samePol2 = Polygon(list(samePol.exterior.coords)[::-1])
+
+# print(samePol.equals(samePol2))
+print(rewPol.equals(rewPol2))
+# Extract first and last intersection points
+
+# Print results
 
 
-WAYS_STYLES  = [
-    ([('waterway', '')], {StyleType.DEFAULT: {StyleKey.COLOR: '#8FB8DB', StyleKey.LINEWIDTH: 8, StyleKey.ZINDEX: 0},
-                          StyleType.ZOOM: {'4-5': {StyleKey.LINEWIDTH: 4}, '6-7': {StyleKey.LINEWIDTH: 6}, '8-9': {StyleKey.LINEWIDTH: 8}}}),
-    ([('highway', '')], {StyleType.DEFAULT: {StyleKey.COLOR: '#FFFFFF',
-                         StyleKey.BRIDGE_EDGE_COLOR: "#7D7D7D",
-                         StyleKey.ZINDEX: 1, StyleKey.LINEWIDTH: 8, StyleKey.EDGE_COLOR: "#B0A78D"}, 
-                         StyleType.ZOOM: {'4-5': {StyleKey.LINEWIDTH: 4}, '6-7': {StyleKey.LINEWIDTH: 6}, '8-9': {StyleKey.LINEWIDTH: 8}}}),
-    ([('railway', '')], {StyleType.DEFAULT:{StyleKey.COLOR: '#FFFFFF',
-     StyleKey.ZINDEX: 2, StyleKey.LINEWIDTH: 8}, StyleType.ZOOM:{'4-5': {StyleKey.LINEWIDTH: 4}, '6-7': {StyleKey.LINEWIDTH: 6}, '8-9': {StyleKey.LINEWIDTH: 8}}}),
-]
 
 
-WAYS_STYLES: FeatureCategoriesStyles  = [
-    ([('waterway', '')], {StyleKey.COLOR: '#8FB8DB', StyleKey.LINEWIDTH: 8, StyleKey.ZINDEX: 0}),
-    ([('highway', '')], {StyleKey.COLOR: '#FFFFFF', StyleKey.BRIDGE_EDGE_COLOR: "#7D7D7D",
-                         StyleKey.ZINDEX: 1, StyleKey.LINEWIDTH: 8, StyleKey.EDGE_COLOR: "#B0A78D"}),
-    ([('railway', '')], {StyleKey.COLOR: '#FFFFFF', StyleKey.ZINDEX: 2, StyleKey.LINEWIDTH: 8}),
-]
 
 
-print(WAYS_STYLES)
+# ! měřítko
+# import matplotlib.pyplot as plt
+# import numpy as np
+
+# # === PARAMETRY MAPY ===
+# scale = 25000  # Měřítko mapy (např. 1:25000 → 1 cm = 250 m)
+# paper_width_cm = 21  # Šířka mapového výřezu na papíře (např. A4 na šířku = 21 cm)
+# min_ratio = 0.08  # Minimální délka čáry jako % šířky mapy (8 %)
+# max_ratio = 0.10  # Maximální délka čáry jako % šířky mapy (10 %)
+
+# # === VÝPOČET OPTIMÁLNÍHO MĚŘÍTKA ===
+# min_scale_length_cm = paper_width_cm * min_ratio  # Převod na cm
+# max_scale_length_cm = paper_width_cm * max_ratio  # Převod na cm
+
+# # Převod na reálnou vzdálenost (v metrech)
+# min_real_length_m = min_scale_length_cm * scale / 100  # Převod na metry
+# max_real_length_m = max_scale_length_cm * scale / 100  # Převod na metry
+
+# # Zvolíme "hezkou" hodnotu měřítka (100m, 200m, 500m, 1km, 2km, 5km…)
+# scale_values_m = [100, 200, 500, 1000, 2000, 5000, 10000, 20000]  
+# chosen_length_m = max([s for s in scale_values_m if min_real_length_m <= s <= max_real_length_m], default=1000)
+
+# # Spočítáme odpovídající délku čáry na papíře v cm
+# scale_length_cm = (chosen_length_m * 100) / scale
+
+# # === VYKRESLENÍ MĚŘÍTKA ===
+# fig, ax = plt.subplots(figsize=(paper_width_cm / 2.54, 2), dpi=300)
+
+# # Nakreslíme černý pruh
+# ax.plot([0, scale_length_cm], [0, 0], color="black", lw=8, solid_capstyle="butt")
+
+# # Popisky na začátku a na konci
+# ax.text(0, 0.5, "0", ha="center", va="bottom", fontsize=10, fontweight="bold",
+#         bbox=dict(facecolor='white', edgecolor='none'))
+
+# # Pokud je měřítko v km, zobrazíme v km, jinak v metrech
+# if chosen_length_m >= 1000:
+#     text_label = f"{chosen_length_m // 1000} km"
+# else:
+#     text_label = f"{chosen_length_m} m"
+
+# ax.text(scale_length_cm, 0.5, text_label, ha="center", va="bottom", fontsize=10, fontweight="bold",
+#         bbox=dict(facecolor='white', edgecolor='none'))
+
+# # Skrytí os
+# ax.set_xticks([])
+# ax.set_yticks([])
+# ax.set_frame_on(False)
+
+# # Zobrazení
+# plt.show()
+
