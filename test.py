@@ -685,41 +685,141 @@
 # plt.show()
 
 
+import matplotlib.pyplot as plt
+import geopandas as gpd
+from matplotlib.colors import ListedColormap
 
+from shapely.geometry import Polygon, MultiPolygon, GeometryCollection, LineString
+from shapely.ops import split, linemerge
+polygon = Polygon([(0, 0), (10, 0), (10, 10), (0, 10)])
+splitter = LineString([(2, 1), (2, 5), (4, 3), (2, 1)]).reverse()
+# splitter = splitter.reverse()
+# splitter = LineString([(-1,5), (2, 1), (2, 5), (4, 3), (2.1, 1), (8, 3), (8, 2), (11, 5)])
+# splitter = splitter.reverse()
+
+print(split(polygon, splitter))
+geometry_collection = split(polygon, splitter)
+
+
+import matplotlib.pyplot as plt
 from shapely.geometry import Polygon, LineString
-from shapely.ops import split
+import geopandas as gpd
+from shapely.geometry import mapping
 
-# Define a polygon
-polygon = Polygon([(0, 0), (4, 0), (4, 4), (0, 4)])
+gdf = gpd.GeoDataFrame(geometry=[split(polygon, splitter)])
 
-# Define a splitting line
-splitter = LineString([(2, -1), (2, 5)])
-t = split(polygon, splitter)
-print(t)
+# Create a GeoDataFrame for each geometry
+polygon_gdf = gpd.GeoDataFrame(geometry=[polygon])
+line_gdf = gpd.GeoDataFrame(geometry=[splitter])
 
-rew = t.geoms[0].intersection(splitter) 
-same = t.geoms[1].intersection(splitter)
-rewPol = t.geoms[0]
-samePol = t.geoms[1]
-print(rewPol)
-print(same)
+# Plot
+fig, ax = plt.subplots(figsize=(10, 10))
+gdf = gdf = gdf.drop(gdf.index[0])
 
-def test(l1,l2):
-    line = l2.intersection(l1)
-    if line.is_empty or not hasattr(line, "coords"):  
-        return False  # Handle empty or non-LineString cases
-    return True if line.coords[0] == l1.coords[0] and line.coords[-1] == l1.coords[-1] else False
-if( not (test(rewPol.intersection(splitter),splitter))):
-  rewPol2 = Polygon(list(rewPol.exterior.coords)[::-1])
-  print(rewPol2)
-if( not (test(samePol.intersection(splitter),splitter))):
-  samePol2 = Polygon(list(samePol.exterior.coords)[::-1])
+def shift_list(lst, n):
+    return lst[n:] + lst[:n]
+polygon_gdf.plot(ax=ax, color='lightblue', edgecolor='black', alpha=0.5)
+polygons_and_multipolygons = []
+def test(l1, l2): #! stejná orientaec kde l2 je splitter a l1 le linestring co je intersection s polygonem
+      print(l1, l2)
+      print(linemerge(l2.intersection(l1)))
+      line = linemerge(l2.intersection(l1))
+      # print(l1, l2, line)
+      print(True if line.coords[0] == l1.coords[0] and line.coords[-1] == l1.coords[-1] else False)
+      return True if line.coords[0] == l1.coords[0] and line.coords[-1] == l1.coords[-1] else False
+# Plot line
+line_gdf.plot(ax=ax, color='red', linewidth=2)
+for geom in geometry_collection.geoms:
+    # nastavení geom na stejnou orientaci jako splitter
+    line_coords = list(linemerge(splitter.intersection(geom)).coords)
+    line_coords2 = list(linemerge(geom.intersection(splitter)).coords)
+    
+    # oddělání ukončující divočiny spliteru
+    poly_coords = list(geom.exterior.coords)[:-1]
+    # namapování na indexy
+    try:
+      start_index = poly_coords.index(line_coords[0])
+    except ValueError:
+        print("Line's first coordinate not found in the polygon's exterior!")
+        start_index = None
+    shifted_poly_coords = shift_list(poly_coords, start_index)
 
-# print(samePol.equals(samePol2))
-print(rewPol.equals(rewPol2))
-# Extract first and last intersection points
+    print(poly_coords)
+    print(line_coords)
+    print(line_coords2)
+    print(shifted_poly_coords)
+    if(line_coords == line_coords2):
+      print("same")
+    if(line_coords == line_coords2):
+      print("notSame")
+      geom = geom.reverse()
+    print(f"Is polygon_cw CCW? {geom.exterior.is_ccw}")
+    print("-------------------------------------------------")
+    # if(not test(linemerge(geom.intersection(splitter)), splitter)):
+    #   geom = geom.reverse()
+    
 
-# Print results
+# from shapely.geometry import LineString
+
+# # line2 = LineString([(5, 5), (0, 0)])
+# line1 = LineString([(0, 0), (5, 5)])
+# line2 = LineString([(0, 0), (5, 5)])
+
+
+# # Compare the coordinate sequences directly
+# if list(line1.coords) == list(line2.coords):
+#     print("The lines are identical and have the same orientation.")
+# else:
+#     print("The lines are either not identical or have different orientations.")
+    
+
+
+# Customize plot
+ax.set_title('Polygon and Line Plot')
+plt.show()
+# # Define a polygon
+# polygon = Polygon([(0, 0), (4, 0), (4, 4), (0, 4)])
+# # Define a splitting line
+# splitter = LineString([(2, -1), (2, 5), (2, 3), (2, -1)])
+
+# # t = split(polygon, splitter) # ! test jestli split nevrací to vlevo ccw a v pravo normálně
+# # print(t)
+# from shapely.geometry import Polygon
+
+# # Create a polygon with counter-clockwise orientation (CCW)
+# polygon_ccw = Polygon([(0, 0), (1, 0), (1, 1), (0, 1)])
+
+# # Create a polygon with clockwise orientation (CW)
+# polygon_cw = Polygon([(0, 0), (1, 0), (0, 1), (1, 1)])
+
+# # Check if the polygons are CCW
+# print(f"Is polygon_ccw CCW? {polygon_ccw.exterior.is_ccw}")
+# print(f"Is polygon_cw CCW? {polygon_cw.exterior.is_ccw}")
+# print(f"Is polygon_cw CCW? {polygon.exterior.is_ccw}")
+# print(f"Is polygon_cw CCW? {polygon.reverse().exterior.is_ccw}")
+# rew = t.geoms[0].intersection(splitter) 
+# same = t.geoms[1].intersection(splitter)
+# rewPol = t.geoms[0]
+# samePol = t.geoms[1]
+# print(rewPol)
+# print(same)
+
+# def test(l1,l2): #! stejná orientaec kde l2 je splitter a l1 le linestring co je intersection s polygonem
+#     line = l2.intersection(l1)
+#     if line.is_empty or not hasattr(line, "coords"):  
+#         return False  # Handle empty or non-LineString cases
+#     return True if line.coords[0] == l1.coords[0] and line.coords[-1] == l1.coords[-1] else False
+# if(not (test(rewPol.intersection(splitter),splitter))):
+#   rewPol2 = rewPol.reverse()
+#   print(rewPol2)
+# if(not (test(samePol.intersection(splitter),splitter))):
+#   samePol2 = samePol.reverse()
+
+# # print(samePol.equals(samePol2))
+# print(rewPol.equals(rewPol2))
+# # Extract first and last intersection points
+
+# # Print results
 
 
 
