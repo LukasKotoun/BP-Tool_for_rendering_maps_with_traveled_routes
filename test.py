@@ -692,9 +692,9 @@ from matplotlib.colors import ListedColormap
 from shapely.geometry import Polygon, MultiPolygon, GeometryCollection, LineString
 from shapely.ops import split, linemerge
 polygon = Polygon([(0, 0), (10, 0), (10, 10), (0, 10)])
-splitter = LineString([(2, 1), (2, 5), (4, 3), (2, 1)]).reverse()
+splitter = LineString([(2, 1), (2, 5), (4, 3), (2, 1)])
 # splitter = splitter.reverse()
-# splitter = LineString([(-1,5), (2, 1), (2, 5), (4, 3), (2.1, 1), (8, 3), (8, 2), (11, 5)])
+# splitter = LineString([(-1,5), (2, 1), (2, 5), (4, 3), (2.1, 1), (8, 3), (8, 2), (11, 5)]).reverse()
 # splitter = splitter.reverse()
 
 print(split(polygon, splitter))
@@ -719,40 +719,24 @@ gdf = gdf = gdf.drop(gdf.index[0])
 def shift_list(lst, n):
     return lst[n:] + lst[:n]
 polygon_gdf.plot(ax=ax, color='lightblue', edgecolor='black', alpha=0.5)
-polygons_and_multipolygons = []
-def test(l1, l2): #! stejná orientaec kde l2 je splitter a l1 le linestring co je intersection s polygonem
-      print(l1, l2)
-      print(linemerge(l2.intersection(l1)))
-      line = linemerge(l2.intersection(l1))
-      # print(l1, l2, line)
-      print(True if line.coords[0] == l1.coords[0] and line.coords[-1] == l1.coords[-1] else False)
-      return True if line.coords[0] == l1.coords[0] and line.coords[-1] == l1.coords[-1] else False
+
 # Plot line
 line_gdf.plot(ax=ax, color='red', linewidth=2)
 for geom in geometry_collection.geoms:
-    # nastavení geom na stejnou orientaci jako splitter
+  
+    # zjištění oreintace podle splitteru a geom
     line_coords = list(linemerge(splitter.intersection(geom)).coords)
     line_coords2 = list(linemerge(geom.intersection(splitter)).coords)
     
-    # oddělání ukončující divočiny spliteru
-    poly_coords = list(geom.exterior.coords)[:-1]
-    # namapování na indexy
-    try:
-      start_index = poly_coords.index(line_coords[0])
-    except ValueError:
-        print("Line's first coordinate not found in the polygon's exterior!")
-        start_index = None
-    shifted_poly_coords = shift_list(poly_coords, start_index)
-
-    print(poly_coords)
     print(line_coords)
     print(line_coords2)
-    print(shifted_poly_coords)
+    # check if orientation are same
     if(line_coords == line_coords2):
       print("same")
-    if(line_coords == line_coords2):
+    else:
       print("notSame")
       geom = geom.reverse()
+      # check if polygon is on righ or left side of splitter
     print(f"Is polygon_cw CCW? {geom.exterior.is_ccw}")
     print("-------------------------------------------------")
     # if(not test(linemerge(geom.intersection(splitter)), splitter)):
