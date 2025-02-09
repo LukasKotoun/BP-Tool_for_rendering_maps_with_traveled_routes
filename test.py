@@ -506,7 +506,6 @@
 # df['points_assists'] = [t]*len(df)
 
 
-
 # import geopandas as gpd
 # import matplotlib.pyplot as plt
 # from shapely.geometry import LineString, Polygon, LinearRing
@@ -516,7 +515,7 @@
 #     """
 #     Given a polygon (geom) that was produced by splitting with a LineString (splitter),
 #     determine whether the geom lies to the left or right of the splitter.
-    
+
 #     The method:
 #       1. Extracts the first and last point of the splitter (p0 and pN).
 #       2. Obtains a representative point from the geom.
@@ -524,11 +523,11 @@
 #       4. Uses ring.is_ccw:
 #          - If True, the aside point is to the left of the directed splitter.
 #          - If False, it is to the right.
-    
+
 #     Parameters:
 #       geom: A Polygon from the splitting result.
 #       splitter: The LineString that was used to split the original geometry.
-    
+
 #     Returns:
 #       A string "left" or "right" indicating on which side of the splitter the geom lies.
 #     """
@@ -536,16 +535,16 @@
 #     coords = list(splitter.coords)
 #     p0 = coords[0]
 #     pN = coords[-1]
-    
+
 #     # 2. Get a representative point from the geometry.
 #     # Using representative_point() ensures the point lies within the geom.
 #     aside_point = geom.representative_point()
-    
+
 #     # 3. Form a LinearRing using the splitter endpoints and the aside point.
 #     # The order of points is important. Here we use [p0, aside_point, pN, p0].
 #     ring_coords = [p0, (aside_point.x, aside_point.y), pN, p0]
 #     ring = LinearRing(ring_coords)
-    
+
 #     # 4. Determine side based on the ring orientation.
 #     # If ring.is_ccw is True, the aside_point is to the left of the directed line.
 #     if ring.is_ccw:
@@ -602,16 +601,16 @@
 #     """
 #     Given a polygon (resulting from a split) and the splitting line,
 #     determine whether the polygon lies to the left or right of the splitter.
-    
+
 #     The splitter’s direction is defined from its first coordinate (p0) to its last (pN).
 #     We form a LinearRing using [p0, aside_point, pN, p0] and use its orientation:
 #       - If ring.is_ccw is True, the aside point is on the left side.
 #       - Otherwise, it is on the right.
-    
+
 #     Parameters:
 #       geom: The polygon (a Shapely Polygon) to test.
 #       splitter: The splitting line (a Shapely LineString).
-      
+
 #     Returns:
 #       A string: "left" or "right".
 #     """
@@ -619,15 +618,15 @@
 #     coords = list(splitter.coords)
 #     p0 = np.array(coords[0])
 #     pN = np.array(coords[-1])
-    
+
 #     # 2. Obtain a representative point from the geometry
 #     #    (guaranteed to lie within the polygon).
 #     aside_point = geom.representative_point()
-    
+
 #     # 3. Form a LinearRing using [p0, aside_point, pN, p0].
 #     ring_coords = [tuple(p0), (aside_point.x, aside_point.y), tuple(pN), tuple(p0)]
 #     ring = LinearRing(ring_coords)
-    
+
 #     # 4. Check the orientation:
 #     #    If ring.is_ccw is True, the aside_point lies to the left of the directed splitter.
 #     if ring.is_ccw:
@@ -685,31 +684,61 @@
 # plt.show()
 
 
+from shapely.geometry import mapping
+from shapely.geometry import Polygon, LineString
 import matplotlib.pyplot as plt
 import geopandas as gpd
 from matplotlib.colors import ListedColormap
 
 from shapely.geometry import Polygon, MultiPolygon, GeometryCollection, LineString, MultiLineString
 from shapely.ops import split, linemerge
-polygon = Polygon([(0, 0), (10, 0), (10, 10), (0, 10)])
+polygon = Polygon([(0, 0), (10, 0), (10, 10), (0, 10)]).reverse()
 # splitters = [LineString([(2,1), (1,1), (1,4)]), LineString([(2, 5), (5, 7), (7, 7)]), LineString([(1,4), (4, 3), (2, 5)]), LineString([(1.1,4), (4, 3), (2, 5), (1.1,4)])]
 
 # splitters = LineString([(2, 1), (2, 5), (4, 3), (2, 1)])
 # splitters = splitters.reverse()
 # splitters = LineString([(-1,5), (2, 1), (2, 5), (4, 3), (2.1, 1), (8, 3), (8, 2), (11, 5)])
-splitters = [LineString([(-1,5), (2, 1), (2, 5), (4, 3), (2.1, 1), (8, 3), (8, 2), (11, 5)]), LineString([(7,7),(8,8),(9,7),(7,7)]),  LineString([(1,7),(2,8),(1,9),(1,7)])]
+splitters = [LineString([(-1, 5), (2, 1), (2, 5), (4, 3), (2.1, 1), (8, 3), (8, 2), (11, 5)]).reverse(),  # down is watter
+             LineString([(7, 7), (8, 8), (9, 7), (7, 7)]
+                        ),  # inside is watter
+             LineString([(1, 7), (2, 8), (1, 9), (1, 7)])]  # inside is land
 
 # splitters = splitters.reverse()
 # if(not isinstance(splitters, LineString)):
 
 
-splitters =  linemerge(splitters) if isinstance(splitters, list) else linemerge([splitters])
+splitters = linemerge(splitters) if isinstance(
+    splitters, list) else linemerge([splitters])
 
 print(splitters)
-import matplotlib.pyplot as plt
-from shapely.geometry import Polygon, LineString
-import geopandas as gpd
-from shapely.geometry import mapping
+
+
+def ensure_opposite_orientation(polygon):
+    """
+    Ensure that the inner rings (holes) have the opposite orientation to the outer ring.
+
+    Parameters:
+        polygon (Polygon): The input polygon.
+
+    Returns:
+        Polygon: A new polygon with corrected inner ring orientations.
+    """
+    # Determine the orientation of the exterior ring
+    is_exterior_ccw = polygon.exterior.is_ccw
+
+    all_opposite = True
+    # Fix the orientation of each interior ring
+    fixed_interiors = []
+    for interior in list(polygon.interiors):
+        if interior.is_ccw == is_exterior_ccw:  # If the orientation matches the exterior, reverse it
+            all_opposite = False
+            fixed_interiors.append(interior.coords[::-1])
+        else:
+            fixed_interiors.append(interior.coords)
+
+    if (all_opposite):
+        return polygon
+    return Polygon(polygon.exterior.coords, fixed_interiors)
 
 
 # Create a GeoDataFrame for each geometry
@@ -719,66 +748,62 @@ line_gdf = gpd.GeoDataFrame(geometry=[splitters])
 # Plot
 fig, ax = plt.subplots(figsize=(10, 10))
 
-
+data = []
 line_gdf.plot(ax=ax, color='red', linewidth=2)
+splitters = list(splitters.geoms) if isinstance(
+    splitters, MultiLineString) else [splitters]
 
-splitters = list(splitters.geoms) if isinstance(splitters, MultiLineString) else [splitters]
 for splitter in splitters:
-  print(splitter)
-  geometry_collection = split(polygon, splitter)
-  if(len(geometry_collection.geoms) == 1):
-    continue
-  for geom in geometry_collection.geoms:
-      # zjištění oreintace podle splitteru a geom
-      geomInter = geom.intersection(splitter)
-      geomInter = linemerge(geomInter) if isinstance(geomInter, MultiLineString) else geomInter # todo to function
-      lineinter = splitter.intersection(geom)
-      lineinter = linemerge(lineinter) if isinstance(lineinter, MultiLineString) else lineinter
-      line_coords = list(geomInter.coords)
-      line_coords2 = list(lineinter.coords)
-      
-      # check if orientation are same
-      if(line_coords == line_coords2):
-        print(f"Is polygon_cw watter? {geom.exterior.is_ccw}")
-        # todo add to watter and than
-        w = gpd.GeoDataFrame(geometry=[geom])
-        w.plot(ax=ax, color='blue', alpha = 0.5)
+    geometry_collection = split(polygon, splitter)
+    if (len(geometry_collection.geoms) == 1):
+        continue
+    # check if geom is on right or left of splitter
+    for geom in geometry_collection.geoms:
+        print(geom)
+        # if (len(geom.interiors) > 0):
+        #     geom = ensure_opposite_orientation(geom)
 
-      else:
-        print(f"Is polygon_cw watter? {not geom.exterior.is_ccw}")
-        w = gpd.GeoDataFrame(geometry=[geom])
-        w.plot(ax=ax, color='#EDEDE0', alpha = 0.5)
+        # získání intersection podle orinetace geomu 
+        geomInter = geom.intersection(splitter)
+        geomInter = linemerge(geomInter) if isinstance(
+            geomInter, MultiLineString) else geomInter  # todo to function
+
+        # získání intersection podle orinetace spliteru
+        lineinter = splitter.intersection(geom)
+        lineinter = linemerge(lineinter) if isinstance(
+            lineinter, MultiLineString) else lineinter
+
+        line_coords = list(geomInter.coords)
+        line_coords2 = list(lineinter.coords)
+        # check if orientation are same
+        color = ""
+        if (line_coords == line_coords2):
+            if (geom.exterior.is_ccw):
+                color = '#EDEDE0'  # polygon is on left side of splitter
+            else:
+                color = 'blue'  # polygon is on right side of splitter
+        else:
+            if (geom.exterior.is_ccw):  # polygon is reversed to splitter
+                color = 'blue'  # polygon is on left side of splitter
+            else:
+                color = '#EDEDE0'  # polygon is on left side of splitter
+        data.append({"geometry": geom, "color": color})
+
         # check if polygon is on righ or left side of splitter
-      print("-------------------------------------------------")
-      # if(not test(linemerge(geom.intersection(splitter)), splitter)):
-  #     #   geom = geom.reverse()
-# splitter = LineString([(2, 1), (2, 5), (4, 3)])
-# splitter0 = LineString([(2, 5), (4, 3),(2, 1)])
-# polygon = Polygon([(0, 0), (10, 0), (10, 10), (0, 10)])
-# polygon0 = Polygon([ (10, 0), (10, 10), (0, 10),(0, 0)])
+        print("-------------------------------------------------")
 
 
-# print(splitter.equals(splitter0))
-# print(polygon.equals(polygon0))
-
-# from shapely.geometry import LineString
-
-# # line2 = LineString([(5, 5), (0, 0)])
-# line1 = LineString([(0, 0), (5, 5)])
-# line2 = LineString([(0, 0), (5, 5)])
-
-
-# # Compare the coordinate sequences directly
-# if list(line1.coords) == list(line2.coords):
-#     print("The lines are identical and have the same orientation.")
-# else:
-#     print("The lines are either not identical or have different orientations.")
-    
-
-
+gdf = gpd.GeoDataFrame(data, geometry="geometry")
+gdf['area'] = gdf.area
+# order gdf by area
+gdf = gdf.sort_values(by='area', ascending=False)
+print(gdf)
+gdf.plot(ax=ax, color=gdf["color"])
 # Customize plot
 ax.set_title('Polygon and Line Plot')
 plt.show()
+
+
 # # Define a polygon
 # polygon = Polygon([(0, 0), (4, 0), (4, 4), (0, 4)])
 # # Define a splitting line
@@ -799,7 +824,7 @@ plt.show()
 # print(f"Is polygon_cw CCW? {polygon_cw.exterior.is_ccw}")
 # print(f"Is polygon_cw CCW? {polygon.exterior.is_ccw}")
 # print(f"Is polygon_cw CCW? {polygon.reverse().exterior.is_ccw}")
-# rew = t.geoms[0].intersection(splitter) 
+# rew = t.geoms[0].intersection(splitter)
 # same = t.geoms[1].intersection(splitter)
 # rewPol = t.geoms[0]
 # samePol = t.geoms[1]
@@ -808,7 +833,7 @@ plt.show()
 
 # def test(l1,l2): #! stejná orientaec kde l2 je splitter a l1 le linestring co je intersection s polygonem
 #     line = l2.intersection(l1)
-#     if line.is_empty or not hasattr(line, "coords"):  
+#     if line.is_empty or not hasattr(line, "coords"):
 #         return False  # Handle empty or non-LineString cases
 #     return True if line.coords[0] == l1.coords[0] and line.coords[-1] == l1.coords[-1] else False
 # if(not (test(rewPol.intersection(splitter),splitter))):
@@ -822,10 +847,6 @@ plt.show()
 # # Extract first and last intersection points
 
 # # Print results
-
-
-
-
 
 
 # ! měřítko
@@ -847,7 +868,7 @@ plt.show()
 # max_real_length_m = max_scale_length_cm * scale / 100  # Převod na metry
 
 # # Zvolíme "hezkou" hodnotu měřítka (100m, 200m, 500m, 1km, 2km, 5km…)
-# scale_values_m = [100, 200, 500, 1000, 2000, 5000, 10000, 20000]  
+# scale_values_m = [100, 200, 500, 1000, 2000, 5000, 10000, 20000]
 # chosen_length_m = max([s for s in scale_values_m if min_real_length_m <= s <= max_real_length_m], default=1000)
 
 # # Spočítáme odpovídající délku čáry na papíře v cm
@@ -879,4 +900,3 @@ plt.show()
 
 # # Zobrazení
 # plt.show()
-
