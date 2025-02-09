@@ -689,59 +689,77 @@ import matplotlib.pyplot as plt
 import geopandas as gpd
 from matplotlib.colors import ListedColormap
 
-from shapely.geometry import Polygon, MultiPolygon, GeometryCollection, LineString
+from shapely.geometry import Polygon, MultiPolygon, GeometryCollection, LineString, MultiLineString
 from shapely.ops import split, linemerge
 polygon = Polygon([(0, 0), (10, 0), (10, 10), (0, 10)])
-splitter = LineString([(2, 1), (2, 5), (4, 3), (2, 1)])
-# splitter = splitter.reverse()
-# splitter = LineString([(-1,5), (2, 1), (2, 5), (4, 3), (2.1, 1), (8, 3), (8, 2), (11, 5)]).reverse()
-# splitter = splitter.reverse()
+# splitters = [LineString([(2,1), (1,1), (1,4)]), LineString([(2, 5), (5, 7), (7, 7)]), LineString([(1,4), (4, 3), (2, 5)]), LineString([(1.1,4), (4, 3), (2, 5), (1.1,4)])]
 
-print(split(polygon, splitter))
-geometry_collection = split(polygon, splitter)
+# splitters = LineString([(2, 1), (2, 5), (4, 3), (2, 1)])
+# splitters = splitters.reverse()
+# splitters = LineString([(-1,5), (2, 1), (2, 5), (4, 3), (2.1, 1), (8, 3), (8, 2), (11, 5)])
+splitters = [LineString([(-1,5), (2, 1), (2, 5), (4, 3), (2.1, 1), (8, 3), (8, 2), (11, 5)]), LineString([(7,7),(8,8),(9,7),(7,7)]),  LineString([(1,7),(2,8),(1,9),(1,7)])]
+
+# splitters = splitters.reverse()
+# if(not isinstance(splitters, LineString)):
 
 
+splitters =  linemerge(splitters) if isinstance(splitters, list) else linemerge([splitters])
+
+print(splitters)
 import matplotlib.pyplot as plt
 from shapely.geometry import Polygon, LineString
 import geopandas as gpd
 from shapely.geometry import mapping
 
-gdf = gpd.GeoDataFrame(geometry=[split(polygon, splitter)])
 
 # Create a GeoDataFrame for each geometry
 polygon_gdf = gpd.GeoDataFrame(geometry=[polygon])
-line_gdf = gpd.GeoDataFrame(geometry=[splitter])
+line_gdf = gpd.GeoDataFrame(geometry=[splitters])
 
 # Plot
 fig, ax = plt.subplots(figsize=(10, 10))
-gdf = gdf = gdf.drop(gdf.index[0])
 
-def shift_list(lst, n):
-    return lst[n:] + lst[:n]
-polygon_gdf.plot(ax=ax, color='lightblue', edgecolor='black', alpha=0.5)
 
-# Plot line
 line_gdf.plot(ax=ax, color='red', linewidth=2)
-for geom in geometry_collection.geoms:
-  
-    # zjištění oreintace podle splitteru a geom
-    line_coords = list(linemerge(splitter.intersection(geom)).coords)
-    line_coords2 = list(linemerge(geom.intersection(splitter)).coords)
-    
-    print(line_coords)
-    print(line_coords2)
-    # check if orientation are same
-    if(line_coords == line_coords2):
-      print("same")
-    else:
-      print("notSame")
-      geom = geom.reverse()
-      # check if polygon is on righ or left side of splitter
-    print(f"Is polygon_cw CCW? {geom.exterior.is_ccw}")
-    print("-------------------------------------------------")
-    # if(not test(linemerge(geom.intersection(splitter)), splitter)):
-    #   geom = geom.reverse()
-    
+
+splitters = list(splitters.geoms) if isinstance(splitters, MultiLineString) else [splitters]
+for splitter in splitters:
+  print(splitter)
+  geometry_collection = split(polygon, splitter)
+  if(len(geometry_collection.geoms) == 1):
+    continue
+  for geom in geometry_collection.geoms:
+      # zjištění oreintace podle splitteru a geom
+      geomInter = geom.intersection(splitter)
+      geomInter = linemerge(geomInter) if isinstance(geomInter, MultiLineString) else geomInter # todo to function
+      lineinter = splitter.intersection(geom)
+      lineinter = linemerge(lineinter) if isinstance(lineinter, MultiLineString) else lineinter
+      line_coords = list(geomInter.coords)
+      line_coords2 = list(lineinter.coords)
+      
+      # check if orientation are same
+      if(line_coords == line_coords2):
+        print(f"Is polygon_cw watter? {geom.exterior.is_ccw}")
+        # todo add to watter and than
+        w = gpd.GeoDataFrame(geometry=[geom])
+        w.plot(ax=ax, color='blue', alpha = 0.5)
+
+      else:
+        print(f"Is polygon_cw watter? {not geom.exterior.is_ccw}")
+        w = gpd.GeoDataFrame(geometry=[geom])
+        w.plot(ax=ax, color='#EDEDE0', alpha = 0.5)
+        # check if polygon is on righ or left side of splitter
+      print("-------------------------------------------------")
+      # if(not test(linemerge(geom.intersection(splitter)), splitter)):
+  #     #   geom = geom.reverse()
+# splitter = LineString([(2, 1), (2, 5), (4, 3)])
+# splitter0 = LineString([(2, 5), (4, 3),(2, 1)])
+# polygon = Polygon([(0, 0), (10, 0), (10, 10), (0, 10)])
+# polygon0 = Polygon([ (10, 0), (10, 10), (0, 10),(0, 0)])
+
+
+# print(splitter.equals(splitter0))
+# print(polygon.equals(polygon0))
 
 # from shapely.geometry import LineString
 
