@@ -213,6 +213,7 @@ class GdfUtils:
             return GdfUtils.create_empty_gdf()
         bg_data = []
         required_area_polygon = GdfUtils.create_polygon_from_gdf(map_area_gdf)
+        # split one by one
         splitters = linemerge(costline_gdf.geometry.unary_union)
         splitters = list(splitters.geoms) if isinstance(
             splitters, MultiLineString) else [splitters]
@@ -226,7 +227,6 @@ class GdfUtils:
                 same_orientation = check_same_orientation(geom, splitter)
                 if (same_orientation is None):
                     continue
-                # check if orientation are same
                 color = ""
                 if (same_orientation):
                     if (geom.exterior.is_ccw):

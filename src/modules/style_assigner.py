@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import to_rgba
 
 from modules.utils import Utils
-from common.map_enums import StyleKey, ColorMode
+from common.map_enums import StyleKey, ColorMode, StyleType
 from common.custom_types import FeaturesCategoriesStyles, WantedCategories, FeatureStyles, FeaturesCategoryStyle, ElementStyles
 
 # element or static or map element and gpx...?
@@ -159,6 +159,32 @@ class StyleAssigner:
     #     GdfUtils.change_columns_to_categorical(styled_gdf, categorical_list)
 
     #     return styled_gdf
+    @staticmethod
+    def convert_dynamic_to_normal(dynamic_styles, zoom_level):
+        def check_range(range_str, zoom_level):
+            lower_str, upper_str = range_str.split("-")
+            lower, upper = int(lower_str), int(upper_str)
+            if (lower > upper):
+                lower, upper = upper, lower
+            return lower <= zoom_level <= upper
+
+        normal_styles = []
+        for filter, styles in dynamic_styles:
+            style_default = {}
+            styles_filter = {}
+            for style_type, style_values in styles.items():
+                if style_type == StyleType.DEFAULT:
+                    style_default = style_values
+                elif style_type == StyleType.ZOOM:
+                    for zoom_range, zoom_style_values in style_values.items():
+                        if (check_range(zoom_range, zoom_level)):
+                            styles_filter = {**zoom_style_values, **styles_filter}
+                else:  # if styletype is not assigned
+                    style_default = styles
+                    break
+            styles = {**style_default, **styles_filter}
+            normal_styles.append((filter, styles))
+        return normal_styles
 
     
     @staticmethod
@@ -171,7 +197,7 @@ class StyleAssigner:
         for conditons, styles in reversed(conditons_styles): # assing from least specific to most specific
             filtered_rows: pd.Series = GdfUtils.create_rows_filter(gdf, conditons)
             for key, value in styles.items():
-                if isinstance(value, tuple): 
+                if isinstance(value, tuple) or isinstance(value, list): 
                     # write whole tuple to one column cell. Dont need to match index to filtered_rows, it will be assinged by value
                     tmp = pd.Series([value] * filtered_rows.sum())  
                     gdf.loc[filtered_rows, key] = tmp.values

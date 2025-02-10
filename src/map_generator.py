@@ -220,7 +220,7 @@ def main():
         # folder_gpxs_gdf, GPX_FOLDERS_CATEGORIES)
     # gpxs_gdf = GdfUtils.combine_gdfs([root_files_gpxs_gdf, folder_gpxs_gdf])
 
-    StyleAssigner.assign_styles(gpxs_gdf, GPXS_STYLES)
+    StyleAssigner.assign_styles(gpxs_gdf, GPXS_STYLES) # maybe add gpx to be change by zoom - size
     # ------------osm file------------
     osm_file_parser = OsmDataParser(
         wanted_nodes, wanted_ways, wanted_areas,
@@ -273,9 +273,9 @@ def main():
     #     AREAS_STYLES, GENERAL_DEFAULT_STYLES, AREA_MANDATORY_STYLES)
     # areas_gdf = areas_style_assigner.assign_styles(areas_gdf, wanted_areas)
     coast_gdf, ways_gdf = GdfUtils.filter_gdf_column_values(ways_gdf, 'natural', ['coastline'], compl=True)
-    StyleAssigner.assign_styles(nodes_gdf, STYLES['nodes'])
-    StyleAssigner.assign_styles(ways_gdf, STYLES['ways'])
-    StyleAssigner.assign_styles(areas_gdf, STYLES['areas'])
+    StyleAssigner.assign_styles(nodes_gdf, StyleAssigner.convert_dynamic_to_normal(STYLES['nodes'], 20))
+    StyleAssigner.assign_styles(ways_gdf, StyleAssigner.convert_dynamic_to_normal(STYLES['ways'],20))
+    StyleAssigner.assign_styles(areas_gdf, StyleAssigner.convert_dynamic_to_normal(STYLES['areas'], 20))
 
     if ('layer' in ways_gdf.columns):
         GdfUtils.change_columns_to_numeric(ways_gdf, ['layer'])
@@ -316,7 +316,7 @@ def main():
             nodes_gdf, ways_gdf, areas_gdf))
    
     plotter.generate_pdf(OUTPUT_PDF_NAME)
-    plotter.show_plot()
+    # plotter.show_plot()
 
 
 if __name__ == "__main__":
