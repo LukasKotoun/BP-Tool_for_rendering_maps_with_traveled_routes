@@ -3,8 +3,11 @@ from shapely.geometry import Point
 
 from config import *
 from common.custom_types import DimensionsTuple, OptDimensionsTuple
+from shapely.geometry import LineString
+from shapely.ops import linemerge
 
 from pyproj import Geod
+
 
 class Utils:
     @staticmethod
@@ -120,7 +123,7 @@ class Utils:
     def calc_bounds_to_fill_paper_with_ratio(center_point: Point, pdf_dim: DimensionsTuple,
                                              bigger_area_dim: DimensionsTuple, bigger_pdf_dim: DimensionsTuple) -> BoundsDict:
         """Calculate bounds of area to fill paper with ratio (bigger area/bigger pdf dimensions) for area preview. 
-        
+
             Calc bounds that will have center in center_point and will fill whole paper.
             Function will first calculated new dimensions that will match bigger pdf ratios and one side will fill pdf side.
             This dimensions will be adjusted by function adjust_bounds_to_fill_paper to fill whole paper by expanding the remaining side to fill pdf paper.
@@ -153,7 +156,7 @@ class Utils:
     @staticmethod
     def adjust_bounds_to_fill_paper(area_bounds: BoundsDict, pdf_dim: DimensionsTuple) -> BoundsDict:
         """Adjust one side of bounds (that dont will that dimension of paper) to fill whole paper.
-        
+
             Function will adjust one side of bounds to fill whole paper by expanding the remaining side to fill pdf paper.
             It will calculate aspect ratio of bounds and paper and than adjust the side that is shorter than paper side.
         Args:
@@ -187,7 +190,8 @@ class Utils:
 
         return area_bounds
 
-    def calc_scaling_factor_multiplier(x, min_val, max_val, a=1.894, b=-0.8257):  # -> Any:
+    # -> Any:
+    def calc_scaling_factor_multiplier(x, min_val, max_val, a=1.894, b=-0.8257):
         # a and b derived from points f(0.4)=1 and f(0.0004)=300
         # a = 0.15
         a = 0.212
@@ -212,7 +216,8 @@ class Utils:
         map_scaling_factor = (map_dimensions_m[0] + map_dimensions_m[1])
         paper_scaling_factor = (
             paper_dimensions_mm[0] + paper_dimensions_mm[1])
-        map_scaling_factor2 = min(paper_dimensions_mm[0]/map_dimensions_m[0],paper_dimensions_mm[1]/ map_dimensions_m[1])
+        map_scaling_factor2 = min(
+            paper_dimensions_mm[0]/map_dimensions_m[0], paper_dimensions_mm[1] / map_dimensions_m[1])
         print(map_scaling_factor2)
         print(paper_scaling_factor/map_scaling_factor)
         return paper_scaling_factor / map_scaling_factor
@@ -221,16 +226,20 @@ class Utils:
     def get_distance(point1: Point, point2: Point):
         geod = Geod(ellps="WGS84")
         _, _, distance_m = geod.inv(point1[1], point1[0], point2[1], point2[0])
-        return distance_m    
+        return distance_m
         # return map_scaling_factor
 
     @staticmethod
     def get_scale(map_bounds, paper_dimensions_mm):
-        midx = (map_bounds[WorldSides.NORTH] + map_bounds[WorldSides.SOUTH]) / 2  # Use middle longitude for vertical distance
+        # Use middle longitude for vertical distance
+        midx = (map_bounds[WorldSides.NORTH] +
+                map_bounds[WorldSides.SOUTH]) / 2
 
-        height = Utils.get_distance((map_bounds[WorldSides.NORTH], map_bounds[WorldSides.WEST]), (map_bounds[WorldSides.SOUTH], map_bounds[WorldSides.WEST]))
-        width = Utils.get_distance((midx, map_bounds[WorldSides.WEST]), (midx, map_bounds[WorldSides.EAST]))
-         # Calculate the scale for width and height
+        height = Utils.get_distance((map_bounds[WorldSides.NORTH], map_bounds[WorldSides.WEST]), (
+            map_bounds[WorldSides.SOUTH], map_bounds[WorldSides.WEST]))
+        width = Utils.get_distance(
+            (midx, map_bounds[WorldSides.WEST]), (midx, map_bounds[WorldSides.EAST]))
+        # Calculate the scale for width and height
         scale_width = width / paper_dimensions_mm[0]
         scale_height = height / paper_dimensions_mm[1]
 
@@ -238,7 +247,7 @@ class Utils:
         scale = max(scale_width, scale_height)
 
         return scale
-        
+
     @staticmethod
     def count_missing_values(keys: list[str], styles: FeaturesCategoryStyle, missing_style: StyleKey) -> int:
         count = 0
@@ -246,6 +255,7 @@ class Utils:
             if key not in styles or missing_style not in styles[key].keys():
                 count += 1
         return count
+
 
     # @staticmethod
     # def get_direct_folders_name(root_folder_path: str) -> list[str]:

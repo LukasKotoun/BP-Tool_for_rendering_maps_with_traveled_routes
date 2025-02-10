@@ -10,6 +10,8 @@ from shapely import geometry
 from shapely.geometry.polygon import Polygon
 from shapely.geometry.linestring import LineString
 from shapely.geometry.multilinestring import MultiLineString
+from shapely.geometry.multipolygon import  MultiPolygon
+from shapely.geometry import LinearRing, Point
 import textwrap
 from adjustText import adjust_text
 from shapely.ops import linemerge, unary_union
@@ -20,6 +22,7 @@ from modules.gdf_utils import GdfUtils
 from common.common_helpers import time_measurement
 
 
+from shapely.ops import unary_union, split, linemerge
 
 class Plotter:
 
@@ -34,8 +37,8 @@ class Plotter:
         self.city_names = []
         self.other_text = []
         self.icons = []
-
-    def init_plot(self, map_bg_color: str, area_zoom_preview: None | DimensionsTuple = None):
+        
+    def init_plot(self, map_bg_color: str, bg_gdf: gpd.GeoDataFrame, area_zoom_preview: None | DimensionsTuple = None):
         self.fig, self.ax = plt.subplots(figsize=(self.paper_dimensions_mm[0]/self.MM_TO_INCH,
                                                   # convert mm to inch
                                                   self.paper_dimensions_mm[1]/self.MM_TO_INCH))
@@ -49,10 +52,10 @@ class Plotter:
             top_margin = 1 - bottom_margin
             self.fig.subplots_adjust(
                 left=left_margin, right=right_margin, top=top_margin, bottom=bottom_margin)
-
         self.ax.axis('off')
-        # self.ax.set_aspect('equal')
-        self.reqired_area_gdf.plot(ax=self.ax, color=map_bg_color, linewidth=1)
+        self.reqired_area_gdf.plot(ax=self.ax, color=map_bg_color)
+        if(not bg_gdf.empty):
+            bg_gdf.plot(ax=self.ax, color=bg_gdf[StyleKey.COLOR])
 
     def __plot_city_names(self, place_names_gdf: gpd.GeoDataFrame, wrap_len: int | None):
         if (place_names_gdf.empty):
@@ -81,6 +84,7 @@ class Plotter:
             y = geom.y
             # weight='bold'
             # todo to function
+            
             text = self.ax.text(
                 x, y, wraped_name, fontsize=fontsize, ha='center', va='center', zorder=4, color=color,
                 path_effects=[patheffects.withStroke(linewidth=outline_width, foreground=edge_color)])

@@ -5,12 +5,12 @@ from common.map_enums import *
 # --------------------------------------------------------------map area--------------------------------------------------------------
 # OSM_INPUT_FILE_NAMES: str = ['../osm_files/vys.osm.pbf','../osm_files/jihmor.osm.pbf']
 # OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/vysJihE.osm.pbf'
-OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/angolaM.osm.pbf'
+OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/angolaT.osm.pbf'
 # OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/brno.osm.pbf'
 # extract
 OSM_WANT_EXTRACT_AREA: bool = False
 # set if want osm file cutting using osmium command line tool (need to be uinstalled), If not set to None
-OSM_OUTPUT_FILE_NAME: None | str = '../osm_files/angolaM.osm.pbf'
+OSM_OUTPUT_FILE_NAME: None | str = '../osm_files/angolaT.osm.pbf'
 
 OUTPUT_PDF_NAME: str = '../pdfs/divocina'
 # with fill or false cliping is recomended 0
@@ -21,7 +21,8 @@ PERCENTAGE_PADDING = 0
 # AREA: WantedArea = [(6.94872,4.84293),(6.99314,4.84293),(6.99314,4.81603),(6.94872,4.81603)] #afrika
 # AREA: WantedArea = [(13.2198495,-8.8130580),(13.2614774,-8.8139062),(13.2616062,-8.8439302),(13.2181329,-8.8424460)] #angola - mesto 5km
 # AREA: WantedArea = [(13.2020960,-8.7766815),(13.2020370,-8.8766827),(13.3099288, -8.8775122), (13.3082471,-8.7782667)] # angol- 11.85 - z14 - square
-AREA: WantedArea = [(15.7937669,49.2511294),(15.7940459,49.1851468),(15.9009507, 49.1847962), (15.9003445,49.2499564)] # tr - 7.8 - z14 - square
+AREA: WantedArea = [(13.0140862,-8.8831442),(13.1660763,-8.8819132),(13.1667146, -9.0826624), (13.0159664,-9.0781028)] # angol- ostrovy test
+# AREA: WantedArea = [(15.7937669,49.2511294),(15.7940459,49.1851468),(15.9009507, 49.1847962), (15.9003445,49.2499564)] # tr - 7.8 - z14 - square
 # AREA: WantedArea = "Horní vilémovice, Česko"
 # AREA: WantedArea = "Česko"
 # AREA: WantedArea = [(15.8784350,49.2926919), (15.8852585,49.2925274), (15.8845263, 49.2894905), (15.8769732, 49.2896681)] # zoom 18 (inf - 0.13* 1
@@ -53,10 +54,10 @@ AREA: WantedArea = [(15.7937669,49.2511294),(15.7940459,49.1851468),(15.9009507,
 # AREA: WantedArea = ["Texas, USA"]
 # AREA: WantedArea = ["Vysočina, Česko"]
 
-# PAPER_DIMENSIONS: PaperSize | tuple[float | None, float | None] = PaperSize.A4.dimensions
+PAPER_DIMENSIONS: PaperSize | tuple[float | None, float | None] = PaperSize.A4.dimensions
 # set own dimensions. If one is left as 'None' it will be automaticaly calculated using area size
 # PAPER_DIMENSIONS = (1000, None)
-PAPER_DIMENSIONS = (300, 300)
+# PAPER_DIMENSIONS = (300, 300)
 # what side of paper was set (smaller true bigger false) - only if only one side in custom dimension was set to None
 GIVEN_SMALLER_PAPER_DIMENSION: bool = True
 # set how will resulted paper be oriented, AUTOMATIC is Recommended
@@ -128,7 +129,7 @@ ROOT_FILES_COLOR_DIS_PALLET = True
 FOLDER_COLOR_MODE: ColorMode = ColorMode.DEFAULT
 FOLDER_COLOR_OR_PALLET: str = "Set1"
 FOLDER_COLOR_DIS_PALLET = True
-
+OCEAN_WATER = '#8fb6db'
 # ? none means that it will not be printed (edge or facecolor (not normal color in ways)), "" will be like that is not in that? - or better to be just removed
 # -------------------gpx styles by folder-------------------
 
@@ -189,7 +190,8 @@ wanted_ways: WantedCategories = {
     # 'highway': ['motorway', 'trunk','primary', 'secondary'],
     # 'highway': {'motorway', 'trunk', 'primary', 'secondary', 'tertiary', 'unclassified', 'residential', 'path', 'footway'},
     # 'highway':[],
-    'railway': {'rail'}
+    'railway': {'rail'},
+    'natural': {'coastline'}
 }
 
 unwanted_ways_tags: UnwantedTags = {
@@ -342,7 +344,10 @@ railway_styles: ElementStyles = [
 
 
 ways_styles_default: ElementStyles = [
-
+    ([('natural', '')], {
+        StyleKey.COLOR: 'Red', StyleKey.BRIDGE_EDGE_COLOR: "Red",
+        StyleKey.ZINDEX: 1, StyleKey.WIDTH: 80
+    }),
     ([('highway', '')], {
         StyleKey.COLOR: '#FFFFFF', StyleKey.BRIDGE_EDGE_COLOR: "#7D7D7D",
         StyleKey.ZINDEX: 1, StyleKey.WIDTH: 8, StyleKey.EDGE_COLOR: "#B0A78D"

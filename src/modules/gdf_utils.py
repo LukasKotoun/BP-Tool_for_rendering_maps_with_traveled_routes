@@ -1,7 +1,7 @@
 import warnings
 
 from shapely import geometry
-from shapely.geometry import Polygon, GeometryCollection
+from shapely.geometry import Polygon, GeometryCollection, MultiLineString, LineString
 import geopandas as gpd
 import pandas as pd
 import osmnx as ox
@@ -12,6 +12,8 @@ from modules.utils import Utils
 from common.map_enums import WorldSides, StyleKey
 from common.custom_types import BoundsDict, DimensionsTuple, Point, WantedArea, RowsConditions
 from common.common_helpers import time_measurement
+
+from shapely.ops import linemerge, split
 
 
 class GdfUtils:
@@ -169,6 +171,78 @@ class GdfUtils:
                     pd.concat(gdfs, ignore_index=True), crs=gdfs[0].crs).to_crs(epsg=toEpsg)
             return combined_gdf.unary_union
 
+    @staticmethod
+    def create_bg_gdf(map_area_gdf: gpd.GeoDataFrame, costline_gdf: gpd.GeoDataFrame, water_color: str, land_color: str) -> gpd.GeoDataFrame:
+        def check_same_orientation(geom, splitter):
+            # get intersetion by orientation of geom
+            geom_orientation_inter = geom.intersection(splitter)
+            geom_orientation_inter = linemerge(geom_orientation_inter) if isinstance(
+                geom_orientation_inter, MultiLineString) else geom_orientation_inter
+            # get intersetion by orientation of splitter
+            split_orientation_inter = splitter.intersection(geom)
+            split_orientation_inter = linemerge(split_orientation_inter) if isinstance(
+                split_orientation_inter, MultiLineString) else split_orientation_inter
+            if (not geom_orientation_inter.equals(split_orientation_inter)):
+                return None
+            
+            # if both are linestring can compare
+            if(isinstance(geom_orientation_inter, LineString) and isinstance(split_orientation_inter, LineString)):
+                return list(geom_orientation_inter.coords) == list(split_orientation_inter.coords)
+            
+            # if some is multilinestring find one component that is equal and check if it equal by direction
+            if isinstance(geom_orientation_inter, MultiLineString):
+                geom_lines = list(geom_orientation_inter.geoms)
+            else:
+                geom_lines = [geom_orientation_inter]
+
+            if isinstance(split_orientation_inter, MultiLineString):
+                split_lines = list(split_orientation_inter.geoms)
+            else:
+                split_lines = [split_orientation_inter]
+
+            # Find a matching LineString in both lists
+            for g_line in geom_lines:
+                for s_line in split_lines:
+                    if g_line.equals(s_line):  # Check if they are the same
+                        # check if they are same by orientation
+                        return list(g_line.coords) == list(s_line.coords)
+
+            return None 
+
+        if (costline_gdf.empty):
+            return GdfUtils.create_empty_gdf()
+        bg_data = []
+        required_area_polygon = GdfUtils.create_polygon_from_gdf(map_area_gdf)
+        splitters = linemerge(costline_gdf.geometry.unary_union)
+        splitters = list(splitters.geoms) if isinstance(
+            splitters, MultiLineString) else [splitters]
+        for splitter in splitters:
+            geometry_collection = split(required_area_polygon, splitter)
+            # splitter does not split area
+            if (len(geometry_collection.geoms) == 1):
+                continue
+            # check if geom is on right or left of splitter
+            for geom in geometry_collection.geoms:
+                same_orientation = check_same_orientation(geom, splitter)
+                if (same_orientation is None):
+                    continue
+                # check if orientation are same
+                color = ""
+                if (same_orientation):
+                    if (geom.exterior.is_ccw):
+                        color = land_color  # polygon is on left side of splitter
+                    else:
+                        color = water_color  # polygon is on right side of splitter
+                else:
+                    if (geom.exterior.is_ccw):  # polygon is reversed to splitter
+                        color = water_color  # polygon is on left side of splitter
+                    else:
+                        color = land_color  # polygon is on left side of splitter
+                bg_data.append({"geometry": geom, StyleKey.COLOR: color})
+        # create gdf from data
+        bg_gdf = gpd.GeoDataFrame(bg_data, geometry="geometry", crs=map_area_gdf.crs)
+        return bg_gdf
+
     # ------------editing gdf------------
 
     @staticmethod
@@ -219,7 +293,7 @@ class GdfUtils:
             return gdf.set_crs(epsg=toEpsg)
         return gdf.to_crs(epsg=toEpsg)
 
-    @staticmethod #does not work if area is inside of aother area - use or not use - by gap
+    @staticmethod  # does not work if area is inside of aother area - use or not use - by gap
     @time_measurement("inacurrate")
     def remove_common_boundary_inaccuracy(boundary_gdf: gpd.GeoDataFrame) -> None:
         """Remove common boundary inaccuracy in given GeoDataFrame 
@@ -229,8 +303,8 @@ class GdfUtils:
             boundary_gdf (gpd.GeoDataFrame): Gdf with boundaries.
         """
         # # by shifting area...
-        # boundary_gdf['area'] = boundary_gdf.geometry.area 
-        # boundary_gdf = boundary_gdf.sort_values(by='area', ascending=True)  
+        # boundary_gdf['area'] = boundary_gdf.geometry.area
+        # boundary_gdf = boundary_gdf.sort_values(by='area', ascending=True)
         # # from smallest to biggest area
         # for i, area1 in boundary_gdf.iterrows():
         #     for j, area2 in boundary_gdf.iterrows():
@@ -243,19 +317,20 @@ class GdfUtils:
         #             adjusted_area2 = area2.geometry.difference(common_border)
         #             precise_area2 = adjusted_area2.union(common_border)
 
-                    # boundary_gdf.loc[j, "geometry"] = adjusted_area2
+        # boundary_gdf.loc[j, "geometry"] = adjusted_area2
 
         # work by createing from 2 seperated areas row with combined area and one row with original area
         # # remove small gaps between areas
         boundary_gdf["geometry"] = boundary_gdf["geometry"].buffer(0)
         for i, row in boundary_gdf.iterrows():
             # find areas that share a boundary with row
-            neighbors = boundary_gdf[boundary_gdf.geometry.touches(row.geometry)]
+            neighbors = boundary_gdf[boundary_gdf.geometry.touches(
+                row.geometry)]
             for _, neighbor in neighbors.iterrows():
                 # merge the border of the current area and neighbor
                 merged_border = row.geometry.union(neighbor.geometry)
                 boundary_gdf.at[i, 'geometry'] = merged_border
-                    
+
     # ------------Bool operations------------
     @staticmethod
     def is_geometry_inside_bounds(area_bounds: BoundsDict, polygon: GeometryCollection) -> bool:
@@ -292,9 +367,6 @@ class GdfUtils:
     #         pd.Series[bool]: condition for given gdf.
     #     """
 
-  
-
-    
     @staticmethod
     def __filter_gdf_columns_values_AND_condition(gdf: gpd.GeoDataFrame, col_names: list[str],
                                                   col_values: list = [], neg: bool = False) -> pd.Series:
@@ -396,23 +468,26 @@ class GdfUtils:
         for column_name, column_value in conditions:
             if column_name not in gdf.columns:
                 # handle missing columns
-                if(isinstance(column_value, list)):
+                if (isinstance(column_value, list)):
                     # If any value in the list start with "~", the columns can be skipped
                     if any(str(v).startswith("~") for v in column_value):
                         continue
                     else:
                         # If none of the values start with "~", the column must exists
-                        filter_mask &= False  
+                        filter_mask &= False
                         break
-                elif column_value.startswith("~"):  # not equal to value after ~ or NA
+                # not equal to value after ~ or NA
+                elif column_value.startswith("~"):
                     continue
-                else:  # column should equal the value or should not be NA (but column doesn't exist)
-                    filter_mask &= False  
+                # column should equal the value or should not be NA (but column doesn't exist)
+                else:
+                    filter_mask &= False
                     break
-                
+
             else:
                 if isinstance(column_value, list):
-                    condition_mask = pd.Series([False] * len(gdf))  # start with all rows excluded
+                    # start with all rows excluded
+                    condition_mask = pd.Series([False] * len(gdf))
                     if not column_value:
                         # If the list is empty, the column should not be NA
                         condition_mask |= gdf[column_name].notna()
@@ -422,24 +497,27 @@ class GdfUtils:
                                 condition_mask |= gdf[column_name].notna()
                             elif value == "~":  # Column should be NA
                                 condition_mask |= gdf[column_name].isna()
-                            elif value.startswith("~"):  # Not equal to value after ~
-                                condition_mask |= (gdf[column_name] != value[1:])
+                            # Not equal to value after ~
+                            elif value.startswith("~"):
+                                condition_mask |= (
+                                    gdf[column_name] != value[1:])
                             else:  # Column equal the value
                                 condition_mask |= (gdf[column_name] == value)
                         filter_mask &= condition_mask
-                        
-                else:   
+
+                else:
                     if column_value == '':  # Not NA
                         filter_mask &= gdf[column_name].notna()
                     elif column_value.startswith("~"):
                         if column_value == "~":  # column should be NA
                             filter_mask &= gdf[column_name].isna()
                         else:  # column should not equal the value after ~
-                            filter_mask &= (gdf[column_name] != column_value[1:])
+                            filter_mask &= (
+                                gdf[column_name] != column_value[1:])
                     else:  # column should equal the value
                         filter_mask &= (gdf[column_name] == column_value)
         return filter_mask
-    
+
     @staticmethod
     def return_filtered(gdf: gpd.GeoDataFrame, condition: pd.Series, neg: bool = False,
                         compl: bool = False):
@@ -513,12 +591,12 @@ class GdfUtils:
 
         return GdfUtils.return_filtered(gdf, condition, False, compl)
 
-
     @staticmethod
-    def filter_gdf_columns_value(): 
-        #todo - create function that will filter gdf that in each column in list have value from same position in other list
+    def filter_gdf_columns_value():
+        # todo - create function that will filter gdf that in each column in list have value from same position in other list
         # for example: filter_gdf_columns_value(gdf, [1, 2], ['a', 'b']) will return gdf with rows that have 'a' in column 1 and 'b' in column 2
         pass
+
     @staticmethod
     def filter_gdf_columns_values_AND(gdf: gpd.GeoDataFrame, col_names: list[str],
                                       col_values: list = [], neg: bool = False,

@@ -272,11 +272,11 @@ def main():
     # areas_style_assigner = StyleAssigner(
     #     AREAS_STYLES, GENERAL_DEFAULT_STYLES, AREA_MANDATORY_STYLES)
     # areas_gdf = areas_style_assigner.assign_styles(areas_gdf, wanted_areas)
+    coast_gdf, ways_gdf = GdfUtils.filter_gdf_column_values(ways_gdf, 'natural', ['coastline'], compl=True)
     StyleAssigner.assign_styles(nodes_gdf, STYLES['nodes'])
     StyleAssigner.assign_styles(ways_gdf, STYLES['ways'])
     StyleAssigner.assign_styles(areas_gdf, STYLES['areas'])
 
-        
     if ('layer' in ways_gdf.columns):
         GdfUtils.change_columns_to_numeric(ways_gdf, ['layer'])
         ways_gdf['layer'] = ways_gdf['layer'].fillna(0)
@@ -284,7 +284,11 @@ def main():
     ways_gdf = GdfUtils.sort_gdf_by_column(ways_gdf, "layer")
     ways_gdf = GdfUtils.sort_gdf_by_column(ways_gdf, StyleKey.ZINDEX)
     areas_gdf = GdfUtils.sort_gdf_by_column(areas_gdf, StyleKey.ZINDEX)
-    
+
+    bg_gdf = GdfUtils.create_bg_gdf(map_area_gdf, coast_gdf, OCEAN_WATER, GENERAL_DEFAULT_STYLES[StyleKey.COLOR])
+    bg_gdf['area'] = bg_gdf.area
+    # order gdf by area
+    bg_gdf = bg_gdf.sort_values(by='area', ascending=False)
     # todo for ordering in plotting
     # areas_gdf['area'] = areas_gdf.geometry.area 
 
@@ -292,19 +296,19 @@ def main():
     # ------------plot------------
     plotter = Plotter(map_area_gdf, paper_dimensions_mm,
                       map_object_scaling_factor)
+
     plotter.init_plot(
-        GENERAL_DEFAULT_STYLES[StyleKey.COLOR], area_zoom_preview)
+        GENERAL_DEFAULT_STYLES[StyleKey.COLOR], bg_gdf, area_zoom_preview)
     plotter.zoom(zoom_percent_padding=PERCENTAGE_PADDING)
     plotter.plot_areas(areas_gdf, AREAS_EDGE_WIDTH_MULTIPLIER)
     plotter.plot_ways(ways_gdf, WAYS_WIDTH_MULTIPLIER)
     plotter.plot_nodes(nodes_gdf, TEXT_WRAP_NAMES_LEN)
     plotter.plot_gpxs(gpxs_gdf, 1)
-
     if (boundary_map_area_gdf is not None and not boundary_map_area_gdf.empty):
             # GdfUtils.remove_common_boundary_inaccuracy(boundary_map_area_gdf) # maybe turn off/on in settings
             plotter.plot_area_boundary(area_gdf=boundary_map_area_gdf.to_crs(
                 epsg=EPSG_DISPLAY), linewidth=AREA_BOUNDARY_LINEWIDTH)
-
+            
     plotter.adjust_texts(TEXT_BOUNDS_OVERFLOW_THRESHOLD)
 
     if (WANT_AREA_CLIPPING or WANT_PREVIEW):
@@ -312,7 +316,7 @@ def main():
             nodes_gdf, ways_gdf, areas_gdf))
    
     plotter.generate_pdf(OUTPUT_PDF_NAME)
-    # plotter.show_plot()
+    plotter.show_plot()
 
 
 if __name__ == "__main__":
