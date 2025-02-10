@@ -255,7 +255,22 @@ class Utils:
             if key not in styles or missing_style not in styles[key].keys():
                 count += 1
         return count
+    
+    @staticmethod
+    def get_zoom_level(value, mapping, threshold_above_lower = 0.25):
+        zooms = sorted(mapping.items(), key=lambda x: -x[1])
+        for i in range(len(zooms) - 1):
+            higher_level, higher_value = zooms[i]
+            lower_level, lower_value = zooms[i + 1]
 
+            # Compute the threshold at threshold_above_lower from lower to higher value
+            # so if is between to values it should be higher zoom
+            threshold = lower_value + (higher_value - lower_value) * threshold_above_lower
+
+            if value >= threshold:
+                return higher_level
+
+        return zooms[-1][0]  # lowest level 
 
     # @staticmethod
     # def get_direct_folders_name(root_folder_path: str) -> list[str]:
