@@ -17,13 +17,13 @@ class StyleKey(Enum):
     LINESTYLE = 5
     EDGE_COLOR = 6
     EDGE_ALPHA = 21
-    EDGE_WIDTH_RATIO = 7
+    EDGE_WIDTH_RATIO = 7  # start with + 1
     EDGE_LINESTYLE = 8
     #   bridges
     BRIDGE_COLOR = 9
-    BRIDGE_WIDTH_RATIO = 10
+    BRIDGE_WIDTH_RATIO = 10  # start with + 1
     BRIDGE_EDGE_COLOR = 11
-    BRIDGE_EDGE_WIDTH_RATIO = 12
+    BRIDGE_EDGE_WIDTH_RATIO = 12  # start with + 1 - bud rovnou v nastavení nebo funkce pro wautomatické nastavení
     #points
     ICON = 13
 
@@ -36,7 +36,7 @@ class StyleKey(Enum):
     TEXT_OUTLINE_WIDTH = 17
     # calculated like WIDTH + WIDTH * EDGE_WIDTH_RATIO
     EDGEWIDTH = 18
-    # calculated like
+    # calculated like WIDTH + WIDTH * BRIDGE_WIDTH_RATIO 
     BRIDGE_WIDTH = 19
     # calculated like WIDTH + WIDTH * (BRIDGE_WIDTH_RATIO * EDGE_WIDTH_RATIO) or BRIDGE_WIDTH + BRIDGE_WIDTH * BRIDGE_EDGE_WIDTH_RATIO
     BRIDGE_EDGE_WIDTH = 20

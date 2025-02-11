@@ -195,43 +195,46 @@ class Plotter:
         tram_gdf, rails_gdf = GdfUtils.filter_gdf_column_values(
             railways_gdf, 'railway', ['tram'], compl=True)
         if (not tram_gdf.empty):
+            #todo add by flag?? 
+            # tram_gdf.plot(ax=self.ax, color=tram_gdf[StyleKey.COLOR], linewidth=tram_gdf[StyleKey.WIDTH],
+            #               alpha=tram_gdf[StyleKey.ALPHA], path_effects=[
+            #     patheffects.Stroke(capstyle="round", joinstyle='round'),
+            #     patheffects.withTickedStroke(
+            #         angle=-90, capstyle="round",  spacing=tram_second_line_spacing, length=0.2),
+            #     patheffects.withTickedStroke(angle=90, capstyle="round", spacing=tram_second_line_spacing, length=0.2)])
             tram_gdf.plot(ax=self.ax, color=tram_gdf[StyleKey.COLOR], linewidth=tram_gdf[StyleKey.WIDTH],
-                          alpha=tram_gdf[StyleKey.ALPHA], path_effects=[
-                patheffects.Stroke(capstyle="round", joinstyle='round'),
-                patheffects.withTickedStroke(
-                    angle=-90, capstyle="round",  spacing=tram_second_line_spacing, length=0.2),
-                patheffects.withTickedStroke(angle=90, capstyle="round", spacing=tram_second_line_spacing, length=0.2)])
+                          alpha=tram_gdf[StyleKey.ALPHA])
 
-
+        #
         if (not rails_gdf.empty and StyleKey.EDGE_COLOR in rails_gdf):
-            
-            # # todo if edge color is none then plot quicker (filter)
-            # # todo if pattern is 
-            edge_c = rails_gdf[StyleKey.EDGE_COLOR]
-            color = rails_gdf[StyleKey.COLOR]
-            linewidth1 = rails_gdf[StyleKey.WIDTH] + rail_bg_width_offset
-            linewidth2 = rails_gdf[StyleKey.WIDTH]
-            alpha = rails_gdf[StyleKey.ALPHA]
-            linestyle = rails_gdf[StyleKey.LINESTYLE]
-            for geom in rails_gdf.geometry:
-                # here take data from gdf
-                if isinstance(geom, MultiLineString):
-                    for line in geom.geoms:  # Extract each LineString
-                        gpd.GeoSeries(line).plot(ax=self.ax, color=edge_c,
-                           linewidth=linewidth1,
-                           alpha=alpha, path_effects=[
-                patheffects.Stroke(capstyle="projecting", joinstyle='round')])
+            pass
+            # # # todo if edge color is none then plot quicker (filter)
+            # # # todo if pattern is 
+            # edge_c = rails_gdf[StyleKey.EDGE_COLOR]
+            # color = rails_gdf[StyleKey.COLOR]
+            # linewidth1 = rails_gdf[StyleKey.WIDTH] + rail_bg_width_offset
+            # linewidth2 = rails_gdf[StyleKey.WIDTH]
+            # alpha = rails_gdf[StyleKey.ALPHA]
+            # linestyle = rails_gdf[StyleKey.LINESTYLE]
+            # for geom in rails_gdf.geometry:
+            #     # here take data from gdf
+            #     if isinstance(geom, MultiLineString):
+            #         for line in geom.geoms:  # Extract each LineString
+            #             gpd.GeoSeries(line).plot(ax=self.ax, color=edge_c,
+            #                linewidth=linewidth1,
+            #                alpha=alpha, path_effects=[
+            #     patheffects.Stroke(capstyle="projecting", joinstyle='round')])
                         
-                        gpd.GeoSeries(line).plot(ax=self.ax, color=color, linewidth=linewidth2,
-                           alpha=alpha, linestyle=linestyle)
-                else:
-                    gpd.GeoSeries(geom).plot(ax=self.ax, color=edge_c,
-                           linewidth=linewidth1,
-                           alpha=alpha, path_effects=[
-                    patheffects.Stroke(capstyle="projecting", joinstyle='round')])
+            #             gpd.GeoSeries(line).plot(ax=self.ax, color=color, linewidth=linewidth2,
+            #                alpha=alpha, linestyle=linestyle)
+            #     else:
+            #         gpd.GeoSeries(geom).plot(ax=self.ax, color=edge_c,
+            #                linewidth=linewidth1,
+            #                alpha=alpha, path_effects=[
+            #         patheffects.Stroke(capstyle="projecting", joinstyle='round')])
                         
-                    gpd.GeoSeries(geom).plot(ax=self.ax, color=color, linewidth=linewidth2,
-                           alpha=alpha, linestyle=linestyle)
+            #         gpd.GeoSeries(geom).plot(ax=self.ax, color=color, linewidth=linewidth2,
+            #                alpha=alpha, linestyle=linestyle)
                     
             # rails_gdf.plot(ax=self.ax, color=rails_gdf[StyleKey.EDGE_COLOR],
             #                 linestyle=rails_gdf[StyleKey.EDGE_LINESTYLE],
@@ -267,7 +270,6 @@ class Plotter:
                      path_effects=[patheffects.Stroke(capstyle="butt", joinstyle='round')])
 
         def plot_bridges_center(gdf: gpd.GeoDataFrame):
-            # todo - after calculating widht before there will only be bridge color and BRIDGE_WIDTH
             gdf = GdfUtils.filter_gdf_columns_values_AND(
                 gdf, [StyleKey.BRIDGE_WIDTH_RATIO, StyleKey.BRIDGE_COLOR], [])
             if (gdf.empty):
@@ -312,6 +314,7 @@ class Plotter:
 
     @time_measurement("wayplot")
     def plot_ways(self, ways_gdf: gpd.GeoDataFrame, ways_width_multiplier: float):
+
         if (ways_gdf.empty or StyleKey.WIDTH not in ways_gdf
            or StyleKey.COLOR not in ways_gdf):
             return
@@ -346,11 +349,11 @@ class Plotter:
         
         # self.__plot_railways(
         #     railways_gdf, 2 * self.map_object_scaling_factor, 15 * self.map_object_scaling_factor)
-        
+        # todo this will be before ploting
         # railways_gdf = GdfUtils.filter_gdf_column_values(
         #         ways_gdf, 'railway')
-        railways_gdf.loc[0, "geometry"] = linemerge(unary_union(railways_gdf.geometry))
-        railways_gdf = railways_gdf.iloc[:1].reset_index(drop=True)
+        # railways_gdf.loc[0, "geometry"] = linemerge(unary_union(railways_gdf.geometry))
+        # railways_gdf = railways_gdf.iloc[:1].reset_index(drop=True)
         self.__plot_railways(
             railways_gdf, 2 * self.map_object_scaling_factor, 15 * self.map_object_scaling_factor)
         # self.__plot_bridges(bridges_gdf)
@@ -360,16 +363,15 @@ class Plotter:
         if (areas_gdf.empty):
             return
         # plot face
-        if (StyleKey.COLOR in areas_gdf):
-            face_areas_gdf = GdfUtils.filter_gdf_column_values(
-                areas_gdf, StyleKey.COLOR, [])
-            if (not face_areas_gdf.empty and StyleKey.COLOR in face_areas_gdf):
-                face_areas_gdf.plot(
-                    ax=self.ax, color=face_areas_gdf[StyleKey.COLOR], alpha=face_areas_gdf[StyleKey.ALPHA])
+        face_areas_gdf = GdfUtils.filter_gdf_column_values(
+            areas_gdf, StyleKey.COLOR, [])
+        if (not face_areas_gdf.empty):
+            face_areas_gdf.plot(
+                ax=self.ax, color=face_areas_gdf[StyleKey.COLOR], alpha=face_areas_gdf[StyleKey.ALPHA])
         # plot bounds
-        if (StyleKey.EDGE_COLOR in areas_gdf):
-            edge_areas_gdf = GdfUtils.filter_gdf_columns_values_AND(
-                areas_gdf, [StyleKey.EDGE_COLOR, StyleKey.WIDTH, StyleKey.EDGE_LINESTYLE], [])
+        edge_areas_gdf = GdfUtils.filter_gdf_columns_values_AND(
+            areas_gdf, [StyleKey.EDGE_COLOR, StyleKey.WIDTH, StyleKey.EDGE_LINESTYLE], [])
+        if (not edge_areas_gdf.empty):
             edge_areas_gdf[StyleKey.WIDTH] = edge_areas_gdf[StyleKey.WIDTH] * \
                 self.map_object_scaling_factor * areas_bounds_multiplier
             edge_areas_gdf.plot(

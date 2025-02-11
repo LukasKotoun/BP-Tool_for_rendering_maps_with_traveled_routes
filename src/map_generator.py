@@ -149,7 +149,7 @@ def main():
         map_object_scaling_factor, 1, 500))
     print(Utils.get_zoom_level(map_object_scaling_factor, ZOOM_MAPPING,0.1))
     # map_object_scaling_factor *= Utils.calc_scaling_factor_multiplier(
-    #     map_object_scaling_factor, 1, 500)
+        #  map_object_scaling_factor, 1, 500)
     # map_object_scaling_factor = 1
     # map_object_scaling_factor *= 13
     # ------------get elements from osm file------------
@@ -287,10 +287,10 @@ def main():
 
     bg_gdf = GdfUtils.create_bg_gdf(map_area_gdf, coast_gdf, OCEAN_WATER, GENERAL_DEFAULT_STYLES[StyleKey.COLOR])
     bg_gdf['area'] = bg_gdf.area
-    # order gdf by area
     bg_gdf = bg_gdf.sort_values(by='area', ascending=False)
-    # todo for ordering in plotting
-    # areas_gdf['area'] = areas_gdf.geometry.area 
+    # order gdf by area plot smaller at the end
+    areas_gdf['area'] = areas_gdf.geometry.area 
+    areas_gdf = areas_gdf.sort_values(by='area', ascending=False)
 
     
     # ------------plot------------

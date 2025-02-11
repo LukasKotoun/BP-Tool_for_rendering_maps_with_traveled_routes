@@ -240,6 +240,8 @@ class GdfUtils:
                         color = land_color  # polygon is on left side of splitter
                 bg_data.append({"geometry": geom, StyleKey.COLOR: color})
         # create gdf from data
+        if(bg_data == []):
+            return GdfUtils.create_empty_gdf()
         bg_gdf = gpd.GeoDataFrame(bg_data, geometry="geometry", crs=map_area_gdf.crs)
         return bg_gdf
 

@@ -10,7 +10,7 @@ OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/trebic.osm.pbf'
 # extract
 OSM_WANT_EXTRACT_AREA: bool = False
 # set if want osm file cutting using osmium command line tool (need to be uinstalled), If not set to None
-OSM_OUTPUT_FILE_NAME: None | str = '../osm_files/angolaT.osm.pbf'
+OSM_OUTPUT_FILE_NAME: None | str = '../osm_files/T.osm.pbf'
 
 OUTPUT_PDF_NAME: str = '../pdfs/divocina'
 # with fill or false cliping is recomended 0
@@ -23,6 +23,7 @@ PERCENTAGE_PADDING = 0
 # AREA: WantedArea = [(13.2020960,-8.7766815),(13.2020370,-8.8766827),(13.3099288, -8.8775122), (13.3082471,-8.7782667)] # angol- 11.85 - z14 - square
 # AREA: WantedArea = [(13.0140862,-8.8831442),(13.1660763,-8.8819132),(13.1667146, -9.0826624), (13.0159664,-9.0781028)] # angol- ostrovy test
 # AREA: WantedArea = [(15.7937669,49.2511294),(15.7940459,49.1851468),(15.9009507, 49.1847962), (15.9003445,49.2499564)] # tr - 7.8 - z14 - square
+
 # zoom testing
 # AREA: WantedArea = [(15.8149639,48.6439769), (15.8183625,48.6439700), (15.8183439, 48.6423997), (15.8149561, 48.6424158)] # zoom 19  - 0.7832305054706878
 # AREA: WantedArea = [(15.8131475,48.6445003), (15.8199369,48.6445106), (15.8199317, 48.6413736), (15.8131403, 48.6413914)] # zoom 18  - 0.39254868520064207
@@ -56,7 +57,7 @@ AREA: WantedArea = ["Třebíč, Česko"]
 # AREA: WantedArea = ["Texas, USA"]
 # AREA: WantedArea = ["Vysočina, Česko"]
 
-PAPER_DIMENSIONS: PaperSize | tuple[float | None, float | None] = PaperSize.A4.dimensions
+PAPER_DIMENSIONS: PaperSize | tuple[float | None, float | None] = PaperSize.A3.dimensions
 # set own dimensions. If one is left as 'None' it will be automaticaly calculated using area size
 # PAPER_DIMENSIONS = (1000, None)
 # PAPER_DIMENSIONS = (300, 300)
@@ -98,10 +99,10 @@ TEXT_BOUNDS_OVERFLOW_THRESHOLD = 0.97
 # --------------------------------------------------------------preview--------------------------------------------------------------
 # NOTE: must have same settings as the resulting one when generating for large format printing
 WANT_PREVIEW: bool = False
-OUTER_AREA: WantedArea = [(15.7034756,48.6941575), (15.9206889,48.6941186), (15.9198775, 48.5926164), (15.7030222, 48.5936264)] # zoom 13 - 0.012257255675006467
+# OUTER_AREA: WantedArea = [(15.7034756,48.6941575), (15.9206889,48.6941186), (15.9198775, 48.5926164), (15.7030222, 48.5936264)] # zoom 13 - 0.012257255675006467
 
 # area for that you are creating smaller preview (bigger than normal area)
-# OUTER_AREA: WantedArea = "Vysočina, Česko"
+OUTER_AREA: WantedArea = "Vysočina, Česko"
 # OUTER_AREA: WantedArea = "Česko"
 # OUTER_AREA: WantedArea = [(15.7396182, 49.3111173), (16.0273871, 49.3028839),
 #                     (16.0266146, 49.1439064), (15.6712219, 49.1928600)]
@@ -393,10 +394,10 @@ landuse_styles: ElementStyles = [
 # todo ....
 
 leisure_styles: ElementStyles = [
-    ([('leisure', 'swimming_pool')], {StyleKey.COLOR: '#8FB8DB', StyleKey.ZINDEX: 1}),
+    ([('leisure', 'swimming_pool')], {StyleKey.COLOR: '#8FB8DB'}),
     ([('leisure', 'golf_course')], {StyleKey.COLOR: '#DCE9B9'}),
     ([('leisure', 'playground')], {StyleKey.COLOR: '#DCE9B9'}),
-    ([('leisure', 'pitch')], {StyleKey.COLOR: '#DCE9B9', StyleKey.ZINDEX: 1}),
+    ([('leisure', 'pitch')], {StyleKey.COLOR: '#DCE9B9'}),
     ([('leisure', 'sports_centre')], {StyleKey.COLOR: '#9FC98D'}),
     ([('leisure', 'nature_reserve')], {StyleKey.COLOR: None, StyleKey.EDGE_COLOR: '#97BB72', 
                                        StyleKey.WIDTH: 80, StyleKey.ZINDEX: 1, 
@@ -404,22 +405,22 @@ leisure_styles: ElementStyles = [
 ]
 
 building_styles: ElementStyles = [
-    ([('building', 'house')], {StyleKey.COLOR: 'grey', StyleKey.ZINDEX: 1}),
-    ([('building', 'residential')], {StyleKey.COLOR: 'grey', StyleKey.ZINDEX: 1}),
+    ([('building', 'house')], {StyleKey.COLOR: 'grey'}),
+    ([('building', 'residential')], {StyleKey.COLOR: 'grey'}),
 ]
 
 natural_styles: ElementStyles = [
     ([('natural', 'wood')], {StyleKey.COLOR: '#9FC98D'}),
-    ([('natural', 'water')], {StyleKey.COLOR: '#8FB8DB', StyleKey.ZINDEX: 1}),
+    ([('natural', 'water')], {StyleKey.COLOR: '#8FB8DB'}),
     ([('natural', 'scrub')], {StyleKey.COLOR: '#B7DEA6'}),
     ([('natural', 'heath')], {StyleKey.COLOR: '#B7DEA6'}),
 ]
 
 area_styles_default: ElementStyles = [
-    ([('building', '')], {StyleKey.COLOR: '#B7DEA6', StyleKey.ZINDEX: 1}),
+    ([('building', '')], {StyleKey.COLOR: '#B7DEA6'}),
     ([('landuse', '')],  {StyleKey.COLOR: '#EDEDE0'}),
-    ([('water', '')], {StyleKey.COLOR: '#8FB8DB', StyleKey.ZINDEX: 1}),
-    ([('leisure', '')], {StyleKey.COLOR: '#EDEDE0', StyleKey.WIDTH: 8}),
+    ([('water', '')], {StyleKey.COLOR: '#8FB8DB'}),
+    ([('leisure', '')], {StyleKey.COLOR: '#EDEDE0'}),
     ([('natural', '')], {StyleKey.COLOR: '#B7DEA6'}),
     ([('boundary', '')], {
         StyleKey.COLOR: None, StyleKey.EDGE_COLOR: '#97BB72',
