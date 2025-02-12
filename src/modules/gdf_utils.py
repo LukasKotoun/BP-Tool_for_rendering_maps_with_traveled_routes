@@ -13,7 +13,7 @@ from common.map_enums import WorldSides, StyleKey
 from common.custom_types import BoundsDict, DimensionsTuple, Point, WantedArea, RowsConditions
 from common.common_helpers import time_measurement
 
-from shapely.ops import linemerge, split
+from shapely.ops import unary_union, split, linemerge
 
 
 class GdfUtils:
@@ -176,19 +176,22 @@ class GdfUtils:
         def check_same_orientation(geom, splitter):
             # get intersetion by orientation of geom
             geom_orientation_inter = geom.intersection(splitter)
-            geom_orientation_inter = linemerge(geom_orientation_inter) if isinstance(
-                geom_orientation_inter, MultiLineString) else geom_orientation_inter
+            # geom_orientation_inter = linemerge(geom_orientation_inter) if isinstance(
+            #     geom_orientation_inter, MultiLineString) else geom_orientation_inter
+            geom_orientation_inter = GdfUtils.merge_lines_safe(geom_orientation_inter)
+            
             # get intersetion by orientation of splitter
             split_orientation_inter = splitter.intersection(geom)
-            split_orientation_inter = linemerge(split_orientation_inter) if isinstance(
-                split_orientation_inter, MultiLineString) else split_orientation_inter
+            # split_orientation_inter = linemerge(split_orientation_inter) if isinstance(
+            #     split_orientation_inter, MultiLineString) else split_orientation_inter
+            split_orientation_inter = GdfUtils.merge_lines_safe(split_orientation_inter)
             if (not geom_orientation_inter.equals(split_orientation_inter)):
                 return None
-            
+
             # if both are linestring can compare
-            if(isinstance(geom_orientation_inter, LineString) and isinstance(split_orientation_inter, LineString)):
+            if (isinstance(geom_orientation_inter, LineString) and isinstance(split_orientation_inter, LineString)):
                 return list(geom_orientation_inter.coords) == list(split_orientation_inter.coords)
-            
+
             # if some is multilinestring find one component that is equal and check if it equal by direction
             if isinstance(geom_orientation_inter, MultiLineString):
                 geom_lines = list(geom_orientation_inter.geoms)
@@ -207,14 +210,15 @@ class GdfUtils:
                         # check if they are same by orientation
                         return list(g_line.coords) == list(s_line.coords)
 
-            return None 
+            return None
 
         if (costline_gdf.empty):
             return GdfUtils.create_empty_gdf()
         bg_data = []
         required_area_polygon = GdfUtils.create_polygon_from_gdf(map_area_gdf)
         # split one by one
-        splitters = linemerge(costline_gdf.geometry.unary_union)
+        # splitters = linemerge(costline_gdf.geometry.unary_union)
+        splitters = GdfUtils.merge_lines_safe(costline_gdf.geometry) 
         splitters = list(splitters.geoms) if isinstance(
             splitters, MultiLineString) else [splitters]
         for splitter in splitters:
@@ -240,9 +244,10 @@ class GdfUtils:
                         color = land_color  # polygon is on left side of splitter
                 bg_data.append({"geometry": geom, StyleKey.COLOR: color})
         # create gdf from data
-        if(bg_data == []):
+        if (bg_data == []):
             return GdfUtils.create_empty_gdf()
-        bg_gdf = gpd.GeoDataFrame(bg_data, geometry="geometry", crs=map_area_gdf.crs)
+        bg_gdf = gpd.GeoDataFrame(
+            bg_data, geometry="geometry", crs=map_area_gdf.crs)
         return bg_gdf
 
     # ------------editing gdf------------
@@ -259,13 +264,85 @@ class GdfUtils:
             return gdf.to_crs(epsg=toEpsg)
         return gpd.GeoDataFrame(geometry=[gdf.to_crs(epsg=toEpsg).geometry.unary_union], crs=f"EPSG:{toEpsg}")
 
+    # todo to normal utils
+    @staticmethod
+    def merge_lines_safe(geoms):
+        unioned = unary_union(geoms)
+        if unioned.is_empty:
+            return unioned
+        if unioned.geom_type == "LineString":
+            return unioned
+        if unioned.geom_type == "MultiLineString":
+            try:
+                merged = linemerge(unioned)
+                return merged
+            except Exception as e:
+                print(f"linemerge failed on MultiLineString: {e}")
+                return unioned
+        if unioned.geom_type == "GeometryCollection":
+            lines = [geom for geom in unioned if geom.geom_type in ["LineString", "MultiLineString"]]
+            if not lines:
+                return unioned
+            elif len(lines) == 1:
+                return lines[0]
+            else:
+                # Merge the extracted line geometries.
+                try:
+                    merged = linemerge(MultiLineString(lines))
+                    return merged
+                except Exception as e:
+                    print(f"linemerge failed on extracted lines: {e}")
+                    return MultiLineString(lines)
+        return unioned
+    
     @staticmethod
     def change_columns_to_numeric(gdf: gpd.GeoDataFrame, columns: list[str]) -> None:
         for column in columns:
             if (column in gdf):
                 gdf[column] = pd.to_numeric(gdf[column], errors='coerce')
 
-    # todo change from list
+    @staticmethod
+    # will create new gdf with likend ways with same attributes
+    def merge_lines_gdf(gdf: gpd.GeoDataFrame, want_bridges: bool, columns_ignore: list[str | StyleKey] = []) -> gpd.GeoDataFrame:
+        """Columns ignore - columns that will not be used to grouby"""
+        columns_ignore = [*columns_ignore, 'geometry']
+        if (want_bridges):
+            pass
+        else:
+            tunnels_gdf, rest_gdf = GdfUtils.filter_gdf_column_values(
+                gdf, 'tunnel', [], compl=True)
+            tunnels_gdf = GdfUtils.create_empty_gdf()
+
+            tunnel_columns = [
+                col for col in tunnels_gdf.columns if col not in columns_ignore]
+            rest_columns = [
+                col for col in rest_gdf.columns if col not in [*columns_ignore,  'bridge']]
+        
+            grouped_tunnels = []
+            print(tunnels_gdf)
+            # for group_key, group in tunnels_gdf.groupby(tunnel_columns, dropna=False, observed=True):
+            #     # if grouping on multiple columns, group_key is a tuple.
+            #     if isinstance(group_key, tuple):
+            #         row = dict(zip(tunnel_columns, group_key))
+            #     else:
+            #         row = {tunnel_columns[0]: group_key}
+                    
+            #     row['geometry'] = GdfUtils.merge_lines_safe(group['geometry'])
+            #     grouped_tunnels.append(row)
+            # merged_gdf = gpd.GeoDataFrame(grouped_tunnels, geometry='geometry', crs=tunnels_gdf.crs)
+            # print(merged_gdf)
+
+            merged_tunnels = tunnels_gdf.groupby(tunnel_columns, dropna=False, observed=True).agg({
+                'geometry': GdfUtils.merge_lines_safe
+            })
+            merged_tunnels_gdf = gpd.GeoDataFrame(merged_tunnels, geometry='geometry', crs=tunnels_gdf.crs).reset_index()
+            
+            merged_rest = rest_gdf.groupby(rest_columns, dropna=False, observed=True).agg({
+                'geometry': GdfUtils.merge_lines_safe
+            })
+            merged_rest_gdf = gpd.GeoDataFrame(merged_rest, geometry='geometry', crs=tunnels_gdf.crs).reset_index()
+            print(GdfUtils.combine_gdfs([merged_tunnels_gdf, merged_rest_gdf]))
+            return GdfUtils.combine_gdfs([merged_tunnels_gdf, merged_rest_gdf])
     @staticmethod
     def combine_gdfs(gdfs: list[gpd.GeoDataFrame]) -> gpd.GeoDataFrame:
         if (len(gdfs) == 1):

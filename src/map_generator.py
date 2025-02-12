@@ -273,6 +273,7 @@ def main():
     #     AREAS_STYLES, GENERAL_DEFAULT_STYLES, AREA_MANDATORY_STYLES)
     # areas_gdf = areas_style_assigner.assign_styles(areas_gdf, wanted_areas)
     coast_gdf, ways_gdf = GdfUtils.filter_gdf_column_values(ways_gdf, 'natural', ['coastline'], compl=True)
+    GdfUtils.merge_lines_gdf(ways_gdf, False, [])
     StyleAssigner.assign_styles(nodes_gdf, StyleAssigner.convert_dynamic_to_normal(STYLES['nodes'], 20))
     StyleAssigner.assign_styles(ways_gdf, StyleAssigner.convert_dynamic_to_normal(STYLES['ways'],20))
     StyleAssigner.assign_styles(areas_gdf, StyleAssigner.convert_dynamic_to_normal(STYLES['areas'], 20))
