@@ -252,10 +252,10 @@ def main():
         nodes_gdf, map_area_gdf)
     # filter out place without name
     nodes_gdf = GdfUtils.filter_gdf_related_columns_values(
-        nodes_gdf, 'place', [], ['name'], [])
+        nodes_gdf, 'place', [], ['name'], [])  # ekvivalent[('place', ''), ('name', '')]
     # filter out peak without name and ele
     nodes_gdf = GdfUtils.filter_gdf_related_columns_values(
-        nodes_gdf, 'natural', ['peak'], ['name', 'ele'], [])
+        nodes_gdf, 'natural', ['peak'], ['name', 'ele'], []) # ekvivalent[('natural', 'peak'), ('name', ''), ('ele', '')] or [(')]
     # round ele to whole number
     GdfUtils.change_columns_to_numeric(nodes_gdf, ['ele'])
     if('ele' in nodes_gdf.columns):
@@ -272,8 +272,10 @@ def main():
     # areas_style_assigner = StyleAssigner(
     #     AREAS_STYLES, GENERAL_DEFAULT_STYLES, AREA_MANDATORY_STYLES)
     # areas_gdf = areas_style_assigner.assign_styles(areas_gdf, wanted_areas)
+    
     coast_gdf, ways_gdf = GdfUtils.filter_gdf_column_values(ways_gdf, 'natural', ['coastline'], compl=True)
-    GdfUtils.merge_lines_gdf(ways_gdf, False, [])
+
+    ways_gdf = GdfUtils.merge_lines_gdf(ways_gdf, False, [])
     StyleAssigner.assign_styles(nodes_gdf, StyleAssigner.convert_dynamic_to_normal(STYLES['nodes'], 20))
     StyleAssigner.assign_styles(ways_gdf, StyleAssigner.convert_dynamic_to_normal(STYLES['ways'],20))
     StyleAssigner.assign_styles(areas_gdf, StyleAssigner.convert_dynamic_to_normal(STYLES['areas'], 20))
