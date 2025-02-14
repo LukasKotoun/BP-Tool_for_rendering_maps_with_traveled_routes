@@ -252,16 +252,18 @@ class GdfUtils:
 
     # ------------editing gdf------------
     @staticmethod  # column and multipliers must be numeric otherwise it will throw error
-    def multiply_column_gdf(gdf, column: StyleKey | str, multipliers: list[str | StyleKey] = [], scaling=None):
+    def multiply_column_gdf(gdf, column: StyleKey | str, multipliers: list[str | StyleKey] = [], scaling=None, filter: RowsConditions = []):
         if (column not in gdf):
-            warnings.warn(f"Column {column} not in GeoDataFrame")
             return
         # multiply rows where column value is not empty
         rows_with_column = GdfUtils.get_rows_filter(gdf, [(column, "")])
-
+        if (filter):
+            rows_with_column &= GdfUtils.get_rows_filter(gdf, filter)
+            
         if (scaling is not None):
             gdf.loc[rows_with_column,
                     column] = gdf.loc[rows_with_column, column] * scaling
+            
         multipliers = [
             multiplier for multiplier in multipliers if multiplier in gdf.columns]
         # multiply rows where multiplier column exists
@@ -274,8 +276,7 @@ class GdfUtils:
     @staticmethod  # column and multipliers must be numeric otherwise it will throw error
     def create_derivated_columns(gdf, new_column: StyleKey | str, base_column: StyleKey | str, filter: RowsConditions = [], multipliers: list[str | StyleKey] = [], scaling=None):
         if (new_column in gdf or base_column not in gdf):
-            warnings.warn(f"New column already exist or base column dont in GeoDataFrame")
-            
+            return
         # multiply rows where column value is not empty
         rows_filter = GdfUtils.get_rows_filter(gdf, filter)
         gdf.loc[rows_filter, new_column] = gdf.loc[rows_filter, base_column]

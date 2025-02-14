@@ -63,6 +63,7 @@ class Plotter:
             return
         place_names_gdf[StyleKey.TEXT_OUTLINE_WIDTH] = place_names_gdf[StyleKey.TEXT_OUTLINE_WIDTH] * \
             (self.map_object_scaling_factor )
+            
         def get_place_data(city_names_gdf: gpd.GeoDataFrame) -> Generator[tuple[Point, str, str, str, int, float], None, None]:
             """Yields a tuple of city data for each city in the GeoDataFrame."""
             for data in zip(
@@ -249,21 +250,23 @@ class Plotter:
             return
 
         def plot_bridges_edges(gdf: gpd.GeoDataFrame):
+        
             # todo - after calculating widht before there will only be bridge edge color and BRIDGE_EDGE_WIDTH - check for existing bridge width will be in calc before
             gdf = GdfUtils.filter_rows(
                 gdf, [(StyleKey.BRIDGE_EDGE_COLOR, ''), (StyleKey.BRIDGE_WIDTH_RATIO, '')])
 
             if (gdf.empty):
                 return
-            gdf[StyleKey.WIDTH] = gdf[StyleKey.WIDTH] + gdf[StyleKey.WIDTH] * \
-                (gdf[StyleKey.BRIDGE_WIDTH_RATIO] +
-                 gdf[StyleKey.EDGE_WIDTH_RATIO])
+            # gdf[StyleKey.WIDTH] = gdf[StyleKey.WIDTH] + gdf[StyleKey.WIDTH] * \
+            #     (gdf[StyleKey.BRIDGE_WIDTH_RATIO] +
+            #      gdf[StyleKey.EDGE_WIDTH_RATIO])
 
             # gdf[StyleKey.BRIDGE_EDGE_WIDTH] = gdf[StyleKey.BRIDGE_WIDTH] + gdf[StyleKey.BRIDGE_WIDTH] * gdf[StyleKey.BRIDGE_EDGE_WIDTH_RATIO]
             # in calculating use this - if want same edge as normal edge set BRIDGE_EDGE_WIDTH_RATIO to same as way and BRIDGE_WIDTH_RATIO to 0 -> BRIDGE_WIDTH == WIDTH so it will be same
+            gdf[StyleKey.BRIDGE_EDGE_WIDTH] *= self.map_object_scaling_factor 
 
             gdf.plot(ax=self.ax, color=gdf[StyleKey.BRIDGE_EDGE_COLOR],
-                     linewidth=gdf[StyleKey.WIDTH],
+                     linewidth=gdf[StyleKey.BRIDGE_EDGE_WIDTH],
                      linestyle=gdf[StyleKey.EDGE_LINESTYLE],
                      alpha=gdf[StyleKey.ALPHA],
                      path_effects=[patheffects.Stroke(capstyle="butt", joinstyle='round')])
@@ -275,18 +278,16 @@ class Plotter:
             if (gdf.empty):
                 return
 
-            gdf[StyleKey.WIDTH] = gdf[StyleKey.WIDTH] + \
-                gdf[StyleKey.WIDTH] * gdf[StyleKey.BRIDGE_WIDTH_RATIO]
-            # gdf[StyleKey.BRIDGE_WIDTH] = gdf[StyleKey.WIDTH] + gdf[StyleKey.WIDTH] * gdf[StyleKey.BRIDGE_WIDTH_RATIO] - in calculating use this
+            gdf[StyleKey.BRIDGE_WIDTH] *= self.map_object_scaling_factor 
 
             gdf.plot(ax=self.ax, color=gdf[StyleKey.BRIDGE_COLOR],
-                     linewidth=gdf[StyleKey.WIDTH],
+                     linewidth=gdf[StyleKey.BRIDGE_WIDTH],
                      linestyle=gdf[StyleKey.LINESTYLE],
                      alpha=gdf[StyleKey.ALPHA],
                      path_effects=[patheffects.Stroke(capstyle="butt", joinstyle='round')])
 
         def plot_ways_on_bridges(gdf: gpd.GeoDataFrame):
-
+            
             highways_gdf, rest_gdf = GdfUtils.filter_rows(
                 gdf, [('highway', '')], compl=True)
 
@@ -325,7 +326,8 @@ class Plotter:
       # Zoom like 13 and bigger
         waterways_gdf, rest_gdf = GdfUtils.filter_rows(
             rest_gdf, [('waterway', '')], compl=True)
-
+        bridge_gdf, rest_gdf = GdfUtils.filter_rows(
+            rest_gdf, [('bridge', '')], compl=True)
         for layer, group_gdf in waterways_gdf.groupby("layer"):
             self.__plot_waterways(waterways_gdf)
         railways_gdf, rest_gdf = GdfUtils.filter_rows(
@@ -341,12 +343,9 @@ class Plotter:
 
         # self.__plot_railways(
         #     railways_gdf, 2 * self.map_object_scaling_factor, 15 * self.map_object_scaling_factor)
-        # todo this will be before ploting
-        # railways_gdf.loc[0, "geometry"] = linemerge(unary_union(railways_gdf.geometry))
-        # railways_gdf = railways_gdf.iloc[:1].reset_index(drop=True)
         self.__plot_railways(
             railways_gdf, 2 * self.map_object_scaling_factor, 15 * self.map_object_scaling_factor)
-        self.__plot_bridges(railways_gdf)
+        self.__plot_bridges(bridge_gdf)
 
     @time_measurement("areaPlot")
     def plot_areas(self, areas_gdf: gpd.GeoDataFrame, areas_bounds_multiplier: float):

@@ -309,7 +309,6 @@ def main():
     GdfUtils.create_derivated_columns(ways_gdf, StyleKey.BRIDGE_WIDTH, StyleKey.WIDTH, [('bridge', '')], [StyleKey.BRIDGE_WIDTH_RATIO])
     GdfUtils.create_derivated_columns(ways_gdf, StyleKey.BRIDGE_EDGE_WIDTH, StyleKey.BRIDGE_WIDTH, [('bridge', '')], [StyleKey.BRIDGE_EDGE_WIDTH_RATIO])
 
-
     
 
     ways_gdf = GdfUtils.sort_gdf_by_column(ways_gdf, "layer")

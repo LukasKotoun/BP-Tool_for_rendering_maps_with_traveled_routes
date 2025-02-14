@@ -5,7 +5,7 @@ from common.map_enums import *
 # --------------------------------------------------------------map area--------------------------------------------------------------
 # OSM_INPUT_FILE_NAMES: str = ['../osm_files/vys.osm.pbf','../osm_files/jihmor.osm.pbf']
 # OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/vysJihE.osm.pbf'
-OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/hv.osm.pbf'
+OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/trebic.osm.pbf'
 # OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/brno.osm.pbf'
 # extract
 OSM_WANT_EXTRACT_AREA: bool = False
@@ -50,9 +50,9 @@ PERCENTAGE_PADDING = 0
 # AREA: WantedArea = ["Brno, Česko"]
 # AREA: WantedArea = ["Jihomoravský kraj, Česko", "Kraj Vysočina, Česko"]
 # AREA: WantedArea = ["Česko"]
-AREA: WantedArea = ["Horní Vilémovice, Česko"]
+# AREA: WantedArea = ["Horní Vilémovice, Česko"]
 # AREA: WantedArea = ["Okřešice, Česko"]
-# AREA: WantedArea = ["Třebíč, Česko"]
+AREA: WantedArea = ["Třebíč, Česko"]
 # AREA: WantedArea = ["Okres Třebíč, Česko", "Třebíč, Česko", "Okres Jihlava, Česko"]
 # AREA: WantedArea = ["Třebíč, Česko", "Vladislav, Česko"]
 # AREA: WantedArea = ["Texas, USA"]
@@ -238,18 +238,20 @@ GENERAL_DEFAULT_STYLES: FeatureStyles = {StyleKey.COLOR: '#EDEDE0',  StyleKey.ZI
 nodes_mandatory_styles: ElementStyles = [
     ([], {
         StyleKey.COLOR: '#000000', StyleKey.TEXT_FONT_SIZE: 50, 
-        StyleKey.EDGE_COLOR: '#FFFFFF', StyleKey.TEXT_OUTLINE_WIDTH: 5
+        StyleKey.EDGE_COLOR: '#FFFFFF', StyleKey.TEXT_OUTLINE_WIDHT_RATIO: 0.1#StyleKey.TEXT_OUTLINE_WIDTH: 5
     })
 ]
 
 place_styles: ElementStyles = [
     ([('place', 'city')], {
         StyleKey.TEXT_FONT_SIZE: 2500 * CITY_CITY_SIZE_MULTIPLIER, 
-        StyleKey.TEXT_OUTLINE_WIDTH: 270 * CITY_CITY_SIZE_MULTIPLIER
+        StyleKey.TEXT_OUTLINE_WIDHT_RATIO: 0.2
+        # StyleKey.TEXT_OUTLINE_WIDTH: 270 * CITY_CITY_SIZE_MULTIPLIER
     }),
     ([('place', 'town')], {
         StyleKey.TEXT_FONT_SIZE: 1500 * CITY_TOWN_SIZE_MULTIPLIER, 
-        StyleKey.TEXT_OUTLINE_WIDTH: 170 * CITY_TOWN_SIZE_MULTIPLIER
+        StyleKey.TEXT_OUTLINE_WIDHT_RATIO: 0.2
+        # StyleKey.TEXT_OUTLINE_WIDTH: 170 * CITY_TOWN_SIZE_MULTIPLIER
     }),
     # ([('place', 'village')], {
     #     StyleKey.TEXT_FONT_SIZE: 15 * CITY_VILLAGE_SIZE_MULTIPLIER, 
@@ -257,7 +259,8 @@ place_styles: ElementStyles = [
     # }),
     ([('place', 'village')], {
         StyleKey.TEXT_FONT_SIZE: 550 * CITY_VILLAGE_SIZE_MULTIPLIER, 
-        StyleKey.TEXT_OUTLINE_WIDTH: 110 * CITY_VILLAGE_SIZE_MULTIPLIER
+        StyleKey.TEXT_OUTLINE_WIDHT_RATIO: 0.2
+        # StyleKey.TEXT_OUTLINE_WIDTH: 110 * CITY_VILLAGE_SIZE_MULTIPLIER
     }),
 ]
 # !!! icon from svg
@@ -275,8 +278,8 @@ place_styles: ElementStyles = [
 natural_styles_nodes: ElementStyles = [
     ([('natural', 'peak')], {
         StyleKey.ICON: "^", StyleKey.COLOR: "#7f3016", 
-        StyleKey.EDGEWIDTH: 1 + 0.2, StyleKey.TEXT_OUTLINE_WIDTH: 50, 
-        StyleKey.TEXT_FONT_SIZE: 400, StyleKey.WIDTH: 3.6
+        StyleKey.TEXT_OUTLINE_WIDHT_RATIO: 0.1, #StyleKey.TEXT_OUTLINE_WIDTH:50,
+        StyleKey.TEXT_FONT_SIZE: 400, StyleKey.WIDTH: 3.6,StyleKey.EDGE_WIDTH_RATIO:0.2 #, # todo edge widht change...
     }),
 ]
 
@@ -305,17 +308,22 @@ NODES_STYLES: ElementStyles = [
 ways_mandatory_styles: ElementStyles = [
     ([], {
         StyleKey.COLOR: '#EDEDE0', StyleKey.ALPHA: 1.0, StyleKey.WIDTH: 1, StyleKey.LINESTYLE: '-',
-        StyleKey.EDGE_WIDTH_RATIO: 1 + 0.3, StyleKey.BRIDGE_WIDTH_RATIO: 0, StyleKey.BRIDGE_EDGE_WIDTH_RATIO: 1 + 0.3, 
-        StyleKey.BRIDGE_COLOR: "#FFFFFF", StyleKey.BRIDGE_EDGE_COLOR: "#7D7D7D", 
+        StyleKey.EDGE_WIDTH_RATIO: 1 + 0.3,
         StyleKey.EDGE_COLOR: None, StyleKey.EDGE_LINESTYLE: '-', StyleKey.WIDTH_SCALE: 100, StyleKey.FE_WIDTH_SCALE: 1,
-    })
+    }),
+    ([('bridge', '')], {
+        StyleKey.BRIDGE_WIDTH_RATIO: 1, StyleKey.BRIDGE_EDGE_WIDTH_RATIO: 1 + 0.3,
+        StyleKey.BRIDGE_COLOR: "#FFFFFF", StyleKey.BRIDGE_EDGE_COLOR: "#7D7D7D", StyleKey.PLOT_ON_BRIDGE: True # on bridge (will be bridge edge)
+    }),
 ]
 
 # # highway_styles_tunnels: FeaturesCategoryStyle = {
 # #     'motorway': {StyleKey.COLOR: '#8cd25f', StyleKey.ZINDEX: 7, StyleKey.WIDTH: 32, StyleKey.EDGE_COLOR: "#5E9346"..},
 # # }
+#todo add highway bridges
 
 highway_styles: ElementStyles = [
+    ([('highway', ''), ('bridge', '')], {StyleKey.EDGE_COLOR: None}),
     ([('highway', 'motorway')], {StyleKey.COLOR: '#8cd25f', StyleKey.ZINDEX: 7, StyleKey.WIDTH: 32, StyleKey.EDGE_COLOR: "#5E9346"}),
     ([('highway', 'trunk')], {StyleKey.COLOR: '#FDC364', StyleKey.ZINDEX: 6, StyleKey.WIDTH: 26, StyleKey.EDGE_COLOR: "#E19532"}),
     ([('highway', 'primary')], {StyleKey.COLOR: '#FDC364', StyleKey.ZINDEX: 5, StyleKey.WIDTH: 22, StyleKey.EDGE_COLOR: "#E19532"}),
@@ -325,11 +333,12 @@ highway_styles: ElementStyles = [
     ([('highway', 'unclassified')], {StyleKey.COLOR: '#FFFFFF'}),
     ([('highway', 'road')], {StyleKey.COLOR: '#FFFFFF'}),
     ([('highway', 'footway')], {StyleKey.COLOR: '#FFFFFF', StyleKey.BRIDGE_COLOR: "#FFFFFF"}),
-    ([('highway', 'steps')], {StyleKey.COLOR: '#8f8364', StyleKey.LINESTYLE: "--", StyleKey.EDGE_COLOR: None}),
-    ([('highway', 'path')], {StyleKey.COLOR: '#8f8364', StyleKey.LINESTYLE: "--", StyleKey.EDGE_COLOR: None, StyleKey.BRIDGE_COLOR: "#FFFFFF"}),
-    ([('highway', 'track')], {StyleKey.COLOR: '#8f8364', StyleKey.LINESTYLE: "--", StyleKey.EDGE_COLOR: None, StyleKey.BRIDGE_COLOR: "#FFFFFF"}),
+    ([('highway', 'steps')], {StyleKey.COLOR: '#8f8364', StyleKey.LINESTYLE: "--", StyleKey.EDGE_COLOR: None, StyleKey.PLOT_ON_BRIDGE: None}),
+    ([('highway', 'path')], {StyleKey.COLOR: '#8f8364', StyleKey.LINESTYLE: "--", StyleKey.EDGE_COLOR: None, StyleKey.BRIDGE_COLOR: "#FFFFFF", StyleKey.PLOT_ON_BRIDGE: None}),
+    ([('highway', 'track')], {StyleKey.COLOR: '#8f8364', StyleKey.LINESTYLE: "--", StyleKey.EDGE_COLOR: None, StyleKey.BRIDGE_COLOR: "#FFFFFF", StyleKey.PLOT_ON_BRIDGE: None}),
     ([('highway', 'residential')], {StyleKey.COLOR: '#FFFFFF'})
 ]
+
 
 railway_styles: ElementStyles = [
     ([('railway', 'rail')], {
@@ -349,10 +358,6 @@ railway_styles: ElementStyles = [
 
 
 ways_styles_default: ElementStyles = [
-    ([('natural', '')], {
-        StyleKey.COLOR: 'Red', StyleKey.BRIDGE_EDGE_COLOR: "Red",
-        StyleKey.ZINDEX: 1, StyleKey.WIDTH: 80
-    }),
     ([('highway', '')], {
         StyleKey.COLOR: '#FFFFFF', StyleKey.BRIDGE_EDGE_COLOR: "#7D7D7D",
         StyleKey.ZINDEX: 1, StyleKey.WIDTH: 8, StyleKey.EDGE_COLOR: "#B0A78D"
@@ -392,7 +397,6 @@ landuse_styles: ElementStyles = [
     ([('landuse', 'salt_pond')], {StyleKey.COLOR: '#8FB8DB', StyleKey.ZINDEX: 1}),
 ]
 
-# todo ....
 
 leisure_styles: ElementStyles = [
     ([('leisure', 'swimming_pool')], {StyleKey.COLOR: '#8FB8DB'}),
