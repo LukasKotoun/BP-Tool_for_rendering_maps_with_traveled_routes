@@ -250,7 +250,7 @@ def main():
     nodes_gdf = GdfUtils.filter_gdf_rows_inside_gdf_area(
         nodes_gdf, map_area_gdf)
     # filter place without name
-    nodes_gdf2 = GdfUtils.filter_rows(nodes_gdf, [
+    nodes_gdf = GdfUtils.filter_rows(nodes_gdf, [
         [('place', '~')],
         [('place', ''), ('name', '')]])
     # filter peak without name and ele
@@ -260,7 +260,6 @@ def main():
     GdfUtils.change_columns_to_numeric(nodes_gdf, ['ele'])
     if ('ele' in nodes_gdf.columns):
         nodes_gdf['ele'] = nodes_gdf['ele'].round(0).astype('Int64')
-
     # ------------style elements------------
     # nodes_style_assigner = StyleAssigner(
     #     NODES_STYLES, GENERAL_DEFAULT_STYLES, NODES_MANDATORY_STYLES)
@@ -272,10 +271,11 @@ def main():
     #     AREAS_STYLES, GENERAL_DEFAULT_STYLES, AREA_MANDATORY_STYLES)
     # areas_gdf = areas_style_assigner.assign_styles(areas_gdf, wanted_areas)
 
-    coast_gdf, ways_gdf = GdfUtils.filter_rows(ways_gdf,[('natural', 'coastline')], compl=True)
-    
-    ways_gdf = GdfUtils.merge_lines_gdf(ways_gdf, False, [])
-    
+    coast_gdf, ways_gdf = GdfUtils.filter_rows(
+        ways_gdf, [('natural', 'coastline')], compl=True)
+
+    ways_gdf = GdfUtils.merge_lines_gdf(ways_gdf, True, [])
+
     StyleAssigner.assign_styles(
         nodes_gdf, StyleAssigner.convert_dynamic_to_normal(STYLES['nodes'], 20))
     StyleAssigner.assign_styles(
@@ -286,6 +286,31 @@ def main():
     if ('layer' in ways_gdf.columns):
         GdfUtils.change_columns_to_numeric(ways_gdf, ['layer'])
         ways_gdf['layer'] = ways_gdf['layer'].fillna(0)
+
+    # set base width - to function
+    GdfUtils.multiply_column_gdf(nodes_gdf, StyleKey.WIDTH, [
+                             StyleKey.WIDTH_SCALE, StyleKey.FE_WIDTH_SCALE], None)
+    GdfUtils.multiply_column_gdf(nodes_gdf, StyleKey.TEXT_FONT_SIZE, [
+                             StyleKey.TEXT_FONT_SIZE_SCALE, StyleKey.FE_TEXT_FONT_SIZE_SCALE], None)
+    
+    GdfUtils.multiply_column_gdf(ways_gdf, StyleKey.WIDTH, [
+                             StyleKey.WIDTH_SCALE, StyleKey.FE_WIDTH_SCALE], map_object_scaling_factor)
+    
+    GdfUtils.multiply_column_gdf(areas_gdf, StyleKey.WIDTH, [
+                             StyleKey.WIDTH_SCALE, StyleKey.FE_WIDTH_SCALE], map_object_scaling_factor)
+
+    # create derivated columns
+    # text outline
+    GdfUtils.create_derivated_columns(nodes_gdf, StyleKey.TEXT_OUTLINE_WIDTH, StyleKey.TEXT_FONT_SIZE, [], [StyleKey.TEXT_OUTLINE_WIDHT_RATIO])
+    # edge - icons and ways
+    GdfUtils.create_derivated_columns(nodes_gdf, StyleKey.EDGEWIDTH, StyleKey.WIDTH, [], [StyleKey.EDGE_WIDTH_RATIO])
+    GdfUtils.create_derivated_columns(ways_gdf, StyleKey.EDGEWIDTH, StyleKey.WIDTH, [], [StyleKey.EDGE_WIDTH_RATIO])
+    # calc bridge size only for bridges 
+    GdfUtils.create_derivated_columns(ways_gdf, StyleKey.BRIDGE_WIDTH, StyleKey.WIDTH, [('bridge', '')], [StyleKey.BRIDGE_WIDTH_RATIO])
+    GdfUtils.create_derivated_columns(ways_gdf, StyleKey.BRIDGE_EDGE_WIDTH, StyleKey.BRIDGE_WIDTH, [('bridge', '')], [StyleKey.BRIDGE_EDGE_WIDTH_RATIO])
+
+
+    
 
     ways_gdf = GdfUtils.sort_gdf_by_column(ways_gdf, "layer")
     ways_gdf = GdfUtils.sort_gdf_by_column(ways_gdf, StyleKey.ZINDEX)

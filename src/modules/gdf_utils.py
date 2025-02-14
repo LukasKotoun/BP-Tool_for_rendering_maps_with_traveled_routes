@@ -251,6 +251,35 @@ class GdfUtils:
         return bg_gdf
 
     # ------------editing gdf------------
+    @staticmethod  # column and multipliers must be numeric otherwise it will throw error
+    def multiply_column_gdf(gdf, column: StyleKey | str, multipliers: list[str | StyleKey] = [], scaling=None):
+        if (column not in gdf):
+            warnings.warn(f"Column {column} not in GeoDataFrame")
+            return
+        # multiply rows where column value is not empty
+        rows_with_column = GdfUtils.get_rows_filter(gdf, [(column, "")])
+
+        if (scaling is not None):
+            gdf.loc[rows_with_column,
+                    column] = gdf.loc[rows_with_column, column] * scaling
+        multipliers = [
+            multiplier for multiplier in multipliers if multiplier in gdf.columns]
+        # multiply rows where multiplier column exists
+        for multiplier in multipliers:
+            rows_with_multipler = GdfUtils.get_rows_filter(
+                gdf, [(multiplier, "")]) & rows_with_column
+            gdf.loc[rows_with_multipler,
+                    column] *= gdf.loc[rows_with_multipler, multiplier]
+
+    @staticmethod  # column and multipliers must be numeric otherwise it will throw error
+    def create_derivated_columns(gdf, new_column: StyleKey | str, base_column: StyleKey | str, filter: RowsConditions = [], multipliers: list[str | StyleKey] = [], scaling=None):
+        if (new_column in gdf or base_column not in gdf):
+            warnings.warn(f"New column already exist or base column dont in GeoDataFrame")
+            
+        # multiply rows where column value is not empty
+        rows_filter = GdfUtils.get_rows_filter(gdf, filter)
+        gdf.loc[rows_filter, new_column] = gdf.loc[rows_filter, base_column]
+        GdfUtils.multiply_column_gdf(gdf, new_column, multipliers, scaling)
 
     @staticmethod
     def change_columns_to_categorical(gdf: gpd.GeoDataFrame, columns: list) -> None:
@@ -443,7 +472,7 @@ class GdfUtils:
         return percentage_inside >= threshold
 
     # ------------Filtering------------
-   
+
     def get_rows_filter_AND(gdf: gpd.GeoDataFrame, conditions: RowsConditionsAND) -> pd.Series:
         filter_mask = pd.Series(True, index=gdf.index)
         for column_name, column_value in conditions:
@@ -500,7 +529,6 @@ class GdfUtils:
                         filter_mask &= (gdf[column_name] == column_value)
         return filter_mask
 
-
     def get_rows_filter(gdf: gpd.GeoDataFrame, conditions: RowsConditions) -> pd.Series:
         filter_mask = pd.Series(False, index=gdf.index)
         # if list is not nested (is empty) and one empty (true) or condition
@@ -510,12 +538,10 @@ class GdfUtils:
             filter_mask |= GdfUtils.get_rows_filter_AND(gdf, and_conditions)
         return filter_mask
 
-
     def filter_rows(gdf: gpd.GeoDataFrame, conditions: RowsConditions,
                     neg: bool = False, compl: bool = False) -> gpd.GeoDataFrame:
         filter_mask = GdfUtils.get_rows_filter(gdf, conditions)
         return GdfUtils.return_filtered(gdf, filter_mask, neg, compl)
-
 
     @staticmethod
     def return_filtered(gdf: gpd.GeoDataFrame, filter_mask: pd.Series, neg: bool = False,
@@ -530,6 +556,7 @@ class GdfUtils:
                 return gdf[~filter_mask].reset_index(drop=True)
             else:
                 return gdf[filter_mask].reset_index(drop=True)
+
     @staticmethod
     def filter_gdf_rows_inside_gdf_area(gdf_rows: gpd.GeoDataFrame, gdf_area: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
         return gdf_rows[gdf_rows.geometry.within(gdf_area.unary_union)].reset_index(drop=True)

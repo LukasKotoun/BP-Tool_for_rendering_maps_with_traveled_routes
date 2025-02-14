@@ -5,7 +5,7 @@ from common.map_enums import *
 # --------------------------------------------------------------map area--------------------------------------------------------------
 # OSM_INPUT_FILE_NAMES: str = ['../osm_files/vys.osm.pbf','../osm_files/jihmor.osm.pbf']
 # OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/vysJihE.osm.pbf'
-OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/trebic.osm.pbf'
+OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/hv.osm.pbf'
 # OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/brno.osm.pbf'
 # extract
 OSM_WANT_EXTRACT_AREA: bool = False
@@ -48,16 +48,17 @@ PERCENTAGE_PADDING = 0
 # AREA: WantedArea = ["Česko", "Německo", "Slovensko"]
 # AREA: WantedArea = ["Česko","Vysočina, Česko", "Jihomoravský kraj, Česko"]
 # AREA: WantedArea = ["Brno, Česko"]
+# AREA: WantedArea = ["Jihomoravský kraj, Česko", "Kraj Vysočina, Česko"]
 # AREA: WantedArea = ["Česko"]
-# AREA: WantedArea = ["Horní Vilémovice, Česko"]
+AREA: WantedArea = ["Horní Vilémovice, Česko"]
 # AREA: WantedArea = ["Okřešice, Česko"]
-AREA: WantedArea = ["Třebíč, Česko"]
+# AREA: WantedArea = ["Třebíč, Česko"]
 # AREA: WantedArea = ["Okres Třebíč, Česko", "Třebíč, Česko", "Okres Jihlava, Česko"]
 # AREA: WantedArea = ["Třebíč, Česko", "Vladislav, Česko"]
 # AREA: WantedArea = ["Texas, USA"]
 # AREA: WantedArea = ["Vysočina, Česko"]
 
-PAPER_DIMENSIONS: PaperSize | tuple[float | None, float | None] = PaperSize.A3.dimensions
+PAPER_DIMENSIONS: PaperSize | tuple[float | None, float | None] = PaperSize.A4.dimensions
 # set own dimensions. If one is left as 'None' it will be automaticaly calculated using area size
 # PAPER_DIMENSIONS = (1000, None)
 # PAPER_DIMENSIONS = (300, 300)
@@ -174,7 +175,7 @@ WAYS_ADDITIONAL_COLUMNS = ['bridge', 'layer', 'tunnel']
 AREA_ADDITIONAL_COLUMNS = []
 # wanted_ways: WantedFeatures
 wanted_nodes: WantedCategories = {
-    # 'place': {'city'},
+    'place': {'city'},
     # 'place': {'city', 'town'},
     # 'place': {'city', 'town', 'village'},
     # 'place': {'village'},
@@ -192,20 +193,20 @@ unwanted_nodes_tags: UnwantedTags = {
 wanted_ways: WantedCategories = {
     'waterway': set({}),
     # 'highway': ['motorway', 'trunk','primary', 'secondary', 'tertiary'],
-    # 'highway': ['motorway', 'trunk','primary', 'secondary'],
+    # 'highway': ['motorway', 'trunk', 'primary'],
     'highway': {'motorway', 'trunk', 'primary', 'secondary', 'tertiary', 'unclassified', 'residential', 'path', 'footway'},
-    # 'highway':[],
+    # 'highway':set({}),
     'railway': {'rail', 'tram'},
     'natural': {'coastline'}
 }
 
 unwanted_ways_tags: UnwantedTags = {
     # 'highway':['coridor','via_ferrata','crossing','traffic_island','proposed','construction' ],
-    'railway': {
-        'service': ['yard', 'spur'], # spur, siding
-        'tunnel': ['building_passage'],
-    },
-    'waterway': ['stream']
+    # 'railway': {
+    #     'service': ['yard', 'spur'], # spur, siding
+    #     'tunnel': ['building_passage'],
+    # },
+    # 'waterway': ['stream']
 
     
     # {'railway':""}:{'service':['yard'],'tunnel': ['building_passage']}
@@ -213,7 +214,7 @@ unwanted_ways_tags: UnwantedTags = {
 
 
 wanted_areas: WantedCategories = {
-        # # 'landuse': ['forest', 'residential', 'farmland', 'meadow', 'grass'],
+        # 'landuse': ['forest', 'residential', 'farmland', 'meadow', 'grass'],
         'landuse': {'forest', 'residential', 'commercial', 'retail', 'industrial', 'farmland', 'meadow', 'grass'},
         'leisure': {'park', 'pitch', 'garden', 'golf_course', 'nature_reserve', 'playground', 'stadium', 'swimming_pool', 'sports_centre'},
         # 'leisure': {'park', 'pitch', 'garden', 'golf_course', 'playground', 'stadium', 'swimming_pool', 'sports_centre'},
@@ -221,8 +222,8 @@ wanted_areas: WantedCategories = {
         # # 'leisure': ['park', 'pitch', 'garden', 'golf_course', 'nature_reserve'],
         'water': set({}),
         'boundary': {'national_park'},
-        'building':{'house','residential'}
-        # 'water': ['river','lake','reservoir'],
+        'building': {'house','residential'},
+        'water': ['river','lake','reservoir'],
 }
 unwanted_areas_tags: UnwantedTags = {
 }
@@ -274,7 +275,7 @@ place_styles: ElementStyles = [
 natural_styles_nodes: ElementStyles = [
     ([('natural', 'peak')], {
         StyleKey.ICON: "^", StyleKey.COLOR: "#7f3016", 
-        StyleKey.EDGEWIDTH: 0.2, StyleKey.TEXT_OUTLINE_WIDTH: 50, 
+        StyleKey.EDGEWIDTH: 1 + 0.2, StyleKey.TEXT_OUTLINE_WIDTH: 50, 
         StyleKey.TEXT_FONT_SIZE: 400, StyleKey.WIDTH: 3.6
     }),
 ]
@@ -304,9 +305,9 @@ NODES_STYLES: ElementStyles = [
 ways_mandatory_styles: ElementStyles = [
     ([], {
         StyleKey.COLOR: '#EDEDE0', StyleKey.ALPHA: 1.0, StyleKey.WIDTH: 1, StyleKey.LINESTYLE: '-',
-        StyleKey.EDGE_WIDTH_RATIO: 0.3, StyleKey.BRIDGE_WIDTH_RATIO: 0, StyleKey.BRIDGE_EDGE_WIDTH_RATIO: 0.3, 
+        StyleKey.EDGE_WIDTH_RATIO: 1 + 0.3, StyleKey.BRIDGE_WIDTH_RATIO: 0, StyleKey.BRIDGE_EDGE_WIDTH_RATIO: 1 + 0.3, 
         StyleKey.BRIDGE_COLOR: "#FFFFFF", StyleKey.BRIDGE_EDGE_COLOR: "#7D7D7D", 
-        StyleKey.EDGE_COLOR: None, StyleKey.EDGE_LINESTYLE: '-'
+        StyleKey.EDGE_COLOR: None, StyleKey.EDGE_LINESTYLE: '-', StyleKey.WIDTH_SCALE: 100, StyleKey.FE_WIDTH_SCALE: 1,
     })
 ]
 
@@ -327,7 +328,7 @@ highway_styles: ElementStyles = [
     ([('highway', 'steps')], {StyleKey.COLOR: '#8f8364', StyleKey.LINESTYLE: "--", StyleKey.EDGE_COLOR: None}),
     ([('highway', 'path')], {StyleKey.COLOR: '#8f8364', StyleKey.LINESTYLE: "--", StyleKey.EDGE_COLOR: None, StyleKey.BRIDGE_COLOR: "#FFFFFF"}),
     ([('highway', 'track')], {StyleKey.COLOR: '#8f8364', StyleKey.LINESTYLE: "--", StyleKey.EDGE_COLOR: None, StyleKey.BRIDGE_COLOR: "#FFFFFF"}),
-    ([('highway', 'residential')], {StyleKey.COLOR: '#FFFFFF'}),
+    ([('highway', 'residential')], {StyleKey.COLOR: '#FFFFFF'})
 ]
 
 railway_styles: ElementStyles = [
@@ -335,7 +336,7 @@ railway_styles: ElementStyles = [
         StyleKey.COLOR: '#FFFFFF', StyleKey.ZINDEX: 1, StyleKey.WIDTH: 10,
         StyleKey.BRIDGE_EDGE_COLOR: '#5D5D5D', StyleKey.BRIDGE_COLOR: "#FFFFFF",
         StyleKey.EDGE_COLOR: '#5D5D5D', StyleKey.BRIDGE_WIDTH_RATIO: 1.7, 
-        StyleKey.BRIDGE_EDGE_WIDTH_RATIO: 0.4,  # todo control after function to calculating width
+        StyleKey.BRIDGE_EDGE_WIDTH_RATIO: 1 + 0.4,  # todo control after function to calculating width
         StyleKey.LINESTYLE: (0, (5, 5))
     }),
     ([('railway', 'tram')], {

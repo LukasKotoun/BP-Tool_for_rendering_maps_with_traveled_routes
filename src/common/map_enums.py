@@ -19,6 +19,8 @@ class StyleKey(Enum):
     EDGE_ALPHA = 21
     EDGE_WIDTH_RATIO = 7  # start with + 1
     EDGE_LINESTYLE = 8
+    WIDTH_SCALE = 30
+    FE_WIDTH_SCALE = 31
     #   bridges
     BRIDGE_COLOR = 9
     BRIDGE_WIDTH_RATIO = 10  # start with + 1
@@ -30,15 +32,16 @@ class StyleKey(Enum):
     #text
     TEXT_FONT_SIZE = 14
     TEXT_OUTLINE_WIDHT_RATIO = 16
-    
+    TEXT_FONT_SIZE_SCALE = 32
+    FE_TEXT_FONT_SIZE_SCALE = 32
     # calculated - cant be set by user
     # calculated like TEXT_FONT_SIZE * TEXT_OUTLINE_WIDHT_RATIO
     TEXT_OUTLINE_WIDTH = 17
-    # calculated like WIDTH + WIDTH * EDGE_WIDTH_RATIO
+    # calculated like WIDTH * 1 + EDGE_WIDTH_RATIO
     EDGEWIDTH = 18
-    # calculated like WIDTH + WIDTH * BRIDGE_WIDTH_RATIO 
+    # calculated like WIDTH * (1 + BRIDGE_WIDTH_RATIO)
     BRIDGE_WIDTH = 19
-    # calculated like WIDTH + WIDTH * (BRIDGE_WIDTH_RATIO * EDGE_WIDTH_RATIO) or BRIDGE_WIDTH + BRIDGE_WIDTH * BRIDGE_EDGE_WIDTH_RATIO
+    # calculated like BRIDGE_WIDTH * 1+  BRIDGE_EDGE_WIDTH_RATIO
     BRIDGE_EDGE_WIDTH = 20
 
 class StyleType(Enum):
