@@ -195,7 +195,7 @@ class StyleAssigner:
         new_styles: StyleKey = set()
         # assign styles from most general to most specific by writing to columns in styles
         for conditons, styles in reversed(conditons_styles): # assing from least specific to most specific
-            filtered_rows: pd.Series = GdfUtils.create_rows_filter(gdf, conditons)
+            filtered_rows: pd.Series = GdfUtils.get_rows_filter(gdf, conditons)
             for key, value in styles.items():
                 if isinstance(value, tuple) or isinstance(value, list): 
                     # write whole tuple to one column cell. Dont need to match index to filtered_rows, it will be assinged by value

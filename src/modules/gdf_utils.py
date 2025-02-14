@@ -10,12 +10,14 @@ import pygeoops
 from modules.utils import Utils
 
 from common.map_enums import WorldSides, StyleKey
-from common.custom_types import BoundsDict, DimensionsTuple, Point, WantedArea, RowsConditions
+from common.custom_types import BoundsDict, DimensionsTuple, Point, WantedArea, RowsConditions, RowsConditionsAND
 from common.common_helpers import time_measurement
 
 from shapely.ops import unary_union, split, linemerge
 
 # todo remove unused and refactor
+
+
 class GdfUtils:
 
     # ------------getting informations------------
@@ -329,8 +331,8 @@ class GdfUtils:
             # remove bridge column if exists
             gdf = gdf.drop(columns=['bridge'], errors='ignore')
             # split gdf to tunnels and rest
-            tunnels_gdf, rest_gdf = GdfUtils.filter_gdf_column_values(
-                gdf, 'tunnel', [], compl=True)
+            tunnels_gdf, rest_gdf = GdfUtils.filter_rows(
+                gdf, [('tunnel', '')], compl=True)
 
             tunnel_columns = [
                 col for col in tunnels_gdf.columns if col not in columns_ignore]
@@ -342,14 +344,14 @@ class GdfUtils:
                 'geometry': GdfUtils.merge_lines_safe
             })
             merged_tunnels_gdf = gpd.GeoDataFrame(
-                merged_tunnels, geometry='geometry', crs=gdf.crs).reset_index()
+                merged_tunnels, geometry='geometry', crs=gdf.crs).reset_index(drop=False)
 
             # merge all rest lines with same values in 'rest_columns' (ignore bridge, layer and tunnel)
             merged_rest = rest_gdf.groupby(rest_columns, dropna=False, observed=True).agg({
                 'geometry': GdfUtils.merge_lines_safe
             })
             merged_rest_gdf = gpd.GeoDataFrame(
-                merged_rest, geometry='geometry', crs=gdf.crs).reset_index()
+                merged_rest, geometry='geometry', crs=gdf.crs).reset_index(drop=False)
             # merge rest and tunnels
             return GdfUtils.combine_gdfs([merged_tunnels_gdf, merged_rest_gdf])
 
@@ -382,7 +384,7 @@ class GdfUtils:
             return gdf.set_crs(epsg=toEpsg)
         return gdf.to_crs(epsg=toEpsg)
 
-    @staticmethod  # does not work if area is inside of aother area - use or not use - by gap
+    @staticmethod  # does not work if area is inside of another area - use or not use - by gap
     @time_measurement("inacurrate")
     def remove_common_boundary_inaccuracy(boundary_gdf: gpd.GeoDataFrame) -> None:
         """Remove common boundary inaccuracy in given GeoDataFrame 
@@ -408,8 +410,8 @@ class GdfUtils:
 
         # boundary_gdf.loc[j, "geometry"] = adjusted_area2
 
-        # work by createing from 2 seperated areas row with combined area and one row with original area
-        # # remove small gaps between areas
+        # work by creating from 2 seperated areas row with combined area and one row with original area
+        # # remove small gaps between areas - does not work always but better then above??
         boundary_gdf["geometry"] = boundary_gdf["geometry"].buffer(0)
         for i, row in boundary_gdf.iterrows():
             # find areas that share a boundary with row
@@ -441,122 +443,9 @@ class GdfUtils:
         return percentage_inside >= threshold
 
     # ------------Filtering------------
-    # @staticmethod
-    # def create_condition(gdf: gpd.GeoDataFrame, att_name: str, att_values: list[str] = []) -> pd.Series:
-    #     """Create condition for given gdf, return true for every row that have att_name with att_value (if given,
-    #     if not it check for any value (not NA)).
-    #     If att_name is not in gdf it return condition with all false.
-
-    #     Args:
-    #         gdf (gpd.GeoDataFrame): Gdf to create condition for.
-    #         att_name (str): Name of atribute to condition (will leave true for rows with value on this att column).
-    #         att_values (list[str], optional): Values of att_name (will leave true for rows with this values in att_name column) Defaults to [].
-
-    #     Returns:
-    #         pd.Series[bool]: condition for given gdf.
-    #     """
-
-    @staticmethod
-    def __filter_gdf_columns_values_AND_condition(gdf: gpd.GeoDataFrame, col_names: list[str],
-                                                  col_values: list = [], neg: bool = False) -> pd.Series:
-        """
-        Create a condition for filtering rows where every column specified in 'col_names' contains any of the values in 'col_values'.
-        If 'neg' is used, create a condition for filtering rows where none of the values in 'col_values' are present in any of the 'col_names'.
-
-        Example usage:
-            - To select all rows that contain '-' or pd.NA in columns 1 and 2:
-                __filter_gdf_columns_values_AND_condition(gdf, [1, 2], ['-', pd.NA])
-            - To select all rows that do not contain '-' or pd.NA in columns 1 and 2:
-                __filter_gdf_columns_values_AND_condition(gdf, [1, 2], ['-', pd.NA], True)
-            - To select all rows where columns 1 and 2 have some value (i.e., do not contain pd.NA):
-                __filter_gdf_columns_values_AND_condition(gdf, [1, 2])
-            - To select all rows where columns 1 and 2 do not have any value (i.e., contain only pd.NA):
-                __filter_gdf_columns_values_AND_condition(gdf, [1, 2], [], True)
-
-        Args:
-            gdf (gpd.GeoDataFrame): GeoDataFrame to filter.
-            col_names (list[str]): List of column names to check.
-            col_values (list, optional): List of values to check for in the specified columns. Defaults to [].
-            neg (bool, optional): If True, filters rows where none of the specified values in 'col_values' are present in any of the 'col_names'. Defaults to False.
-
-        Returns:
-            Series: A boolean Series indicating the filtered rows.
-        """
-        existing_columns: list[str] = [
-            col for col in col_names if col in gdf.columns]
-
-        # None of values in col_values can be in any of column in each row
-        if (neg):
-            # All of col_names are in gdf
-            if (set(existing_columns) == set(col_names)):
-                if (col_values):
-                    # ~(some column have some value from col_values) == no column has any value from col_values
-                    condition = ~gdf[existing_columns].isin(
-                        col_values).any(axis=1)
-                else:
-                    # col values are not specified - values must have NA
-                    condition = gdf[existing_columns].isna().all(axis=1)
-
-            # None of col_names is in gdf
-            elif (not existing_columns):
-                if (col_values and any(pd.isna(value) for value in col_values)):
-                    # cant have NA
-                    condition = gdf.index < 0
-                else:
-                    # can have na - match missing columns (all) as NA
-                    condition = gdf.index >= 0
-
-            # Some of col_names are in gdf
-            else:
-                if (col_values and any(pd.isna(value) for value in col_values)):
-                    # cant have NA and have missing columns
-                    condition = gdf.index < 0
-                else:
-                    if (col_values):
-                        # can have NA
-                        condition = ~gdf[existing_columns].isin(
-                            col_values).any(axis=1)
-                    else:
-                        # Must have NA
-                        condition = gdf[existing_columns].isna().all(axis=1)
-                    # match missing columns as NA and check rest
-
-        # Some value from col_values must be in every column in each row
-        else:
-            # All of col_names are in gdf
-            if (set(existing_columns) == set(col_names)):
-                if (col_values):
-                    condition = gdf[existing_columns].isin(
-                        col_values).all(axis=1)
-                else:
-                    # col values are not specified - values cant have NA
-                    condition = gdf[existing_columns].notna().all(axis=1)
-
-            # None of col_names is in gdf
-            elif (not existing_columns):
-                if (col_values and any(pd.isna(value) for value in col_values)):
-                    # match missing columns (all) as NA
-                    condition = gdf.index >= 0
-                else:
-                    # cant have NA - non specified or not containing NA
-                    condition = gdf.index < 0
-
-            # Some of col_names are in gdf
-            else:
-                if (col_values and any(pd.isna(value) for value in col_values)):
-                    # match missing columns as NA and check rest
-                    condition = gdf[existing_columns].isin(
-                        col_values).all(axis=1)
-                else:
-                    # cant have NA and have missing columns
-                    condition = gdf.index < 0
-        return condition
-
-    def create_rows_filter(gdf: gpd.GeoDataFrame, conditions: RowsConditions) -> pd.Series:
-
-        # todo craete function that will suport also OR - using this as AND and new function as for every call of this function use OR and remove all other filters, can also replace
-        # todo all suported conditons - name, nan ~, nonan '', [list of or values with individual ~] - [list with '' and '~' will return all rows]
-        filter_mask = pd.Series([True] * len(gdf))
+   
+    def get_rows_filter_AND(gdf: gpd.GeoDataFrame, conditions: RowsConditionsAND) -> pd.Series:
+        filter_mask = pd.Series(True, index=gdf.index)
         for column_name, column_value in conditions:
             if column_name not in gdf.columns:
                 # handle missing columns
@@ -579,7 +468,8 @@ class GdfUtils:
             else:
                 if isinstance(column_value, list):
                     # start with all rows excluded
-                    condition_mask = pd.Series([False] * len(gdf))
+                    condition_mask = pd.Series(False, index=gdf.index)
+
                     if not column_value:
                         # If the list is empty, the column should not be NA
                         condition_mask |= gdf[column_name].notna()
@@ -610,116 +500,36 @@ class GdfUtils:
                         filter_mask &= (gdf[column_name] == column_value)
         return filter_mask
 
+
+    def get_rows_filter(gdf: gpd.GeoDataFrame, conditions: RowsConditions) -> pd.Series:
+        filter_mask = pd.Series(False, index=gdf.index)
+        # if list is not nested (is empty) and one empty (true) or condition
+        if not any(isinstance(item, list) for item in conditions):
+            conditions = [conditions]
+        for and_conditions in conditions:
+            filter_mask |= GdfUtils.get_rows_filter_AND(gdf, and_conditions)
+        return filter_mask
+
+
+    def filter_rows(gdf: gpd.GeoDataFrame, conditions: RowsConditions,
+                    neg: bool = False, compl: bool = False) -> gpd.GeoDataFrame:
+        filter_mask = GdfUtils.get_rows_filter(gdf, conditions)
+        return GdfUtils.return_filtered(gdf, filter_mask, neg, compl)
+
+
     @staticmethod
-    def return_filtered(gdf: gpd.GeoDataFrame, condition: pd.Series, neg: bool = False,
+    def return_filtered(gdf: gpd.GeoDataFrame, filter_mask: pd.Series, neg: bool = False,
                         compl: bool = False):
         if (compl):
             if (neg):
-                return gdf[~condition].reset_index(drop=True), gdf[condition].reset_index(drop=True)
+                return gdf[~filter_mask].reset_index(drop=True), gdf[filter_mask].reset_index(drop=True)
             else:
-                return gdf[condition].reset_index(drop=True), gdf[~condition].reset_index(drop=True)
+                return gdf[filter_mask].reset_index(drop=True), gdf[~filter_mask].reset_index(drop=True)
         else:
             if (neg):
-                return gdf[~condition].reset_index(drop=True)
+                return gdf[~filter_mask].reset_index(drop=True)
             else:
-                return gdf[condition].reset_index(drop=True)
-
-    @staticmethod
-    def filter_gdf_column_values(gdf: gpd.GeoDataFrame, col_name: str,
-                                 col_values: list = [], neg: bool = False,
-                                 compl: bool = False) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame] | gpd.GeoDataFrame:
-        if (col_values and col_name in gdf):
-            condition = gdf[col_name].isin(col_values)
-        elif (col_name in gdf):
-            condition = gdf[col_name].notna()
-        else:
-            if (col_values and any(pd.isna(value) for value in col_values)):
-                # match missin column as NA
-                condition = gdf.index >= 0
-            else:
-                # cant have NA and have missing column
-                condition = gdf.index < 0
-        return GdfUtils.return_filtered(gdf, condition, neg, compl)
-
-    @staticmethod
-    def filter_gdf_related_columns_values(gdf: gpd.GeoDataFrame, col_name: str, col_values: list, related_col_names: list,
-                                          related_col_values: list = [], related_neg: bool = False,
-                                          compl: bool = False) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame] | gpd.GeoDataFrame:
-        """Filter rows in a GeoDataFrame (gdf) where the specified `col_name` contains some of the values in `col_values` and apply 
-        the `__filter_gdf_columns_values_AND_condition` function on the `related_col_names` and `related_col_values`.
-        Rows that do not match `col_values` in `col_name` remain unfiltered (unchanged) in the gdf.
-
-        Example of usage:
-            - Want all places that have name
-                filter_gdf_related_columns_values(gdf, 'place', [], ['name'], [])
-            - Want all cities that dont have name 
-                filter_gdf_related_columns_values(gdf, 'place', ['city'], ['name'], [pd.NA])
-
-        Args:
-            gdf (gpd.GeoDataFrame): GeoDataFrame where to check.
-            col_name (list[str]): Column to check for `col_values`.
-            col_values (list, optional): list of values to check for in `col_name`. Defaults to [].
-            related_col_names (list): list of columns to check for `related_col_values`, but only in rows where `col_name` corresponds to `col_values`. Defaults to [].
-            related_col_values (list, optional):  list of values to check for in `related_col_names`, but only in rows where `col_name` corresponds to `col_values`. Defaults to [].. Defaults to [].
-            related_neg (bool, optional): If True, filters rows where none of the `related_col_values` are present in `related_col_names`. Defaults to False.
-            compl (bool, optional): If True, the function returns both the filtered GeoDataFrame and its complement. Defaults to False.
-
-        Returns:
-            tuple[gpd.GeoDataFrame, gpd.GeoDataFrame] | gpd.GeoDataFrame: Filtered GeoDataFrame and, optionally, its complement.
-        """
-        if (col_values and col_name in gdf):
-            condition = (~gdf[col_name].isin(col_values)) | (gdf[col_name].isin(col_values) & (
-                GdfUtils.__filter_gdf_columns_values_AND_condition(gdf, related_col_names, related_col_values, related_neg)))
-        elif (col_name in gdf):
-            condition = (~gdf[col_name].notna()) | (gdf[col_name].notna() & (
-                GdfUtils.__filter_gdf_columns_values_AND_condition(gdf, related_col_names, related_col_values, related_neg)))
-        else:
-            if (col_values and any(pd.isna(value) for value in col_values)):
-                # filter related also on NA - all are NA => filter all
-                condition = GdfUtils.__filter_gdf_columns_values_AND_condition(
-                    gdf, related_col_names, related_col_values, related_neg)
-            else:
-                condition = gdf.index >= 0
-
-        return GdfUtils.return_filtered(gdf, condition, False, compl)
-
-    @staticmethod
-    def filter_gdf_columns_value():
-        # todo - create function that will filter gdf that in each column in list have value from same position in other list
-        # for example: filter_gdf_columns_value(gdf, [1, 2], ['a', 'b']) will return gdf with rows that have 'a' in column 1 and 'b' in column 2
-        pass
-
-    @staticmethod
-    def filter_gdf_columns_values_AND(gdf: gpd.GeoDataFrame, col_names: list[str],
-                                      col_values: list = [], neg: bool = False,
-                                      compl: bool = False) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame] | gpd.GeoDataFrame:
-        """Return gdf with rows where every column specified in 'col_names' contains any of the values in 'col_values'.
-        If 'neg' is used, return gdf with rows that dont have any of values specified in 'col_values' in any of 'col_names'.
-
-        Example of usage:
-            - To select all rows that have '-' or pd.NA in columns 1 and 2
-                filter_gdf_columns_values_AND(gdf, [1, 2], ['-', pd.NA])
-            - To select all rows that dont have '-' or pd.NA in columns 1 and 2
-                filter_gdf_columns_values_AND(gdf, [1, 2], ['-', pd.NA], True)
-            - To select all rows that have some value in columns 1 and 2
-                filter_gdf_columns_values_AND(gdf, [1, 2], [])
-            - To select all rows that dont have some value (have pd.NA) in columns 1 and 2
-                filter_gdf_columns_values_AND(gdf, [1, 2], [], True)
-        Args:
-            gdf (gpd.GeoDataFrame): GeoDataFrame where to check.
-            col_names (list[str]): List of columns to check.
-            col_values (list, optional): List of values to check for in columns. Defaults to [].
-            neg (bool, optional): If neg is used create condition for filtering with rows that dont have any of values specified in 'col_values' in any of 'col_names'. Defaults to False.
-            compl (bool, optional): If is set to true returned gdf will have also complimentary gdf. Defaults to False.
-
-        Returns:
-            tuple[gpd.GeoDataFrame, gpd.GeoDataFrame] | gpd.GeoDataFrame: Filtered frame with condition and optionaly second complimentary gdf.
-        """
-        condition = GdfUtils.__filter_gdf_columns_values_AND_condition(
-            gdf, col_names, col_values, neg)
-
-        return GdfUtils.return_filtered(gdf, condition, False, compl)
-
+                return gdf[filter_mask].reset_index(drop=True)
     @staticmethod
     def filter_gdf_rows_inside_gdf_area(gdf_rows: gpd.GeoDataFrame, gdf_area: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
         return gdf_rows[gdf_rows.geometry.within(gdf_area.unary_union)].reset_index(drop=True)
@@ -735,6 +545,7 @@ class GdfUtils:
         return filtered_gdf_mercator_projected.to_crs(epsg=gdf.crs)
 
     # ------------Others functions------------
+
     @staticmethod
     def buffer_gdf_same_distance(gdf: gpd.GeoDataFrame, distance: float, toEpsg: int, resolution: int = 16,
                                  cap_style: str = 'round', join_style: str = 'round') -> gpd.GeoDataFrame:

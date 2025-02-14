@@ -53,5 +53,5 @@ class GpxManager:
 
         GdfUtils.change_columns_to_categorical(
             self.gpxs_gdf, ['fileName', 'folder'])
-        return GdfUtils.filter_gdf_column_values(self.gpxs_gdf, 'folder', [], neg=True, compl=True)
+        return GdfUtils.filter_rows(self.gpxs_gdf,[('folder','')], neg = True, compl=True)
      

@@ -82,11 +82,13 @@ def main():
         print("Multiple files feature (list of osm files) is avilable only with option OSM_WANT_EXTRACT_AREA")
         return
     # if are for preview is not specified, use whole area
-    if(WANT_PREVIEW and AREA == None):
-        map_area_gdf = GdfUtils.get_whole_area_gdf(OUTER_AREA, EPSG_OSM, EPSG_DISPLAY)
+    if (WANT_PREVIEW and AREA == None):
+        map_area_gdf = GdfUtils.get_whole_area_gdf(
+            OUTER_AREA, EPSG_OSM, EPSG_DISPLAY)
     else:
-        map_area_gdf = GdfUtils.get_whole_area_gdf(AREA, EPSG_OSM, EPSG_DISPLAY)
-        
+        map_area_gdf = GdfUtils.get_whole_area_gdf(
+            AREA, EPSG_OSM, EPSG_DISPLAY)
+
     # ------------store bounds to plot and combine area rows in gdf to 1 row------------
     boundary_map_area_gdf = GdfUtils.create_empty_gdf()  # default dont plot
     if (AREA_BOUNDARY == AreaBounds.SEPARATED):
@@ -135,21 +137,21 @@ def main():
         #! map scale in real size
         # map_area_bounds = GdfUtils.get_bounds_gdf(GdfUtils.change_epsg(map_area_gdf, EPSG_OSM))
         # map_scale = Utils.get_scale(map_area_bounds, paper_dimensions_mm)
-        
+
         # # in meteres for same proportion keeping
         # map_object_scaling_factor = (Utils.calc_map_object_scaling_factor(map_area_dimensions,
         #                                                                   paper_dimensions_mm)
         #                              * OBJECT_MULTIPLIER)
         #! scaling factor and for zoom calc in webmercato
         map_object_scaling_factor = (Utils.calc_map_object_scaling_factor(map_area_dimensions,
-                                                                           paper_dimensions_mm)
-                                      * OBJECT_MULTIPLIER)
+                                                                          paper_dimensions_mm)
+                                     * OBJECT_MULTIPLIER)
 
-    print(Utils.calc_scaling_factor_multiplier( 
+    print(Utils.calc_scaling_factor_multiplier(
         map_object_scaling_factor, 1, 500))
-    print(Utils.get_zoom_level(map_object_scaling_factor, ZOOM_MAPPING,0.1))
+    print(Utils.get_zoom_level(map_object_scaling_factor, ZOOM_MAPPING, 0.1))
     # map_object_scaling_factor *= Utils.calc_scaling_factor_multiplier(
-        #  map_object_scaling_factor, 1, 500)
+    #  map_object_scaling_factor, 1, 500)
     # map_object_scaling_factor = 1
     # map_object_scaling_factor *= 13
     # ------------get elements from osm file------------
@@ -186,9 +188,6 @@ def main():
     # if (not GdfUtils.are_gdf_geometry_inside_geometry(root_files_gpxs_gdf, reqired_area_polygon)
     #    or not GdfUtils.are_gdf_geometry_inside_geometry(folder_gpxs_gdf, reqired_area_polygon)):
     #     warnings.warn("Some gpx files are not whole inside selected map area.")
-   
-
-
 
     # todo to FE - and send in settings to BE and on BE check settings validity
     # root_files = list(root_files_gpxs_gdf['fileName'].unique())
@@ -205,7 +204,7 @@ def main():
     # if (ROOT_FILES_COLOR_MODE == ColorMode.PALETTE or ROOT_FILES_COLOR_MODE == ColorMode.SHADE):
     #     used_colors_count = StyleAssigner.assign_dynamic_colors(
     #         root_files, root_files_styles, ROOT_FILES_COLOR_MODE, ROOT_FILES_COLOR_OR_PALLET, ROOT_FILES_COLOR_DIS_PALLET, max_colors_count, 0)
-        
+
     # # assing colors to folders from pallet or shade + use count of used colors from root files if same pallet or shade
     # if (FOLDER_COLOR_MODE == ColorMode.PALETTE or FOLDER_COLOR_MODE == ColorMode.SHADE):
     #     used_colors_count = used_colors_count if same_pallet else 0
@@ -220,7 +219,8 @@ def main():
         # folder_gpxs_gdf, GPX_FOLDERS_CATEGORIES)
     # gpxs_gdf = GdfUtils.combine_gdfs([root_files_gpxs_gdf, folder_gpxs_gdf])
 
-    StyleAssigner.assign_styles(gpxs_gdf, GPXS_STYLES) # maybe add gpx to be change by zoom - size
+    # maybe add gpx to be change by zoom - size
+    StyleAssigner.assign_styles(gpxs_gdf, GPXS_STYLES)
     # ------------osm file------------
     osm_file_parser = OsmDataParser(
         wanted_nodes, wanted_ways, wanted_areas,
@@ -243,25 +243,24 @@ def main():
         warnings.warn(
             "Selected area map is not whole inside given osm.pbf file.")
 
-        
     # ------------filter some elements out - before styles adding------------
     # only for some ways categories
     # ways_gdf = GdfUtils.filter_short_ways(ways_gdf, 10)
 
     nodes_gdf = GdfUtils.filter_gdf_rows_inside_gdf_area(
         nodes_gdf, map_area_gdf)
-    # filter out place without name
-    nodes_gdf = GdfUtils.filter_gdf_related_columns_values(
-        nodes_gdf, 'place', [], ['name'], [])  # ekvivalent[('place', ''), ('name', '')]
-    # filter out peak without name and ele
-    nodes_gdf = GdfUtils.filter_gdf_related_columns_values(
-        nodes_gdf, 'natural', ['peak'], ['name', 'ele'], []) # ekvivalent[('natural', 'peak'), ('name', ''), ('ele', '')] or [(')]
-    # round ele to whole number
+    # filter place without name
+    nodes_gdf2 = GdfUtils.filter_rows(nodes_gdf, [
+        [('place', '~')],
+        [('place', ''), ('name', '')]])
+    # filter peak without name and ele
+    nodes_gdf = GdfUtils.filter_rows(nodes_gdf, [
+        [('natural', '~peak')],
+        [('natural', 'peak'), ('name', ''), ('ele', '')]])
     GdfUtils.change_columns_to_numeric(nodes_gdf, ['ele'])
-    if('ele' in nodes_gdf.columns):
+    if ('ele' in nodes_gdf.columns):
         nodes_gdf['ele'] = nodes_gdf['ele'].round(0).astype('Int64')
 
-    
     # ------------style elements------------
     # nodes_style_assigner = StyleAssigner(
     #     NODES_STYLES, GENERAL_DEFAULT_STYLES, NODES_MANDATORY_STYLES)
@@ -272,30 +271,33 @@ def main():
     # areas_style_assigner = StyleAssigner(
     #     AREAS_STYLES, GENERAL_DEFAULT_STYLES, AREA_MANDATORY_STYLES)
     # areas_gdf = areas_style_assigner.assign_styles(areas_gdf, wanted_areas)
-    
-    coast_gdf, ways_gdf = GdfUtils.filter_gdf_column_values(ways_gdf, 'natural', ['coastline'], compl=True)
 
+    coast_gdf, ways_gdf = GdfUtils.filter_rows(ways_gdf,[('natural', 'coastline')], compl=True)
+    
     ways_gdf = GdfUtils.merge_lines_gdf(ways_gdf, False, [])
-    StyleAssigner.assign_styles(nodes_gdf, StyleAssigner.convert_dynamic_to_normal(STYLES['nodes'], 20))
-    StyleAssigner.assign_styles(ways_gdf, StyleAssigner.convert_dynamic_to_normal(STYLES['ways'],20))
-    StyleAssigner.assign_styles(areas_gdf, StyleAssigner.convert_dynamic_to_normal(STYLES['areas'], 20))
+    
+    StyleAssigner.assign_styles(
+        nodes_gdf, StyleAssigner.convert_dynamic_to_normal(STYLES['nodes'], 20))
+    StyleAssigner.assign_styles(
+        ways_gdf, StyleAssigner.convert_dynamic_to_normal(STYLES['ways'], 20))
+    StyleAssigner.assign_styles(
+        areas_gdf, StyleAssigner.convert_dynamic_to_normal(STYLES['areas'], 20))
 
     if ('layer' in ways_gdf.columns):
         GdfUtils.change_columns_to_numeric(ways_gdf, ['layer'])
         ways_gdf['layer'] = ways_gdf['layer'].fillna(0)
-            
+
     ways_gdf = GdfUtils.sort_gdf_by_column(ways_gdf, "layer")
     ways_gdf = GdfUtils.sort_gdf_by_column(ways_gdf, StyleKey.ZINDEX)
     areas_gdf = GdfUtils.sort_gdf_by_column(areas_gdf, StyleKey.ZINDEX)
-
-    bg_gdf = GdfUtils.create_bg_gdf(map_area_gdf, coast_gdf, OCEAN_WATER, GENERAL_DEFAULT_STYLES[StyleKey.COLOR])
+    bg_gdf = GdfUtils.create_bg_gdf(
+        map_area_gdf, coast_gdf, OCEAN_WATER, GENERAL_DEFAULT_STYLES[StyleKey.COLOR])
     bg_gdf['area'] = bg_gdf.area
     bg_gdf = bg_gdf.sort_values(by='area', ascending=False)
     # order gdf by area plot smaller at the end
-    areas_gdf['area'] = areas_gdf.geometry.area 
+    areas_gdf['area'] = areas_gdf.geometry.area
     areas_gdf = areas_gdf.sort_values(by='area', ascending=False)
 
-    
     # ------------plot------------
     plotter = Plotter(map_area_gdf, paper_dimensions_mm,
                       map_object_scaling_factor)
@@ -308,16 +310,16 @@ def main():
     plotter.plot_nodes(nodes_gdf, TEXT_WRAP_NAMES_LEN)
     plotter.plot_gpxs(gpxs_gdf, 1)
     if (boundary_map_area_gdf is not None and not boundary_map_area_gdf.empty):
-            # GdfUtils.remove_common_boundary_inaccuracy(boundary_map_area_gdf) # maybe turn off/on in settings
-            plotter.plot_area_boundary(area_gdf=boundary_map_area_gdf.to_crs(
-                epsg=EPSG_DISPLAY), linewidth=AREA_BOUNDARY_LINEWIDTH)
-            
+        # GdfUtils.remove_common_boundary_inaccuracy(boundary_map_area_gdf) # maybe turn off/on in settings
+        plotter.plot_area_boundary(area_gdf=boundary_map_area_gdf.to_crs(
+            epsg=EPSG_DISPLAY), linewidth=AREA_BOUNDARY_LINEWIDTH)
+
     plotter.adjust_texts(TEXT_BOUNDS_OVERFLOW_THRESHOLD)
 
     if (WANT_AREA_CLIPPING or WANT_PREVIEW):
         plotter.clip(EPSG_DISPLAY, GdfUtils.create_polygon_from_gdf_bounds(
             nodes_gdf, ways_gdf, areas_gdf))
-   
+
     plotter.generate_pdf(OUTPUT_PDF_NAME)
     # plotter.show_plot()
 
