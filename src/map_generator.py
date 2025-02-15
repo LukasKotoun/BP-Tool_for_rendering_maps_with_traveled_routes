@@ -274,10 +274,14 @@ def main():
         
     coast_gdf, ways_gdf = GdfUtils.filter_rows(
         ways_gdf, [('natural', 'coastline')], compl=True)
-
-    GdfUtils.change_bridge_and_tunnels(ways_gdf, False, False)
+    
+    ways_gdf['layer'] = ways_gdf.get('layer', 0)
+    ways_gdf.loc[GdfUtils.get_rows_filter(
+            ways_gdf, [[('tunnel', '~'), ('bridge', '~')]]), 'layer'] = 0
+    
+    GdfUtils.change_bridges_and_tunnels(ways_gdf, True, True)
     ways_gdf = GdfUtils.merge_lines_gdf(ways_gdf, [])
-
+    
     StyleAssigner.assign_styles(
         nodes_gdf, StyleAssigner.convert_dynamic_to_normal(STYLES['nodes'], zoom_level))
     StyleAssigner.assign_styles(
@@ -285,9 +289,8 @@ def main():
     StyleAssigner.assign_styles(
         areas_gdf, StyleAssigner.convert_dynamic_to_normal(STYLES['areas'], zoom_level))
 
-    if ('layer' in ways_gdf.columns):
-        GdfUtils.change_columns_to_numeric(ways_gdf, ['layer'])
-        ways_gdf['layer'] = ways_gdf['layer'].fillna(0)
+    GdfUtils.change_columns_to_numeric(ways_gdf, ['layer'])
+    ways_gdf['layer'] = ways_gdf['layer'].fillna(0)
 
 
 
@@ -312,6 +315,7 @@ def main():
     # calc bridge size only for bridges 
     GdfUtils.create_derivated_columns(ways_gdf, StyleKey.BRIDGE_WIDTH, StyleKey.WIDTH,[StyleKey.BRIDGE_WIDTH_RATIO], [('bridge', '')] )
     GdfUtils.create_derivated_columns(ways_gdf, StyleKey.BRIDGE_EDGE_WIDTH, StyleKey.BRIDGE_WIDTH, [StyleKey.BRIDGE_EDGE_WIDTH_RATIO], [('bridge', '')])
+    print(ways_gdf)
     # todo remove columns used for calc ratios (array in settings?)
 
 

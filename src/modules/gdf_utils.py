@@ -252,24 +252,21 @@ class GdfUtils:
 
     # ------------editing gdf------------
     @staticmethod
-    def change_bridge_and_tunnels(gdf, want_bridges: bool, want_tunnels: bool):
-        # layer will be used only with tunnel and bridge
-        gdf.loc[GdfUtils.get_rows_filter(
-            gdf, [[('tunnel', '~'), ('bridge', '~')]]), 'layer'] = 0
+    def change_bridges_and_tunnels(gdf, want_bridges: bool, want_tunnels: bool):
         if (not want_bridges and not want_tunnels):
             gdf['layer'] = 0
             gdf.drop(columns=['bridge', 'tunnel'], inplace=True, errors='ignore')
         
         if (not want_bridges):
             if ('layer' in gdf):
-                # set layer to nan in bridges
+                # set layer to 0 in bridges - as normal ways
                 gdf.loc[GdfUtils.get_rows_filter(
                     gdf, [('bridge', '')]), 'layer'] = 0
             gdf.drop(columns=['bridge'], inplace=True, errors='ignore')
         
         if (not want_tunnels):
             if ('layer' in gdf):
-                # set layer to nan in tunnels
+                # set layer to 0 in tunnels - as normal ways
                 gdf.loc[GdfUtils.get_rows_filter(
                     gdf, [('tunnel', '')]), 'layer'] = 0
             gdf.drop(columns=['tunnel'], inplace=True, errors='ignore')
@@ -299,7 +296,9 @@ class GdfUtils:
 
     @staticmethod  # column and multipliers must be numeric otherwise it will throw error
     def create_derivated_columns(gdf, new_column: StyleKey | str, base_column: StyleKey | str, multipliers: list[str | StyleKey] = [], filter: RowsConditions = [], scaling=None):
-        if (new_column in gdf or base_column not in gdf):
+        # create new column with 0 if base not exists
+        if (base_column not in gdf):
+            gdf[new_column] = gdf.get(new_column, 0)
             return
         # multiply rows where column value is not empty
         rows_filter = GdfUtils.get_rows_filter(gdf, filter)
