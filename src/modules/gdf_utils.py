@@ -251,6 +251,30 @@ class GdfUtils:
         return bg_gdf
 
     # ------------editing gdf------------
+    @staticmethod
+    def change_bridge_and_tunnels(gdf, want_bridges: bool, want_tunnels: bool):
+        # layer will be used only with tunnel and bridge
+        gdf.loc[GdfUtils.get_rows_filter(
+            gdf, [[('tunnel', '~'), ('bridge', '~')]]), 'layer'] = 0
+        if (not want_bridges and not want_tunnels):
+            gdf['layer'] = 0
+            gdf.drop(columns=['bridge', 'tunnel'], inplace=True, errors='ignore')
+        
+        if (not want_bridges):
+            if ('layer' in gdf):
+                # set layer to nan in bridges
+                gdf.loc[GdfUtils.get_rows_filter(
+                    gdf, [('bridge', '')]), 'layer'] = 0
+            gdf.drop(columns=['bridge'], inplace=True, errors='ignore')
+        
+        if (not want_tunnels):
+            if ('layer' in gdf):
+                # set layer to nan in tunnels
+                gdf.loc[GdfUtils.get_rows_filter(
+                    gdf, [('tunnel', '')]), 'layer'] = 0
+            gdf.drop(columns=['tunnel'], inplace=True, errors='ignore')
+        return
+
     @staticmethod  # column and multipliers must be numeric otherwise it will throw error
     def multiply_column_gdf(gdf, column: StyleKey | str, multipliers: list[str | StyleKey] = [], scaling=None, filter: RowsConditions = []):
         if (column not in gdf):
@@ -259,11 +283,11 @@ class GdfUtils:
         rows_with_column = GdfUtils.get_rows_filter(gdf, [(column, "")])
         if (filter):
             rows_with_column &= GdfUtils.get_rows_filter(gdf, filter)
-            
+
         if (scaling is not None):
             gdf.loc[rows_with_column,
                     column] = gdf.loc[rows_with_column, column] * scaling
-            
+
         multipliers = [
             multiplier for multiplier in multipliers if multiplier in gdf.columns]
         # multiply rows where multiplier column exists
@@ -274,7 +298,7 @@ class GdfUtils:
                     column] *= gdf.loc[rows_with_multipler, multiplier]
 
     @staticmethod  # column and multipliers must be numeric otherwise it will throw error
-    def create_derivated_columns(gdf, new_column: StyleKey | str, base_column: StyleKey | str, filter: RowsConditions = [], multipliers: list[str | StyleKey] = [], scaling=None):
+    def create_derivated_columns(gdf, new_column: StyleKey | str, base_column: StyleKey | str, multipliers: list[str | StyleKey] = [], filter: RowsConditions = [], scaling=None):
         if (new_column in gdf or base_column not in gdf):
             return
         # multiply rows where column value is not empty
@@ -332,7 +356,7 @@ class GdfUtils:
 
     @time_measurement("mergeLines")
     @staticmethod
-    def merge_lines_gdf(gdf: gpd.GeoDataFrame, want_bridges: bool, columns_ignore: list[str | StyleKey] = []) -> gpd.GeoDataFrame:
+    def merge_lines_gdf(gdf: gpd.GeoDataFrame, columns_ignore: list[str | StyleKey] = []) -> gpd.GeoDataFrame:
         """Merge lines in GeoDataFrame to one line if they have same values in columns (except columns in columns_ignore).
         If want_bridges is True, merge all lines with same values in columns. If False, merge all lines with same values but ignore bridges.
         To merging geoms is used function merge_lines_safe that uses unary_union and linemerge from shapely.ops.
@@ -347,43 +371,57 @@ class GdfUtils:
             gpd.GeoDataFrame: _description_
         """
         columns_ignore = [*columns_ignore, 'geometry']
-        if (want_bridges):
-            columns = [
-                col for col in gdf.columns if col not in columns_ignore]
-            # merge all lines with same values in 'columns'
-            merged = gdf.groupby(columns, dropna=False, observed=True).agg({
-                'geometry': GdfUtils.merge_lines_safe
-            })
-            merged_gdf = gpd.GeoDataFrame(
-                merged, geometry='geometry', crs=gdf.crs).reset_index()
-            return merged_gdf
-        else:
-            # remove bridge column if exists
-            gdf = gdf.drop(columns=['bridge'], errors='ignore')
-            # split gdf to tunnels and rest
-            tunnels_gdf, rest_gdf = GdfUtils.filter_rows(
-                gdf, [('tunnel', '')], compl=True)
+            # if dont want remove columns and than...
+        columns = [
+            col for col in gdf.columns if col not in columns_ignore]
+        # merge all lines with same values in 'columns'
+        merged = gdf.groupby(columns, dropna=False, observed=True).agg({
+            'geometry': GdfUtils.merge_lines_safe
+        })
+        merged_gdf = gpd.GeoDataFrame(
+            merged, geometry='geometry', crs=gdf.crs).reset_index()
+        return merged_gdf
 
-            tunnel_columns = [
-                col for col in tunnels_gdf.columns if col not in columns_ignore]
-            rest_columns = [
-                col for col in rest_gdf.columns if col not in [*columns_ignore,  'bridge', 'layer', 'tunnel']]
 
-            # merge all tunnels with same values in 'tunnel_columns'
-            merged_tunnels = tunnels_gdf.groupby(tunnel_columns, dropna=False, observed=True).agg({
-                'geometry': GdfUtils.merge_lines_safe
-            })
-            merged_tunnels_gdf = gpd.GeoDataFrame(
-                merged_tunnels, geometry='geometry', crs=gdf.crs).reset_index(drop=False)
+        # columns_ignore = [*columns_ignore, 'geometry']
+        # if (want_bridges):
+        #     # if dont want remove columns and than...
+        #     columns = [
+        #         col for col in gdf.columns if col not in columns_ignore]
+        #     # merge all lines with same values in 'columns'
+        #     merged = gdf.groupby(columns, dropna=False, observed=True).agg({
+        #         'geometry': GdfUtils.merge_lines_safe
+        #     })
+        #     merged_gdf = gpd.GeoDataFrame(
+        #         merged, geometry='geometry', crs=gdf.crs).reset_index()
+        #     return merged_gdf
+        # else:  # ? want tunnels but not bridges, if want bridges but not tunnels reverse
+        #     # remove bridge column if exists
+        #     gdf = gdf.drop(columns=['bridge'], errors='ignore')
+        #     # split gdf to tunnels and rest
+        #     tunnels_gdf, rest_gdf = GdfUtils.filter_rows(
+        #         gdf, [('tunnel', '')], compl=True)
 
-            # merge all rest lines with same values in 'rest_columns' (ignore bridge, layer and tunnel)
-            merged_rest = rest_gdf.groupby(rest_columns, dropna=False, observed=True).agg({
-                'geometry': GdfUtils.merge_lines_safe
-            })
-            merged_rest_gdf = gpd.GeoDataFrame(
-                merged_rest, geometry='geometry', crs=gdf.crs).reset_index(drop=False)
-            # merge rest and tunnels
-            return GdfUtils.combine_gdfs([merged_tunnels_gdf, merged_rest_gdf])
+        #     tunnel_columns = [
+        #         col for col in tunnels_gdf.columns if col not in columns_ignore]
+        #     rest_columns = [
+        #         col for col in rest_gdf.columns if col not in [*columns_ignore,  'bridge', 'layer', 'tunnel']]
+
+        #     # merge all tunnels with same values in 'tunnel_columns'
+        #     merged_tunnels = tunnels_gdf.groupby(tunnel_columns, dropna=False, observed=True).agg({
+        #         'geometry': GdfUtils.merge_lines_safe
+        #     })
+        #     merged_tunnels_gdf = gpd.GeoDataFrame(
+        #         merged_tunnels, geometry='geometry', crs=gdf.crs).reset_index(drop=False)
+
+        #     # merge all rest lines with same values in 'rest_columns' (ignore bridge, layer and tunnel)
+        #     merged_rest = rest_gdf.groupby(rest_columns, dropna=False, observed=True).agg({
+        #         'geometry': GdfUtils.merge_lines_safe
+        #     })
+        #     merged_rest_gdf = gpd.GeoDataFrame(
+        #         merged_rest, geometry='geometry', crs=gdf.crs).reset_index(drop=False)
+        #     # merge rest and tunnels
+        #     return GdfUtils.combine_gdfs([merged_tunnels_gdf, merged_rest_gdf])
 
     @staticmethod
     def combine_gdfs(gdfs: list[gpd.GeoDataFrame]) -> gpd.GeoDataFrame:

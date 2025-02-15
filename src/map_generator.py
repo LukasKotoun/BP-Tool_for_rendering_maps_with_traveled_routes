@@ -149,11 +149,9 @@ def main():
 
     print(Utils.calc_scaling_factor_multiplier(
         map_object_scaling_factor, 1, 500))
-    print(Utils.get_zoom_level(map_object_scaling_factor, ZOOM_MAPPING, 0.1))
-    # map_object_scaling_factor *= Utils.calc_scaling_factor_multiplier(
-    #  map_object_scaling_factor, 1, 500)
-    # map_object_scaling_factor = 1
-    # map_object_scaling_factor *= 13
+    zoom_level = Utils.get_zoom_level(map_object_scaling_factor, ZOOM_MAPPING, 0.1)
+    map_object_scaling_factor *= Utils.calc_scaling_factor_multiplier(
+     map_object_scaling_factor, 1, 500)
     # ------------get elements from osm file------------
     if (OSM_WANT_EXTRACT_AREA):
         if (OSM_OUTPUT_FILE_NAME is None):
@@ -185,6 +183,8 @@ def main():
     gpxs_gdf = gpx_manager.get_gpxs_gdf()
     if (not GdfUtils.are_gdf_geometry_inside_geometry(gpxs_gdf, reqired_area_polygon)):
         warnings.warn("Some gpx files are not whole inside selected map area.")
+
+        
     # if (not GdfUtils.are_gdf_geometry_inside_geometry(root_files_gpxs_gdf, reqired_area_polygon)
     #    or not GdfUtils.are_gdf_geometry_inside_geometry(folder_gpxs_gdf, reqired_area_polygon)):
     #     warnings.warn("Some gpx files are not whole inside selected map area.")
@@ -270,46 +270,50 @@ def main():
     # areas_style_assigner = StyleAssigner(
     #     AREAS_STYLES, GENERAL_DEFAULT_STYLES, AREA_MANDATORY_STYLES)
     # areas_gdf = areas_style_assigner.assign_styles(areas_gdf, wanted_areas)
-
+    # nechce mosty ani a tunnely
+        
     coast_gdf, ways_gdf = GdfUtils.filter_rows(
         ways_gdf, [('natural', 'coastline')], compl=True)
 
-    ways_gdf = GdfUtils.merge_lines_gdf(ways_gdf, True, [])
+    GdfUtils.change_bridge_and_tunnels(ways_gdf, False, False)
+    ways_gdf = GdfUtils.merge_lines_gdf(ways_gdf, [])
 
     StyleAssigner.assign_styles(
-        nodes_gdf, StyleAssigner.convert_dynamic_to_normal(STYLES['nodes'], 20))
+        nodes_gdf, StyleAssigner.convert_dynamic_to_normal(STYLES['nodes'], zoom_level))
     StyleAssigner.assign_styles(
-        ways_gdf, StyleAssigner.convert_dynamic_to_normal(STYLES['ways'], 20))
+        ways_gdf, StyleAssigner.convert_dynamic_to_normal(STYLES['ways'], zoom_level))
     StyleAssigner.assign_styles(
-        areas_gdf, StyleAssigner.convert_dynamic_to_normal(STYLES['areas'], 20))
+        areas_gdf, StyleAssigner.convert_dynamic_to_normal(STYLES['areas'], zoom_level))
 
     if ('layer' in ways_gdf.columns):
         GdfUtils.change_columns_to_numeric(ways_gdf, ['layer'])
         ways_gdf['layer'] = ways_gdf['layer'].fillna(0)
 
-    # set base width - to function
+
+
+    # set base width - scale by muplitpliers and object scaling factor
     GdfUtils.multiply_column_gdf(nodes_gdf, StyleKey.WIDTH, [
-                             StyleKey.WIDTH_SCALE, StyleKey.FE_WIDTH_SCALE], None)
+                             StyleKey.WIDTH_SCALE, StyleKey.FE_WIDTH_SCALE], None) # maybe to setting like scale icons, text, and ways...
     GdfUtils.multiply_column_gdf(nodes_gdf, StyleKey.TEXT_FONT_SIZE, [
                              StyleKey.TEXT_FONT_SIZE_SCALE, StyleKey.FE_TEXT_FONT_SIZE_SCALE], None)
     
     GdfUtils.multiply_column_gdf(ways_gdf, StyleKey.WIDTH, [
-                             StyleKey.WIDTH_SCALE, StyleKey.FE_WIDTH_SCALE], map_object_scaling_factor)
+                             StyleKey.WIDTH_SCALE, StyleKey.FE_WIDTH_SCALE], map_object_scaling_factor) # if i will be creationg function with continues width scaling than multiply only by FEwidthscale
     
     GdfUtils.multiply_column_gdf(areas_gdf, StyleKey.WIDTH, [
                              StyleKey.WIDTH_SCALE, StyleKey.FE_WIDTH_SCALE], map_object_scaling_factor)
 
     # create derivated columns
     # text outline
-    GdfUtils.create_derivated_columns(nodes_gdf, StyleKey.TEXT_OUTLINE_WIDTH, StyleKey.TEXT_FONT_SIZE, [], [StyleKey.TEXT_OUTLINE_WIDHT_RATIO])
-    # edge - icons and ways
-    GdfUtils.create_derivated_columns(nodes_gdf, StyleKey.EDGEWIDTH, StyleKey.WIDTH, [], [StyleKey.EDGE_WIDTH_RATIO])
-    GdfUtils.create_derivated_columns(ways_gdf, StyleKey.EDGEWIDTH, StyleKey.WIDTH, [], [StyleKey.EDGE_WIDTH_RATIO])
+    GdfUtils.create_derivated_columns(nodes_gdf, StyleKey.TEXT_OUTLINE_WIDTH, StyleKey.TEXT_FONT_SIZE, [StyleKey.TEXT_OUTLINE_WIDHT_RATIO])
+    # edge - icons size and ways width
+    GdfUtils.create_derivated_columns(nodes_gdf, StyleKey.EDGEWIDTH, StyleKey.WIDTH, [StyleKey.EDGE_WIDTH_RATIO]) #?? maybe remove ... 
+    GdfUtils.create_derivated_columns(ways_gdf, StyleKey.EDGEWIDTH, StyleKey.WIDTH, [StyleKey.EDGE_WIDTH_RATIO])
     # calc bridge size only for bridges 
-    GdfUtils.create_derivated_columns(ways_gdf, StyleKey.BRIDGE_WIDTH, StyleKey.WIDTH, [('bridge', '')], [StyleKey.BRIDGE_WIDTH_RATIO])
-    GdfUtils.create_derivated_columns(ways_gdf, StyleKey.BRIDGE_EDGE_WIDTH, StyleKey.BRIDGE_WIDTH, [('bridge', '')], [StyleKey.BRIDGE_EDGE_WIDTH_RATIO])
+    GdfUtils.create_derivated_columns(ways_gdf, StyleKey.BRIDGE_WIDTH, StyleKey.WIDTH,[StyleKey.BRIDGE_WIDTH_RATIO], [('bridge', '')] )
+    GdfUtils.create_derivated_columns(ways_gdf, StyleKey.BRIDGE_EDGE_WIDTH, StyleKey.BRIDGE_WIDTH, [StyleKey.BRIDGE_EDGE_WIDTH_RATIO], [('bridge', '')])
+    # todo remove columns used for calc ratios (array in settings?)
 
-    
 
     ways_gdf = GdfUtils.sort_gdf_by_column(ways_gdf, "layer")
     ways_gdf = GdfUtils.sort_gdf_by_column(ways_gdf, StyleKey.ZINDEX)

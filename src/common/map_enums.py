@@ -22,6 +22,8 @@ class StyleKey(Enum):
     WIDTH_SCALE = 30
     FE_WIDTH_SCALE = 31
     PLOT_ON_BRIDGE = 33
+    LINE_CUP = 35
+    EDGE_CUP = 34
     #   bridges
     BRIDGE_COLOR = 9
     BRIDGE_WIDTH_RATIO = 10  
@@ -30,6 +32,7 @@ class StyleKey(Enum):
     #points
     ICON = 13
 
+    
     #text
     TEXT_FONT_SIZE = 14
     TEXT_OUTLINE_WIDHT_RATIO = 16
