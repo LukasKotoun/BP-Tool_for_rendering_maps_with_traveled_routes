@@ -561,7 +561,7 @@ class GdfUtils:
                 return gdf[filter_mask].reset_index(drop=True)
 
     @staticmethod
-    def filter_gdf_rows_inside_gdf_area(gdf_rows: gpd.GeoDataFrame, gdf_area: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
+    def get_rows_inside_area(gdf_rows: gpd.GeoDataFrame, gdf_area: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
         return gdf_rows[gdf_rows.geometry.within(gdf_area.unary_union)].reset_index(drop=True)
 
     @staticmethod

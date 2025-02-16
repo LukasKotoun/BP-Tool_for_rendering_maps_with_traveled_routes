@@ -41,11 +41,8 @@ PERCENTAGE_PADDING = 0
 # AREA: WantedArea = [(0.3733594, 54.1375764), (27.5538867, 54.1118236),(27.5538867, 40.9478483), (0.3294142, 41.1136006)]  # zoom 6 - 0.000095
 
 
-
 # AREA: WantedArea = [[(15.7396182, 49.3111173), (16.0273871, 49.3028839),
 #                     (16.0266146, 49.1439064), (15.6712219, 49.1928600)]]  # trebic
-# AREA: WantedArea = ["Česko", "Německo", "Polsko", "Rakousko", "Slovensko"]
-# AREA: WantedArea = ["Česko", "Německo", "Slovensko"]
 # AREA: WantedArea = ["Česko","Vysočina, Česko", "Jihomoravský kraj, Česko"]
 # AREA: WantedArea = ["Brno, Česko"]
 # AREA: WantedArea = ["Jihomoravský kraj, Česko", "Kraj Vysočina, Česko"]
@@ -54,14 +51,12 @@ AREA: WantedArea = ["Horní Vilémovice, Česko"]
 # AREA: WantedArea = ["Okřešice, Česko"]
 # AREA: WantedArea = ["Třebíč, Česko"]
 # AREA: WantedArea = ["Okres Třebíč, Česko", "Třebíč, Česko", "Okres Jihlava, Česko"]
-# AREA: WantedArea = ["Třebíč, Česko", "Vladislav, Česko"]
 # AREA: WantedArea = ["Texas, USA"]
-# AREA: WantedArea = ["Vysočina, Česko"]
 
 PAPER_DIMENSIONS: PaperSize | tuple[float | None, float | None] = PaperSize.A4.dimensions
 # set own dimensions. If one is left as 'None' it will be automaticaly calculated using area size
 # PAPER_DIMENSIONS = (1000, None)
-# PAPER_DIMENSIONS = (300, 300)
+
 # what side of paper was set (smaller true bigger false) - only if only one side in custom dimension was set to None
 GIVEN_SMALLER_PAPER_DIMENSION: bool = True
 # set how will resulted paper be oriented, AUTOMATIC is Recommended
@@ -69,9 +64,6 @@ WANTED_ORIENTATION: MapOrientation = MapOrientation.AUTOMATIC
 
 # FIT_PAPER_SIZE recomended with PERCENTAGE_PADDING 0
 FIT_PAPER_SIZE = False
-# polygon or country name - custom area must be bigger than normal
-CUSTOM_EXPAND_AREA: WantedArea | None = [[(15.7396182, 49.3111173), (16.0273871, 49.3028839),
-                    (16.0266146, 49.1439064), (15.6712219, 49.1928600)]]
 
 # bounds
 # COMBINED - one bound around area, SEPARATED - separated bounds around every area in AREA variable
@@ -118,13 +110,46 @@ OUTER_WANTED_ORIENTATION = MapOrientation.AUTOMATIC
 
 # expand area
 OUTER_FIT_PAPER_SIZE = False
-OUTER_CUSTOM_EXPAND_AREA: WantedArea | None = "Česko"
  
 # clipping - if used without preview than replaced by fit_paper_size and default should be true
 # if true it will plot only given AREA (recomended) if False it will plot whole osm file with AREA in center
 WANT_AREA_CLIPPING = True
 
+# ------------constants--------------
+# world 3857
+CRS_OSM = "EPSG:4326"
+# mercato to all ploting and calc paper and map scaling factor of elements and special funcion for map scale
+# map scaling factor of elements should be in same as map will be displayed to maintain same scale
+CRS_CALC = "EPSG:3857"  # europe 25833 - calculating map scale and scaling factor
+CRS_DISPLAY = "EPSG:3857"
+
+OBJECT_MULTIPLIER = 1
+AREAS_EDGE_WIDTH_MULTIPLIER = 1
+WAYS_WIDTH_MULTIPLIER = 1
+
 # --------------------------------------------------------------gpx settings--------------------------------------------------------------
+
+# zooms: scaling values for center of each zoom level 
+ZOOM_MAPPING: dict[int, float] = {
+    19: 0.7832305,
+    18: 0.3925486,
+    17: 0.1967345,
+    16: 0.0981350,
+    15: 0.0490022,
+    14: 0.0245145,
+    13: 0.0122572,
+    12: 0.0061528,
+    11: 0.0030862,
+    10: 0.0015295,
+    9:  0.0007648,
+    8:  0.0003824,
+    7:  0.0001920,
+    6:  0.0000958
+}
+
+# this will come from FE:
+
+
 
 
 GPX_FOLDER: str = '../gpxs/trebic2'
@@ -136,12 +161,11 @@ FOLDER_COLOR_MODE: ColorMode = ColorMode.DEFAULT
 FOLDER_COLOR_OR_PALLET: str = "Set1"
 FOLDER_COLOR_DIS_PALLET = True
 OCEAN_WATER = '#8fb6db'
-# ? none means that it will not be printed (edge or facecolor (not normal color in ways)), "" will be like that is not in that? - or better to be just removed
+
 # -------------------gpx styles by folder-------------------
 
 # todo styles for gpx will be assigned on fronted and will be sended to backend in format like
 # gpx will be recived from FE a turned to gdf and then styled by backend using sent styles
-
 
 # --------------filters for map elements--------------
 # columns that are used for ploting nodes name for city, ele for elevation points
@@ -207,41 +231,3 @@ wanted_areas: WantedCategories = {
 unwanted_areas_tags: UnwantedTags = {
 }
 
-# ------------constants--------------
-# world 3857
-CRS_OSM = "EPSG:4326"
-# mercato to all ploting and calc paper and map scaling factor of elements and special funcion for map scale
-# map scaling factor of elements should be in same as map will be displayed to maintain same scale
-CRS_CALC = "EPSG:3857"  # europe 25833 - calculating map scale and scaling factor
-CRS_DISPLAY = "EPSG:3857"
-
-OBJECT_MULTIPLIER = 1
-AREAS_EDGE_WIDTH_MULTIPLIER = 1
-WAYS_WIDTH_MULTIPLIER = 1
-
-# # set wanted categories to all gpxs with folder ->
-# # switching/workaround from styling map elements by category to styling GPX routes by folder
-# # GPX_FOLDERS_CATEGORIES: WantedCategories = {
-# #     'folder': set({}),
-# # }
-# # GPX_ROOT_FILES_CATEGORIES: WantedCategories = {
-# #     'fileName': set({}),
-# # }
-
-# zooms: scaling values for center of each zoom level 
-ZOOM_MAPPING: dict[int, float] = {
-    19: 0.7832305,
-    18: 0.3925486,
-    17: 0.1967345,
-    16: 0.0981350,
-    15: 0.0490022,
-    14: 0.0245145,
-    13: 0.0122572,
-    12: 0.0061528,
-    11: 0.0030862,
-    10: 0.0015295,
-    9:  0.0007648,
-    8:  0.0003824,
-    7:  0.0001920,
-    6:  0.0000958
-}

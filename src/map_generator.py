@@ -183,6 +183,8 @@ def main():
     nodes_gdf, ways_gdf, areas_gdf = osm_file_parser.create_gdf(
         osm_file_name, CRS_OSM, CRS_DISPLAY)
 
+
+    # check for development
     whole_map_gdf = GdfUtils.create_polygon_from_gdf_bounds(
         ways_gdf, areas_gdf)
     # check if area is inside osm file
@@ -190,11 +192,16 @@ def main():
         warnings.warn(
             "Selected area map is not whole inside given osm.pbf file.")
 
-    # ------------filter some elements out - before styles adding------------
-    # only for some ways categories
-    # ways_gdf = GdfUtils.filter_short_ways(ways_gdf, 10)
-
-    nodes_gdf = GdfUtils.filter_gdf_rows_inside_gdf_area(
+    # get coastline and determine where is land and where water
+    coast_gdf, ways_gdf = GdfUtils.filter_rows(
+        ways_gdf, [('natural', 'coastline')], compl=True)
+    bg_gdf = GdfUtils.create_bg_gdf(
+        map_area_gdf, coast_gdf, OCEAN_WATER, GENERAL_DEFAULT_STYLES[StyleKey.COLOR])
+    bg_gdf['area'] = bg_gdf.area
+    bg_gdf = bg_gdf.sort_values(by='area', ascending=False)
+    
+    # ------------filter some elements out - before styling ------------
+    nodes_gdf = GdfUtils.get_rows_inside_area(
         nodes_gdf, map_area_gdf)
     # filter place without name
     nodes_gdf = GdfUtils.filter_rows(nodes_gdf, [
@@ -204,31 +211,22 @@ def main():
     nodes_gdf = GdfUtils.filter_rows(nodes_gdf, [
         [('natural', '~peak')],
         [('natural', 'peak'), ('name', ''), ('ele', '')]])
+    # round ele to int
     GdfUtils.change_columns_to_numeric(nodes_gdf, ['ele'])
     if ('ele' in nodes_gdf.columns):
         nodes_gdf['ele'] = nodes_gdf['ele'].round(0).astype('Int64')
-    # ------------style elements------------
-    # nodes_style_assigner = StyleAssigner(
-    #     NODES_STYLES, GENERAL_DEFAULT_STYLES, NODES_MANDATORY_STYLES)
-    # nodes_gdf = nodes_style_assigner.assign_styles(nodes_gdf, wanted_nodes)
-    # ways_style_assigner = StyleAssigner(
-    #     WAYS_STYLES, GENERAL_DEFAULT_STYLES, WAY_MANDATORY_STYLES)
-    # ways_gdf = ways_style_assigner.assign_styles(ways_gdf, wanted_ways)
-    # areas_style_assigner = StyleAssigner(
-    #     AREAS_STYLES, GENERAL_DEFAULT_STYLES, AREA_MANDATORY_STYLES)
-    # areas_gdf = areas_style_assigner.assign_styles(areas_gdf, wanted_areas)
-    # nechce mosty ani a tunnely
 
-    coast_gdf, ways_gdf = GdfUtils.filter_rows(
-        ways_gdf, [('natural', 'coastline')], compl=True)
-
+    # setting on bridge and tunnel ploting 
     ways_gdf['layer'] = ways_gdf.get('layer', 0)
     ways_gdf.loc[GdfUtils.get_rows_filter(
         ways_gdf, [[('tunnel', '~'), ('bridge', '~')]]), 'layer'] = 0
-
-    GdfUtils.change_bridges_and_tunnels(ways_gdf, True, True)
+    GdfUtils.change_bridges_and_tunnels(ways_gdf, True, True)    
+    # merge lines
     ways_gdf = GdfUtils.merge_lines_gdf(ways_gdf, [])
-
+    GdfUtils.change_columns_to_numeric(ways_gdf, ['layer'])
+    ways_gdf['layer'] = ways_gdf['layer'].fillna(0)
+    
+    # assing zoom specific styles 
     StyleAssigner.assign_styles(
         nodes_gdf, StyleAssigner.convert_dynamic_to_normal(STYLES['nodes'], zoom_level))
     StyleAssigner.assign_styles(
@@ -236,9 +234,7 @@ def main():
     StyleAssigner.assign_styles(
         areas_gdf, StyleAssigner.convert_dynamic_to_normal(STYLES['areas'], zoom_level))
 
-    GdfUtils.change_columns_to_numeric(ways_gdf, ['layer'])
-    ways_gdf['layer'] = ways_gdf['layer'].fillna(0)
-
+    
     # set base width - scale by muplitpliers and object scaling factor
     GdfUtils.multiply_column_gdf(nodes_gdf, StyleKey.WIDTH, [
         # maybe to setting like scale icons, text, and ways...
@@ -270,18 +266,16 @@ def main():
                                       StyleKey.BRIDGE_EDGE_WIDTH_RATIO], [('bridge', '')])
     # todo remove columns used for calc ratios (array in settings?)
 
+    # todo review
     ways_gdf = GdfUtils.sort_gdf_by_column(ways_gdf, "layer")
     ways_gdf = GdfUtils.sort_gdf_by_column(ways_gdf, StyleKey.ZINDEX)
     areas_gdf = GdfUtils.sort_gdf_by_column(areas_gdf, StyleKey.ZINDEX)
-    bg_gdf = GdfUtils.create_bg_gdf(
-        map_area_gdf, coast_gdf, OCEAN_WATER, GENERAL_DEFAULT_STYLES[StyleKey.COLOR])
-    bg_gdf['area'] = bg_gdf.area
-    bg_gdf = bg_gdf.sort_values(by='area', ascending=False)
+    
     # order gdf by area plot smaller at the end
     areas_gdf['area'] = areas_gdf.geometry.area
     areas_gdf = areas_gdf.sort_values(by='area', ascending=False)
 
-    # ------------plot------------
+    # ------------plot------------ # todo to function
     plotter = Plotter(map_area_gdf, paper_dimensions_mm,
                       map_object_scaling_factor)
 
