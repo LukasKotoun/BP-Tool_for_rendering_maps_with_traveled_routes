@@ -391,46 +391,6 @@ class GdfUtils:
         return merged_gdf
 
 
-        # columns_ignore = [*columns_ignore, 'geometry']
-        # if (want_bridges):
-        #     # if dont want remove columns and than...
-        #     columns = [
-        #         col for col in gdf.columns if col not in columns_ignore]
-        #     # merge all lines with same values in 'columns'
-        #     merged = gdf.groupby(columns, dropna=False, observed=True).agg({
-        #         'geometry': GdfUtils.merge_lines_safe
-        #     })
-        #     merged_gdf = gpd.GeoDataFrame(
-        #         merged, geometry='geometry', crs=gdf.crs).reset_index()
-        #     return merged_gdf
-        # else:  # ? want tunnels but not bridges, if want bridges but not tunnels reverse
-        #     # remove bridge column if exists
-        #     gdf = gdf.drop(columns=['bridge'], errors='ignore')
-        #     # split gdf to tunnels and rest
-        #     tunnels_gdf, rest_gdf = GdfUtils.filter_rows(
-        #         gdf, [('tunnel', '')], compl=True)
-
-        #     tunnel_columns = [
-        #         col for col in tunnels_gdf.columns if col not in columns_ignore]
-        #     rest_columns = [
-        #         col for col in rest_gdf.columns if col not in [*columns_ignore,  'bridge', 'layer', 'tunnel']]
-
-        #     # merge all tunnels with same values in 'tunnel_columns'
-        #     merged_tunnels = tunnels_gdf.groupby(tunnel_columns, dropna=False, observed=True).agg({
-        #         'geometry': GdfUtils.merge_lines_safe
-        #     })
-        #     merged_tunnels_gdf = gpd.GeoDataFrame(
-        #         merged_tunnels, geometry='geometry', crs=gdf.crs).reset_index(drop=False)
-
-        #     # merge all rest lines with same values in 'rest_columns' (ignore bridge, layer and tunnel)
-        #     merged_rest = rest_gdf.groupby(rest_columns, dropna=False, observed=True).agg({
-        #         'geometry': GdfUtils.merge_lines_safe
-        #     })
-        #     merged_rest_gdf = gpd.GeoDataFrame(
-        #         merged_rest, geometry='geometry', crs=gdf.crs).reset_index(drop=False)
-        #     # merge rest and tunnels
-        #     return GdfUtils.combine_gdfs([merged_tunnels_gdf, merged_rest_gdf])
-
     @staticmethod
     def combine_gdfs(gdfs: list[gpd.GeoDataFrame]) -> gpd.GeoDataFrame:
         if (len(gdfs) == 1):
@@ -438,13 +398,9 @@ class GdfUtils:
         return pd.concat(gdfs, ignore_index=True)  # concat to one gdf
 
     @staticmethod
-    def expand_area(area_gdf: gpd.GeoDataFrame | None, fromCrs: str, toCrs: str | None = None, pdf_dim: DimensionsTuple | None = None,
-                    custom_area: WantedArea | None = None):
-        if (custom_area is not None):  # custom expand area to one row in gdf
-            return GdfUtils.combine_rows_gdf(GdfUtils.get_whole_area_gdf(custom_area, fromCrs, toCrs), toCrs)
-        else:  # fit paper - expand by area bounds to rectangle
-            bounds: BoundsDict = GdfUtils.get_bounds_gdf(area_gdf)
-            return GdfUtils.create_gdf_from_bounds(Utils.adjust_bounds_to_fill_paper(bounds, pdf_dim), fromCrs, toCrs)
+    def expand_area_fitPaperSize(area_gdf: gpd.GeoDataFrame, pdf_dim: DimensionsTuple):
+        bounds: BoundsDict = GdfUtils.get_bounds_gdf(area_gdf)
+        return GdfUtils.create_gdf_from_bounds(Utils.adjust_bounds_to_fill_paper(bounds, pdf_dim), area_gdf.crs, None)
 
     @staticmethod
     def sort_gdf_by_column(gdf: gpd.GeoDataFrame, column_name: StyleKey, ascending: bool = True, na_position: str = 'first') -> gpd.GeoDataFrame:

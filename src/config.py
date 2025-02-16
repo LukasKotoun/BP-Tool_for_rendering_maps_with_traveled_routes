@@ -5,7 +5,7 @@ from common.map_enums import *
 # --------------------------------------------------------------map area--------------------------------------------------------------
 # OSM_INPUT_FILE_NAMES: str = ['../osm_files/vys.osm.pbf','../osm_files/jihmor.osm.pbf']
 # OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/vysJihE.osm.pbf'
-OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/brno.osm.pbf'
+OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/hv.osm.pbf'
 # OSM_INPUT_FILE_NAMES: str | list[str] = '../trebic.osm.pbf'
 # extract
 OSM_WANT_EXTRACT_AREA: bool = False
@@ -68,14 +68,14 @@ GIVEN_SMALLER_PAPER_DIMENSION: bool = True
 WANTED_ORIENTATION: MapOrientation = MapOrientation.AUTOMATIC
 
 # FIT_PAPER_SIZE recomended with PERCENTAGE_PADDING 0
-EXPAND_AREA_MODE = ExpandArea.FIT_PAPER_SIZE
+FIT_PAPER_SIZE = False
 # polygon or country name - custom area must be bigger than normal
 CUSTOM_EXPAND_AREA: WantedArea | None = [[(15.7396182, 49.3111173), (16.0273871, 49.3028839),
                     (16.0266146, 49.1439064), (15.6712219, 49.1928600)]]
 
 # bounds
 # COMBINED - one bound around area, SEPARATED - separated bounds around every area in AREA variable
-AREA_BOUNDARY = AreaBounds.NONE
+AREA_BOUNDARY = AreaBounds.SEPARATED
 EXPAND_AREA_BOUNDS_PLOT = False
 AREA_BOUNDARY_LINEWIDTH = 30
 
@@ -117,7 +117,7 @@ OUTER_GIVEN_SMALLER_PAPER_DIMENSION = True
 OUTER_WANTED_ORIENTATION = MapOrientation.AUTOMATIC
 
 # expand area
-OUTER_EXPAND_AREA_MODE = ExpandArea.FIT_PAPER_SIZE
+OUTER_FIT_PAPER_SIZE = False
 OUTER_CUSTOM_EXPAND_AREA: WantedArea | None = "Česko"
  
 # clipping - if used without preview than replaced by fit_paper_size and default should be true

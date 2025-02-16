@@ -29,19 +29,14 @@ def calc_preview(map_area_gdf, paper_dimensions_mm):
 
     outer_area_gdf = GdfUtils.get_whole_area_gdf(
         OUTER_AREA, CRS_OSM, CRS_DISPLAY)
-    if (OUTER_EXPAND_AREA_MODE == ExpandArea.CUSTOM_AREA):
-        outer_area_gdf = GdfUtils.expand_area(None, CRS_OSM, CRS_DISPLAY, None,
-                                              OUTER_CUSTOM_EXPAND_AREA)
 
     outer_map_area_dimensions = GdfUtils.get_dimensions_gdf(outer_area_gdf)
     # map in meters for calc automatic orientation and same pdf sides proportions
     outer_paper_dimensions_mm = Utils.adjust_paper_dimensions(outer_map_area_dimensions, OUTER_PAPER_DIMENSIONS,
                                                               OUTER_GIVEN_SMALLER_PAPER_DIMENSION,
                                                               OUTER_WANTED_ORIENTATION)
-
-    if (OUTER_EXPAND_AREA_MODE == ExpandArea.FIT_PAPER_SIZE):
-        outer_area_gdf = GdfUtils.expand_area(outer_area_gdf, CRS_DISPLAY, None, outer_paper_dimensions_mm,
-                                              None)
+    if (OUTER_FIT_PAPER_SIZE):
+        outer_area_gdf = GdfUtils.expand_area_fitPaperSize(outer_area_gdf, outer_paper_dimensions_mm)
         outer_map_area_dimensions = GdfUtils.get_dimensions_gdf(outer_area_gdf)
     # outer_map_area_bounds = GdfUtils.get_bounds_gdf(GdfUtils.change_crs(outer_area_gdf, CRS_OSM)) # real scale cacl
     # map_scale = Utils.get_scale(outer_map_area_bounds, outer_paper_dimensions_mm)
@@ -93,7 +88,9 @@ def main():
             AREA, CRS_OSM, CRS_DISPLAY)
 
     # ------------store bounds to plot and combine area rows in gdf to 1 row------------
-    boundary_map_area_gdf = GdfUtils.create_empty_gdf(map_area_gdf.crs)  # default dont plot
+    # todo  filter not ploting bounds and merge by category
+    boundary_map_area_gdf = GdfUtils.create_empty_gdf(
+        map_area_gdf.crs)  # default dont plot
     if (AREA_BOUNDARY == AreaBounds.SEPARATED):
         # store separated areas (before gdf row merge)
         boundary_map_area_gdf = map_area_gdf.copy()
@@ -104,24 +101,18 @@ def main():
             # store comined areas (after row combination)
             boundary_map_area_gdf: gpd.GeoDataFrame = map_area_gdf.copy()
 
-    # #------------expand area custom (before get paper dimension)------------
-    if (EXPAND_AREA_MODE == ExpandArea.CUSTOM_AREA):
-        map_area_gdf = GdfUtils.expand_area(None, CRS_OSM, CRS_DISPLAY, PAPER_DIMENSIONS,
-                                            CUSTOM_EXPAND_AREA)
-
     # ------------get paper dimension (size and orientation)------------
     map_area_dimensions = GdfUtils.get_dimensions_gdf(map_area_gdf)
     paper_dimensions_mm = Utils.adjust_paper_dimensions(map_area_dimensions, PAPER_DIMENSIONS,
                                                         GIVEN_SMALLER_PAPER_DIMENSION, WANTED_ORIENTATION)
 
     # ------------expand area custom (before get paper dimension)------------
-    if (EXPAND_AREA_MODE == ExpandArea.FIT_PAPER_SIZE):
-        map_area_gdf = GdfUtils.expand_area(map_area_gdf, CRS_DISPLAY, None, paper_dimensions_mm,
-                                            None)
+    if (FIT_PAPER_SIZE):
+        map_area_gdf = GdfUtils.expand_area_fitPaperSize(map_area_gdf, paper_dimensions_mm)
         map_area_dimensions = GdfUtils.get_dimensions_gdf(map_area_gdf)
 
     # store bounds as rows
-    if (EXPAND_AREA_MODE != ExpandArea.NONE and EXPAND_AREA_BOUNDS_PLOT):
+    if (FIT_PAPER_SIZE and EXPAND_AREA_BOUNDS_PLOT):
         if (boundary_map_area_gdf is not None):
             boundary_map_area_gdf = GdfUtils.combine_gdfs(
                 [boundary_map_area_gdf, map_area_gdf.copy()])
@@ -134,28 +125,21 @@ def main():
         # todo automatic creation of wanted elements and linewidths - factor or directly giving paper size and area dimensions
     else:
         area_zoom_preview = None
-        # map_object_scaling_factor = (Utils.calc_map_object_scaling_factor(GdfUtils.get_dimensions_gdf(
-        #     GdfUtils.change_crs(map_area_gdf, CRS_CALC)), paper_dimensions_mm)
-        #                              * OBJECT_MULTIPLIER)
-        #! map scale in real size
+
+        # - map scale in real size
         # map_area_bounds = GdfUtils.get_bounds_gdf(GdfUtils.change_crs(map_area_gdf, CRS_OSM))
         # map_scale = Utils.get_scale(map_area_bounds, paper_dimensions_mm)
 
-        # # in meteres for same proportion keeping
-        # map_object_scaling_factor = (Utils.calc_map_object_scaling_factor(map_area_dimensions,
-        #                                                                   paper_dimensions_mm)
-        #                              * OBJECT_MULTIPLIER)
-        #! scaling factor and for zoom calc in webmercato
+        # - scaling factor and for zoom calc in webmercato
         map_object_scaling_factor = (Utils.calc_map_object_scaling_factor(map_area_dimensions,
                                                                           paper_dimensions_mm)
                                      * OBJECT_MULTIPLIER)
 
-    print(Utils.calc_scaling_factor_multiplier(
-        map_object_scaling_factor, 1, 500))
     zoom_level = Utils.get_zoom_level(
         map_object_scaling_factor, ZOOM_MAPPING, 0.1)
     map_object_scaling_factor *= Utils.calc_scaling_factor_multiplier(
         map_object_scaling_factor, 1, 500)
+
     # ------------get elements from osm file------------
     if (OSM_WANT_EXTRACT_AREA):
         if (OSM_OUTPUT_FILE_NAME is None):
@@ -175,7 +159,7 @@ def main():
         else:
             osm_file_name = OSM_INPUT_FILE_NAMES
 
-    # ------------Working in display EPSG------------
+    # ------------Working in display CRS------------
     map_area_gdf = GdfUtils.change_crs(map_area_gdf, CRS_DISPLAY)
     boundary_map_area_gdf = GdfUtils.change_crs(
         boundary_map_area_gdf, CRS_DISPLAY)
@@ -187,26 +171,16 @@ def main():
     gpxs_gdf = gpx_manager.get_gpxs_gdf()
     if (not GdfUtils.are_gdf_geometry_inside_geometry(gpxs_gdf, reqired_area_polygon)):
         warnings.warn("Some gpx files are not whole inside selected map area.")
-
-        
-
     # maybe add gpx to be change by zoom - size
     StyleAssigner.assign_styles(gpxs_gdf, GPXS_STYLES)
+
     # ------------osm file------------
     osm_file_parser = OsmDataParser(
         wanted_nodes, wanted_ways, wanted_areas,
         unwanted_nodes_tags, unwanted_ways_tags, unwanted_areas_tags, area_additional_columns=AREA_ADDITIONAL_COLUMNS,
         node_additional_columns=NODES_ADDITIONAL_COLUMNS, way_additional_columns=WAYS_ADDITIONAL_COLUMNS)
-
-    # @time_measurement("apply file")
-    # def apply_file():
-    #     osm_file_parser.apply_file(osm_file_name, locations=True, idx='flex_mem')
-    #     # osm_file_parser.apply(merged_reader, simplify=True)
-    # apply_file()
-
     nodes_gdf, ways_gdf, areas_gdf = osm_file_parser.create_gdf(
         osm_file_name, CRS_OSM, CRS_DISPLAY)
-    # osm_file_parser.clear_gdf()
 
     whole_map_gdf = GdfUtils.create_polygon_from_gdf_bounds(
         ways_gdf, areas_gdf)

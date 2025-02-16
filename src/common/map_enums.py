@@ -58,12 +58,6 @@ class AreaBounds(Enum):
     SEPARATED = 3
 
 
-class ExpandArea(Enum):
-    NONE = 1
-    FIT_PAPER_SIZE = 2
-    CUSTOM_AREA = 3
-
-
 class WorldSides(Enum):
     WEST = 'west'
     EAST = 'east'
