@@ -2,6 +2,7 @@ import warnings
 import geopandas as gpd
 
 from config import *
+from styles.mapycz_style import GENERAL_DEFAULT_STYLES, STYLES, GPXS_STYLES
 from modules.gdf_utils import GdfUtils
 from modules.utils import Utils
 from modules.osm_data_preprocessor import OsmDataPreprocessor
