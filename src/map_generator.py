@@ -11,6 +11,9 @@ from modules.plotter import Plotter
 from modules.gpx_manager import GpxManager
 from common.common_helpers import time_measurement
 import pandas as pd
+from osmium.filter import GeoInterfaceFilter
+
+import osmium
 
 
 def calc_preview(map_area_gdf, paper_dimensions_mm):
@@ -25,9 +28,9 @@ def calc_preview(map_area_gdf, paper_dimensions_mm):
     """
 
     outer_area_gdf = GdfUtils.get_whole_area_gdf(
-        OUTER_AREA, EPSG_OSM, EPSG_DISPLAY)
+        OUTER_AREA, CRS_OSM, CRS_DISPLAY)
     if (OUTER_EXPAND_AREA_MODE == ExpandArea.CUSTOM_AREA):
-        outer_area_gdf = GdfUtils.expand_area(None, EPSG_OSM, EPSG_DISPLAY, None,
+        outer_area_gdf = GdfUtils.expand_area(None, CRS_OSM, CRS_DISPLAY, None,
                                               OUTER_CUSTOM_EXPAND_AREA)
 
     outer_map_area_dimensions = GdfUtils.get_dimensions_gdf(outer_area_gdf)
@@ -37,10 +40,10 @@ def calc_preview(map_area_gdf, paper_dimensions_mm):
                                                               OUTER_WANTED_ORIENTATION)
 
     if (OUTER_EXPAND_AREA_MODE == ExpandArea.FIT_PAPER_SIZE):
-        outer_area_gdf = GdfUtils.expand_area(outer_area_gdf, EPSG_DISPLAY, None, outer_paper_dimensions_mm,
+        outer_area_gdf = GdfUtils.expand_area(outer_area_gdf, CRS_DISPLAY, None, outer_paper_dimensions_mm,
                                               None)
         outer_map_area_dimensions = GdfUtils.get_dimensions_gdf(outer_area_gdf)
-    # outer_map_area_bounds = GdfUtils.get_bounds_gdf(GdfUtils.change_epsg(outer_area_gdf, EPSG_OSM)) # real scale cacl
+    # outer_map_area_bounds = GdfUtils.get_bounds_gdf(GdfUtils.change_crs(outer_area_gdf, CRS_OSM)) # real scale cacl
     # map_scale = Utils.get_scale(outer_map_area_bounds, outer_paper_dimensions_mm)
     map_object_scaling_factor = (Utils.calc_map_object_scaling_factor(outer_map_area_dimensions, outer_paper_dimensions_mm)
                                  * OBJECT_MULTIPLIER)
@@ -58,7 +61,7 @@ def calc_preview(map_area_gdf, paper_dimensions_mm):
                                                                        outer_paper_dimensions_mm)
         # area will be changing -> create copy for bounds plotting
         map_area_gdf = GdfUtils.create_gdf_from_bounds(
-            paper_fill_bounds, EPSG_DISPLAY)
+            paper_fill_bounds, CRS_DISPLAY)
     else:
         # oříznuté okraje když to bude menší než papír
         map_area_dimensions = GdfUtils.get_dimensions_gdf(map_area_gdf)
@@ -84,26 +87,26 @@ def main():
     # if are for preview is not specified, use whole area
     if (WANT_PREVIEW and AREA == None):
         map_area_gdf = GdfUtils.get_whole_area_gdf(
-            OUTER_AREA, EPSG_OSM, EPSG_DISPLAY)
+            OUTER_AREA, CRS_OSM, CRS_DISPLAY)
     else:
         map_area_gdf = GdfUtils.get_whole_area_gdf(
-            AREA, EPSG_OSM, EPSG_DISPLAY)
+            AREA, CRS_OSM, CRS_DISPLAY)
 
     # ------------store bounds to plot and combine area rows in gdf to 1 row------------
-    boundary_map_area_gdf = GdfUtils.create_empty_gdf()  # default dont plot
+    boundary_map_area_gdf = GdfUtils.create_empty_gdf(map_area_gdf.crs)  # default dont plot
     if (AREA_BOUNDARY == AreaBounds.SEPARATED):
         # store separated areas (before gdf row merge)
         boundary_map_area_gdf = map_area_gdf.copy()
-        map_area_gdf = GdfUtils.combine_rows_gdf(map_area_gdf, EPSG_DISPLAY)
+        map_area_gdf = GdfUtils.combine_rows_gdf(map_area_gdf, CRS_DISPLAY)
     else:
-        map_area_gdf = GdfUtils.combine_rows_gdf(map_area_gdf, EPSG_DISPLAY)
+        map_area_gdf = GdfUtils.combine_rows_gdf(map_area_gdf, CRS_DISPLAY)
         if (AREA_BOUNDARY == AreaBounds.COMBINED):
             # store comined areas (after row combination)
             boundary_map_area_gdf: gpd.GeoDataFrame = map_area_gdf.copy()
 
     # #------------expand area custom (before get paper dimension)------------
     if (EXPAND_AREA_MODE == ExpandArea.CUSTOM_AREA):
-        map_area_gdf = GdfUtils.expand_area(None, EPSG_OSM, EPSG_DISPLAY, PAPER_DIMENSIONS,
+        map_area_gdf = GdfUtils.expand_area(None, CRS_OSM, CRS_DISPLAY, PAPER_DIMENSIONS,
                                             CUSTOM_EXPAND_AREA)
 
     # ------------get paper dimension (size and orientation)------------
@@ -113,7 +116,7 @@ def main():
 
     # ------------expand area custom (before get paper dimension)------------
     if (EXPAND_AREA_MODE == ExpandArea.FIT_PAPER_SIZE):
-        map_area_gdf = GdfUtils.expand_area(map_area_gdf, EPSG_DISPLAY, None, paper_dimensions_mm,
+        map_area_gdf = GdfUtils.expand_area(map_area_gdf, CRS_DISPLAY, None, paper_dimensions_mm,
                                             None)
         map_area_dimensions = GdfUtils.get_dimensions_gdf(map_area_gdf)
 
@@ -132,10 +135,10 @@ def main():
     else:
         area_zoom_preview = None
         # map_object_scaling_factor = (Utils.calc_map_object_scaling_factor(GdfUtils.get_dimensions_gdf(
-        #     GdfUtils.change_epsg(map_area_gdf, EPSG_CALC)), paper_dimensions_mm)
+        #     GdfUtils.change_crs(map_area_gdf, CRS_CALC)), paper_dimensions_mm)
         #                              * OBJECT_MULTIPLIER)
         #! map scale in real size
-        # map_area_bounds = GdfUtils.get_bounds_gdf(GdfUtils.change_epsg(map_area_gdf, EPSG_OSM))
+        # map_area_bounds = GdfUtils.get_bounds_gdf(GdfUtils.change_crs(map_area_gdf, CRS_OSM))
         # map_scale = Utils.get_scale(map_area_bounds, paper_dimensions_mm)
 
         # # in meteres for same proportion keeping
@@ -149,9 +152,10 @@ def main():
 
     print(Utils.calc_scaling_factor_multiplier(
         map_object_scaling_factor, 1, 500))
-    zoom_level = Utils.get_zoom_level(map_object_scaling_factor, ZOOM_MAPPING, 0.1)
+    zoom_level = Utils.get_zoom_level(
+        map_object_scaling_factor, ZOOM_MAPPING, 0.1)
     map_object_scaling_factor *= Utils.calc_scaling_factor_multiplier(
-     map_object_scaling_factor, 1, 500)
+        map_object_scaling_factor, 1, 500)
     # ------------get elements from osm file------------
     if (OSM_WANT_EXTRACT_AREA):
         if (OSM_OUTPUT_FILE_NAME is None):
@@ -162,7 +166,7 @@ def main():
             OSM_INPUT_FILE_NAMES, OSM_OUTPUT_FILE_NAME)
         print(map_area_gdf)
         osm_file_name = osm_data_preprocessor.extract_areas(
-            map_area_gdf, EPSG_OSM)
+            map_area_gdf, CRS_OSM)
     else:
         # todo function check osm file or in validator before?
         # list have length of 1 (checked in validator)
@@ -172,52 +176,19 @@ def main():
             osm_file_name = OSM_INPUT_FILE_NAMES
 
     # ------------Working in display EPSG------------
-    map_area_gdf = GdfUtils.change_epsg(map_area_gdf, EPSG_DISPLAY)
-    boundary_map_area_gdf = GdfUtils.change_epsg(
-        boundary_map_area_gdf, EPSG_DISPLAY)
+    map_area_gdf = GdfUtils.change_crs(map_area_gdf, CRS_DISPLAY)
+    boundary_map_area_gdf = GdfUtils.change_crs(
+        boundary_map_area_gdf, CRS_DISPLAY)
     reqired_area_polygon = GdfUtils.create_polygon_from_gdf(map_area_gdf)
 
     # ------------gpxs------------
-    gpx_manager = GpxManager(GPX_FOLDER, EPSG_DISPLAY)
+    gpx_manager = GpxManager(GPX_FOLDER, CRS_DISPLAY)
     # root_files_gpxs_gdf, folder_gpxs_gdf = gpx_manager.get_gpxs_gdf_splited()
     gpxs_gdf = gpx_manager.get_gpxs_gdf()
     if (not GdfUtils.are_gdf_geometry_inside_geometry(gpxs_gdf, reqired_area_polygon)):
         warnings.warn("Some gpx files are not whole inside selected map area.")
 
         
-    # if (not GdfUtils.are_gdf_geometry_inside_geometry(root_files_gpxs_gdf, reqired_area_polygon)
-    #    or not GdfUtils.are_gdf_geometry_inside_geometry(folder_gpxs_gdf, reqired_area_polygon)):
-    #     warnings.warn("Some gpx files are not whole inside selected map area.")
-
-    # todo to FE - and send in settings to BE and on BE check settings validity
-    # root_files = list(root_files_gpxs_gdf['fileName'].unique())
-    # folders = list(folder_gpxs_gdf['folder'].unique())
-    # # assign dynamic colors to root files and folders styles if wanted
-    # same_pallet: bool = ((FOLDER_COLOR_MODE == ColorMode.PALETTE or FOLDER_COLOR_MODE == ColorMode.SHADE)
-    #                      and FOLDER_COLOR_MODE == ROOT_FILES_COLOR_MODE and FOLDER_COLOR_OR_PALLET == ROOT_FILES_COLOR_OR_PALLET)
-    # used_colors_count = 0
-    # max_colors_count = (Utils.count_missing_values(root_files, root_files_styles, StyleKey.COLOR) + \
-    #     Utils.count_missing_values(
-    #         folders, folders_styles, StyleKey.COLOR)) if same_pallet else None
-
-    # # assing colors to root files from pallet or shade + count number of used colors
-    # if (ROOT_FILES_COLOR_MODE == ColorMode.PALETTE or ROOT_FILES_COLOR_MODE == ColorMode.SHADE):
-    #     used_colors_count = StyleAssigner.assign_dynamic_colors(
-    #         root_files, root_files_styles, ROOT_FILES_COLOR_MODE, ROOT_FILES_COLOR_OR_PALLET, ROOT_FILES_COLOR_DIS_PALLET, max_colors_count, 0)
-
-    # # assing colors to folders from pallet or shade + use count of used colors from root files if same pallet or shade
-    # if (FOLDER_COLOR_MODE == ColorMode.PALETTE or FOLDER_COLOR_MODE == ColorMode.SHADE):
-    #     used_colors_count = used_colors_count if same_pallet else 0
-    #     StyleAssigner.assign_dynamic_colors(
-    #         folders, folders_styles, FOLDER_COLOR_MODE, FOLDER_COLOR_OR_PALLET, FOLDER_COLOR_DIS_PALLET, max_colors_count, used_colors_count)
-    # gpxs_style_assigner = StyleAssigner(
-    #     GPXS_STYLES, GENERAL_DEFAULT_STYLES, GPXS_MANDATORY_STYLES)
-    # assign styles to gpxs
-    # root_files_gpxs_gdf: gpd.GeoDataFrame = gpxs_style_assigner.assign_styles(
-        # root_files_gpxs_gdf, GPX_ROOT_FILES_CATEGORIES)
-    # folder_gpxs_gdf: gpd.GeoDataFrame = gpxs_style_assigner.assign_styles(
-        # folder_gpxs_gdf, GPX_FOLDERS_CATEGORIES)
-    # gpxs_gdf = GdfUtils.combine_gdfs([root_files_gpxs_gdf, folder_gpxs_gdf])
 
     # maybe add gpx to be change by zoom - size
     StyleAssigner.assign_styles(gpxs_gdf, GPXS_STYLES)
@@ -227,14 +198,15 @@ def main():
         unwanted_nodes_tags, unwanted_ways_tags, unwanted_areas_tags, area_additional_columns=AREA_ADDITIONAL_COLUMNS,
         node_additional_columns=NODES_ADDITIONAL_COLUMNS, way_additional_columns=WAYS_ADDITIONAL_COLUMNS)
 
-    @time_measurement("apply file")
-    def apply_file():
-        osm_file_parser.apply_file(osm_file_name)
-    apply_file()
+    # @time_measurement("apply file")
+    # def apply_file():
+    #     osm_file_parser.apply_file(osm_file_name, locations=True, idx='flex_mem')
+    #     # osm_file_parser.apply(merged_reader, simplify=True)
+    # apply_file()
 
     nodes_gdf, ways_gdf, areas_gdf = osm_file_parser.create_gdf(
-        EPSG_OSM, EPSG_DISPLAY)
-    osm_file_parser.clear_gdf()
+        osm_file_name, CRS_OSM, CRS_DISPLAY)
+    # osm_file_parser.clear_gdf()
 
     whole_map_gdf = GdfUtils.create_polygon_from_gdf_bounds(
         ways_gdf, areas_gdf)
@@ -271,17 +243,17 @@ def main():
     #     AREAS_STYLES, GENERAL_DEFAULT_STYLES, AREA_MANDATORY_STYLES)
     # areas_gdf = areas_style_assigner.assign_styles(areas_gdf, wanted_areas)
     # nechce mosty ani a tunnely
-        
+
     coast_gdf, ways_gdf = GdfUtils.filter_rows(
         ways_gdf, [('natural', 'coastline')], compl=True)
-    
+
     ways_gdf['layer'] = ways_gdf.get('layer', 0)
     ways_gdf.loc[GdfUtils.get_rows_filter(
-            ways_gdf, [[('tunnel', '~'), ('bridge', '~')]]), 'layer'] = 0
-    
+        ways_gdf, [[('tunnel', '~'), ('bridge', '~')]]), 'layer'] = 0
+
     GdfUtils.change_bridges_and_tunnels(ways_gdf, True, True)
     ways_gdf = GdfUtils.merge_lines_gdf(ways_gdf, [])
-    
+
     StyleAssigner.assign_styles(
         nodes_gdf, StyleAssigner.convert_dynamic_to_normal(STYLES['nodes'], zoom_level))
     StyleAssigner.assign_styles(
@@ -292,32 +264,36 @@ def main():
     GdfUtils.change_columns_to_numeric(ways_gdf, ['layer'])
     ways_gdf['layer'] = ways_gdf['layer'].fillna(0)
 
-
-
     # set base width - scale by muplitpliers and object scaling factor
     GdfUtils.multiply_column_gdf(nodes_gdf, StyleKey.WIDTH, [
-                             StyleKey.WIDTH_SCALE, StyleKey.FE_WIDTH_SCALE], None) # maybe to setting like scale icons, text, and ways...
+        # maybe to setting like scale icons, text, and ways...
+        StyleKey.WIDTH_SCALE, StyleKey.FE_WIDTH_SCALE], None)
     GdfUtils.multiply_column_gdf(nodes_gdf, StyleKey.TEXT_FONT_SIZE, [
-                             StyleKey.TEXT_FONT_SIZE_SCALE, StyleKey.FE_TEXT_FONT_SIZE_SCALE], None)
-    
+        StyleKey.TEXT_FONT_SIZE_SCALE, StyleKey.FE_TEXT_FONT_SIZE_SCALE], None)
+
     GdfUtils.multiply_column_gdf(ways_gdf, StyleKey.WIDTH, [
-                             StyleKey.WIDTH_SCALE, StyleKey.FE_WIDTH_SCALE], map_object_scaling_factor) # if i will be creationg function with continues width scaling than multiply only by FEwidthscale
-    
+        # if i will be creationg function with continues width scaling than multiply only by FEwidthscale
+        StyleKey.WIDTH_SCALE, StyleKey.FE_WIDTH_SCALE], map_object_scaling_factor)
+
     GdfUtils.multiply_column_gdf(areas_gdf, StyleKey.WIDTH, [
-                             StyleKey.WIDTH_SCALE, StyleKey.FE_WIDTH_SCALE], map_object_scaling_factor)
+        StyleKey.WIDTH_SCALE, StyleKey.FE_WIDTH_SCALE], map_object_scaling_factor)
 
     # create derivated columns
     # text outline
-    GdfUtils.create_derivated_columns(nodes_gdf, StyleKey.TEXT_OUTLINE_WIDTH, StyleKey.TEXT_FONT_SIZE, [StyleKey.TEXT_OUTLINE_WIDHT_RATIO])
+    GdfUtils.create_derivated_columns(nodes_gdf, StyleKey.TEXT_OUTLINE_WIDTH, StyleKey.TEXT_FONT_SIZE, [
+                                      StyleKey.TEXT_OUTLINE_WIDHT_RATIO])
     # edge - icons size and ways width
-    GdfUtils.create_derivated_columns(nodes_gdf, StyleKey.EDGEWIDTH, StyleKey.WIDTH, [StyleKey.EDGE_WIDTH_RATIO]) #?? maybe remove ... 
-    GdfUtils.create_derivated_columns(ways_gdf, StyleKey.EDGEWIDTH, StyleKey.WIDTH, [StyleKey.EDGE_WIDTH_RATIO])
-    # calc bridge size only for bridges 
-    GdfUtils.create_derivated_columns(ways_gdf, StyleKey.BRIDGE_WIDTH, StyleKey.WIDTH,[StyleKey.BRIDGE_WIDTH_RATIO], [('bridge', '')] )
-    GdfUtils.create_derivated_columns(ways_gdf, StyleKey.BRIDGE_EDGE_WIDTH, StyleKey.BRIDGE_WIDTH, [StyleKey.BRIDGE_EDGE_WIDTH_RATIO], [('bridge', '')])
-    print(ways_gdf)
+    GdfUtils.create_derivated_columns(nodes_gdf, StyleKey.EDGEWIDTH, StyleKey.WIDTH, [
+                                      # ?? maybe remove ...
+                                      StyleKey.EDGE_WIDTH_RATIO])
+    GdfUtils.create_derivated_columns(
+        ways_gdf, StyleKey.EDGEWIDTH, StyleKey.WIDTH, [StyleKey.EDGE_WIDTH_RATIO])
+    # calc bridge size only for bridges
+    GdfUtils.create_derivated_columns(ways_gdf, StyleKey.BRIDGE_WIDTH, StyleKey.WIDTH, [
+                                      StyleKey.BRIDGE_WIDTH_RATIO], [('bridge', '')])
+    GdfUtils.create_derivated_columns(ways_gdf, StyleKey.BRIDGE_EDGE_WIDTH, StyleKey.BRIDGE_WIDTH, [
+                                      StyleKey.BRIDGE_EDGE_WIDTH_RATIO], [('bridge', '')])
     # todo remove columns used for calc ratios (array in settings?)
-
 
     ways_gdf = GdfUtils.sort_gdf_by_column(ways_gdf, "layer")
     ways_gdf = GdfUtils.sort_gdf_by_column(ways_gdf, StyleKey.ZINDEX)
@@ -344,12 +320,12 @@ def main():
     if (boundary_map_area_gdf is not None and not boundary_map_area_gdf.empty):
         # GdfUtils.remove_common_boundary_inaccuracy(boundary_map_area_gdf) # maybe turn off/on in settings
         plotter.plot_area_boundary(area_gdf=boundary_map_area_gdf.to_crs(
-            epsg=EPSG_DISPLAY), linewidth=AREA_BOUNDARY_LINEWIDTH)
+            CRS_DISPLAY), linewidth=AREA_BOUNDARY_LINEWIDTH)
 
     plotter.adjust_texts(TEXT_BOUNDS_OVERFLOW_THRESHOLD)
 
     if (WANT_AREA_CLIPPING or WANT_PREVIEW):
-        plotter.clip(EPSG_DISPLAY, GdfUtils.create_polygon_from_gdf_bounds(
+        plotter.clip(CRS_DISPLAY, GdfUtils.create_polygon_from_gdf_bounds(
             nodes_gdf, ways_gdf, areas_gdf))
 
     plotter.generate_pdf(OUTPUT_PDF_NAME)

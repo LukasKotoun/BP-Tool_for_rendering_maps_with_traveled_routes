@@ -41,8 +41,8 @@ class OsmDataPreprocessor:
                 f"Cannot extract osm file, check if osmium command line tool is installed")
         return osm_output_file
 
-    def extract_areas(self, reqired_area_gdf: GeoDataFrame, epsgTo: int):
-        temp_geojson_path = self.__create_tmp_geojson(reqired_area_gdf.to_crs(epsg=epsgTo))
+    def extract_areas(self, reqired_area_gdf: GeoDataFrame, crsTo: str):
+        temp_geojson_path = self.__create_tmp_geojson(reqired_area_gdf.to_crs(crsTo))
         extracted_files_names = []
 
         if (isinstance(self.osm_input_files, str)):

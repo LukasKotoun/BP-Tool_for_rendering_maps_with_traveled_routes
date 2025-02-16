@@ -209,31 +209,31 @@ class Plotter:
             pass
             # # # todo if edge color is none then plot quicker (filter)
             # # # todo if pattern is
-            # edge_c = rails_gdf[StyleKey.EDGE_COLOR]
-            # color = rails_gdf[StyleKey.COLOR]
-            # linewidth1 = rails_gdf[StyleKey.WIDTH] + rail_bg_width_offset
-            # linewidth2 = rails_gdf[StyleKey.WIDTH]
-            # alpha = rails_gdf[StyleKey.ALPHA]
-            # linestyle = rails_gdf[StyleKey.LINESTYLE]
-            # for geom in rails_gdf.geometry:
-            #     # here take data from gdf
-            #     if isinstance(geom, MultiLineString):
-            #         for line in geom.geoms:  # Extract each LineString
-            #             gpd.GeoSeries(line).plot(ax=self.ax, color=edge_c,
-            #                linewidth=linewidth1,
-            #                alpha=alpha, path_effects=[
-            #     patheffects.Stroke(capstyle="projecting", joinstyle='round')])
+            edge_c = rails_gdf[StyleKey.EDGE_COLOR]
+            color = rails_gdf[StyleKey.COLOR]
+            linewidth1 = rails_gdf[StyleKey.WIDTH] + rail_bg_width_offset
+            linewidth2 = rails_gdf[StyleKey.WIDTH]
+            alpha = rails_gdf[StyleKey.ALPHA]
+            linestyle = rails_gdf[StyleKey.LINESTYLE]
+            for geom in rails_gdf.geometry:
+                # here take data from gdf
+                if isinstance(geom, MultiLineString):
+                    for line in geom.geoms:  # Extract each LineString
+                        gpd.GeoSeries(line).plot(ax=self.ax, color=edge_c,
+                           linewidth=linewidth1,
+                           alpha=alpha, path_effects=[
+                patheffects.Stroke(capstyle="projecting", joinstyle='round')])
 
-            #             gpd.GeoSeries(line).plot(ax=self.ax, color=color, linewidth=linewidth2,
-            #                alpha=alpha, linestyle=linestyle)
-            #     else:
-            #         gpd.GeoSeries(geom).plot(ax=self.ax, color=edge_c,
-            #                linewidth=linewidth1,
-            #                alpha=alpha, path_effects=[
-            #         patheffects.Stroke(capstyle="projecting", joinstyle='round')])
+                        gpd.GeoSeries(line).plot(ax=self.ax, color=color, linewidth=linewidth2,
+                           alpha=alpha, linestyle=linestyle)
+                else:
+                    gpd.GeoSeries(geom).plot(ax=self.ax, color=edge_c,
+                           linewidth=linewidth1,
+                           alpha=alpha, path_effects=[
+                    patheffects.Stroke(capstyle="projecting", joinstyle='round')])
 
-            #         gpd.GeoSeries(geom).plot(ax=self.ax, color=color, linewidth=linewidth2,
-            #                alpha=alpha, linestyle=linestyle)
+                    gpd.GeoSeries(geom).plot(ax=self.ax, color=color, linewidth=linewidth2,
+                           alpha=alpha, linestyle=linestyle)
 
             # rails_gdf.plot(ax=self.ax, color=rails_gdf[StyleKey.EDGE_COLOR],
             #                 linestyle=rails_gdf[StyleKey.EDGE_LINESTYLE],
@@ -326,8 +326,8 @@ class Plotter:
       # Zoom like 13 and bigger
         waterways_gdf, rest_gdf = GdfUtils.filter_rows(
             rest_gdf, [('waterway', '')], compl=True)
-        bridge_gdf, rest_gdf = GdfUtils.filter_rows(
-            rest_gdf, [('bridge', '')], compl=True)
+        # bridge_gdf, rest_gdf = GdfUtils.filter_rows(
+        #     rest_gdf, [('bridge', '')], compl=True)
         for layer, group_gdf in waterways_gdf.groupby("layer"):
             self.__plot_waterways(waterways_gdf)
         railways_gdf, rest_gdf = GdfUtils.filter_rows(
@@ -340,12 +340,16 @@ class Plotter:
             highways_gdf = GdfUtils.filter_rows(group_gdf, [('highway', '')])
 
             self.__plot_highways(highways_gdf)  # todo send with edges types
-
+        # railways_gdf = GdfUtils.filter_gdf_column_values(
+        #         ways_gdf, 'railway')
+        # railways_gdf.loc[0, "geometry"] = linemerge(unary_union(railways_gdf.geometry))
+        # railways_gdf = railways_gdf.iloc[:1].reset_index(drop=True)
         # self.__plot_railways(
         #     railways_gdf, 2 * self.map_object_scaling_factor, 15 * self.map_object_scaling_factor)
+        
         self.__plot_railways(
             railways_gdf, 2 * self.map_object_scaling_factor, 15 * self.map_object_scaling_factor)
-        self.__plot_bridges(bridge_gdf)
+        # self.__plot_bridges(bridge_gdf)
 
     @time_measurement("areaPlot")
     def plot_areas(self, areas_gdf: gpd.GeoDataFrame, areas_bounds_multiplier: float):
@@ -425,7 +429,7 @@ class Plotter:
                 if (not GdfUtils.is_geometry_inside_geometry_threshold(bbox_polygon, self.reqired_area_polygon, text_bounds_overflow_threshold)):
                     text.remove()
 
-    def clip(self, epsg: int, whole_map_polygon: Polygon, reqired_area_gdf: gpd.GeoDataFrame | None = None, clipped_area_color: str = 'white'):
+    def clip(self, crs: str, whole_map_polygon: Polygon, reqired_area_gdf: gpd.GeoDataFrame | None = None, clipped_area_color: str = 'white'):
 
         if (reqired_area_gdf is not None):
             reqired_area_polygon = GdfUtils.create_polygon_from_gdf(
@@ -437,9 +441,9 @@ class Plotter:
         if (not GdfUtils.is_geometry_inside_geometry(clipping_polygon, whole_map_polygon)):
             return
 
-        # clipping_polygon = geometry.MultiPolygon([clipping_polygon]) - epsg in constructor
+        # clipping_polygon = geometry.MultiPolygon([clipping_polygon]) - crs in constructor
         clipping_polygon = gpd.GeoDataFrame(
-            geometry=[clipping_polygon], crs=f"EPSG:{epsg}")
+            geometry=[clipping_polygon], crs=crs)
 
         clipping_polygon.plot(
             ax=self.ax, color=clipped_area_color, alpha=1, zorder=3)

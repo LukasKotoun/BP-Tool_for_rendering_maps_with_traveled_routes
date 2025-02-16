@@ -5,8 +5,8 @@ from common.map_enums import *
 # --------------------------------------------------------------map area--------------------------------------------------------------
 # OSM_INPUT_FILE_NAMES: str = ['../osm_files/vys.osm.pbf','../osm_files/jihmor.osm.pbf']
 # OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/vysJihE.osm.pbf'
-OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/trebic.osm.pbf'
-# OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/brno.osm.pbf'
+OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/brno.osm.pbf'
+# OSM_INPUT_FILE_NAMES: str | list[str] = '../trebic.osm.pbf'
 # extract
 OSM_WANT_EXTRACT_AREA: bool = False
 # set if want osm file cutting using osmium command line tool (need to be uinstalled), If not set to None
@@ -50,9 +50,9 @@ PERCENTAGE_PADDING = 0
 # AREA: WantedArea = ["Brno, Česko"]
 # AREA: WantedArea = ["Jihomoravský kraj, Česko", "Kraj Vysočina, Česko"]
 # AREA: WantedArea = ["Česko"]
-# AREA: WantedArea = ["Horní Vilémovice, Česko"]
+AREA: WantedArea = ["Horní Vilémovice, Česko"]
 # AREA: WantedArea = ["Okřešice, Česko"]
-AREA: WantedArea = ["Třebíč, Česko"]
+# AREA: WantedArea = ["Třebíč, Česko"]
 # AREA: WantedArea = ["Okres Třebíč, Česko", "Třebíč, Česko", "Okres Jihlava, Česko"]
 # AREA: WantedArea = ["Třebíč, Česko", "Vladislav, Česko"]
 # AREA: WantedArea = ["Texas, USA"]
@@ -175,11 +175,11 @@ WAYS_ADDITIONAL_COLUMNS = ['bridge', 'layer', 'tunnel']
 AREA_ADDITIONAL_COLUMNS = []
 # wanted_ways: WantedFeatures
 wanted_nodes: WantedCategories = {
-    'place': {'city'},
-    # 'place': {'city', 'town'},
-    # 'place': {'city', 'town', 'village'},
+    # 'place': {'city'},
+    # # 'place': {'city', 'town'},
+    # # # 'place': {'city', 'town', 'village'},
     # 'place': {'village'},
-    'natural': {'peak'}
+    # 'natural': {'peak'}
 }
 
 
@@ -191,40 +191,44 @@ unwanted_nodes_tags: UnwantedTags = {
 }
 
 wanted_ways: WantedCategories = {
-    'waterway': set({}),
+    # 'waterway': set({}),
     # 'highway': ['motorway', 'trunk','primary', 'secondary', 'tertiary'],
     # 'highway': ['motorway', 'trunk', 'primary'],
-    'highway': {'motorway', 'trunk', 'primary', 'secondary', 'tertiary', 'unclassified', 'residential', 'path', 'footway'},
-    # 'highway':set({}),
+    # 'highway': {'motorway', 'trunk', 'primary', 'secondary', 'tertiary', 'unclassified', 'residential', 'path', 'footway'},
+    # 'highway': {'tertiary'},
+    'highway':set({}),
     'railway': {'rail', 'tram'},
+
+    # 'railway': {'rail'},
     'natural': {'coastline'}
 }
 
 unwanted_ways_tags: UnwantedTags = {
-    # 'highway':['coridor','via_ferrata','crossing','traffic_island','proposed','construction' ],
-    # 'railway': {
-    #     'service': ['yard', 'spur'], # spur, siding
-    #     'tunnel': ['building_passage'],
-    # },
-    # 'waterway': ['stream']
+    'highway':['coridor','via_ferrata','crossing','traffic_island','proposed','construction' ],
+    'railway': {
+        'service': ['yard', 'spur','crossover', 'siding'], # spur, siding
+        # 'tunnel': ['building_passage'],
+        # 'tunnel': [],
+    },
+    'waterway': ['stream']
 
     
     # {'railway':""}:{'service':['yard'],'tunnel': ['building_passage']}
 }
 
-
 wanted_areas: WantedCategories = {
-        # 'landuse': ['forest', 'residential', 'farmland', 'meadow', 'grass'],
         'landuse': {'forest', 'residential', 'commercial', 'retail', 'industrial', 'farmland', 'meadow', 'grass'},
+   
         'leisure': {'park', 'pitch', 'garden', 'golf_course', 'nature_reserve', 'playground', 'stadium', 'swimming_pool', 'sports_centre'},
         # 'leisure': {'park', 'pitch', 'garden', 'golf_course', 'playground', 'stadium', 'swimming_pool', 'sports_centre'},
         'natural': {'wood', 'water', 'scrub', 'heath'},
         # # 'leisure': ['park', 'pitch', 'garden', 'golf_course', 'nature_reserve'],
-        'water': set({}),
+        # 'water': set({}),
         'boundary': {'national_park'},
         'building': {'house','residential'},
         'water': ['river','lake','reservoir'],
 }
+
 unwanted_areas_tags: UnwantedTags = {
 }
 
@@ -309,7 +313,7 @@ ways_mandatory_styles: ElementStyles = [
     ([], {
         StyleKey.COLOR: '#EDEDE0', StyleKey.ALPHA: 1.0, StyleKey.WIDTH: 1, StyleKey.LINESTYLE: '-',
         StyleKey.EDGE_WIDTH_RATIO: 1 + 0.3,
-        StyleKey.EDGE_COLOR: None, StyleKey.EDGE_LINESTYLE: '-', StyleKey.WIDTH_SCALE: 100, StyleKey.FE_WIDTH_SCALE: 1,
+        StyleKey.EDGE_COLOR: None, StyleKey.EDGE_LINESTYLE: '-', StyleKey.WIDTH_SCALE: 1, StyleKey.FE_WIDTH_SCALE: 1,
     }),
     ([('bridge', '')], {
         StyleKey.BRIDGE_WIDTH_RATIO: 1, StyleKey.BRIDGE_EDGE_WIDTH_RATIO: 1 + 0.3,
@@ -344,10 +348,11 @@ railway_styles: ElementStyles = [
     ([('railway', 'rail')], {
         StyleKey.COLOR: '#FFFFFF', StyleKey.ZINDEX: 1, StyleKey.WIDTH: 10,
         StyleKey.BRIDGE_EDGE_COLOR: '#5D5D5D', StyleKey.BRIDGE_COLOR: "#FFFFFF",
-        StyleKey.EDGE_COLOR: '#5D5D5D', StyleKey.BRIDGE_WIDTH_RATIO: 1.7, 
+        StyleKey.EDGE_COLOR: '#5D5D5D', StyleKey.BRIDGE_WIDTH_RATIO: 1 + 1.7, 
         StyleKey.BRIDGE_EDGE_WIDTH_RATIO: 1 + 0.4,  # todo control after function to calculating width
-        StyleKey.LINESTYLE: (0, (5, 5))
+        StyleKey.LINESTYLE: (0, (5, 5)), StyleKey.EDGE_WIDTH_RATIO: 1 + 0.4
     }),
+    
     ([('railway', 'tram')], {
         StyleKey.COLOR: '#404040', StyleKey.ZINDEX: 10, StyleKey.WIDTH: 4
     }),
@@ -452,12 +457,12 @@ STYLES: dict[str, ElementStyles]   = {
 # ------------constants--------------
 
 # world 3857
-EPSG_OSM = 4326
+CRS_OSM = "EPSG:4326"
 # mercato to all ploting and calc paper and map scaling factor of elements and special funcion for map scale
 # map scaling factor of elements should be in same as map will be displayed to maintain same scale
-# EPSG_CALC = 25833  
-EPSG_CALC = 3857  # europe 25833 - calculating map scale and scaling factor
-EPSG_DISPLAY = 3857
+# CRS_CALC = 25833  
+CRS_CALC = "EPSG:3857"  # europe 25833 - calculating map scale and scaling factor
+CRS_DISPLAY = "EPSG:3857"
 # todo table with epsg
 OBJECT_MULTIPLIER = 1
 AREAS_EDGE_WIDTH_MULTIPLIER = 1

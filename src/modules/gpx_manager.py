@@ -8,12 +8,12 @@ from modules.gdf_utils import GdfUtils
 
 
 class GpxManager:
-    def __init__(self, gpx_folder: str, toEpsg: int):
+    def __init__(self, gpx_folder: str, toCrs: str):
         self.gpx_folder: str = gpx_folder
-        self.gpxs_gdf = GdfUtils.create_empty_gdf('fileName', 'folder')
-        self.parse_gpxs_gdf(toEpsg)
+        self.gpxs_gdf = GdfUtils.create_empty_gdf(None, ['geometry', 'fileName', 'folder'])
+        self.parse_gpxs_gdf(toCrs)
 
-    def parse_gpxs_gdf(self, toEpsg: int) -> gpd.GeoDataFrame:
+    def parse_gpxs_gdf(self, toCrs: int) -> gpd.GeoDataFrame:
         gpx_list: list[gpd.GeoDataFrame] = []
 
         for root, dirs, files in os.walk(self.gpx_folder):
@@ -30,7 +30,7 @@ class GpxManager:
                     gpd.read_file(file_path, layer='tracks'))
                 gpx_gdf['fileName'] = unicodedata.normalize('NFC',file)
                 gpx_gdf['folder'] = unicodedata.normalize('NFC', last_folder) if last_folder else None
-                gpx_list.append(gpx_gdf.to_crs(epsg=toEpsg))
+                gpx_list.append(gpx_gdf.to_crs(toCrs))
 
         if (gpx_list):
             # GdfUtils.combine_gdfs
@@ -38,18 +38,18 @@ class GpxManager:
         else:
             warnings.warn(f"No GPX files found in {self.gpx_folder}")
 
-    def get_gpxs_gdf(self, inEpsg: int = None) -> gpd.GeoDataFrame:
+    def get_gpxs_gdf(self, inCrs: str = None) -> gpd.GeoDataFrame:
         # if (self.gpxs_gdf.empty):
         #     return self.gpxs_gdf
 
         GdfUtils.change_columns_to_categorical(
             self.gpxs_gdf, ['fileName', 'folder'])
-        if (inEpsg is None):
+        if (inCrs is None):
             return self.gpxs_gdf
         else:
-            return GdfUtils.change_epsg(self.gpxs_gdf, inEpsg)
+            return GdfUtils.change_crs(self.gpxs_gdf, inCrs)
 
-    def get_gpxs_gdf_splited(self, inEpsg: int = None) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]:
+    def get_gpxs_gdf_splited(self, inCrs: str = None) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]:
 
         GdfUtils.change_columns_to_categorical(
             self.gpxs_gdf, ['fileName', 'folder'])
