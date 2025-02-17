@@ -20,9 +20,8 @@ FeatureCategoriesStylesDynamic = tuple[CategoryFilters, FeatureStyleDynamics]
 
 Styles = dict[StyleKey, str | int | float]
 StyleZooms = dict[str, Styles]
-StylesDynamic = dict[StyleType, Styles | StyleZooms]
-RowsConditionsAND = list[tuple([str, str | list[str]])]
+RowsConditionsAND = dict[str, str | list[str]]
 RowsConditions = list[RowsConditionsAND]
 ElementStyles = tuple[RowsConditions | RowsConditionsAND, Styles]
-ElementStylesDynamic = tuple[RowsConditions | RowsConditionsAND, StylesDynamic]
+ElementStylesDynamic = tuple[RowsConditions | RowsConditionsAND, Styles, StyleZooms | None]
 

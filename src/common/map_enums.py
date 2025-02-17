@@ -15,6 +15,7 @@ class StyleKey(Enum):
     #lines
     WIDTH = 4
     LINESTYLE = 5
+    LINE_CUP = 35
     EDGE_COLOR = 6
     EDGE_ALPHA = 21
     EDGE_WIDTH_RATIO = 7  
@@ -22,15 +23,26 @@ class StyleKey(Enum):
     WIDTH_SCALE = 30
     FE_WIDTH_SCALE = 31
     PLOT_ON_BRIDGE = 33
-    LINE_CUP = 35
     EDGE_CUP = 34
-    #   bridges
+    # bridges
     BRIDGE_COLOR = 9
-    BRIDGE_WIDTH_RATIO = 10  
+    BRIDGE_WIDTH_RATIO = 10
     BRIDGE_EDGE_COLOR = 11
     BRIDGE_EDGE_WIDTH_RATIO = 12
     #points
     ICON = 13
+
+    # gpx
+    START_ICON = 54
+    START_ICON_WIDHT = 59
+    FINISH_ICON = 55
+    FINISH_ICON_WIDHT = 56
+    START_ICON_EDGE_RATIO = 57
+    FINISH_ICON_EDGE_RATIO = 58
+
+    
+    #? maybe add START_ICON_WIDHT, START_ICON_EDGE_RATIO, FINISH_ICON_WIDHT, FINISH_ICON_EDGE_RATIO, -> START_ICON_EDGE_WIDTH, FINISH_ICON_EDGE_WIDTH calculated
+
 
     
     #text
@@ -47,6 +59,10 @@ class StyleKey(Enum):
     BRIDGE_WIDTH = 19
     # calculated like BRIDGE_WIDTH * (1 + BRIDGE_EDGE_WIDTH_RATIO)
     BRIDGE_EDGE_WIDTH = 20
+    # calculated like start START_ICON_WIDHT * START_ICON_EDGE_RATIO
+    START_ICON_EDGE_WIDTH = 60
+    # calculated like FINISH_ICON_WIDHT * FINISH_ICON_EDGE_RATIO
+    FINISH_ICON_EDGE_WIDTH = 61
 
 class StyleType(Enum):
     DEFAULT = 1

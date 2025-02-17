@@ -29,20 +29,13 @@ class StyleAssigner:
             return lower <= zoom_level <= upper
 
         normal_styles = []
-        for filter, styles in dynamic_styles:
-            style_default = {}
+        for filter, styles_default, *zoom_styles in dynamic_styles:
+            zoom_styles = zoom_styles[0] if zoom_styles else {} # convert list to dict
             styles_filter = {}
-            for style_type, style_values in styles.items():
-                if style_type == StyleType.DEFAULT:
-                    style_default = style_values
-                elif style_type == StyleType.ZOOM:
-                    for zoom_range, zoom_style_values in style_values.items():
-                        if (check_range(zoom_range, zoom_level)):
-                            styles_filter = {**zoom_style_values, **styles_filter}
-                else:  # if styletype is not assigned
-                    style_default = styles
-                    break
-            styles = {**style_default, **styles_filter}
+            for zoom_range, zoom_style_values in zoom_styles.items():
+                if (check_range(zoom_range, zoom_level)):
+                    styles_filter = {**zoom_style_values, **styles_filter}
+            styles = {**styles_default, **styles_filter}
             normal_styles.append((filter, styles))
         return normal_styles
 

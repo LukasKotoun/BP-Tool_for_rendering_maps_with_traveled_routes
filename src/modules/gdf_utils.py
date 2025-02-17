@@ -134,19 +134,19 @@ class GdfUtils:
     def create_gdf_from_geometry_and_attributes(geometry: list, tags: list[dict], fromCrs: str) -> gpd.GeoDataFrame:
         return gpd.GeoDataFrame(pd.DataFrame(tags).assign(
             geometry=geometry), crs=fromCrs)
-        
+
     @staticmethod
-    def create_gdf_from_file_processor(fp: FileProcessor, fromCrs: str, columns = []) -> gpd.GeoDataFrame:
-        gdf =  gpd.GeoDataFrame.from_features(fp)
-        if(gdf.empty):
+    def create_gdf_from_file_processor(fp: FileProcessor, fromCrs: str, columns=[]) -> gpd.GeoDataFrame:
+        gdf = gpd.GeoDataFrame.from_features(fp)
+        if (gdf.empty):
             # create gdf with column geometry
-            return GdfUtils.create_empty_gdf(fromCrs) 
+            return GdfUtils.create_empty_gdf(fromCrs)
         else:
             return gdf.set_crs(fromCrs)
 
     @staticmethod
-    def create_empty_gdf(crs: str, columns = ["geometry"]) -> gpd.GeoDataFrame:
-        if(crs is None):
+    def create_empty_gdf(crs: str, columns=["geometry"]) -> gpd.GeoDataFrame:
+        if (crs is None):
             return gpd.GeoDataFrame(columns=columns)
         return gpd.GeoDataFrame(columns=columns, crs=crs)
 
@@ -262,22 +262,26 @@ class GdfUtils:
     # ------------editing gdf------------
     @staticmethod
     def change_bridges_and_tunnels(gdf, want_bridges: bool, want_tunnels: bool):
+        gdf['layer'] = gdf.get('layer', 0)
+        gdf.loc[GdfUtils.get_rows_filter(
+            gdf, {'tunnel': '~', 'bridge': '~'}), 'layer'] = 0
         if (not want_bridges and not want_tunnels):
             gdf['layer'] = 0
-            gdf.drop(columns=['bridge', 'tunnel'], inplace=True, errors='ignore')
-        
+            gdf.drop(columns=['bridge', 'tunnel'],
+                     inplace=True, errors='ignore')
+
         if (not want_bridges):
             if ('layer' in gdf):
                 # set layer to 0 in bridges - as normal ways
                 gdf.loc[GdfUtils.get_rows_filter(
-                    gdf, [('bridge', '')]), 'layer'] = 0
+                    gdf, {'bridge': ''}), 'layer'] = 0
             gdf.drop(columns=['bridge'], inplace=True, errors='ignore')
-        
+
         if (not want_tunnels):
             if ('layer' in gdf):
                 # set layer to 0 in tunnels - as normal ways
                 gdf.loc[GdfUtils.get_rows_filter(
-                    gdf, [('tunnel', '')]), 'layer'] = 0
+                    gdf, {'tunnel': ''}), 'layer'] = 0
             gdf.drop(columns=['tunnel'], inplace=True, errors='ignore')
         return
 
@@ -286,7 +290,7 @@ class GdfUtils:
         if (column not in gdf):
             return
         # multiply rows where column value is not empty
-        rows_with_column = GdfUtils.get_rows_filter(gdf, [(column, "")])
+        rows_with_column = GdfUtils.get_rows_filter(gdf, {column: ""})
         if (filter):
             rows_with_column &= GdfUtils.get_rows_filter(gdf, filter)
 
@@ -299,12 +303,12 @@ class GdfUtils:
         # multiply rows where multiplier column exists
         for multiplier in multipliers:
             rows_with_multipler = GdfUtils.get_rows_filter(
-                gdf, [(multiplier, "")]) & rows_with_column
+                gdf, {multiplier: ""}) & rows_with_column
             gdf.loc[rows_with_multipler,
                     column] *= gdf.loc[rows_with_multipler, multiplier]
 
     @staticmethod  # column and multipliers must be numeric otherwise it will throw error
-    def create_derivated_columns(gdf, new_column: StyleKey | str, base_column: StyleKey | str, multipliers: list[str | StyleKey] = [], filter: RowsConditions = [], scaling=None):
+    def create_derivated_columns(gdf, new_column: StyleKey | str, base_column: StyleKey | str, multipliers: list[str | StyleKey] = [], filter: RowsConditions | RowsConditionsAND = [], scaling=None):
         # create new column with 0 if base not exists
         if (base_column not in gdf):
             gdf[new_column] = gdf.get(new_column, 0)
@@ -379,7 +383,7 @@ class GdfUtils:
             gpd.GeoDataFrame: _description_
         """
         columns_ignore = [*columns_ignore, 'geometry']
-            # if dont want remove columns and than...
+        # if dont want remove columns and than...
         columns = [
             col for col in gdf.columns if col not in columns_ignore]
         # merge all lines with same values in 'columns'
@@ -389,7 +393,6 @@ class GdfUtils:
         merged_gdf = gpd.GeoDataFrame(
             merged, geometry='geometry', crs=gdf.crs).reset_index()
         return merged_gdf
-
 
     @staticmethod
     def combine_gdfs(gdfs: list[gpd.GeoDataFrame]) -> gpd.GeoDataFrame:
@@ -478,7 +481,7 @@ class GdfUtils:
 
     def get_rows_filter_AND(gdf: gpd.GeoDataFrame, conditions: RowsConditionsAND) -> pd.Series:
         filter_mask = pd.Series(True, index=gdf.index)
-        for column_name, column_value in conditions:
+        for column_name, column_value in conditions.items():
             if column_name not in gdf.columns:
                 # handle missing columns
                 if (isinstance(column_value, list)):
@@ -532,16 +535,19 @@ class GdfUtils:
                         filter_mask &= (gdf[column_name] == column_value)
         return filter_mask
 
-    def get_rows_filter(gdf: gpd.GeoDataFrame, conditions: RowsConditions) -> pd.Series:
+    def get_rows_filter(gdf: gpd.GeoDataFrame, conditions: RowsConditions | RowsConditionsAND) -> pd.Series:
         filter_mask = pd.Series(False, index=gdf.index)
-        # if list is not nested (is empty) and one empty (true) or condition
-        if not any(isinstance(item, list) for item in conditions):
+        # if is not list
+        if isinstance(conditions, dict):
             conditions = [conditions]
+        elif not conditions:
+            conditions = [{}]  # empty condition - all rows
+
         for and_conditions in conditions:
             filter_mask |= GdfUtils.get_rows_filter_AND(gdf, and_conditions)
         return filter_mask
 
-    def filter_rows(gdf: gpd.GeoDataFrame, conditions: RowsConditions,
+    def filter_rows(gdf: gpd.GeoDataFrame, conditions: RowsConditions | RowsConditionsAND,
                     neg: bool = False, compl: bool = False) -> gpd.GeoDataFrame:
         filter_mask = GdfUtils.get_rows_filter(gdf, conditions)
         return GdfUtils.return_filtered(gdf, filter_mask, neg, compl)

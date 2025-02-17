@@ -5,7 +5,7 @@ from common.map_enums import *
 # --------------------------------------------------------------map area--------------------------------------------------------------
 # OSM_INPUT_FILE_NAMES: str = ['../osm_files/vys.osm.pbf','../osm_files/jihmor.osm.pbf']
 # OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/vysJihE.osm.pbf'
-OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/hv.osm.pbf'
+OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/okresice.osm.pbf'
 # OSM_INPUT_FILE_NAMES: str | list[str] = '../trebic.osm.pbf'
 # extract
 OSM_WANT_EXTRACT_AREA: bool = False
@@ -46,16 +46,17 @@ PERCENTAGE_PADDING = 0
 # AREA: WantedArea = ["Česko","Vysočina, Česko", "Jihomoravský kraj, Česko"]
 # AREA: WantedArea = ["Brno, Česko"]
 # AREA: WantedArea = ["Jihomoravský kraj, Česko", "Kraj Vysočina, Česko"]
+# AREA: WantedArea = ["Kraj Vysočina, Česko"]
 # AREA: WantedArea = ["Česko"]
-AREA: WantedArea = ["Horní Vilémovice, Česko"]
-# AREA: WantedArea = ["Okřešice, Česko"]
+AREA: WantedArea = ["Okřešice, Česko"]
 # AREA: WantedArea = ["Třebíč, Česko"]
 # AREA: WantedArea = ["Okres Třebíč, Česko", "Třebíč, Česko", "Okres Jihlava, Česko"]
 # AREA: WantedArea = ["Texas, USA"]
 
 PAPER_DIMENSIONS: PaperSize | tuple[float | None, float | None] = PaperSize.A4.dimensions
+# PAPER_DIMENSIONS: PaperSize | tuple[float | None, float | None] = PaperSize.A4.dimensions
 # set own dimensions. If one is left as 'None' it will be automaticaly calculated using area size
-# PAPER_DIMENSIONS = (1000, None)
+# PAPER_DIMENSIONS = (1100, None)
 
 # what side of paper was set (smaller true bigger false) - only if only one side in custom dimension was set to None
 GIVEN_SMALLER_PAPER_DIMENSION: bool = True
@@ -63,7 +64,7 @@ GIVEN_SMALLER_PAPER_DIMENSION: bool = True
 WANTED_ORIENTATION: MapOrientation = MapOrientation.AUTOMATIC
 
 # FIT_PAPER_SIZE recomended with PERCENTAGE_PADDING 0
-FIT_PAPER_SIZE = False
+FIT_PAPER_SIZE = True
 
 # bounds
 # COMBINED - one bound around area, SEPARATED - separated bounds around every area in AREA variable
@@ -91,7 +92,7 @@ TEXT_BOUNDS_OVERFLOW_THRESHOLD = 0.97
 
 # --------------------------------------------------------------preview--------------------------------------------------------------
 # NOTE: must have same settings as the resulting one when generating for large format printing
-WANT_PREVIEW: bool = False
+WANT_PREVIEW: bool = True
 # OUTER_AREA: WantedArea = [(15.7034756,48.6941575), (15.9206889,48.6941186), (15.9198775, 48.5926164), (15.7030222, 48.5936264)] # zoom 13 - 0.012257255675006467
 
 # area for that you are creating smaller preview (bigger than normal area)
@@ -149,9 +150,6 @@ ZOOM_MAPPING: dict[int, float] = {
 
 # this will come from FE:
 
-
-
-
 GPX_FOLDER: str = '../gpxs/trebic2'
 ROOT_FILES_COLOR_MODE: ColorMode = ColorMode.DEFAULT
 ROOT_FILES_COLOR_OR_PALLET: str = "Set1"
@@ -160,7 +158,7 @@ ROOT_FILES_COLOR_DIS_PALLET = True
 FOLDER_COLOR_MODE: ColorMode = ColorMode.DEFAULT
 FOLDER_COLOR_OR_PALLET: str = "Set1"
 FOLDER_COLOR_DIS_PALLET = True
-OCEAN_WATER = '#8fb6db'
+
 
 # -------------------gpx styles by folder-------------------
 
@@ -172,13 +170,17 @@ OCEAN_WATER = '#8fb6db'
 NODES_ADDITIONAL_COLUMNS = ['name', 'ele']
 WAYS_ADDITIONAL_COLUMNS = ['bridge', 'layer', 'tunnel']
 AREA_ADDITIONAL_COLUMNS = []
+
+
+
+
 # wanted_ways: WantedFeatures
 wanted_nodes: WantedCategories = {
     # 'place': {'city'},
     # # 'place': {'city', 'town'},
     # # # 'place': {'city', 'town', 'village'},
     # 'place': {'village'},
-    # 'natural': {'peak'}
+    'natural': {'peak'}
 }
 
 
