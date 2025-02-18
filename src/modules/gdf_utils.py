@@ -624,3 +624,16 @@ class GdfUtils:
             column='geometry', ignore_index=True)
         # gdf_merged_diss = gdf_merged_diss.to_crs(gdf.crs.epsg)
         return gdf_merged_diss
+
+
+    @staticmethod
+    def get_groups_by_columns(df, group_cols, dropna=True, default_key=None):
+     
+        missing = [col for col in group_cols if col not in df.columns]
+        if missing:
+            if default_key is None:
+                # Default key is np.nan for a single column, or a tuple of np.nan for multiple columns.
+                default_key = pd.NA if len(group_cols) == 1 else tuple(pd.NA for _ in group_cols)
+            return [(default_key, df)]
+        else:
+            return df.groupby(group_cols, dropna=dropna)

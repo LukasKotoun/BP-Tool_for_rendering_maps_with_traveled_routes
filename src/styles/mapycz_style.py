@@ -1,6 +1,8 @@
 from common.custom_types import *
 from common.map_enums import *
 
+#! edge linestyle is suported only dashed or not dashed on not solid lines, 
+
 # ------------styles--------------
 OCEAN_WATER = '#8fb6db'
 
@@ -134,7 +136,7 @@ NODES_STYLES: ElementStyles = [
 ways_mandatory_styles: ElementStyles = [
     ([], {
         StyleKey.COLOR: '#EDEDE0', StyleKey.ALPHA: 1.0, StyleKey.WIDTH: 1, StyleKey.LINESTYLE: '-',
-        StyleKey.EDGE_WIDTH_RATIO: 1 + 0.3,
+        StyleKey.EDGE_WIDTH_RATIO: 1 + 0.3, StyleKey.EDGE_ALPHA: 1,
         StyleKey.EDGE_COLOR: None, StyleKey.EDGE_LINESTYLE: '-', StyleKey.WIDTH_SCALE: 1, StyleKey.FE_WIDTH_SCALE: 1,
     }),
     ({'bridge': ''}, {
@@ -232,7 +234,7 @@ leisure_styles: ElementStyles = [
     ({'leisure': 'sports_centre'}, {StyleKey.COLOR: '#9FC98D'}),
     ({'leisure': 'nature_reserve'}, {StyleKey.COLOR: None, StyleKey.EDGE_COLOR: '#97BB72', 
                                        StyleKey.WIDTH: 80, StyleKey.ZINDEX: 1, 
-                                       StyleKey.ALPHA: 0.85, StyleKey.EDGE_LINESTYLE: '-'})
+                                       StyleKey.EDGE_ALPHA: 0.85, StyleKey.EDGE_LINESTYLE: '-'})
 ]
 
 building_styles: ElementStyles = [
@@ -256,7 +258,7 @@ area_styles_default: ElementStyles = [
     ({'boundary': ''}, {
         StyleKey.COLOR: None, StyleKey.EDGE_COLOR: '#97BB72',
         StyleKey.WIDTH: 80, StyleKey.EDGE_LINESTYLE: '-',
-        StyleKey.ZINDEX: 1, StyleKey.ALPHA: 0.85
+        StyleKey.ZINDEX: 1, StyleKey.EDGE_ALPHA: 0.85
     })
 ]
 

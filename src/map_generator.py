@@ -269,6 +269,9 @@ def main():
                                       StyleKey.BRIDGE_WIDTH_RATIO], {'bridge': ''})
     GdfUtils.create_derivated_columns(ways_gdf, StyleKey.BRIDGE_EDGE_WIDTH, StyleKey.BRIDGE_WIDTH, [
                                       StyleKey.BRIDGE_EDGE_WIDTH_RATIO], {'bridge': ''})
+
+    GdfUtils.create_derivated_columns(
+        areas_gdf, StyleKey.EDGEWIDTH, StyleKey.WIDTH, [StyleKey.EDGE_WIDTH_RATIO])
     # todo remove columns used for calc ratios (array in settings?)
 
     # todo review
@@ -287,8 +290,8 @@ def main():
     plotter.init_plot(
         GENERAL_DEFAULT_STYLES[StyleKey.COLOR], bg_gdf, area_zoom_preview)
     plotter.zoom(zoom_percent_padding=PERCENTAGE_PADDING)
-    plotter.plot_areas(areas_gdf, AREAS_EDGE_WIDTH_MULTIPLIER)
-    plotter.plot_ways(ways_gdf, WAYS_WIDTH_MULTIPLIER)
+    plotter.plot_areas(areas_gdf)
+    plotter.plot_ways(ways_gdf, areas_gdf)
     plotter.plot_nodes(nodes_gdf, TEXT_WRAP_NAMES_LEN)
     plotter.plot_gpxs(gpxs_gdf, 1)
     if (boundary_map_area_gdf is not None and not boundary_map_area_gdf.empty):
