@@ -1,7 +1,7 @@
 from typing import Generator
 
 import matplotlib.pyplot as plt
-from matplotlib import patheffects
+import matplotlib.patheffects as pe
 from matplotlib.backends.backend_agg import RendererAgg
 import pandas as pd
 import geopandas as gpd
@@ -86,7 +86,7 @@ class Plotter:
 
             text = self.ax.text(
                 x, y, wraped_name, fontsize=fontsize, ha='center', va='center', zorder=4, color=color,
-                path_effects=[patheffects.withStroke(linewidth=outline_width, foreground=edge_color)])
+                path_effects=[pe.withStroke(linewidth=outline_width, foreground=edge_color)])
             self.city_names.append(text)
 
     def __plot_elevations(self, elevations_gdf: gpd.GeoDataFrame):
@@ -100,9 +100,9 @@ class Plotter:
             # second aproach - create annotation and get cordinates and than create text from it
             # and use that text to adjusting but it will be invisible
             # peak_name = self.ax.annotate(row['name'], (x, y), textcoords="offset points", xytext=(0, 300 * self.map_object_scaling_factor), ha='center', color=row[StyleKey.COLOR],
-            #     path_effects=[patheffects.withStroke(linewidth=row[StyleKey.TEXT_OUTLINE_WIDTH], foreground=row[StyleKey.EDGE_COLOR])], fontsize=row[StyleKey.TEXT_FONT_SIZE])
+            #     path_effects=[pe.withStroke(linewidth=row[StyleKey.TEXT_OUTLINE_WIDTH], foreground=row[StyleKey.EDGE_COLOR])], fontsize=row[StyleKey.TEXT_FONT_SIZE])
             # peak_ele = self.ax.annotate(row['ele'], (x, y), textcoords="offset points", xytext=(0, -300 * self.map_object_scaling_factor - row[StyleKey.WIDTH]), ha='center', color=row[StyleKey.COLOR],
-            #     path_effects=[patheffects.withStroke(linewidth=row[StyleKey.TEXT_OUTLINE_WIDTH], foreground=row[StyleKey.EDGE_COLOR])], fontsize=row[StyleKey.TEXT_FONT_SIZE])
+            #     path_effects=[pe.withStroke(linewidth=row[StyleKey.TEXT_OUTLINE_WIDTH], foreground=row[StyleKey.EDGE_COLOR])], fontsize=row[StyleKey.TEXT_FONT_SIZE])
 
             # move text to top and bottom of the icon
             # xy_axes = self.ax.transData.transform((x, y))
@@ -110,9 +110,9 @@ class Plotter:
             # xy_ele = self.ax.transData.inverted().transform((xy_axes[0], xy_axes[1] - 350 * self.map_object_scaling_factor - row[StyleKey.WIDTH]))
             # #todo check if name or ele exists
             # peak_name = self.ax.text(xy_name[0], xy_name[1], row['name'], color=row[StyleKey.COLOR], ha='center',
-            #                          path_effects=[patheffects.withStroke(linewidth=row[StyleKey.TEXT_OUTLINE_WIDTH], foreground=row[StyleKey.EDGE_COLOR])], fontsize=row[StyleKey.TEXT_FONT_SIZE])
+            #                          path_effects=[pe.withStroke(linewidth=row[StyleKey.TEXT_OUTLINE_WIDTH], foreground=row[StyleKey.EDGE_COLOR])], fontsize=row[StyleKey.TEXT_FONT_SIZE])
             # peak_ele = self.ax.text(xy_ele[0], xy_ele[1], row['ele'], color=row[StyleKey.COLOR], ha='center',
-            #                         path_effects=[patheffects.withStroke(linewidth=row[StyleKey.TEXT_OUTLINE_WIDTH], foreground=row[StyleKey.EDGE_COLOR])], fontsize=row[StyleKey.TEXT_FONT_SIZE])
+            #                         path_effects=[pe.withStroke(linewidth=row[StyleKey.TEXT_OUTLINE_WIDTH], foreground=row[StyleKey.EDGE_COLOR])], fontsize=row[StyleKey.TEXT_FONT_SIZE])
 
             # self.ax.scatter(x, y, marker=row[StyleKey.ICON], color=row[StyleKey.COLOR], s=row[StyleKey.WIDTH],
             #                 edgecolor=row[StyleKey.EDGE_COLOR], linewidth=row[StyleKey.EDGEWIDTH])
@@ -144,33 +144,110 @@ class Plotter:
             StyleKey.EDGE_COLOR: '', StyleKey.EDGE_LINESTYLE: '', StyleKey.EDGEWIDTH: '', StyleKey.EDGE_ALPHA: ''})
 
         if (not edge_lines_gdf.empty):
-            groups = GdfUtils.get_groups_by_columns(edge_lines_gdf, [StyleKey.EDGE_CUP], False)
+            groups = GdfUtils.get_groups_by_columns(
+                edge_lines_gdf, [StyleKey.EDGE_CUP], ['round'], False)
             for capstyle, edge_lines_gdf in groups:
                 if (pd.isna(capstyle)):
-                    capstyle = "round"
+                    capstyle = 'round'
                 edge_lines_gdf.plot(ax=self.ax, color=edge_lines_gdf[StyleKey.EDGE_COLOR],
                                     linewidth=edge_lines_gdf[StyleKey.EDGEWIDTH],
                                     linestyle=edge_lines_gdf[StyleKey.EDGE_LINESTYLE],
                                     alpha=edge_lines_gdf[StyleKey.EDGE_ALPHA],
-                                    path_effects=[patheffects.Stroke(capstyle=capstyle, joinstyle='round')])
+                                    path_effects=[pe.Stroke(capstyle=capstyle, joinstyle='round')])
 
     def __plot_line(self, lines_gdf):
-        if (lines_gdf.empty):
-            return
-
         lines_gdf = GdfUtils.filter_rows(lines_gdf, {
             StyleKey.COLOR: '', StyleKey.LINESTYLE: '', StyleKey.WIDTH: '', StyleKey.ALPHA: ''})
+        if (lines_gdf.empty):
+            return
+        
+        groups = GdfUtils.get_groups_by_columns(
+            lines_gdf, [StyleKey.LINE_CUP], ['round'], False)
 
-        if (not lines_gdf.empty):
-            groups = GdfUtils.get_groups_by_columns(lines_gdf, [StyleKey.LINE_CUP], False)
+        for capstyle, lines_group_gdf in groups:
+            if (pd.isna(capstyle)):
+                capstyle = 'round'
+            lines_group_gdf.plot(ax=self.ax, color=lines_group_gdf[StyleKey.COLOR],
+                                 linewidth=lines_group_gdf[StyleKey.WIDTH],
+                                linestyle=lines_group_gdf[StyleKey.LINESTYLE],
+                                alpha=lines_group_gdf[StyleKey.ALPHA],
+                                path_effects=[pe.Stroke(capstyle=capstyle, joinstyle='round')])
 
-            for capstyle, lines_group_gdf in groups:
-                if (pd.isna(capstyle)):
-                    capstyle = "round"
-                lines_group_gdf.plot(ax=self.ax, color=lines_group_gdf[StyleKey.COLOR], linewidth=lines_group_gdf[StyleKey.WIDTH],
-                                     linestyle=lines_group_gdf[StyleKey.LINESTYLE], alpha=lines_group_gdf[StyleKey.ALPHA],
-                                     path_effects=[patheffects.Stroke(capstyle="round", joinstyle='round')])
+    def __plot_dashed_with_edge_dashed(self, gdf: gpd.GeoDataFrame):
+        gdf = GdfUtils.filter_rows(gdf, {StyleKey.COLOR: '', StyleKey.EDGE_COLOR: '',
+                                         StyleKey.LINESTYLE: '', StyleKey.WIDTH: '', StyleKey.EDGEWIDTH: '',
+                                         StyleKey.ALPHA: '', StyleKey.EDGE_ALPHA: ''})
+        if (gdf.empty):
+            return
+        groups = GdfUtils.get_groups_by_columns(
+            gdf, [StyleKey.LINE_CUP, StyleKey.EDGE_CUP, StyleKey.EDGEWIDTH, StyleKey.EDGE_COLOR, StyleKey.EDGE_ALPHA], [], False )
 
+        for (line_cup, edge_cup, edge_width, edge_color, edge_alpha), gdf_group in groups:
+            if (pd.isna(line_cup)):
+                line_cup = "round"
+            if (pd.isna(edge_cup)):
+                edge_cup = "round"
+            gdf_group.plot(ax=self.ax, color=gdf_group[StyleKey.COLOR], linestyle=gdf_group[StyleKey.LINESTYLE],
+                     linewidth=gdf_group[StyleKey.WIDTH], alpha=gdf_group[StyleKey.ALPHA], path_effects=[
+                         pe.Stroke(
+                             linewidth=edge_width, foreground=edge_color, alpha=edge_alpha,
+                             capstyle=edge_cup), pe.Normal(), pe.Stroke(capstyle=line_cup, joinstyle='round')])
+
+    def __plot_dashed_with_edge_solid(self, gdf: gpd.GeoDataFrame):
+        gdf = GdfUtils.filter_rows(gdf, {StyleKey.EDGE_COLOR: '', StyleKey.COLOR: '',
+                                         StyleKey.EDGEWIDTH: '', StyleKey.WIDTH: '',
+                                         StyleKey.ALPHA: '', StyleKey.EDGE_ALPHA: '',
+                                         StyleKey.LINESTYLE: '', })
+        if (gdf.empty):
+            return
+        groups = GdfUtils.get_groups_by_columns(
+            gdf, [StyleKey.LINE_CUP, StyleKey.EDGE_CUP], [], False)
+        # todo make quciker
+        for (line_cup, edge_cup), gdf_group in groups:
+            if (pd.isna(line_cup)):
+                line_cup = "projecting"
+            if (pd.isna(edge_cup)):
+                edge_cup = "projecting"
+            color = gdf_group[StyleKey.COLOR]
+            edge_color = gdf_group[StyleKey.EDGE_COLOR]
+            linewidth = gdf_group[StyleKey.WIDTH]
+            edge_linewidth = gdf_group[StyleKey.EDGEWIDTH]
+            alpha = gdf_group[StyleKey.ALPHA]
+            edge_alpha = gdf_group[StyleKey.EDGE_ALPHA]
+            linestyle = gdf_group[StyleKey.LINESTYLE]
+            edge_linestyle = "-"
+
+            for geom in gdf_group.geometry:
+                if isinstance(geom, MultiLineString):
+                    for line in geom.geoms:  # Extract each LineString
+                        gpd.GeoSeries(line).plot(ax=self.ax, color=edge_color,
+                                                 linewidth=edge_linewidth,
+                                                 alpha=edge_alpha, path_effects=[
+                                                     pe.Stroke(capstyle=edge_cup, joinstyle='round')])
+
+                        gpd.GeoSeries(line).plot(ax=self.ax, color=color, linewidth=linewidth,
+                                                 alpha=alpha, linestyle=linestyle, path_effects=[
+                                                     pe.Stroke(capstyle=line_cup, joinstyle='round')])
+                else:
+                    gpd.GeoSeries(geom).plot(ax=self.ax, color=edge_color,
+                                             linewidth=edge_linewidth,
+                                             alpha=edge_alpha, path_effects=[
+                                                 pe.Stroke(capstyle=edge_cup, joinstyle='round')])
+
+                    gpd.GeoSeries(geom).plot(ax=self.ax, color=color, linewidth=linewidth,
+                                             alpha=alpha, linestyle=linestyle, path_effects=[
+                                                 pe.Stroke(capstyle=line_cup, joinstyle='round')])
+
+        # gdf.plot(ax=self.ax, color=gdf[StyleKey.EDGE_COLOR],
+        #                 linestyle=rails_gdf[StyleKey.EDGE_LINESTYLE],
+        #                 linewidth=rails_gdf[StyleKey.WIDTH] +
+        #                 rail_bg_width_offset, # todo edge width ratio
+        #                 alpha=rails_gdf[StyleKey.ALPHA], path_effects=[
+        #         pe.Stroke(capstyle="projecting", joinstyle='round')])
+
+        # rails_gdf.plot(ax=self.ax, color=rails_gdf[StyleKey.COLOR], linewidth=rails_gdf[StyleKey.WIDTH],
+        #                alpha=rails_gdf[StyleKey.ALPHA], linestyle=rails_gdf[StyleKey.LINESTYLE])
+        
     def __plot_ways_normal(self, gdf: gpd.GeoDataFrame, plotEdges: bool = False):
         """Plot ways based on z-index and capstyles. 
 
@@ -197,70 +274,12 @@ class Plotter:
             self.__plot_dashed_with_edge_dashed(ways_dashed_edge_dashed)
             self.__plot_dashed_with_edge_solid(ways_dashed_edge_solid)
             self.__plot_line(rest_lines)
-
-    def __plot_dashed_with_edge_dashed(self, gdf: gpd.GeoDataFrame):
-        #! todo by capstyle and set bg in path effect...?
-        pass
-
-    def __plot_dashed_with_edge_solid(self, gdf: gpd.GeoDataFrame):
-        if (gdf.empty):
-            return
-        #! todo by capstyle
-
-        gdf = GdfUtils.filter_rows(gdf, {StyleKey.EDGE_COLOR: '', StyleKey.COLOR: '',
-                                         StyleKey.EDGEWIDTH: '', StyleKey.WIDTH: '',
-                                         StyleKey.ALPHA: '', StyleKey.EDGE_ALPHA: '',
-                                         StyleKey.LINESTYLE: '', })
-        # groupby edge cup and line cup 
-        for (line_cup, edge_cup), gdf_group in gdf.groupby(StyleKey.LINE_CUP, StyleKey.EDGE_CUP, dropna=False):
-            if (pd.isna(line_cup)):
-                line_cup = "projecting"
-            if (pd.isna(edge_cup)):
-                edge_cup = "projecting"
-            color = gdf_group[StyleKey.COLOR]
-            edge_color = gdf_group[StyleKey.EDGE_COLOR]
-            linewidth = gdf_group[StyleKey.WIDTH]
-            edge_linewidth = gdf_group[StyleKey.EDGEWIDTH]
-            alpha = gdf_group[StyleKey.ALPHA]
-            edge_alpha = gdf_group[StyleKey.EDGE_ALPHA]
-            linestyle = gdf_group[StyleKey.LINESTYLE]
-            edge_linestyle = "-"
             
-            for geom in gdf_group.geometry:
-                if isinstance(geom, MultiLineString):
-                    for line in geom.geoms:  # Extract each LineString
-                        gpd.GeoSeries(line).plot(ax=self.ax, color=edge_color,
-                                                linewidth=edge_linewidth,
-                                                alpha=edge_alpha, path_effects=[
-                                                    patheffects.Stroke(capstyle=edge_cup, joinstyle='round')])
-
-                        gpd.GeoSeries(line).plot(ax=self.ax, color=color, linewidth=linewidth,
-                                                alpha=alpha, linestyle=linestyle, path_effects=[
-                                                    patheffects.Stroke(capstyle=line_cup, joinstyle='round')])
-                else:
-                    gpd.GeoSeries(geom).plot(ax=self.ax, color=edge_color,
-                                                linewidth=edge_linewidth,
-                                                alpha=edge_alpha, path_effects=[
-                                                    patheffects.Stroke(capstyle=edge_cup, joinstyle='round')])
-
-                    gpd.GeoSeries(geom).plot(ax=self.ax, color=color, linewidth=linewidth,
-                                                alpha=alpha, linestyle=linestyle, path_effects=[
-                                                    patheffects.Stroke(capstyle=line_cup, joinstyle='round')])
-
-        # gdf.plot(ax=self.ax, color=gdf[StyleKey.EDGE_COLOR],
-        #                 linestyle=rails_gdf[StyleKey.EDGE_LINESTYLE],
-        #                 linewidth=rails_gdf[StyleKey.WIDTH] +
-        #                 rail_bg_width_offset, # todo edge width ratio
-        #                 alpha=rails_gdf[StyleKey.ALPHA], path_effects=[
-        #         patheffects.Stroke(capstyle="projecting", joinstyle='round')])
-
-        # rails_gdf.plot(ax=self.ax, color=rails_gdf[StyleKey.COLOR], linewidth=rails_gdf[StyleKey.WIDTH],
-        #                alpha=rails_gdf[StyleKey.ALPHA], linestyle=rails_gdf[StyleKey.LINESTYLE])
-
     def __plot_bridges(self, bridges_gdf: gpd.GeoDataFrame):
         if (bridges_gdf.empty):
             return
-        # can be merged edges and center -- using patheffects
+        # can be merged edges and center -- using pe
+
         def plot_bridges_edges(gdf: gpd.GeoDataFrame):
 
             gdf = GdfUtils.filter_rows(
@@ -274,7 +293,7 @@ class Plotter:
                      linewidth=gdf[StyleKey.BRIDGE_EDGE_WIDTH],
                      linestyle=gdf[StyleKey.EDGE_LINESTYLE],
                      alpha=gdf[StyleKey.EDGE_ALPHA],
-                     path_effects=[patheffects.Stroke(capstyle="butt", joinstyle='round')])
+                     path_effects=[pe.Stroke(capstyle="butt", joinstyle='round')])
 
         def plot_bridges_center(gdf: gpd.GeoDataFrame):
             gdf = GdfUtils.filter_rows(
@@ -287,23 +306,14 @@ class Plotter:
                      linewidth=gdf[StyleKey.BRIDGE_WIDTH],
                      linestyle=gdf[StyleKey.LINESTYLE],
                      alpha=gdf[StyleKey.ALPHA],
-                     path_effects=[patheffects.Stroke(capstyle="butt", joinstyle='round')])
+                     path_effects=[pe.Stroke(capstyle="butt", joinstyle='round')])
 
         def plot_ways_on_bridges(gdf: gpd.GeoDataFrame):
             gdf = GdfUtils.filter_rows(
-                            gdf, {StyleKey.PLOT_ON_BRIDGE: ''})
-            self.__plot_ways_normal(gdf, False)
-            # highways_gdf, rest_gdf = GdfUtils.filter_rows(
-            #     gdf, {'highway': ''}, compl=True)
+                gdf, {StyleKey.PLOT_ON_BRIDGE: ""})
+            # self.__plot_ways_normal(gdf, False)
+            self.__plot_ways_normal(gdf, True)
 
-            # railways_gdf = GdfUtils.filter_rows(rest_gdf, {'railway': ''})
-
-            # highways_gdf = GdfUtils.filter_rows(
-            #     highways_gdf, {StyleKey.PLOT_ON_BRIDGE: ''})
-
-            # self.__plot_ways_normal(highways_gdf, False)
-            # self.__plot_railways(
-            #     railways_gdf, 15 * self.map_object_scaling_factor)
 
         if ('layer' in bridges_gdf.columns):
             bridges_gdf = GdfUtils.sort_gdf_by_column(bridges_gdf, "layer")
@@ -313,11 +323,12 @@ class Plotter:
             plot_bridges_center(bridge_layer_gdf.copy())
             plot_ways_on_bridges(bridge_layer_gdf.copy())
 
-    def plot_tunnels(self, tunnels_gdf):
+    def __plot_tunnels(self, tunnels_gdf):
         if (tunnels_gdf.empty):
             return
         for layer, tunnel_layer_gdf in tunnels_gdf.groupby("layer"):
             self.__plot_ways_normal(tunnel_layer_gdf, True)
+            
 
     @time_measurement("wayplot")
     def plot_ways(self, ways_gdf: gpd.GeoDataFrame, areas_ways_gdf: gpd.GeoDataFrame, plot_over_filter=None):
@@ -331,20 +342,19 @@ class Plotter:
             ways_gdf, {'waterway': ''}, compl=True)
         waterways_tunnel_gdf, waterways_gdf = GdfUtils.filter_rows(
             waterways_gdf, {'tunnel': ''}, compl=True)
-        
-        self.plot_tunnels(waterways_tunnel_gdf)
+
+        self.__plot_tunnels(waterways_tunnel_gdf)
         self.__plot_ways_normal(waterways_gdf)
 
         ways_tunnel_gdf, ways_gdf = GdfUtils.filter_rows(
             ways_gdf, {'tunnel': ''}, compl=True)
-        
-        self.plot_tunnels(ways_tunnel_gdf)
+
+        self.__plot_tunnels(ways_tunnel_gdf)
 
         ways_bridge_gdf, ways_gdf = GdfUtils.filter_rows(
             ways_gdf, {'bridge': ''}, compl=True)
 
         self.__plot_ways_normal(ways_gdf, True)
-
 
         self.__plot_bridges(ways_bridge_gdf)
 
@@ -368,7 +378,7 @@ class Plotter:
                 ax=self.ax, facecolor='none', edgecolor=edge_areas_gdf[StyleKey.EDGE_COLOR],
                 linewidth=edge_areas_gdf[StyleKey.WIDTH], alpha=edge_areas_gdf[StyleKey.EDGE_ALPHA],
                 linestyle=edge_areas_gdf[StyleKey.EDGE_LINESTYLE],
-                path_effects=[patheffects.Stroke(capstyle="round", joinstyle='round')])
+                path_effects=[pe.Stroke(capstyle="round", joinstyle='round')])
 
     @time_measurement("gpxsPlot")
     def plot_gpxs(self, gpxs_gdf: gpd.GeoDataFrame, line_width_multiplier: float):
@@ -382,13 +392,13 @@ class Plotter:
         if (not gpxs_edge_gdf.empty):
             gpxs_edge_gdf.plot(ax=self.ax, color=gpxs_gdf[StyleKey.EDGE_COLOR], linewidth=gpxs_gdf[StyleKey.WIDTH],
                                linestyle=gpxs_gdf[StyleKey.EDGE_LINESTYLE], alpha=gpxs_gdf[StyleKey.ALPHA],
-                               path_effects=[patheffects.Stroke(capstyle="round", joinstyle='round')])
+                               path_effects=[pe.Stroke(capstyle="round", joinstyle='round')])
 
         gpxs_gdf[StyleKey.WIDTH] = gpxs_gdf[StyleKey.WIDTH] * \
             self.map_object_scaling_factor * line_width_multiplier
         gpxs_gdf.plot(ax=self.ax, color=gpxs_gdf[StyleKey.COLOR], linewidth=gpxs_gdf[StyleKey.WIDTH],
                       linestyle=gpxs_gdf[StyleKey.LINESTYLE], alpha=gpxs_gdf[StyleKey.ALPHA],
-                      path_effects=[patheffects.Stroke(capstyle="round", joinstyle='round')])
+                      path_effects=[pe.Stroke(capstyle="round", joinstyle='round')])
 
     @time_measurement("adjusting")
     def adjust_texts(self, text_bounds_overflow_threshold: float):

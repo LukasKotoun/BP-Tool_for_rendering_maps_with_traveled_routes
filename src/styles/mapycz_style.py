@@ -2,7 +2,7 @@ from common.custom_types import *
 from common.map_enums import *
 
 #! edge linestyle is suported only dashed or not dashed on not solid lines, 
-
+#! ploting is turned of by setting color to None
 # ------------styles--------------
 OCEAN_WATER = '#8fb6db'
 
@@ -170,7 +170,7 @@ highway_styles: ElementStyles = [
 
 railway_styles: ElementStyles = [
     ({'railway': 'rail'}, {
-        StyleKey.COLOR: '#FFFFFF', StyleKey.ZINDEX: 1, StyleKey.WIDTH: 10,
+        StyleKey.COLOR: '#FFFFFF', StyleKey.WIDTH: 10,
         StyleKey.BRIDGE_EDGE_COLOR: '#5D5D5D', StyleKey.BRIDGE_COLOR: "#FFFFFF",
         StyleKey.EDGE_COLOR: '#5D5D5D', StyleKey.BRIDGE_WIDTH_RATIO: 1 + 1.7, 
         StyleKey.BRIDGE_EDGE_WIDTH_RATIO: 1 + 0.4,  # todo control after function to calculating width
@@ -178,10 +178,7 @@ railway_styles: ElementStyles = [
     }),
     
     ({'railway': 'tram'}, {
-        StyleKey.COLOR: '#404040', StyleKey.ZINDEX: 10, StyleKey.WIDTH: 4
-    }),
-    ({'railway': 'tram_stop'}, {
-        StyleKey.COLOR: '#404040', StyleKey.ZINDEX: 1, StyleKey.WIDTH: 4
+        StyleKey.COLOR: '#404040',  StyleKey.WIDTH: 4
     })
 ]
 
@@ -192,7 +189,7 @@ ways_styles_default: ElementStyles = [
         StyleKey.ZINDEX: 1, StyleKey.WIDTH: 8, StyleKey.EDGE_COLOR: "#B0A78D"
     }),
     ({'railway': ''}, {
-        StyleKey.COLOR: '#FFFFFF', StyleKey.ZINDEX: 2, StyleKey.WIDTH: 8
+        StyleKey.COLOR: '#FFFFFF', StyleKey.ZINDEX: 100, StyleKey.WIDTH: 8
     }),
     ({'waterway': ''}, {
         StyleKey.COLOR: '#8FB8DB', StyleKey.WIDTH: 8, 

@@ -217,8 +217,8 @@ def main():
         nodes_gdf['ele'] = nodes_gdf['ele'].round(0).astype('Int64')
 
     # setting on bridge and tunnel ploting
-
-    GdfUtils.change_bridges_and_tunnels(ways_gdf, True, True)
+    #todo change also by filter - some will have and some dont
+    GdfUtils.change_bridges_and_tunnels(ways_gdf, False, True)
     # merge lines
     ways_gdf = GdfUtils.merge_lines_gdf(ways_gdf, [])
     GdfUtils.change_columns_to_numeric(ways_gdf, ['layer'])
@@ -304,7 +304,6 @@ def main():
     if (WANT_AREA_CLIPPING or WANT_PREVIEW):
         plotter.clip(CRS_DISPLAY, GdfUtils.create_polygon_from_gdf_bounds(
             nodes_gdf, ways_gdf, areas_gdf))
-
     plotter.generate_pdf(OUTPUT_PDF_NAME)
     # plotter.show_plot()
 

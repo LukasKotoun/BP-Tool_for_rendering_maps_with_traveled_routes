@@ -627,13 +627,14 @@ class GdfUtils:
 
 
     @staticmethod
-    def get_groups_by_columns(df, group_cols, dropna=True, default_key=None):
-     
-        missing = [col for col in group_cols if col not in df.columns]
-        if missing:
-            if default_key is None:
-                # Default key is np.nan for a single column, or a tuple of np.nan for multiple columns.
-                default_key = pd.NA if len(group_cols) == 1 else tuple(pd.NA for _ in group_cols)
-            return [(default_key, df)]
-        else:
-            return df.groupby(group_cols, dropna=dropna)
+    def get_groups_by_columns(gdf, group_cols, default_keys=None, dropna=False):
+        # get missing columns and replace with default key if missing   
+    
+        if len(group_cols) != len(default_keys):
+            default_keys = [None] * len(group_cols)
+        for col, default in zip(group_cols, default_keys):
+            if col not in gdf.columns:
+                gdf[col] = default
+        if(len(group_cols) == 1):
+            return gdf.groupby(group_cols[0], dropna=dropna, observed=False)
+        return gdf.groupby(group_cols, dropna=dropna, observed=False)
