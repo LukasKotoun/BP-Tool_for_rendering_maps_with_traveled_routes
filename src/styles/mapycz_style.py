@@ -174,7 +174,7 @@ railway_styles: ElementStyles = [
         StyleKey.BRIDGE_EDGE_COLOR: '#5D5D5D', StyleKey.BRIDGE_COLOR: "#FFFFFF",
         StyleKey.EDGE_COLOR: '#5D5D5D', StyleKey.BRIDGE_WIDTH_RATIO: 1 + 1.7, 
         StyleKey.BRIDGE_EDGE_WIDTH_RATIO: 1 + 0.4,  # todo control after function to calculating width
-        StyleKey.LINESTYLE: (0, (5, 5)), StyleKey.EDGE_WIDTH_RATIO: 1 + 0.4
+        StyleKey.LINESTYLE: (0, (5, 5)), StyleKey.EDGE_WIDTH_RATIO: 1 + 0.4, 
     }),
     
     ({'railway': 'tram'}, {

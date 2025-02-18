@@ -45,11 +45,9 @@ def calc_preview(map_area_gdf, paper_dimensions_mm):
     map_object_scaling_factor = (Utils.calc_map_object_scaling_factor(outer_map_area_dimensions, outer_paper_dimensions_mm)
                                  * OBJECT_MULTIPLIER)
     # calc map factor for creating automatic array with wanted elements - for preview area (without area_zoom_preview)
-    # todo map_object_scaling_automatic_filters_creating = Utils.calc_map_object_scaling_factor(outer_map_area_dimensions, outer_paper_dimensions_mm)
-    # map_pdf_ratio_auto_filter = sum(Utils.calc_ratios(outer_paper_dimensions_mm, outer_map_area_dimensions))/2
     # ?? to doc - need because it will clip by required area - and that will be some big area in not clipping (cant use only first approach)
     # ?? req area je potom velká jako pdf stránka (přes celou stránku) a ne jako puvodně chtěná oblast a tedy by k žádnému zaříznutí nedošlo
-    if (not WANT_AREA_CLIPPING):
+    if (FIT_PAPER_SIZE):
         # všechny prvky i když to bude menší než papír - např. cesty mimo required area
         area_zoom_preview = None
         # calc bounds so area_zoom_preview will be 1 and will fill whole paper
@@ -161,7 +159,7 @@ def main():
             osm_file_name = OSM_INPUT_FILE_NAMES[0]
         else:
             osm_file_name = OSM_INPUT_FILE_NAMES
-            
+
     # ------------Working in display CRS------------
     map_area_gdf = GdfUtils.change_crs(map_area_gdf, CRS_DISPLAY)
     boundary_map_area_gdf = GdfUtils.change_crs(
@@ -191,7 +189,7 @@ def main():
     if (not GdfUtils.are_gdf_geometry_inside_geometry(gpxs_gdf, reqired_area_polygon)):
         warnings.warn("Some gpx files are not whole inside selected map area.")
     # maybe add gpx to be change by zoom - size
-    
+
     # get coastline and determine where is land and where water
     coast_gdf, ways_gdf = GdfUtils.filter_rows(
         ways_gdf, {'natural': 'coastline'}, compl=True)
@@ -217,8 +215,8 @@ def main():
         nodes_gdf['ele'] = nodes_gdf['ele'].round(0).astype('Int64')
 
     # setting on bridge and tunnel ploting
-    #todo change also by filter - some will have and some dont
-    GdfUtils.change_bridges_and_tunnels(ways_gdf, False, True)
+    # todo change also by filter - some will have and some dont
+    GdfUtils.change_bridges_and_tunnels(ways_gdf, True, True)
     # merge lines
     ways_gdf = GdfUtils.merge_lines_gdf(ways_gdf, [])
     GdfUtils.change_columns_to_numeric(ways_gdf, ['layer'])
@@ -275,7 +273,6 @@ def main():
     # todo remove columns used for calc ratios (array in settings?)
 
     # todo review
-    ways_gdf = GdfUtils.sort_gdf_by_column(ways_gdf, "layer")
     ways_gdf = GdfUtils.sort_gdf_by_column(ways_gdf, StyleKey.ZINDEX)
     areas_gdf = GdfUtils.sort_gdf_by_column(areas_gdf, StyleKey.ZINDEX)
 
@@ -301,7 +298,7 @@ def main():
 
     plotter.adjust_texts(TEXT_BOUNDS_OVERFLOW_THRESHOLD)
 
-    if (WANT_AREA_CLIPPING or WANT_PREVIEW):
+    if (not FIT_PAPER_SIZE or WANT_PREVIEW):
         plotter.clip(CRS_DISPLAY, GdfUtils.create_polygon_from_gdf_bounds(
             nodes_gdf, ways_gdf, areas_gdf))
     plotter.generate_pdf(OUTPUT_PDF_NAME)

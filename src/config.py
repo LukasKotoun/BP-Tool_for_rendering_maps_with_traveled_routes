@@ -5,7 +5,7 @@ from common.map_enums import *
 # --------------------------------------------------------------map area--------------------------------------------------------------
 # OSM_INPUT_FILE_NAMES: str = ['../osm_files/vys.osm.pbf','../osm_files/jihmor.osm.pbf']
 # OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/vysJihE.osm.pbf'
-OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/okresice.osm.pbf'
+OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/trebic.osm.pbf'
 # OSM_INPUT_FILE_NAMES: str | list[str] = '../trebic.osm.pbf'
 # extract
 OSM_WANT_EXTRACT_AREA: bool = False
@@ -48,8 +48,8 @@ PERCENTAGE_PADDING = 0
 # AREA: WantedArea = ["Jihomoravský kraj, Česko", "Kraj Vysočina, Česko"]
 # AREA: WantedArea = ["Kraj Vysočina, Česko"]
 # AREA: WantedArea = ["Česko"]
-AREA: WantedArea = ["Okřešice, Česko"]
-# AREA: WantedArea = ["Třebíč, Česko"]
+# AREA: WantedArea = ["Okřešice, Česko"]
+AREA: WantedArea = ["Třebíč, Česko"]
 # AREA: WantedArea = ["Okres Třebíč, Česko", "Třebíč, Česko", "Okres Jihlava, Česko"]
 # AREA: WantedArea = ["Texas, USA"]
 
@@ -64,7 +64,7 @@ GIVEN_SMALLER_PAPER_DIMENSION: bool = True
 WANTED_ORIENTATION: MapOrientation = MapOrientation.AUTOMATIC
 
 # FIT_PAPER_SIZE recomended with PERCENTAGE_PADDING 0
-FIT_PAPER_SIZE = True
+FIT_PAPER_SIZE = False
 
 # bounds
 # COMBINED - one bound around area, SEPARATED - separated bounds around every area in AREA variable
@@ -92,7 +92,7 @@ TEXT_BOUNDS_OVERFLOW_THRESHOLD = 0.97
 
 # --------------------------------------------------------------preview--------------------------------------------------------------
 # NOTE: must have same settings as the resulting one when generating for large format printing
-WANT_PREVIEW: bool = True
+WANT_PREVIEW: bool = False
 # OUTER_AREA: WantedArea = [(15.7034756,48.6941575), (15.9206889,48.6941186), (15.9198775, 48.5926164), (15.7030222, 48.5936264)] # zoom 13 - 0.012257255675006467
 
 # area for that you are creating smaller preview (bigger than normal area)
@@ -112,10 +112,6 @@ OUTER_WANTED_ORIENTATION = MapOrientation.AUTOMATIC
 # expand area
 OUTER_FIT_PAPER_SIZE = False
  
-# clipping - if used without preview than replaced by fit_paper_size and default should be true
-# if true it will plot only given AREA (recomended) if False it will plot whole osm file with AREA in center
-WANT_AREA_CLIPPING = True
-
 # ------------constants--------------
 # world 3857
 CRS_OSM = "EPSG:4326"
