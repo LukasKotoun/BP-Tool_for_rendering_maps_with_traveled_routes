@@ -146,6 +146,8 @@ class GdfUtils:
 
     @staticmethod
     def create_empty_gdf(crs: str, columns=["geometry"]) -> gpd.GeoDataFrame:
+        if('geometry' not in columns):
+            columns.append('geometry')
         if (crs is None):
             return gpd.GeoDataFrame(columns=columns)
         return gpd.GeoDataFrame(columns=columns, crs=crs)

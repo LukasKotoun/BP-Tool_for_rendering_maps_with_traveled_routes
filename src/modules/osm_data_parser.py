@@ -118,34 +118,27 @@ class OsmDataParser():
 
     @time_measurement("gdf creating")
     def create_gdf(self, file_name: str, fromCrs: str, toCrs: str | None = None) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame, gpd.GeoDataFrame]:
-        class NodesFilter():
+        
+        class ElementsFilter():
             def __init__(self, outer_self):
                 self.outer_self = outer_self
-
+                
             def node(self, node):
                 return not (OsmDataParser._apply_filters(self.outer_self.wanted_nodes, node.tags) and OsmDataParser._apply_filters_not_allowed(self.outer_self.unwanted_nodes_tags, node.tags))
-
-        class WaysFilter():
-            def __init__(self, outer_self):
-                self.outer_self = outer_self
-
+            
             def way(self, way):
                 return not (OsmDataParser._apply_filters(self.outer_self.wanted_ways, way.tags) and OsmDataParser._apply_filters_not_allowed(self.outer_self.unwanted_ways_tags, way.tags))
-
-        class AreasFilter():
-            def __init__(self, outer_self):
-                self.outer_self = outer_self
-
+            
             def area(self, area):
                 return not (OsmDataParser._apply_filters(self.outer_self.wanted_areas, area.tags) and OsmDataParser._apply_filters_not_allowed(self.outer_self.unwanted_areas_tags, area.tags))
-
+ 
         if (self.wanted_nodes):
             fp_node: osmium.FileProcessor = osmium.FileProcessor(file_name)\
                 .with_locations()\
                 .with_filter(osmium.filter.EmptyTagFilter())\
                 .with_filter(osmium.filter.EntityFilter(osmium.osm.NODE))\
                 .with_filter(osmium.filter.KeyFilter(*self.wanted_nodes.keys()))\
-                .with_filter(NodesFilter(self))\
+                .with_filter(ElementsFilter(self))\
                 .with_filter(osmium.filter.GeoInterfaceFilter(tags=self.nodes_columns))
             nodes_gdf = GdfUtils.create_gdf_from_file_processor(fp_node, fromCrs)
         else:
@@ -157,7 +150,7 @@ class OsmDataParser():
                 .with_filter(osmium.filter.EmptyTagFilter())\
                 .with_filter(osmium.filter.EntityFilter(osmium.osm.WAY))\
                 .with_filter(osmium.filter.KeyFilter(*self.wanted_ways.keys()))\
-                .with_filter(WaysFilter(self))\
+                .with_filter(ElementsFilter(self))\
                 .with_filter(osmium.filter.GeoInterfaceFilter(tags=self.way_columns))
             ways_gdf = GdfUtils.create_gdf_from_file_processor(fp_way, fromCrs)
         else:
@@ -169,7 +162,7 @@ class OsmDataParser():
                 .with_filter(osmium.filter.EmptyTagFilter())\
                 .with_filter(osmium.filter.EntityFilter(osmium.osm.AREA))\
                 .with_filter(osmium.filter.KeyFilter(*self.wanted_areas.keys()))\
-                .with_filter(AreasFilter(self))\
+                .with_filter(ElementsFilter(self))\
                 .with_filter(osmium.filter.GeoInterfaceFilter(tags=self.area_columns))
             areas_gdf = GdfUtils.create_gdf_from_file_processor(fp_area, fromCrs)
         else:
