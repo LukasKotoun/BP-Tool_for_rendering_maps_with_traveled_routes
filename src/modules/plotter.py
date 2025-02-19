@@ -136,13 +136,15 @@ class Plotter:
         self.__plot_elevations(rest_gdf)
 
 
-    def __plot_line_edges(self, lines_gdf):
+    def __plot_line_edges(self, lines_gdf, cupstyle: str = None):
         edge_lines_gdf = GdfUtils.filter_rows(lines_gdf, {
             StyleKey.EDGE_COLOR: '', StyleKey.EDGE_LINESTYLE: '', StyleKey.EDGEWIDTH: '', StyleKey.EDGE_ALPHA: ''})
 
         if (edge_lines_gdf.empty):
             return
-
+        if(cupstyle is not None):
+            edge_lines_gdf[StyleKey.EDGE_CUP] = cupstyle
+            
         groups = GdfUtils.get_groups_by_columns(
             edge_lines_gdf, [StyleKey.EDGE_CUP], [self.DEFAULT_CUPSTYLE], False)
         for capstyle, edge_lines_group_gdf in groups:
@@ -156,12 +158,14 @@ class Plotter:
                                 path_effects=[pe.Stroke(capstyle=capstyle)])
 
 
-    def __plot_line(self, lines_gdf):
+    def __plot_line(self, lines_gdf, cupstyle: str = None):
         lines_gdf = GdfUtils.filter_rows(lines_gdf, {
             StyleKey.COLOR: '', StyleKey.LINESTYLE: '', StyleKey.WIDTH: '', StyleKey.ALPHA: ''})
         if (lines_gdf.empty):
             return
-
+        if(cupstyle is not None):
+            lines_gdf[StyleKey.LINE_CUP] = cupstyle
+            
         groups = GdfUtils.get_groups_by_columns(
             lines_gdf, [StyleKey.LINE_CUP], [self.DEFAULT_CUPSTYLE], False)
 
@@ -175,7 +179,7 @@ class Plotter:
                                  alpha=lines_group_gdf[StyleKey.ALPHA],
                                  path_effects=[pe.Stroke(capstyle=capstyle)])
 
-    def __plot_dashed_with_edge_dashed(self, gdf: gpd.GeoDataFrame):
+    def __plot_dashed_with_edge_dashed(self, gdf: gpd.GeoDataFrame, line_cupstyle: str = None, edge_cupstyle: str = None):
         if (gdf.empty):    
             return
         gdf = GdfUtils.filter_rows(gdf, {StyleKey.COLOR: '', StyleKey.EDGE_COLOR: '',
@@ -183,6 +187,11 @@ class Plotter:
                                          StyleKey.ALPHA: '', StyleKey.EDGE_ALPHA: ''})
         if (gdf.empty):
             return
+        if(line_cupstyle is not None):
+            gdf[StyleKey.LINE_CUP] = line_cupstyle
+        if(edge_cupstyle is not None):
+            gdf[StyleKey.EDGE_CUP] = edge_cupstyle
+            
         groups = GdfUtils.get_groups_by_columns(
             gdf, [StyleKey.LINE_CUP, StyleKey.EDGE_CUP, StyleKey.EDGEWIDTH,
                   StyleKey.EDGE_COLOR, StyleKey.EDGE_ALPHA], [], False)
@@ -199,7 +208,7 @@ class Plotter:
                     linewidth=edge_width, foreground=edge_color, alpha=edge_alpha,
                     capstyle=edge_cup), pe.Normal(), pe.Stroke(capstyle=line_cup)])
 
-    def __plot_dashed_with_edge_solid(self, gdf: gpd.GeoDataFrame):
+    def __plot_dashed_with_edge_solid(self, gdf: gpd.GeoDataFrame, line_cupstyle: str = None, edge_cupstyle: str = None):
         if (gdf.empty):    
             return
         gdf = GdfUtils.filter_rows(gdf, {StyleKey.EDGE_COLOR: '', StyleKey.COLOR: '',
@@ -208,6 +217,11 @@ class Plotter:
                                          StyleKey.LINESTYLE: '', })
         if (gdf.empty):
             return
+        if(line_cupstyle is not None):
+            gdf[StyleKey.LINE_CUP] = line_cupstyle
+        if(edge_cupstyle is not None):
+            gdf[StyleKey.EDGE_CUP] = edge_cupstyle
+            
         groups = GdfUtils.get_groups_by_columns(
             gdf, [StyleKey.LINE_CUP, StyleKey.EDGE_CUP], [], False)
         # todo make quciker
@@ -256,9 +270,8 @@ class Plotter:
         # rails_gdf.plot(ax=self.ax, color=rails_gdf[StyleKey.COLOR], linewidth=rails_gdf[StyleKey.WIDTH],
         #                alpha=rails_gdf[StyleKey.ALPHA], linestyle=rails_gdf[StyleKey.LINESTYLE])
 
-    def __plot_ways_normal(self, gdf: gpd.GeoDataFrame, plotEdges: bool = False):
+    def __plot_ways_normal(self, gdf: gpd.GeoDataFrame, plotEdges: bool = False, line_cupstyle: str = None, edge_cupstyle: str = None):
         """Plot ways based on z-index and capstyles. 
-
 
         Args:
             gdf (gpd.GeoDataFrame): _description_
@@ -269,7 +282,7 @@ class Plotter:
         if (plotEdges):
             # plot edge where line is solid or only edge is ploted
             self.__plot_line_edges(GdfUtils.filter_rows(
-                gdf, [{StyleKey.LINESTYLE: ['-', 'solid']}, {StyleKey.COLOR: '~'}]))
+                gdf, [{StyleKey.LINESTYLE: ['-', 'solid']}, {StyleKey.COLOR: '~'}]), edge_cupstyle)
 
         groups = GdfUtils.get_groups_by_columns(
             gdf, [StyleKey.ZINDEX], [], False)
@@ -277,12 +290,13 @@ class Plotter:
             # lines - line is solid or edge does not exists, dashed_with_edge_lines - line is dashed and edge exists
             rest_lines, dashed_with_edge_lines = GdfUtils.filter_rows(
                 ways_group_gdf, [{StyleKey.LINESTYLE: ['-', 'solid']}, {StyleKey.EDGE_COLOR: '~'}], compl=True)
+            # there will be filter for ways with specific edge style (edgeEffect)
             ways_dashed_edge_solid, ways_dashed_edge_dashed = GdfUtils.filter_rows(
                 dashed_with_edge_lines, {StyleKey.EDGE_LINESTYLE: ['-', 'solid']}, compl = True)
             
-            self.__plot_dashed_with_edge_dashed(ways_dashed_edge_dashed)
-            self.__plot_dashed_with_edge_solid(ways_dashed_edge_solid)
-            self.__plot_line(rest_lines)
+            self.__plot_dashed_with_edge_dashed(ways_dashed_edge_dashed, line_cupstyle, edge_cupstyle)
+            self.__plot_dashed_with_edge_solid(ways_dashed_edge_solid, line_cupstyle, edge_cupstyle)
+            self.__plot_line(rest_lines, line_cupstyle)
 
     def __plot_bridges(self, bridges_gdf: gpd.GeoDataFrame):
         if (bridges_gdf.empty):
@@ -364,8 +378,9 @@ class Plotter:
         self.__plot_ways_normal(ways_gdf, True)
 
         self.__plot_bridges(ways_bridge_gdf)
-
-        # todo plot over filter using plot ways normal with cupstyle butt
+        
+        if(plot_over_filter is not None):
+            self.__plot_ways_normal(GdfUtils.filter_rows(ways_gdf, plot_over_filter), True, 'butt', 'butt')
 
     @time_measurement("areaPlot")
     def plot_areas(self, areas_gdf: gpd.GeoDataFrame):

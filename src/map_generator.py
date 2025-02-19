@@ -288,7 +288,9 @@ def main():
         GENERAL_DEFAULT_STYLES[StyleKey.COLOR], bg_gdf, area_zoom_preview)
     plotter.zoom(zoom_percent_padding=PERCENTAGE_PADDING)
     plotter.plot_areas(areas_gdf)
-    plotter.plot_ways(ways_gdf, areas_gdf)
+    # plotter.plot_ways(ways_gdf, areas_gdf, [{'highway': 'motorway'}])
+    # plotter.plot_ways(ways_gdf, areas_gdf, [{'highway': 'primary'}])
+    plotter.plot_ways(ways_gdf, areas_gdf, None)
     plotter.plot_nodes(nodes_gdf, TEXT_WRAP_NAMES_LEN)
     plotter.plot_gpxs(gpxs_gdf, 1)
     if (boundary_map_area_gdf is not None and not boundary_map_area_gdf.empty):

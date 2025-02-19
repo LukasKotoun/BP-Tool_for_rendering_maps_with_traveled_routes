@@ -631,12 +631,13 @@ class GdfUtils:
     @staticmethod
     def get_groups_by_columns(gdf, group_cols, default_keys=None, dropna=False):
         # get missing columns and replace with default key if missing   
-    
+        # todo make quicker - refactor
         if len(group_cols) != len(default_keys):
             default_keys = [None] * len(group_cols)
         for col, default in zip(group_cols, default_keys):
             if col not in gdf.columns:
                 gdf[col] = default
+                
         if(len(group_cols) == 1):
             return gdf.groupby(group_cols[0], dropna=dropna, observed=False)
         return gdf.groupby(group_cols, dropna=dropna, observed=False)
