@@ -72,23 +72,15 @@ AREA_BOUNDARY = AreaBounds.SEPARATED
 EXPAND_AREA_BOUNDS_PLOT = False
 AREA_BOUNDARY_LINEWIDTH = 30
 
-
-# --------------------------------------------------------------names settings--------------------------------------------------------------
-# city text
-SHOW_CITY_NAMES = True  # in automatic wanted_nodes creation
-# The largest urban settlement or settlements within the territory.
-CITY_CITY_SIZE_MULTIPLIER = 1
-# An important urban centre, between a village and a city in size.
-CITY_TOWN_SIZE_MULTIPLIER = 1
-# A smaller distinct settlement, smaller than a town with few facilities available with people traveling to nearby towns to access these.
-CITY_VILLAGE_SIZE_MULTIPLIER = 1
-
-# peek text ...
 # text general
 TEXT_WRAP_NAMES_LEN = 15  # len or None if not wrap (15 default)
 # if allow is false set threashold (0-1) how much of text must be inside
 TEXT_BOUNDS_OVERFLOW_THRESHOLD = 0.97
 
+# plot as bridge (True)  or normal way (False)
+PLOT_BRIDGES = True
+# plot as tunnel (True) or normal way (False) - if false and in dont want tags -> will not be plotted at all
+PLOT_TUNNELS = True
 
 # --------------------------------------------------------------preview--------------------------------------------------------------
 # NOTE: must have same settings as the resulting one when generating for large format printing

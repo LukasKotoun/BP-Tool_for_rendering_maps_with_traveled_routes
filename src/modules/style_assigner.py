@@ -65,10 +65,7 @@ class StyleAssigner:
                 categorical_list.append(style_column)
         GdfUtils.change_columns_to_categorical(gdf, categorical_list)
 
-    
-    @staticmethod
-    def create_styles_from_dynamic():
-        pass
+
     # todo move to FE
     @staticmethod
     def generate_shades_of_color(base_color, num_shades, min_factor=0.3, max_factor=0.7) -> list[tuple[float, float, float, float]]:

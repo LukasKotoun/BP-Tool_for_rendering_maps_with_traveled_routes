@@ -47,11 +47,11 @@ class StyleKey(Enum):
     
     #text
     TEXT_FONT_SIZE = 14
-    TEXT_OUTLINE_WIDHT_RATIO = 16
+    TEXT_OUTLINE_WIDTH_RATIO = 16
     TEXT_FONT_SIZE_SCALE = 32
     FE_TEXT_FONT_SIZE_SCALE = 32
     # calculated - cant be set by user
-    # calculated like TEXT_FONT_SIZE * TEXT_OUTLINE_WIDHT_RATIO
+    # calculated like TEXT_FONT_SIZE * TEXT_OUTLINE_WIDTH_RATIO
     TEXT_OUTLINE_WIDTH = 17
     # calculated like WIDTH * (1 + EDGE_WIDTH_RATIO)
     EDGEWIDTH = 18

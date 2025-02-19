@@ -29,6 +29,7 @@ class Plotter:
 
     MM_TO_INCH = 25.4
     DEFAULT_CUPSTYLE = "round"
+
     def __init__(self, requred_area_gdf: gpd.GeoDataFrame, paper_dimensions_mm: DimensionsTuple, map_object_scaling_factor: float):
         self.reqired_area_gdf: gpd.GeoDataFrame = requred_area_gdf
         self.reqired_area_polygon: Polygon = GdfUtils.create_polygon_from_gdf(
@@ -135,44 +136,42 @@ class Plotter:
         rest_gdf = GdfUtils.filter_rows(nodes_gdf, {'natural': 'peak'})
         self.__plot_elevations(rest_gdf)
 
-
     def __plot_line_edges(self, lines_gdf, cupstyle: str = None):
         edge_lines_gdf = GdfUtils.filter_rows(lines_gdf, {
             StyleKey.EDGE_COLOR: '', StyleKey.EDGE_LINESTYLE: '', StyleKey.EDGEWIDTH: '', StyleKey.EDGE_ALPHA: ''})
 
         if (edge_lines_gdf.empty):
             return
-        if(cupstyle is not None):
+        if (cupstyle is not None):
             edge_lines_gdf[StyleKey.EDGE_CUP] = cupstyle
-            
+
         groups = GdfUtils.get_groups_by_columns(
             edge_lines_gdf, [StyleKey.EDGE_CUP], [self.DEFAULT_CUPSTYLE], False)
         for capstyle, edge_lines_group_gdf in groups:
             if (pd.isna(capstyle)):
                 capstyle = self.DEFAULT_CUPSTYLE
-                
-            edge_lines_group_gdf.plot(ax=self.ax, color=edge_lines_group_gdf[StyleKey.EDGE_COLOR],
-                                linewidth=edge_lines_group_gdf[StyleKey.EDGEWIDTH],
-                                linestyle=edge_lines_group_gdf[StyleKey.EDGE_LINESTYLE],
-                                alpha=edge_lines_group_gdf[StyleKey.EDGE_ALPHA],
-                                path_effects=[pe.Stroke(capstyle=capstyle)])
 
+            edge_lines_group_gdf.plot(ax=self.ax, color=edge_lines_group_gdf[StyleKey.EDGE_COLOR],
+                                      linewidth=edge_lines_group_gdf[StyleKey.EDGEWIDTH],
+                                      linestyle=edge_lines_group_gdf[StyleKey.EDGE_LINESTYLE],
+                                      alpha=edge_lines_group_gdf[StyleKey.EDGE_ALPHA],
+                                      path_effects=[pe.Stroke(capstyle=capstyle)])
 
     def __plot_line(self, lines_gdf, cupstyle: str = None):
         lines_gdf = GdfUtils.filter_rows(lines_gdf, {
             StyleKey.COLOR: '', StyleKey.LINESTYLE: '', StyleKey.WIDTH: '', StyleKey.ALPHA: ''})
         if (lines_gdf.empty):
             return
-        if(cupstyle is not None):
+        if (cupstyle is not None):
             lines_gdf[StyleKey.LINE_CUP] = cupstyle
-            
+
         groups = GdfUtils.get_groups_by_columns(
             lines_gdf, [StyleKey.LINE_CUP], [self.DEFAULT_CUPSTYLE], False)
 
         for capstyle, lines_group_gdf in groups:
             if (pd.isna(capstyle)):
                 capstyle = self.DEFAULT_CUPSTYLE
-                
+
             lines_group_gdf.plot(ax=self.ax, color=lines_group_gdf[StyleKey.COLOR],
                                  linewidth=lines_group_gdf[StyleKey.WIDTH],
                                  linestyle=lines_group_gdf[StyleKey.LINESTYLE],
@@ -180,18 +179,18 @@ class Plotter:
                                  path_effects=[pe.Stroke(capstyle=capstyle)])
 
     def __plot_dashed_with_edge_dashed(self, gdf: gpd.GeoDataFrame, line_cupstyle: str = None, edge_cupstyle: str = None):
-        if (gdf.empty):    
+        if (gdf.empty):
             return
         gdf = GdfUtils.filter_rows(gdf, {StyleKey.COLOR: '', StyleKey.EDGE_COLOR: '',
                                          StyleKey.LINESTYLE: '', StyleKey.WIDTH: '', StyleKey.EDGEWIDTH: '',
                                          StyleKey.ALPHA: '', StyleKey.EDGE_ALPHA: ''})
         if (gdf.empty):
             return
-        if(line_cupstyle is not None):
+        if (line_cupstyle is not None):
             gdf[StyleKey.LINE_CUP] = line_cupstyle
-        if(edge_cupstyle is not None):
+        if (edge_cupstyle is not None):
             gdf[StyleKey.EDGE_CUP] = edge_cupstyle
-            
+
         groups = GdfUtils.get_groups_by_columns(
             gdf, [StyleKey.LINE_CUP, StyleKey.EDGE_CUP, StyleKey.EDGEWIDTH,
                   StyleKey.EDGE_COLOR, StyleKey.EDGE_ALPHA], [], False)
@@ -201,7 +200,7 @@ class Plotter:
                 line_cup = self.DEFAULT_CUPSTYLE
             if (pd.isna(edge_cup)):
                 edge_cup = self.DEFAULT_CUPSTYLE
-                
+
             gdf_group.plot(ax=self.ax, color=gdf_group[StyleKey.COLOR], linestyle=gdf_group[StyleKey.LINESTYLE],
                            linewidth=gdf_group[StyleKey.WIDTH], alpha=gdf_group[StyleKey.ALPHA], path_effects=[
                 pe.Stroke(
@@ -209,7 +208,7 @@ class Plotter:
                     capstyle=edge_cup), pe.Normal(), pe.Stroke(capstyle=line_cup)])
 
     def __plot_dashed_with_edge_solid(self, gdf: gpd.GeoDataFrame, line_cupstyle: str = None, edge_cupstyle: str = None):
-        if (gdf.empty):    
+        if (gdf.empty):
             return
         gdf = GdfUtils.filter_rows(gdf, {StyleKey.EDGE_COLOR: '', StyleKey.COLOR: '',
                                          StyleKey.EDGEWIDTH: '', StyleKey.WIDTH: '',
@@ -217,11 +216,11 @@ class Plotter:
                                          StyleKey.LINESTYLE: '', })
         if (gdf.empty):
             return
-        if(line_cupstyle is not None):
+        if (line_cupstyle is not None):
             gdf[StyleKey.LINE_CUP] = line_cupstyle
-        if(edge_cupstyle is not None):
+        if (edge_cupstyle is not None):
             gdf[StyleKey.EDGE_CUP] = edge_cupstyle
-            
+
         groups = GdfUtils.get_groups_by_columns(
             gdf, [StyleKey.LINE_CUP, StyleKey.EDGE_CUP], [], False)
         # todo make quciker
@@ -260,17 +259,7 @@ class Plotter:
                                              alpha=alpha, linestyle=linestyle, path_effects=[
                                                  pe.Stroke(capstyle=line_cup)])
 
-        # gdf.plot(ax=self.ax, color=gdf[StyleKey.EDGE_COLOR],
-        #                 linestyle=rails_gdf[StyleKey.EDGE_LINESTYLE],
-        #                 linewidth=rails_gdf[StyleKey.WIDTH] +
-        #                 rail_bg_width_offset, # todo edge width ratio
-        #                 alpha=rails_gdf[StyleKey.ALPHA], path_effects=[
-        #         pe.Stroke(capstyle="projecting")])
-
-        # rails_gdf.plot(ax=self.ax, color=rails_gdf[StyleKey.COLOR], linewidth=rails_gdf[StyleKey.WIDTH],
-        #                alpha=rails_gdf[StyleKey.ALPHA], linestyle=rails_gdf[StyleKey.LINESTYLE])
-
-    def __plot_ways_normal(self, gdf: gpd.GeoDataFrame, plotEdges: bool = False, line_cupstyle: str = None, edge_cupstyle: str = None):
+    def __plot_ways_normal(self, gdf: gpd.GeoDataFrame, plotEdges: bool = False, cross_roads_by_zindex=False, line_cupstyle: str = None, edge_cupstyle: str = None):
         """Plot ways based on z-index and capstyles. 
 
         Args:
@@ -279,7 +268,8 @@ class Plotter:
         """
         if (gdf.empty):
             return
-        if (plotEdges):
+
+        if (plotEdges and not cross_roads_by_zindex):
             # plot edge where line is solid or only edge is ploted
             self.__plot_line_edges(GdfUtils.filter_rows(
                 gdf, [{StyleKey.LINESTYLE: ['-', 'solid']}, {StyleKey.COLOR: '~'}]), edge_cupstyle)
@@ -287,15 +277,21 @@ class Plotter:
         groups = GdfUtils.get_groups_by_columns(
             gdf, [StyleKey.ZINDEX], [], False)
         for zindex, ways_group_gdf in groups:
+            # crossroads only on ways with same zindex
+            if (plotEdges and cross_roads_by_zindex):
+                self.__plot_line_edges(GdfUtils.filter_rows(
+                    gdf, [{StyleKey.LINESTYLE: ['-', 'solid']}, {StyleKey.COLOR: '~'}]), edge_cupstyle)
             # lines - line is solid or edge does not exists, dashed_with_edge_lines - line is dashed and edge exists
             rest_lines, dashed_with_edge_lines = GdfUtils.filter_rows(
                 ways_group_gdf, [{StyleKey.LINESTYLE: ['-', 'solid']}, {StyleKey.EDGE_COLOR: '~'}], compl=True)
             # there will be filter for ways with specific edge style (edgeEffect)
             ways_dashed_edge_solid, ways_dashed_edge_dashed = GdfUtils.filter_rows(
-                dashed_with_edge_lines, {StyleKey.EDGE_LINESTYLE: ['-', 'solid']}, compl = True)
-            
-            self.__plot_dashed_with_edge_dashed(ways_dashed_edge_dashed, line_cupstyle, edge_cupstyle)
-            self.__plot_dashed_with_edge_solid(ways_dashed_edge_solid, line_cupstyle, edge_cupstyle)
+                dashed_with_edge_lines, {StyleKey.EDGE_LINESTYLE: ['-', 'solid']}, compl=True)
+
+            self.__plot_dashed_with_edge_dashed(
+                ways_dashed_edge_dashed, line_cupstyle, edge_cupstyle)
+            self.__plot_dashed_with_edge_solid(
+                ways_dashed_edge_solid, line_cupstyle, edge_cupstyle)
             self.__plot_line(rest_lines, line_cupstyle)
 
     def __plot_bridges(self, bridges_gdf: gpd.GeoDataFrame):
@@ -335,8 +331,7 @@ class Plotter:
                 gdf, {StyleKey.PLOT_ON_BRIDGE: ""})
             if (gdf.empty):
                 return
-            # self.__plot_ways_normal(gdf, False)
-            self.__plot_ways_normal(gdf, True)
+            self.__plot_ways_normal(gdf, True), False
 
         groups = GdfUtils.get_groups_by_columns(
             bridges_gdf, ['layer'], [], False)
@@ -349,15 +344,13 @@ class Plotter:
         if (tunnels_gdf.empty):
             return
         for layer, tunnel_layer_gdf in tunnels_gdf.groupby("layer"):
-            self.__plot_ways_normal(tunnel_layer_gdf, True)
+            self.__plot_ways_normal(tunnel_layer_gdf, True, False)
 
     @time_measurement("wayplot")
     def plot_ways(self, ways_gdf: gpd.GeoDataFrame, areas_ways_gdf: gpd.GeoDataFrame, plot_over_filter=None):
-        
-        if (ways_gdf.empty or StyleKey.WIDTH not in ways_gdf
-           or StyleKey.COLOR not in ways_gdf):
+        if (ways_gdf.empty):
             return
-        
+
         # water ways and tunnels
         waterways_gdf, ways_gdf = GdfUtils.filter_rows(
             ways_gdf, {'waterway': ''}, compl=True)
@@ -365,22 +358,27 @@ class Plotter:
             waterways_gdf, {'tunnel': ''}, compl=True)
 
         self.__plot_tunnels(waterways_tunnel_gdf)
-        self.__plot_ways_normal(waterways_gdf)
+        self.__plot_ways_normal(waterways_gdf, True, False)
 
+        # normal tunnels
         ways_tunnel_gdf, ways_gdf = GdfUtils.filter_rows(
             ways_gdf, {'tunnel': ''}, compl=True)
 
         self.__plot_tunnels(ways_tunnel_gdf)
 
+        # normal ways
         ways_bridge_gdf, ways_gdf = GdfUtils.filter_rows(
             ways_gdf, {'bridge': ''}, compl=True)
 
-        self.__plot_ways_normal(ways_gdf, True)
+        self.__plot_ways_normal(ways_gdf, True, False)
 
+        # bridges
         self.__plot_bridges(ways_bridge_gdf)
-        
-        if(plot_over_filter is not None):
-            self.__plot_ways_normal(GdfUtils.filter_rows(ways_gdf, plot_over_filter), True, 'butt', 'butt')
+
+        # ways to prevent crossroads
+        if (plot_over_filter is not None):
+            self.__plot_ways_normal(GdfUtils.filter_rows(
+                ways_gdf, plot_over_filter), True, True, 'butt', 'butt')
 
     @time_measurement("areaPlot")
     def plot_areas(self, areas_gdf: gpd.GeoDataFrame):
@@ -395,19 +393,25 @@ class Plotter:
         # plot bounds
         edge_areas_gdf = GdfUtils.filter_rows(areas_gdf,
                                               {StyleKey.EDGE_COLOR: '', StyleKey.WIDTH: '', StyleKey.EDGE_LINESTYLE: ''})
-        if (not edge_areas_gdf.empty):
-            edge_areas_gdf.plot(
-                ax=self.ax, facecolor='none', edgecolor=edge_areas_gdf[StyleKey.EDGE_COLOR],
-                linewidth=edge_areas_gdf[StyleKey.WIDTH], alpha=edge_areas_gdf[StyleKey.EDGE_ALPHA],
-                linestyle=edge_areas_gdf[StyleKey.EDGE_LINESTYLE],
-                path_effects=[pe.Stroke(capstyle="round")])
+        if (edge_areas_gdf.empty):
+            return
+        groups = GdfUtils.get_groups_by_columns(
+            edge_areas_gdf, [StyleKey.EDGE_CUP], [self.DEFAULT_CUPSTYLE], False)
+        for capstyle, edge_areas_group_gdf in groups:
+            if (pd.isna(capstyle)):
+                capstyle = self.DEFAULT_CUPSTYLE
+            edge_areas_group_gdf.plot(
+                ax=self.ax, facecolor='none', edgecolor=edge_areas_group_gdf[StyleKey.EDGE_COLOR],
+                linewidth=edge_areas_group_gdf[StyleKey.WIDTH], alpha=edge_areas_group_gdf[StyleKey.EDGE_ALPHA],
+                linestyle=edge_areas_group_gdf[StyleKey.EDGE_LINESTYLE],
+                path_effects=[pe.Stroke(capstyle=capstyle)])
 
     @time_measurement("gpxsPlot")
     def plot_gpxs(self, gpxs_gdf: gpd.GeoDataFrame, line_width_multiplier: float):
 
         if (gpxs_gdf.empty):
             return
-        self.__plot_ways_normal(gpxs_gdf, True)
+        self.__plot_ways_normal(gpxs_gdf, True, False)
 
         # gpxs_edge_gdf = GdfUtils.filter_rows(
         #     gpxs_gdf, {StyleKey.EDGE_COLOR: '', StyleKey.EDGE_LINESTYLE: '', StyleKey.WIDTH: ''})

@@ -263,28 +263,31 @@ class GdfUtils:
 
     # ------------editing gdf------------
     @staticmethod
+    def remove_columns(gdf: gpd.GeoDataFrame, columns: list[str | StyleKey]) -> gpd.GeoDataFrame:
+        gdf.drop(columns=columns, inplace=True, errors='ignore')
+    
+    @staticmethod
     def change_bridges_and_tunnels(gdf, want_bridges: bool, want_tunnels: bool):
         gdf['layer'] = gdf.get('layer', 0)
         gdf.loc[GdfUtils.get_rows_filter(
             gdf, {'tunnel': '~', 'bridge': '~'}), 'layer'] = 0
         if (not want_bridges and not want_tunnels):
             gdf['layer'] = 0
-            gdf.drop(columns=['bridge', 'tunnel'],
-                     inplace=True, errors='ignore')
+            GdfUtils.remove_columns(gdf, ['bridge', 'tunnel'])
 
         if (not want_bridges):
             if ('layer' in gdf):
                 # set layer to 0 in bridges - as normal ways
                 gdf.loc[GdfUtils.get_rows_filter(
                     gdf, {'bridge': ''}), 'layer'] = 0
-            gdf.drop(columns=['bridge'], inplace=True, errors='ignore')
+            GdfUtils.remove_columns(gdf, ['bridge'])
 
         if (not want_tunnels):
             if ('layer' in gdf):
                 # set layer to 0 in tunnels - as normal ways
                 gdf.loc[GdfUtils.get_rows_filter(
                     gdf, {'tunnel': ''}), 'layer'] = 0
-            gdf.drop(columns=['tunnel'], inplace=True, errors='ignore')
+            GdfUtils.remove_columns(gdf, ['tunnel'])
         return
 
     @staticmethod  # column and multipliers must be numeric otherwise it will throw error
@@ -572,62 +575,7 @@ class GdfUtils:
     def get_rows_inside_area(gdf_rows: gpd.GeoDataFrame, gdf_area: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
         return gdf_rows[gdf_rows.geometry.within(gdf_area.unary_union)].reset_index(drop=True)
 
-    @staticmethod
-    # todo use one filter creation and than add with 'and' all ways that are longer, that will leave false with all that i want...
-    @time_measurement("short ways filter")
-    def filter_short_ways(gdf: gpd.GeoDataFrame, toCrs: str, min_lenght: float = 2) -> gpd.GeoDataFrame:
-
-        gdf_mercator_projected = gdf.to_crs(toCrs)
-        condition: pd.Series[bool] = gdf_mercator_projected.geometry.length > min_lenght
-        filtered_gdf_mercator_projected = gdf_mercator_projected[condition]
-        return filtered_gdf_mercator_projected.to_crs(gdf.crs)
-
-    # ------------Others functions------------
-
-    @staticmethod
-    def buffer_gdf_same_distance(gdf: gpd.GeoDataFrame, distance: float, toCrs: str, resolution: int = 16,
-                                 cap_style: str = 'round', join_style: str = 'round') -> gpd.GeoDataFrame:
-        gdf_mercator_projected = gdf.to_crs(toCrs)
-        gdf_mercator_projected['geometry'] = gdf_mercator_projected['geometry'].buffer(
-            distance, resolution=resolution, cap_style=cap_style, join_style=join_style)
-        return gdf_mercator_projected.to_crs(toCrs)
-
-    @staticmethod
-    def buffer_gdf_column_value_distance(gdf: gpd.GeoDataFrame, column_key: str, toCrs: str,
-                                         additional_padding: float = 0, resolution: int = 16,
-                                         cap_style: str = 'round', join_style: str = 'round') -> gpd.GeoDataFrame:
-        gdf_mercator_projected = gdf.to_crs(toCrs)
-        gdf_mercator_projected['geometry'] = gdf_mercator_projected.apply(
-            lambda row: row['geometry'].buffer(row[column_key] + additional_padding, resolution=resolution,
-                                               cap_style=cap_style, join_style=join_style), axis=1
-        )
-        return gdf_mercator_projected.to_crs(gdf.crs)
-
-    @staticmethod
-    def aggregate_close_lines(gdf: gpd.GeoDataFrame, toCrs: str, aggreagate_distance: float = 5) -> gpd.GeoDataFrame:
-        if (gdf.empty):
-            return gdf
-        gdf_mercator_projected = gdf.to_crs(toCrs)
-        gdf_mercator_projected['geometry'] = gdf_mercator_projected['geometry'].buffer(
-            aggreagate_distance)
-
-        # https://stackoverflow.com/questions/73566774/group-by-and-combine-intersecting-overlapping-geometries-in-geopandas
-        gdf_merged: gpd.GeoDataFrame = gdf_mercator_projected.sjoin(
-            gdf_mercator_projected, how='left', predicate="intersects")
-        gdf_merged.columns = gdf_merged.columns.str.replace(
-            '_left', '', regex=False).str.replace('_right', '', regex=False)
-        gdf_merged = gdf_merged.loc[:, ~gdf_merged.columns.duplicated()]
-
-        gdf_merged_diss: gpd.GeoDataFrame = gdf_merged.dissolve()
-        gdf_merged_diss = gdf_merged_diss.reset_index(drop=True).dissolve()
-        gdf_merged_diss['geometry'] = pygeoops.centerline(
-            gdf_merged_diss['geometry'], min_branch_length=aggreagate_distance * 10)
-        gdf_merged_diss = gdf_merged_diss.explode(
-            column='geometry', ignore_index=True)
-        # gdf_merged_diss = gdf_merged_diss.to_crs(gdf.crs.epsg)
-        return gdf_merged_diss
-
-
+    # -----------Others functions------------
     @staticmethod
     def get_groups_by_columns(gdf, group_cols, default_keys=None, dropna=False):
         # get missing columns and replace with default key if missing   

@@ -44,23 +44,23 @@ GPXS_STYLES: ElementStyles =[
 nodes_mandatory_styles: ElementStyles = [
     ([], { 
         StyleKey.COLOR: '#000000', StyleKey.TEXT_FONT_SIZE: 50, 
-        StyleKey.EDGE_COLOR: '#FFFFFF', StyleKey.TEXT_OUTLINE_WIDHT_RATIO: 0.1#StyleKey.TEXT_OUTLINE_WIDTH: 5
+        StyleKey.EDGE_COLOR: '#FFFFFF', StyleKey.TEXT_OUTLINE_WIDTH_RATIO: 0.1#StyleKey.TEXT_OUTLINE_WIDTH: 5
     })
 ]
 
 place_styles: ElementStyles = [
     ({'place': 'city'}, {
         StyleKey.TEXT_FONT_SIZE: 2500 , 
-        StyleKey.TEXT_OUTLINE_WIDHT_RATIO: 0.2
+        StyleKey.TEXT_OUTLINE_WIDTH_RATIO: 0.2
     }),
     ({'place': 'town'}, {
         StyleKey.TEXT_FONT_SIZE: 1500, 
-        StyleKey.TEXT_OUTLINE_WIDHT_RATIO: 0.2
+        StyleKey.TEXT_OUTLINE_WIDTH_RATIO: 0.2
     }),
 
     ({'place': 'village'}, {
         StyleKey.TEXT_FONT_SIZE: 550, 
-        StyleKey.TEXT_OUTLINE_WIDHT_RATIO: 0.2
+        StyleKey.TEXT_OUTLINE_WIDTH_RATIO: 0.2
     }),
 ]
 
@@ -80,14 +80,14 @@ place_styles: ElementStyles = [
 natural_styles_nodes: ElementStyles = [
      ({'natural': 'peak'}, {
             StyleKey.ICON: "^", StyleKey.COLOR: "#7f3016",
-            StyleKey.TEXT_OUTLINE_WIDHT_RATIO: 0.1, #StyleKey.TEXT_OUTLINE_WIDTH:50,
+            StyleKey.TEXT_OUTLINE_WIDTH_RATIO: 0.1, #StyleKey.TEXT_OUTLINE_WIDTH:50,
             StyleKey.TEXT_FONT_SIZE: 400, StyleKey.WIDTH: 3.6,StyleKey.EDGE_WIDTH_RATIO:0.2 #, # todo edge widht change...
         },
     ) # rozlišení - dict vs dict s 2 dict uvnitř
     # ! dynamic new 
     # ({'natural': 'peak'}, {
     #     StyleKey.ICON: "^", StyleKey.COLOR: "#7f3016",
-    #     StyleKey.TEXT_OUTLINE_WIDHT_RATIO: 0.1,  # StyleKey.TEXT_OUTLINE_WIDTH:50,
+    #     StyleKey.TEXT_OUTLINE_WIDTH_RATIO: 0.1,  # StyleKey.TEXT_OUTLINE_WIDTH:50,
     #     # , 
     #     StyleKey.TEXT_FONT_SIZE: 400, StyleKey.WIDTH: 3.6, StyleKey.EDGE_WIDTH_RATIO: 0.2
     # },
@@ -101,7 +101,7 @@ natural_styles_nodes: ElementStyles = [
     #  ([('natural', 'peak')], {
     #     StyleType.DEFAULT: {
     #         StyleKey.ICON: "^", StyleKey.COLOR: "#7f3016", 
-    #         StyleKey.TEXT_OUTLINE_WIDHT_RATIO: 0.1, #StyleKey.TEXT_OUTLINE_WIDTH:50,
+    #         StyleKey.TEXT_OUTLINE_WIDTH_RATIO: 0.1, #StyleKey.TEXT_OUTLINE_WIDTH:50,
     #         StyleKey.TEXT_FONT_SIZE: 400, StyleKey.WIDTH: 3.6,StyleKey.EDGE_WIDTH_RATIO:0.2 #,
     #     },
     #     StyleType.ZOOM: {
@@ -174,7 +174,7 @@ railway_styles: ElementStyles = [
         StyleKey.BRIDGE_EDGE_COLOR: '#5D5D5D', StyleKey.BRIDGE_COLOR: "#FFFFFF",
         StyleKey.EDGE_COLOR: '#5D5D5D', StyleKey.BRIDGE_WIDTH_RATIO: 1 + 1.7, 
         StyleKey.BRIDGE_EDGE_WIDTH_RATIO: 1 + 0.4,  # todo control after function to calculating width
-        StyleKey.LINESTYLE: (0, (5, 5)), StyleKey.EDGE_WIDTH_RATIO: 1 + 0.4, 
+        StyleKey.LINESTYLE: (0, (5, 5)), StyleKey.EDGE_WIDTH_RATIO: 1 + 0.4
     }),
     
     ({'railway': 'tram'}, {

@@ -44,7 +44,7 @@ class OsmDataPreprocessor:
     def extract_areas(self, reqired_area_gdf: GeoDataFrame, crsTo: str):
         temp_geojson_path = self.__create_tmp_geojson(reqired_area_gdf.to_crs(crsTo))
         extracted_files_names = []
-
+        # extract area from osm file
         if (isinstance(self.osm_input_files, str)):
             print(f"Extracting area from file: {self.osm_input_files}")
             self.__extract_area(self.osm_input_files,
@@ -56,6 +56,7 @@ class OsmDataPreprocessor:
                 self.osm_input_files[0], self.osm_output_file, temp_geojson_path)
 
         elif (isinstance(self.osm_input_files, list)):
+            # extract area from multiple osm files and merge them (merge after extraction for better performance)
             for index, osm_input_file in enumerate(self.osm_input_files):
                 print(f"Extracting area from file {
                       index + 1}/{len(self.osm_input_files)}: {osm_input_file}")
@@ -70,6 +71,7 @@ class OsmDataPreprocessor:
             except Exception as e:
                 raise Exception(f"Cannot merge osm file")
             finally:
+                # remove temp files
                 for tmp_file in extracted_files_names:
                     os.remove(tmp_file)
                     
