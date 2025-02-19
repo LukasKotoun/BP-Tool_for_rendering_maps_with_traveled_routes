@@ -331,7 +331,7 @@ class Plotter:
                 gdf, {StyleKey.PLOT_ON_BRIDGE: ""})
             if (gdf.empty):
                 return
-            self.__plot_ways_normal(gdf, True), False
+            self.__plot_ways_normal(gdf, True, False)
 
         groups = GdfUtils.get_groups_by_columns(
             bridges_gdf, ['layer'], [], False)
