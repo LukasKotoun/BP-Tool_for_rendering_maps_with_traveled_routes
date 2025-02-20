@@ -2,7 +2,13 @@ from typing import Generator
 
 import matplotlib.pyplot as plt
 import matplotlib.patheffects as pe
+# from matplotlib import line2d
+from matplotlib.lines import Line2D
+
+
+from matplotlib.text import Text, Annotation
 from matplotlib.backends.backend_agg import RendererAgg
+from matplotlib.transforms import Bbox
 import pandas as pd
 import geopandas as gpd
 import numpy as np
@@ -20,6 +26,7 @@ from config import *
 from modules.utils import Utils
 from modules.gdf_utils import GdfUtils
 from common.common_helpers import time_measurement
+import numpy as np
 
 
 from shapely.ops import unary_union, split, linemerge
@@ -29,16 +36,16 @@ class Plotter:
 
     MM_TO_INCH = 25.4
     DEFAULT_CUPSTYLE = "round"
-
-    def __init__(self, requred_area_gdf: gpd.GeoDataFrame, paper_dimensions_mm: DimensionsTuple, map_object_scaling_factor: float):
+    TEXT_EXPAND_PERCENT = 10
+    def __init__(self, requred_area_gdf: gpd.GeoDataFrame, paper_dimensions_mm: DimensionsTuple, map_object_scaling_factor: float, text_bounds_overflow_threshold: float):
         self.reqired_area_gdf: gpd.GeoDataFrame = requred_area_gdf
         self.reqired_area_polygon: Polygon = GdfUtils.create_polygon_from_gdf(
             self.reqired_area_gdf)
+
         self.paper_dimensions_mm = paper_dimensions_mm
         self.map_object_scaling_factor: float = map_object_scaling_factor
-        self.city_names = []
-        self.other_text = []
-        self.icons = []
+        self.texts_and_markers_bboxs = []
+        self.text_bounds_overflow_threshold = text_bounds_overflow_threshold
 
     def init_plot(self, map_bg_color: str, bg_gdf: gpd.GeoDataFrame, area_zoom_preview: None | DimensionsTuple = None):
         self.fig, self.ax = plt.subplots(figsize=(self.paper_dimensions_mm[0]/self.MM_TO_INCH,
@@ -58,37 +65,182 @@ class Plotter:
         self.reqired_area_gdf.plot(ax=self.ax, color=map_bg_color)
         if (not bg_gdf.empty):
             bg_gdf.plot(ax=self.ax, color=bg_gdf[StyleKey.COLOR])
+        self.reqired_area_polygon_display = Polygon(self.ax.transData.transform(
+            np.array(self.reqired_area_polygon.exterior.coords)))
 
-    def __plot_city_names(self, place_names_gdf: gpd.GeoDataFrame, wrap_len: int | None):
+    def expand_bbox(self, bbox: Bbox, percent_expand: int = 0) -> Bbox:
+        if (percent_expand == 0):
+            return bbox
+        width = bbox.x1 - bbox.x0
+        height = bbox.y1 - bbox.y0
+        expand_x = (width * percent_expand) / 100
+        expand_y = (height * percent_expand) / 100
+        expanded_bbox = Bbox.from_extents(bbox.x0 - expand_x, bbox.y0 - expand_y,
+                                          bbox.x1 + expand_x, bbox.y1 + expand_y)
+        return expanded_bbox
+
+    def __check_bbox_position(self, bbox_to_overlap: Bbox, bbox_to_overflow: Bbox, bbox_list: list[Bbox]) -> bool:
+        # check overlap with other bbox
+        for bbox2 in bbox_list:
+            if (bbox2.overlaps(bbox_to_overlap)):
+                return False
+        if (self.text_bounds_overflow_threshold == 0):
+            return True
+        # check if bbox is inside required area
+        bbox_to_overflow = bbox_to_overflow.transformed(
+            self.ax.transData.inverted())
+        bbox_polygon = geometry.box(
+            bbox_to_overflow.x0, bbox_to_overflow.y0, bbox_to_overflow.x1, bbox_to_overflow.y1)
+        return GdfUtils.is_geometry_inside_geometry_threshold(bbox_polygon, self.reqired_area_polygon, self.text_bounds_overflow_threshold)
+        # return GdfUtils.is_geometry_inside_geometry_threshold(bbox_polygon, self.reqired_area_polygon_display, self.text_bounds_overflow_threshold)
+
+    def __plot_text_on_point(self, row, text: str, store_bbox: bool = True, check_bbox_position: bool = True) -> Text | None:
+        text: Annotation = self.ax.text(row.geometry.x, row.geometry.y, text, color=row[StyleKey.TEXT_COLOR], fontsize=row[StyleKey.TEXT_FONT_SIZE], family=row[StyleKey.TEXT_FONTFAMILY],
+                                        weight=row[StyleKey.TEXT_WEIGHT], style=row[StyleKey.TEXT_STYLE],  ha='center', va='center',
+                                        path_effects=[pe.withStroke(linewidth=row[StyleKey.TEXT_OUTLINE_WIDTH],
+                                                                    alpha=row[StyleKey.EDGE_ALPHA], foreground=row[StyleKey.TEXT_OUTLINE_COLOR])])
+
+        if (check_bbox_position or store_bbox):
+            bbox = text.get_tightbbox()
+            bbox_expanded = self.expand_bbox(bbox, self.TEXT_EXPAND_PERCENT)
+        if (check_bbox_position):
+            if (not self.__check_bbox_position(bbox_expanded, bbox, self.texts_and_markers_bboxs)):
+                text.remove()
+                return None
+        if (store_bbox):
+            self.texts_and_markers_bboxs.append(bbox_expanded)
+        return text
+
+    def __plot_marker(self, row, store_bbox: bool = True, check_bbox_position: bool = True) -> Line2D | None:
+        marker: Line2D = self.ax.plot(row.geometry.x, row.geometry.y, marker=row[StyleKey.ICON], mfc=row[StyleKey.COLOR], ms=row[StyleKey.WIDTH],
+                                      mec=row[StyleKey.EDGE_COLOR], mew=row[StyleKey.EDGEWIDTH])
+
+        if (check_bbox_position or store_bbox):
+            bbox = marker.get_tightbbox()
+            bbox_expanded = self.expand_bbox(bbox, self.TEXT_EXPAND_PERCENT)
+        if (check_bbox_position):
+            if (not self.__check_bbox_position(bbox_expanded, bbox, self.texts_and_markers_bboxs)):
+                marker.remove()
+                return None
+        if (store_bbox):
+            self.texts_and_markers_bboxs.append(bbox_expanded)
+        return marker
+
+    def __plot_marker_annotation(self, row, text: str, text_positions: list[TextPositions], check_bbox_position: bool = True) -> Annotation | None:
+        x, y = row.geometry.x, row.geometry.y
+        x_shift = 0
+        y_shift = 0
+        marker_size = row[StyleKey.WIDTH]
+        ha = 'center'
+        va = 'center'
+        for position in text_positions:
+            if (position == TextPositions.TOP):
+                y_shift += marker_size
+                ha = 'center'
+                va = 'bottom'
+            elif (position == TextPositions.BOTTOM):
+                y_shift -= marker_size
+                ha = 'center'
+                va = 'top'
+            elif (position == TextPositions.LEFT):
+                x_shift -= marker_size
+                ha = 'right'
+                va = 'center'
+            elif (position == TextPositions.RIGHT):
+                x_shift += marker_size
+                ha = 'left'
+                va = 'center'
+            text = self.ax.annotate(text, (x, y), textcoords="offset points", xytext=(x_shift, y_shift), ha=ha, va=va,
+                                    color=row[StyleKey.TEXT_COLOR], fontsize=row[StyleKey.TEXT_FONT_SIZE], family=row[StyleKey.TEXT_FONTFAMILY],
+                                    weight=row[StyleKey.TEXT_WEIGHT], style=row[StyleKey.TEXT_STYLE],
+                                    path_effects=[pe.withStroke(linewidth=row[StyleKey.TEXT_OUTLINE_WIDTH],
+                                                                alpha=row[StyleKey.EDGE_ALPHA], foreground=row[StyleKey.TEXT_OUTLINE_COLOR])])
+            if (check_bbox_position):
+                if (not self.__check_bbox_position(self.get_bbox(text), self.texts_and_markers_bboxs)):
+                    text.remove()
+                    continue
+            return text
+        return None
+
+    def __plot_marker_with_annotation(self, row, text_positions: list[str],
+                                      check_bbox_positions: BboxCheckSettings = BboxCheckSettings.ALL, store_bbox: bool = True) -> tuple[Line2D, Text]:
+        # if node must have text 2 (should be prefiltered)
+        if (row[StyleKey.POINT_MIN_PARTS] in [MinParts.TEXT2, MinParts.TEXT1_TEXT2, MinParts.MARKER_TEXT2, MinParts.MARKER_TEXT1_TEXT2]):
+            return (None, None)
+        marker = self.__plot_marker(row, False, True if check_bbox_positions ==
+                                    BboxCheckSettings.ALL or check_bbox_positions == BboxCheckSettings.MARKER else False)
+        # if node must have marker return None
+        if (marker is None and row[StyleKey.POINT_MIN_PARTS] in [MinParts.MARKER, MinParts.MARKER_TEXT1]):
+            return (None, None)
+
+        text = self.__plot_marker_annotation(row, row[StyleKey.TEXT1], row[StyleKey.TEXT1_POSITIONS], True if check_bbox_positions ==
+                                             BboxCheckSettings.ALL or check_bbox_positions == BboxCheckSettings.TEXT else False)
+        # node text does not return None
+        if (text is None and row[StyleKey.POINT_MIN_PARTS] in [MinParts.TEXT1, MinParts.MARKER_TEXT1]):
+            if (marker is not None):
+                marker.remove()
+            return (None, None)
+
+        # node have ploted minimum parts
+        if (store_bbox):
+            if (marker is not None):
+                self.texts_and_markers_bboxs.append(
+                    self.expand_bbox(marker.get_tightbbox(), self.TEXT_EXPAND_PERCENT))
+            if (text is not None):
+                self.texts_and_markers_bboxs.append(
+                    self.expand_bbox(text.get_tightbbox(), self.TEXT_EXPAND_PERCENT))
+        return (marker, text)
+
+    def __plot_marker_with_two_annotations(self, row, check_bbox_positions: BboxCheckSettings = BboxCheckSettings.ALL,
+                                           store_bbox: bool = True) -> tuple[Line2D, Text, Text]:
+       
+        marker = self.__plot_marker(row, False, True if check_bbox_positions ==
+                                    BboxCheckSettings.ALL or check_bbox_positions == BboxCheckSettings.MARKER else False)
+        # if node must have marker return None
+        if (marker is None and row[StyleKey.POINT_MIN_PARTS] in [MinParts.MARKER, MinParts.MARKER_TEXT1, MinParts.MARKER_TEXT2, MinParts.MARKER_TEXT1_TEXT2]):
+            return (None, None, None)
+        text1 = self.__plot_marker_annotation(row, row[StyleKey.TEXT1], row[StyleKey.TEXT1_POSITIONS], True if check_bbox_positions ==
+                                              BboxCheckSettings.ALL or check_bbox_positions == BboxCheckSettings.TEXT else False)
+        if (text1 is None and row[StyleKey.POINT_MIN_PARTS] in [MinParts.TEXT1, MinParts.MARKER_TEXT1, MinParts.MARKER_TEXT1_TEXT2, MinParts.TEXT1_TEXT2]):
+            if (marker is not None):
+                marker.remove()
+            return (None, None, None)
+
+        text2 = self.__plot_marker_annotation(row, row[StyleKey.TEXT2], row[StyleKey.TEXT2_POSITIONS], True if check_bbox_positions ==
+                                              BboxCheckSettings.ALL or check_bbox_positions == BboxCheckSettings.TEXT else False)
+        if (text2 is None and row[StyleKey.POINT_MIN_PARTS] in [MinParts.TEXT2, MinParts.TEXT1_TEXT2, MinParts.MARKER_TEXT2, MinParts.MARKER_TEXT1_TEXT2]):
+            if (marker is not None):
+                marker.remove()
+            if (text1 is not None):
+                text1.remove()
+            return (None, None, None)
+
+        # node have ploted minimum parts
+        # todo maybe merge
+        if(store_bbox):
+            if (marker is not None):
+                self.texts_and_markers_bboxs.append(
+                    self.expand_bbox(marker.get_tightbbox(), self.TEXT_EXPAND_PERCENT))
+            if (text1 is not None):
+                self.texts_and_markers_bboxs.append(
+                    self.expand_bbox(text1.get_tightbbox(), self.TEXT_EXPAND_PERCENT))
+            if (text2 is not None):
+                self.texts_and_markers_bboxs.append(
+                    self.expand_bbox(text2.get_tightbbox(), self.TEXT_EXPAND_PERCENT))
+
+
+        
+    def __plot_with_shift(self, place_names_gdf: gpd.GeoDataFrame, wrap_len: int | None):
         if (place_names_gdf.empty):
             return
-
-        def get_place_data(city_names_gdf: gpd.GeoDataFrame) -> Generator[tuple[Point, str, str, str, int, float], None, None]:
-            """Yields a tuple of city data for each city in the GeoDataFrame."""
-            for data in zip(
-                city_names_gdf.geometry,
-                city_names_gdf['name'],
-                city_names_gdf[StyleKey.COLOR],
-                city_names_gdf[StyleKey.EDGE_COLOR],
-                city_names_gdf[StyleKey.TEXT_FONT_SIZE],
-                city_names_gdf[StyleKey.TEXT_OUTLINE_WIDTH]
-            ):
-                yield data
-
-        for geom, name, color, edge_color, fontsize, outline_width in get_place_data(place_names_gdf):
-            if (wrap_len is not None):
-                wraped_name = textwrap.fill(name, width=wrap_len)
-            else:
-                wraped_name = name
-            x = geom.x
-            y = geom.y
-            # weight='bold'
-            # todo to function
-
-            text = self.ax.text(
-                x, y, wraped_name, fontsize=fontsize, ha='center', va='center', zorder=4, color=color,
-                path_effects=[pe.withStroke(linewidth=outline_width, foreground=edge_color)])
-            self.city_names.append(text)
+        place_names = []
+        
+        for row in place_names_gdf.iterrows():
+            place_names.append(self.__plot_text_on_point(
+                row[1], row[1][StyleKey.TEXT1], True, False))
+            # adjust_text(place_names, force_text=0.02)
+            pass
+        pass
 
     def __plot_elevations(self, elevations_gdf: gpd.GeoDataFrame):
         if (elevations_gdf.empty):
@@ -96,45 +248,27 @@ class Plotter:
 
         for idx, row in elevations_gdf.iterrows():
             x, y = row.geometry.x, row.geometry.y
-
-            # annotation aproach - does not work with adjust text lib
-            # second aproach - create annotation and get cordinates and than create text from it
-            # and use that text to adjusting but it will be invisible
-            # peak_name = self.ax.annotate(row['name'], (x, y), textcoords="offset points", xytext=(0, 300 * self.map_object_scaling_factor), ha='center', color=row[StyleKey.COLOR],
-            #     path_effects=[pe.withStroke(linewidth=row[StyleKey.TEXT_OUTLINE_WIDTH], foreground=row[StyleKey.EDGE_COLOR])], fontsize=row[StyleKey.TEXT_FONT_SIZE])
-            # peak_ele = self.ax.annotate(row['ele'], (x, y), textcoords="offset points", xytext=(0, -300 * self.map_object_scaling_factor - row[StyleKey.WIDTH]), ha='center', color=row[StyleKey.COLOR],
-            #     path_effects=[pe.withStroke(linewidth=row[StyleKey.TEXT_OUTLINE_WIDTH], foreground=row[StyleKey.EDGE_COLOR])], fontsize=row[StyleKey.TEXT_FONT_SIZE])
-
-            # move text to top and bottom of the icon
-            # xy_axes = self.ax.transData.transform((x, y))
-            # xy_name = self.ax.transData.inverted().transform((xy_axes[0], xy_axes[1] + 300 * self.map_object_scaling_factor))
-            # xy_ele = self.ax.transData.inverted().transform((xy_axes[0], xy_axes[1] - 350 * self.map_object_scaling_factor - row[StyleKey.WIDTH]))
-            # #todo check if name or ele exists
-            # peak_name = self.ax.text(xy_name[0], xy_name[1], row['name'], color=row[StyleKey.COLOR], ha='center',
-            #                          path_effects=[pe.withStroke(linewidth=row[StyleKey.TEXT_OUTLINE_WIDTH], foreground=row[StyleKey.EDGE_COLOR])], fontsize=row[StyleKey.TEXT_FONT_SIZE])
-            # peak_ele = self.ax.text(xy_ele[0], xy_ele[1], row['ele'], color=row[StyleKey.COLOR], ha='center',
-            #                         path_effects=[pe.withStroke(linewidth=row[StyleKey.TEXT_OUTLINE_WIDTH], foreground=row[StyleKey.EDGE_COLOR])], fontsize=row[StyleKey.TEXT_FONT_SIZE])
-
-            # self.ax.scatter(x, y, marker=row[StyleKey.ICON], color=row[StyleKey.COLOR], s=row[StyleKey.WIDTH],
-            #                 edgecolor=row[StyleKey.EDGE_COLOR], linewidth=row[StyleKey.EDGEWIDTH])
             plt.plot(x, y, marker=row[StyleKey.ICON], mfc=row[StyleKey.COLOR], ms=row[StyleKey.WIDTH],
                      mec=row[StyleKey.EDGE_COLOR], mew=row[StyleKey.EDGEWIDTH])
-            # self.other_text.append(peak_name)
-            # self.other_text.append(peak_ele)
+    def __plot_nodes_normal(self, nodes_gdf):
+        groups = GdfUtils.get_groups_by_columns(nodes_gdf, [StyleKey.ZINDEX],[],False)
+        for zindex, nodes_group_gdf in reversed(groups):
+            print(zindex)
+        pass
 
+    
     @time_measurement("nodePlot")
     def plot_nodes(self, nodes_gdf: gpd.GeoDataFrame, wrap_len: int | None):
-        all_columns_present: bool = all(col in nodes_gdf.columns for col in [
-            StyleKey.TEXT_FONT_SIZE, StyleKey.TEXT_OUTLINE_WIDTH, StyleKey.COLOR, StyleKey.EDGE_COLOR])
-        if (nodes_gdf.empty or not all_columns_present):
+        if (nodes_gdf.empty):
             return
-
+        # todo prefilter nodes by min parts
+        nodes_gdf = GdfUtils.sort_gdf_by_column(nodes_gdf, StyleKey.ZINDEX, ascending=False)
         place_names_gdf, rest_gdf = GdfUtils.filter_rows(
             nodes_gdf, {'place': ''}, compl=True)
-
-        self.__plot_city_names(place_names_gdf, wrap_len)
-        rest_gdf = GdfUtils.filter_rows(nodes_gdf, {'natural': 'peak'})
-        self.__plot_elevations(rest_gdf)
+        # self.__plot_nodes_normal(nodes_gdf)
+        self.__plot_with_shift(place_names_gdf, wrap_len)
+        # rest_gdf = GdfUtils.filter_rows(nodes_gdf, {'natural': 'peak'})
+        # self.__plot_elevations(rest_gdf)
 
     def __plot_line_edges(self, lines_gdf, cupstyle: str = None):
         edge_lines_gdf = GdfUtils.filter_rows(lines_gdf, {
@@ -429,38 +563,18 @@ class Plotter:
 
     @time_measurement("adjusting")
     def adjust_texts(self, text_bounds_overflow_threshold: float):
-        # #remove overflown texts before adjusting, smaller threshold - can be adjusted
-        # if(not allow_text_bounds_overflow):
-        #     r = self.fig.canvas.get_renderer()
-        #     for text in self.ax.texts:
-        #         text_Bbox = text.get_tightbbox(renderer=r).transformed(self.ax.transData.inverted())
-        #         bbox_polygon = geometry.box(text_Bbox.x0, text_Bbox.y0, text_Bbox.x1, text_Bbox.y1)
-        #         if(not GdfUtils.is_polygon_inside_polygon_threshold(bbox_polygon, self.reqired_area_polygon, text_bounds_overflow_threshold * 0.8)):
-        #             text.remove()
-
-        # adjust_text(
-        #     self.other_text,
-        #     only_move={"texts": "y"},
-        #     avoid_self=False,
-        # )
-        # remove text that is over other text
-        # todo remove text that is over other text
-        if (self.other_text):
-            adjust_text(self.city_names, force_text=0.2,
-                        objects=self.other_text)
-        else:
-            adjust_text(self.city_names, force_text=0.2)
+        pass
         # text force
         # remove overflown texts after adjusting
-        if (text_bounds_overflow_threshold > 0):
-            r: RendererAgg = self.fig.canvas.get_renderer()
-            for text in self.ax.texts:
-                text_Bbox = text.get_tightbbox(renderer=r).transformed(
-                    self.ax.transData.inverted())
-                bbox_polygon = geometry.box(
-                    text_Bbox.x0, text_Bbox.y0, text_Bbox.x1, text_Bbox.y1)
-                if (not GdfUtils.is_geometry_inside_geometry_threshold(bbox_polygon, self.reqired_area_polygon, text_bounds_overflow_threshold)):
-                    text.remove()
+        # if (text_bounds_overflow_threshold > 0):
+        #     r: RendererAgg = self.fig.canvas.get_renderer()
+        #     for text in self.ax.texts:
+        #         text_Bbox = text.get_tightbbox(renderer=r).transformed(
+        #             self.ax.transData.inverted())
+        #         bbox_polygon = geometry.box(
+        #             text_Bbox.x0, text_Bbox.y0, text_Bbox.x1, text_Bbox.y1)
+        #         if (not GdfUtils.is_geometry_inside_geometry_threshold(bbox_polygon, self.reqired_area_polygon, text_bounds_overflow_threshold)):
+        #             text.remove()
 
     def clip(self, crs: str, whole_map_polygon: Polygon, reqired_area_gdf: gpd.GeoDataFrame | None = None, clipped_area_color: str = 'white'):
 

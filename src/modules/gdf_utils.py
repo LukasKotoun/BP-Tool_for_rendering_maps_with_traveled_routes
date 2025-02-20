@@ -321,7 +321,8 @@ class GdfUtils:
         # multiply rows where column value is not empty
         rows_filter = GdfUtils.get_rows_filter(gdf, filter)
         gdf.loc[rows_filter, new_column] = gdf.loc[rows_filter, base_column]
-        GdfUtils.multiply_column_gdf(gdf, new_column, multipliers, scaling)
+        if multipliers or scaling is not None:
+            GdfUtils.multiply_column_gdf(gdf, new_column, multipliers, scaling)
 
     @staticmethod
     def change_columns_to_categorical(gdf: gpd.GeoDataFrame, columns: list) -> None:

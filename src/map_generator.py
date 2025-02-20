@@ -136,7 +136,7 @@ def main():
         map_object_scaling_factor, ZOOM_MAPPING, 0.1)
     map_object_scaling_factor *= Utils.calc_scaling_factor_multiplier(
         map_object_scaling_factor, 1, 500)
-
+    print(f"Zoom level: {zoom_level}")
     # ------------get elements from osm file------------
     if (OSM_WANT_EXTRACT_AREA):
         # todo output file as tmp generated if name is none
@@ -178,7 +178,7 @@ def main():
     if (not GdfUtils.are_gdf_geometry_inside_geometry(gpxs_gdf, reqired_area_polygon)):
         warnings.warn("Some gpx files are not whole inside selected map area.")
     # maybe add gpx to be change by zoom - size
-    # todo to function
+    # todo to function - determine_land_and_water
     # get coastline and determine where is land and where water
     coast_gdf, ways_gdf = GdfUtils.filter_rows(
         ways_gdf, {'natural': 'coastline'}, compl=True)
@@ -186,40 +186,25 @@ def main():
         map_area_gdf, coast_gdf, OCEAN_WATER, GENERAL_DEFAULT_STYLES[StyleKey.COLOR])
 
 
-    # todo to function
-    # ------------filter some elements out - before styling ------------
-    nodes_gdf = GdfUtils.get_rows_inside_area(
-        nodes_gdf, map_area_gdf)
-    # filter place without name
-    nodes_gdf = GdfUtils.filter_rows(nodes_gdf, [
-        {'place': '~'},
-        {'place': '', 'name': ''}])
-    # filter peak without name and ele
-    nodes_gdf = GdfUtils.filter_rows(nodes_gdf, [
-        {'natural': '~peak'},
-        {'natural': 'peak', 'name': '', 'ele': ''}])
-    # round ele to int
-    GdfUtils.change_columns_to_numeric(nodes_gdf, ['ele'])
-    if ('ele' in nodes_gdf.columns):
-        nodes_gdf['ele'] = nodes_gdf['ele'].round(0).astype('Int64')
-
+ 
     # setting on bridge and tunnel ploting
     GdfUtils.change_bridges_and_tunnels(ways_gdf, PLOT_BRIDGES, PLOT_TUNNELS)
     # merge lines
     ways_gdf = GdfUtils.merge_lines_gdf(ways_gdf, [])
+    
     GdfUtils.change_columns_to_numeric(ways_gdf, ['layer'])
     ways_gdf['layer'] = ways_gdf['layer'].fillna(0)
 
     # assing zoom specific styles
     StyleAssigner.assign_styles(gpxs_gdf, GPXS_STYLES)
     StyleAssigner.assign_styles(
-        nodes_gdf, StyleAssigner.convert_dynamic_to_normal(STYLES['nodes'], zoom_level))
+        nodes_gdf, StyleAssigner.convert_dynamic_to_normal(STYLES['nodes'], zoom_level), NODES_DONT_CATEGORIZE)
     StyleAssigner.assign_styles(
         ways_gdf, StyleAssigner.convert_dynamic_to_normal(STYLES['ways'], zoom_level))
     StyleAssigner.assign_styles(
         areas_gdf, StyleAssigner.convert_dynamic_to_normal(STYLES['areas'], zoom_level))
 
-    # ------------scaling and column calc------------
+    # ------------scaling and column calc------------ - to function
     # ----gpx----
     # gpx - is needed in this? will be setted in FE?
     # GdfUtils.multiply_column_gdf(gpxs_gdf, StyleKey.WIDTH, [
@@ -240,6 +225,10 @@ def main():
     GdfUtils.create_derivated_columns(nodes_gdf, StyleKey.EDGEWIDTH, StyleKey.WIDTH, [  
                                       # ?? maybe remove ...
                                       StyleKey.EDGE_WIDTH_RATIO])
+    
+    for filter, new_column, old_column in NODES_NAMES_FROM_COLUMNS:
+        GdfUtils.create_derivated_columns(nodes_gdf, new_column, old_column, filter=filter)
+        
      # remove columns used for calculating
     GdfUtils.remove_columns(nodes_gdf, [StyleKey.WIDTH_SCALE, StyleKey.FE_WIDTH_SCALE,
                                         StyleKey.TEXT_FONT_SIZE_SCALE, StyleKey.FE_TEXT_FONT_SIZE_SCALE, 
@@ -271,6 +260,23 @@ def main():
                                         StyleKey.EDGE_WIDTH_RATIO])
 
 
+    # todo to function - prepare_nodes pomocí min requirments - ty bud do gdf nebo do configu
+    # ------------filter some elements out------------
+    nodes_gdf = GdfUtils.get_rows_inside_area(
+        nodes_gdf, map_area_gdf)
+    # filter place without name
+    nodes_gdf = GdfUtils.filter_rows(nodes_gdf, [
+        {'place': '~'},
+        {'place': '', 'name': ''}])
+    # filter peak without name and ele
+    nodes_gdf = GdfUtils.filter_rows(nodes_gdf, [
+        {'natural': '~peak'},
+        {'natural': 'peak', 'name': '', 'ele': ''}])
+    # round ele to int
+    GdfUtils.change_columns_to_numeric(nodes_gdf, ['ele'])
+    if ('ele' in nodes_gdf.columns):
+        nodes_gdf['ele'] = nodes_gdf['ele'].round(0).astype('Int64')
+
     # -----sort-----
     ways_gdf = GdfUtils.sort_gdf_by_column(ways_gdf, StyleKey.ZINDEX)
     areas_gdf = GdfUtils.sort_gdf_by_column(areas_gdf, StyleKey.ZINDEX)
@@ -284,7 +290,7 @@ def main():
 
     # ------------plot------------ # todo to one function with settings in dict
     plotter = Plotter(map_area_gdf, paper_dimensions_mm,
-                      map_object_scaling_factor)
+                      map_object_scaling_factor, TEXT_BOUNDS_OVERFLOW_THRESHOLD)
 
     plotter.init_plot(
         GENERAL_DEFAULT_STYLES[StyleKey.COLOR], bg_gdf, area_zoom_preview)
@@ -294,7 +300,7 @@ def main():
     # plotter.plot_ways(ways_gdf, areas_gdf, [{'highway': 'primary'}])
     plotter.plot_ways(ways_gdf, areas_gdf, None)
     plotter.plot_nodes(nodes_gdf, TEXT_WRAP_NAMES_LEN)
-    plotter.plot_gpxs(gpxs_gdf, 1)
+    # plotter.plot_gpxs(gpxs_gdf, 1)
     if (boundary_map_area_gdf is not None and not boundary_map_area_gdf.empty):
         # GdfUtils.remove_common_boundary_inaccuracy(boundary_map_area_gdf) # maybe turn off/on in settings
         plotter.plot_area_boundary(area_gdf=boundary_map_area_gdf.to_crs(

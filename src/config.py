@@ -5,14 +5,14 @@ from common.map_enums import *
 # --------------------------------------------------------------map area--------------------------------------------------------------
 # OSM_INPUT_FILE_NAMES: str = ['../osm_files/vys.osm.pbf','../osm_files/jihmor.osm.pbf']
 # OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/vysJihE.osm.pbf'
-OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/trebic.osm.pbf'
+OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/jihmor.osm.pbf'
 # OSM_INPUT_FILE_NAMES: str | list[str] = '../trebic.osm.pbf'
 # extract
 OSM_WANT_EXTRACT_AREA: bool = False
 # set if want osm file cutting using osmium command line tool (need to be uinstalled), If not set to None
 OSM_OUTPUT_FILE_NAME: None | str = '../osm_files/T.osm.pbf'
 
-OUTPUT_PDF_NAME: str = '../pdfs/divocina'
+OUTPUT_PDF_NAME: str = '../pdfs/divocina1'
 # with fill or false cliping is recomended 0
 # padding from page borders NOTE: must have same settings as the resulting one when generating for large format printing
 PERCENTAGE_PADDING = 0
@@ -47,9 +47,10 @@ PERCENTAGE_PADDING = 0
 # AREA: WantedArea = ["Brno, Česko"]
 # AREA: WantedArea = ["Jihomoravský kraj, Česko", "Kraj Vysočina, Česko"]
 # AREA: WantedArea = ["Kraj Vysočina, Česko"]
+AREA: WantedArea = ["Jihomoravský kraj, Česko"]
 # AREA: WantedArea = ["Česko"]
 # AREA: WantedArea = ["Okřešice, Česko"]
-AREA: WantedArea = ["Třebíč, Česko"]
+# AREA: WantedArea = ["Třebíč, Česko"]
 # AREA: WantedArea = ["Okres Třebíč, Česko", "Třebíč, Česko", "Okres Jihlava, Česko"]
 # AREA: WantedArea = ["Texas, USA"]
 
@@ -70,7 +71,7 @@ FIT_PAPER_SIZE = False
 # COMBINED - one bound around area, SEPARATED - separated bounds around every area in AREA variable
 AREA_BOUNDARY = AreaBounds.SEPARATED
 EXPAND_AREA_BOUNDS_PLOT = False
-AREA_BOUNDARY_LINEWIDTH = 30
+AREA_BOUNDARY_LINEWIDTH = 3
 
 # text general
 TEXT_WRAP_NAMES_LEN = 15  # len or None if not wrap (15 default)
@@ -159,14 +160,18 @@ NODES_ADDITIONAL_COLUMNS = ['name', 'ele']
 WAYS_ADDITIONAL_COLUMNS = ['bridge', 'layer', 'tunnel']
 AREA_ADDITIONAL_COLUMNS = []
 
+NODES_NAMES_FROM_COLUMNS = [
+    ({'place': ''}, StyleKey.TEXT1 , 'name'),
+    ({'natural': 'peak'}, StyleKey.TEXT1, 'name'),
+    ({'natural': 'peak'}, StyleKey.TEXT2, 'ele')]
 
-
+NODES_DONT_CATEGORIZE = [StyleKey.TEXT1_POSITIONS, StyleKey.TEXT2_POSITIONS]
 
 # wanted_ways: WantedFeatures
 wanted_nodes: WantedCategories = {
     # 'place': {'city'},
     # # 'place': {'city', 'town'},
-    # # # 'place': {'city', 'town', 'village'},
+    'place': {'city', 'town', 'village'},
     # 'place': {'village'},
     'natural': {'peak'}
 }
@@ -185,37 +190,37 @@ wanted_ways: WantedCategories = {
     # 'highway': ['motorway', 'trunk', 'primary'],
     # 'highway': {'motorway', 'trunk', 'primary', 'secondary', 'tertiary', 'unclassified', 'residential', 'path', 'footway'},
     # 'highway': {'tertiary'},
-    'highway':set({}),
-    'railway': {'rail', 'tram'},
+    # 'highway':set({}),
+    # 'railway': {'rail', 'tram'},
 
-    # 'railway': {'rail'},
-    'natural': {'coastline'}
+    # # 'railway': {'rail'},
+    # 'natural': {'coastline'}
 }
 
 unwanted_ways_tags: UnwantedTags = {
-    'highway':['coridor','via_ferrata','crossing','traffic_island','proposed','construction' ],
-    'railway': {
-        'service': ['yard', 'spur','crossover', 'siding'], # spur, siding
-        # 'tunnel': ['building_passage'],
-        # 'tunnel': [],
-    },
-    'waterway': ['stream']
+    # 'highway':['coridor','via_ferrata','crossing','traffic_island','proposed','construction' ],
+    # 'railway': {
+    #     'service': ['yard', 'spur','crossover', 'siding'], # spur, siding
+    #     # 'tunnel': ['building_passage'],
+    #     # 'tunnel': [],
+    # },
+    # 'waterway': ['stream']
 
     
     # {'railway':""}:{'service':['yard'],'tunnel': ['building_passage']}
 }
 
 wanted_areas: WantedCategories = {
-        'landuse': {'forest', 'residential', 'commercial', 'retail', 'industrial', 'farmland', 'meadow', 'grass'},
+        # 'landuse': {'forest', 'residential', 'commercial', 'retail', 'industrial', 'farmland', 'meadow', 'grass'},
    
-        'leisure': {'park', 'pitch', 'garden', 'golf_course', 'nature_reserve', 'playground', 'stadium', 'swimming_pool', 'sports_centre'},
-        # 'leisure': {'park', 'pitch', 'garden', 'golf_course', 'playground', 'stadium', 'swimming_pool', 'sports_centre'},
-        'natural': {'wood', 'water', 'scrub', 'heath'},
-        # # 'leisure': ['park', 'pitch', 'garden', 'golf_course', 'nature_reserve'],
-        # 'water': set({}),
-        'boundary': {'national_park'},
-        'building': {'house','residential'},
-        'water': ['river','lake','reservoir'],
+        # 'leisure': {'park', 'pitch', 'garden', 'golf_course', 'nature_reserve', 'playground', 'stadium', 'swimming_pool', 'sports_centre'},
+        # # 'leisure': {'park', 'pitch', 'garden', 'golf_course', 'playground', 'stadium', 'swimming_pool', 'sports_centre'},
+        # 'natural': {'wood', 'water', 'scrub', 'heath'},
+        # # # 'leisure': ['park', 'pitch', 'garden', 'golf_course', 'nature_reserve'],
+        # # 'water': set({}),
+        # 'boundary': {'national_park'},
+        # 'building': {'house','residential'},
+        # 'water': ['river','lake','reservoir'],
 }
 
 unwanted_areas_tags: UnwantedTags = {
