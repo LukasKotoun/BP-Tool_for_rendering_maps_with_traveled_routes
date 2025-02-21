@@ -12,6 +12,7 @@ from osmium import FileProcessor
 from common.map_enums import WorldSides, StyleKey, MinParts
 from common.custom_types import BoundsDict, DimensionsTuple, Point, WantedArea, RowsConditions, RowsConditionsAND
 from common.common_helpers import time_measurement
+import textwrap
 
 from shapely.ops import unary_union, split, linemerge
 
@@ -313,17 +314,30 @@ class GdfUtils:
                     column] *= gdf.loc[rows_with_multipler, multiplier]
 
     @staticmethod  # column and multipliers must be numeric otherwise it will throw error
-    def create_derivated_columns(gdf, new_column: StyleKey | str, base_column: StyleKey | str, multipliers: list[str | StyleKey] = [], filter: RowsConditions | RowsConditionsAND = [], scaling=None):
-        # create new column with 0 if base not exists
+    def create_derivated_columns(gdf, new_column: StyleKey | str, base_column: StyleKey | str, multipliers: list[str | StyleKey] = [],
+                                 filter: RowsConditions | RowsConditionsAND = [], fill: any = 0, scaling=None):
+        # create new column with fill if base not exists
         if (base_column not in gdf):
-            gdf[new_column] = gdf.get(new_column, 0)
+            gdf[new_column] = gdf.get(new_column, fill)
             return
+        
         # multiply rows where column value is not empty
         rows_filter = GdfUtils.get_rows_filter(gdf, filter)
         gdf.loc[rows_filter, new_column] = gdf.loc[rows_filter, base_column]
         if multipliers or scaling is not None:
             GdfUtils.multiply_column_gdf(gdf, new_column, multipliers, scaling)
+            
+    # @staticmethod
+    # @time_measurement("wrapText")
+    # def wrap_text_gdf(gdf: gpd.GeoDataFrame, columns: list=[], default_wrap = 0) -> None:
+    #     def wrap_text_with_width(text, width):
+    #         if pd.isna(text) or pd.isna(width) or int(width) == 0:
+    #             return text  # Skip wrapping if text or width is None
+    #         return textwrap.fill(str(text), width=int(width)) # Ensure width is an integer
 
+    #     for column_text, column_wrap_len  in columns:
+    #         gdf[column_text] = gdf.apply(lambda row: wrap_text_with_width(row.get(column_text, None), row.get(column_wrap_len, default_wrap)), axis=1)
+            
     @staticmethod
     def change_columns_to_categorical(gdf: gpd.GeoDataFrame, columns: list) -> None:
         for column in columns:
@@ -464,6 +478,7 @@ class GdfUtils:
                 boundary_gdf.at[i, 'geometry'] = merged_border
 
     # ------------Bool operations------------
+    #! not used
     @staticmethod
     def is_geometry_inside_bounds(area_bounds: BoundsDict, polygon: GeometryCollection) -> bool:
         return GdfUtils.is_geometry_inside_geometry(GdfUtils.create_polygon_from_bounds(area_bounds), polygon)
@@ -476,12 +491,7 @@ class GdfUtils:
     def is_geometry_inside_geometry(inner: GeometryCollection, outer: GeometryCollection) -> bool:
         return outer.contains(inner)
 
-    @staticmethod
-    def is_geometry_inside_geometry_threshold(inner: GeometryCollection, outer: GeometryCollection, threshold: float = 0.95) -> bool:
-        bbox_area: float = inner.area
-        intersection_area: float = inner.intersection(outer).area
-        percentage_inside: float = intersection_area / bbox_area
-        return percentage_inside >= threshold
+
 
     # ------------Filtering------------
 
@@ -574,9 +584,39 @@ class GdfUtils:
                 return gdf[~filter_mask].reset_index(drop=True)
             else:
                 return gdf[filter_mask].reset_index(drop=True)
-
+            
+    def filter_invalid_texts(gdf):
+        return GdfUtils.filter_rows(gdf, {StyleKey.TEXT_FONT_SIZE: '', StyleKey.TEXT_OUTLINE_WIDTH: '', StyleKey.TEXT_COLOR: '',
+                                         StyleKey.TEXT_OUTLINE_COLOR: '', StyleKey.TEXT_FONTFAMILY: '', StyleKey.TEXT_WEIGHT: '',
+                                         StyleKey.TEXT_STYLE: '', StyleKey.ALPHA: '', StyleKey.EDGE_ALPHA: ''})
+    def filter_invalid_markers(gdf):
+        return GdfUtils.filter_rows(gdf, {StyleKey.ICON: '', StyleKey.COLOR: '', StyleKey.WIDTH: '',
+                                         StyleKey.EDGEWIDTH: '', StyleKey.EDGE_COLOR: '', StyleKey.ALPHA: ''})
     @staticmethod
+    def filter_invalid_nodes_min_req(nodes_gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
+        nodes_gdf = GdfUtils.filter_rows(nodes_gdf, [{StyleKey.MIN_REQ_POINT: MinParts.MARKER, StyleKey.ICON: '', StyleKey.COLOR: ''},
+                                                     {StyleKey.MIN_REQ_POINT: MinParts.MARKER_TEXT1,
+                                                         StyleKey.ICON: '', StyleKey.TEXT1: ''},
+                                                     {StyleKey.MIN_REQ_POINT: MinParts.MARKER_TEXT2,
+                                                         StyleKey.ICON: '', StyleKey.TEXT2: ''},
+                                                     {StyleKey.MIN_REQ_POINT: MinParts.MARKER_TEXT1_TEXT2,
+                                                         StyleKey.ICON: '', StyleKey.TEXT1: '', StyleKey.TEXT2: ''},
+                                                     {StyleKey.MIN_REQ_POINT: MinParts.TEXT1,
+                                                         StyleKey.TEXT1: ''},
+                                                     {StyleKey.MIN_REQ_POINT: MinParts.TEXT2,
+                                                         StyleKey.TEXT2: ''},
+                                                     {StyleKey.MIN_REQ_POINT: MinParts.TEXT1_TEXT2, StyleKey.TEXT1: '', StyleKey.TEXT2: ''}])
+        nodes_gdf = GdfUtils.filter_rows(nodes_gdf, [{StyleKey.ICON: ''},
+                                                     {StyleKey.TEXT1: ''},
+                                                     {StyleKey.TEXT2: ''}])
+
+        return nodes_gdf
+    
+    
+    @staticmethod
+    @time_measurement("rowInsideArea")
     def get_rows_inside_area(gdf_rows: gpd.GeoDataFrame, gdf_area: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
+        # todo make quciker
         return gdf_rows[gdf_rows.geometry.within(gdf_area.unary_union)].reset_index(drop=True)
 
     # -----------Others functions------------
@@ -594,26 +634,3 @@ class GdfUtils:
             return gdf.groupby(group_cols[0], dropna=dropna, observed=False)
         return gdf.groupby(group_cols, dropna=dropna, observed=False)
 
-    @staticmethod
-    def validate_nodes(nodes_gdf: gpd.GeoDataFrame, map_area_gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
-        nodes_gdf = GdfUtils.get_rows_inside_area(
-            nodes_gdf, map_area_gdf)
-        # filter by min req
-        nodes_gdf = GdfUtils.filter_rows(nodes_gdf, [{StyleKey.MIN_REQ_LOAD: MinParts.MARKER, StyleKey.ICON: ''},
-                                                     {StyleKey.MIN_REQ_LOAD: MinParts.MARKER_TEXT1,
-                                                         StyleKey.ICON: '', StyleKey.TEXT1: ''},
-                                                     {StyleKey.MIN_REQ_LOAD: MinParts.MARKER_TEXT2,
-                                                         StyleKey.ICON: '', StyleKey.TEXT2: ''},
-                                                     {StyleKey.MIN_REQ_LOAD: MinParts.MARKER_TEXT1_TEXT2,
-                                                         StyleKey.ICON: '', StyleKey.TEXT1: '', StyleKey.TEXT2: ''},
-                                                     {StyleKey.MIN_REQ_LOAD: MinParts.TEXT1,
-                                                         StyleKey.TEXT1: ''},
-                                                     {StyleKey.MIN_REQ_LOAD: MinParts.TEXT2,
-                                                         StyleKey.TEXT2: ''},
-                                                     {StyleKey.MIN_REQ_LOAD: MinParts.TEXT1_TEXT2, StyleKey.TEXT1: '', StyleKey.TEXT2: ''}])
-
-        nodes_gdf = GdfUtils.filter_rows(nodes_gdf, [{StyleKey.ICON: ''},
-                                                     {StyleKey.TEXT1: ''},
-                                                     {StyleKey.TEXT2: ''}])
-
-        return nodes_gdf

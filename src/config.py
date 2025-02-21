@@ -74,9 +74,10 @@ EXPAND_AREA_BOUNDS_PLOT = False
 AREA_BOUNDARY_LINEWIDTH = 3
 
 # text general
-TEXT_WRAP_NAMES_LEN = 15  # len or None if not wrap (15 default)
+TEXT_WRAP_NAMES_LEN = 15  # len or 0/None if not wrap (15 default)
 # if allow is false set threashold (0-1) how much of text must be inside
 TEXT_BOUNDS_OVERFLOW_THRESHOLD = 0.97
+
 
 # plot as bridge (True)  or normal way (False)
 PLOT_BRIDGES = True
@@ -113,9 +114,6 @@ CRS_OSM = "EPSG:4326"
 CRS_CALC = "EPSG:3857"  # europe 25833 - calculating map scale and scaling factor
 CRS_DISPLAY = "EPSG:3857"
 
-OBJECT_MULTIPLIER = 1
-AREAS_EDGE_WIDTH_MULTIPLIER = 1
-WAYS_WIDTH_MULTIPLIER = 1
 
 # --------------------------------------------------------------gpx settings--------------------------------------------------------------
 
@@ -161,10 +159,12 @@ WAYS_ADDITIONAL_COLUMNS = ['bridge', 'layer', 'tunnel']
 AREA_ADDITIONAL_COLUMNS = []
 
 DERIVATE_COLUMNS_NODES = [
-    ({'place': ''}, StyleKey.TEXT1 , 'name'),
-    ({'natural': 'peak'}, StyleKey.TEXT1, 'name'),
-    ({'natural': 'peak'}, StyleKey.TEXT2, 'ele'),
-    ({StyleKey.MIN_REQ_LOAD:'~'}, StyleKey.MIN_REQ_LOAD, StyleKey.MIN_REQ_PLOT)]
+    ({'place': ''}, StyleKey.TEXT1 , 'name', None),
+    ({'natural': 'peak'}, StyleKey.TEXT1, 'name', None), # try to set with filter in derivated columns
+    ({'natural': 'peak'}, StyleKey.TEXT2, 'ele', None),
+]
+
+
 DERIVATE_COLUMNS_WAYS = []
 DERIVATE_COLUMNS_AREAS = []
 NODES_DONT_CATEGORIZE = [StyleKey.TEXT1_POSITIONS, StyleKey.TEXT2_POSITIONS]
@@ -174,8 +174,8 @@ AREAS_DONT_CATEGORIZE = []
 # wanted_ways: WantedFeatures
 wanted_nodes: WantedCategories = {
     # 'place': {'city'},
-    'place': {'city', 'town'},
-    # 'place': {'city', 'town', 'village'},
+    # 'place': {'city', 'town'},
+    'place': {'city', 'town', 'village'},
     # 'place': {'village'},
     'natural': {'peak'}
 }

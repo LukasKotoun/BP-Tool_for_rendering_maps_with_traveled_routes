@@ -45,16 +45,16 @@ class StyleKey(Enum):
     COLOR = 1
     ALPHA = 2
     ZINDEX = 3
-    # lines
     WIDTH = 4
-    LINESTYLE = 5
-    LINE_CUP = 35
     EDGE_COLOR = 6
     EDGE_ALPHA = 21
     EDGE_WIDTH_RATIO = 7
-    EDGE_LINESTYLE = 8
     WIDTH_SCALE = 30
     FE_WIDTH_SCALE = 31
+    # lines
+    LINESTYLE = 5
+    LINE_CUP = 35
+    EDGE_LINESTYLE = 8
     PLOT_ON_BRIDGE = 33
     EDGE_CUP = 34
     # bridges
@@ -62,9 +62,9 @@ class StyleKey(Enum):
     BRIDGE_WIDTH_RATIO = 10
     BRIDGE_EDGE_COLOR = 11
     BRIDGE_EDGE_WIDTH_RATIO = 12
-    # points
+    # markers
     ICON = 13
-
+    MARKER_CHECK_OVERLAP = 88
     # gpx
     START_ICON = 54
     START_ICON_WIDHT = 59
@@ -74,24 +74,26 @@ class StyleKey(Enum):
     FINISH_ICON_EDGE_RATIO = 58
     # ? maybe add START_ICON_WIDHT, START_ICON_EDGE_RATIO, FINISH_ICON_WIDHT, FINISH_ICON_EDGE_RATIO, -> START_ICON_EDGE_WIDTH, FINISH_ICON_EDGE_WIDTH calculated
 
-    # text
+    # texts
     TEXT_FONT_SIZE = 14
-    TEXT_OUTLINE_WIDTH_RATIO = 16
     TEXT_FONT_SIZE_SCALE = 32
     FE_TEXT_FONT_SIZE_SCALE = 32
+    TEXT_OUTLINE_WIDTH_RATIO = 16
     TEXT_COLOR = 74
     TEXT_OUTLINE_COLOR = 85
     TEXT_FONTFAMILY = 59
     TEXT_STYLE = 60
-    TEXT_WEIGHT = 44
-
+    TEXT_WEIGHT = 45
     TEXT1 = 61
     TEXT2 = 62
     TEXT1_POSITIONS = 68
     TEXT2_POSITIONS = 65
-    MIN_REQ_PLOT = 63
-    MIN_REQ_LOAD = 64
-    # calculated - cant be set by user
+    TEXT1_WRAP_LEN = 99
+    TEXT2_WRAP_LEN = 100
+    # nodes 
+    MIN_REQ_POINT = 63
+
+    # calculated/derivated - cant be set by user
     # calculated like TEXT_FONT_SIZE * TEXT_OUTLINE_WIDTH_RATIO
     TEXT_OUTLINE_WIDTH = 17
     # calculated like WIDTH * (1 + EDGE_WIDTH_RATIO)
@@ -104,7 +106,6 @@ class StyleKey(Enum):
     START_ICON_EDGE_WIDTH = 60
     # calculated like FINISH_ICON_WIDHT * FINISH_ICON_EDGE_RATIO
     FINISH_ICON_EDGE_WIDTH = 61
-
 
 class StyleType(Enum):
     DEFAULT = 1

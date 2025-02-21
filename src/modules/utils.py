@@ -5,8 +5,13 @@ from config import *
 from common.custom_types import DimensionsTuple, OptDimensionsTuple
 from shapely.geometry import LineString
 from shapely.ops import linemerge
+import textwrap
+from common.common_helpers import time_measurement
+from shapely import geometry
 
 from pyproj import Geod
+from matplotlib.transforms import Bbox
+from shapely.geometry import Polygon, GeometryCollection
 
 
 class Utils:
@@ -255,9 +260,9 @@ class Utils:
             if key not in styles or missing_style not in styles[key].keys():
                 count += 1
         return count
-    
+
     @staticmethod
-    def get_zoom_level(value, mapping, threshold_above_lower = 0.25):
+    def get_zoom_level(value, mapping, threshold_above_lower=0.25):
         zooms = sorted(mapping.items(), key=lambda x: -x[1])
         for i in range(len(zooms) - 1):
             higher_level, higher_value = zooms[i]
@@ -265,12 +270,13 @@ class Utils:
 
             # Compute the threshold at threshold_above_lower from lower to higher value
             # so if is between to values it should be higher zoom
-            threshold = lower_value + (higher_value - lower_value) * threshold_above_lower
+            threshold = lower_value + \
+                (higher_value - lower_value) * threshold_above_lower
 
             if value >= threshold:
                 return higher_level
 
-        return zooms[-1][0]  # lowest level 
+        return zooms[-1][0]  # lowest level
 
     # @staticmethod
     # def get_direct_folders_name(root_folder_path: str) -> list[str]:
@@ -283,3 +289,49 @@ class Utils:
     #         list[str]: _description_
     #     """
     #     pass
+
+    @staticmethod
+    # @time_measurement("wr")
+    def wrap_text(text, width):
+        if (text is None):
+            return None
+        if (width == 0 or width is None):
+            return text
+        width = int(width)
+        text = str(text)
+        return textwrap.fill(text, width)
+
+    @staticmethod
+    def expand_bbox(bbox: Bbox, percent_expand: int = 0) -> Bbox:
+        if (percent_expand == 0):
+            return bbox
+        width = bbox.x1 - bbox.x0
+        height = bbox.y1 - bbox.y0
+        expand_x = (width * percent_expand) / 100
+        expand_y = (height * percent_expand) / 100
+        expanded_bbox = Bbox.from_extents(bbox.x0 - expand_x, bbox.y0 - expand_y,
+                                          bbox.x1 + expand_x, bbox.y1 + expand_y)
+        return expanded_bbox
+    @staticmethod
+    def is_geometry_inside_geometry_threshold(inner: GeometryCollection, outer: GeometryCollection, threshold: float = 0.95) -> bool:
+        bbox_area: float = inner.area
+        intersection_area: float = inner.intersection(outer).area
+        percentage_inside: float = intersection_area / bbox_area
+        return percentage_inside >= threshold
+    
+    @staticmethod
+    def check_bbox_position(bbox_to_overlap: Bbox, bbox_to_overflow: Bbox, bbox_list: list[Bbox], ax,
+                            text_bounds_overflow_threshold, reqired_area_polygon) -> bool:
+        # check overlap with other bbox
+        for bbox2 in bbox_list:
+            if (bbox2.overlaps(bbox_to_overlap)):
+                return False
+        if text_bounds_overflow_threshold == 0:
+            return True
+        # check if bbox is inside required area
+        bbox_to_overflow = bbox_to_overflow.transformed(
+            ax.transData.inverted())
+        bbox_polygon = geometry.box(
+            bbox_to_overflow.x0, bbox_to_overflow.y0, bbox_to_overflow.x1, bbox_to_overflow.y1)
+        return Utils.is_geometry_inside_geometry_threshold(bbox_polygon, reqired_area_polygon, text_bounds_overflow_threshold)
+        # return GdfUtils.is_geometry_inside_geometry_threshold(bbox_polygon, self.reqired_area_polygon_display, self.text_bounds_overflow_threshold)

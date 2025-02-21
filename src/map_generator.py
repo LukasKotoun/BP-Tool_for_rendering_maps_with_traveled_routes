@@ -21,7 +21,10 @@ def gdfs_prepare_columns(gpxs_gdf, nodes_gdf, ways_gdf, areas_gdf, map_object_sc
     # gpx - is needed in this? will be setted in FE?
     # GdfUtils.multiply_column_gdf(gpxs_gdf, StyleKey.WIDTH, [
     #                              StyleKey.WIDTH_SCALE, StyleKey.FE_WIDTH_SCALE], map_object_scaling_factor)
-    
+    GdfUtils.change_columns_to_numeric(nodes_gdf, ['ele'])
+    if ('ele' in nodes_gdf.columns):
+        nodes_gdf['ele'] = nodes_gdf['ele'].round(0).astype('Int64')
+        
     GdfUtils.create_derivated_columns(gpxs_gdf, StyleKey.EDGEWIDTH, StyleKey.WIDTH, [
                                       StyleKey.EDGE_WIDTH_RATIO])
     # ----nodes----
@@ -38,14 +41,16 @@ def gdfs_prepare_columns(gpxs_gdf, nodes_gdf, ways_gdf, areas_gdf, map_object_sc
     GdfUtils.create_derivated_columns(nodes_gdf, StyleKey.EDGEWIDTH, StyleKey.WIDTH, [  
                                       # ?? maybe remove ...
                                       StyleKey.EDGE_WIDTH_RATIO])
+    old_column_remove = []
+    for filter, new_column, old_column, fill in DERIVATE_COLUMNS_NODES:
+        GdfUtils.create_derivated_columns(nodes_gdf, new_column, old_column, filter=filter, fill=fill)
+        # old_column_remove.append(old_column)
+    # call wrap text - by styles or other struct?
     
-    for filter, new_column, old_column in DERIVATE_COLUMNS_NODES:
-        GdfUtils.create_derivated_columns(nodes_gdf, new_column, old_column, filter=filter)
-        
-     # remove columns used for calculating
+    # remove columns used for calculating
     GdfUtils.remove_columns(nodes_gdf, [StyleKey.WIDTH_SCALE, StyleKey.FE_WIDTH_SCALE,
                                         StyleKey.TEXT_FONT_SIZE_SCALE, StyleKey.FE_TEXT_FONT_SIZE_SCALE, 
-                                        StyleKey.EDGE_WIDTH_RATIO, StyleKey.TEXT_OUTLINE_WIDTH_RATIO])
+                                        StyleKey.EDGE_WIDTH_RATIO, StyleKey.TEXT_OUTLINE_WIDTH_RATIO, *old_column_remove])
 
     # ----ways----
     GdfUtils.multiply_column_gdf(ways_gdf, StyleKey.WIDTH, [
@@ -191,9 +196,9 @@ def main():
         # map_area_bounds = GdfUtils.get_bounds_gdf(GdfUtils.change_crs(map_area_gdf, CRS_OSM))
         # map_scale = Utils.get_scale(map_area_bounds, paper_dimensions_mm)
         # - scaling factor and for zoom calc in webmercato
-        map_object_scaling_factor = (Utils.calc_map_object_scaling_factor(map_area_dimensions,
+        map_object_scaling_factor = Utils.calc_map_object_scaling_factor(map_area_dimensions,
                                                                           paper_dimensions_mm)
-                                     * OBJECT_MULTIPLIER)
+                                     
 
     zoom_level = Utils.get_zoom_level(
         map_object_scaling_factor, ZOOM_MAPPING, 0.1)
@@ -239,7 +244,8 @@ def main():
     # root_files_gpxs_gdf, folder_gpxs_gdf = gpx_manager.get_gpxs_gdf_splited()
     # send warning to FE?
     gpxs_gdf = gpx_manager.get_gpxs_gdf()
-   
+    nodes_gdf = GdfUtils.get_rows_inside_area(
+            nodes_gdf, map_area_gdf)
     # get coastline and determine where is land and where water
     coast_gdf, ways_gdf = GdfUtils.filter_rows(
         ways_gdf, {'natural': 'coastline'}, compl=True)
@@ -247,9 +253,7 @@ def main():
         map_area_gdf, coast_gdf, OCEAN_WATER, GENERAL_DEFAULT_STYLES[StyleKey.COLOR])
     # prepare nodes  
     # round ele to int
-    GdfUtils.change_columns_to_numeric(nodes_gdf, ['ele'])
-    if ('ele' in nodes_gdf.columns):
-        nodes_gdf['ele'] = nodes_gdf['ele'].round(0).astype('Int64')
+
     # prepare ways function
     GdfUtils.change_bridges_and_tunnels(ways_gdf, PLOT_BRIDGES, PLOT_TUNNELS)
     ways_gdf = GdfUtils.merge_lines_gdf(ways_gdf, [])
@@ -264,13 +268,14 @@ def main():
         areas_gdf, StyleAssigner.convert_dynamic_to_normal(STYLES['areas'], zoom_level), AREAS_DONT_CATEGORIZE)
 
     # ------------scaling and column calc------------ - to function
-
+    
     gdfs_prepare_columns(gpxs_gdf, nodes_gdf, ways_gdf, areas_gdf, map_object_scaling_factor)
-    # print()
     # ------------filter some elements out------------
-    nodes_gdf = GdfUtils.validate_nodes(nodes_gdf, map_area_gdf)
-
+    nodes_gdf = GdfUtils.filter_invalid_nodes_min_req(nodes_gdf)
+    
+    # GdfUtils.wrap_text_gdf(nodes_gdf, [(StyleKey.TEXT1, StyleKey.TEXT1_WRAP_LEN), (StyleKey.TEXT2, StyleKey.TEXT2_WRAP_LEN)])
     # todo algorithm for peaks
+    
     # -----sort-----
     nodes_gdf = GdfUtils.sort_gdf_by_column(nodes_gdf, 'ele', ascending=False)
     ways_gdf = GdfUtils.sort_gdf_by_column(ways_gdf, StyleKey.ZINDEX)
@@ -284,23 +289,20 @@ def main():
 
     # ------------plot------------ # todo to one function with settings in dict
     plotter = Plotter(map_area_gdf, paper_dimensions_mm,
-                      map_object_scaling_factor, TEXT_BOUNDS_OVERFLOW_THRESHOLD)
-
-    plotter.init_plot(
+                      map_object_scaling_factor, TEXT_BOUNDS_OVERFLOW_THRESHOLD, TEXT_WRAP_NAMES_LEN)
+    plotter.init(
         GENERAL_DEFAULT_STYLES[StyleKey.COLOR], bg_gdf, area_zoom_preview)
     plotter.zoom(zoom_percent_padding=PERCENTAGE_PADDING)
-    plotter.plot_areas(areas_gdf)
-    # plotter.plot_ways(ways_gdf, areas_gdf, [{'highway': 'motorway'}])
-    # plotter.plot_ways(ways_gdf, areas_gdf, [{'highway': 'primary'}])
-    plotter.plot_ways(ways_gdf, areas_gdf, None)
-    plotter.plot_nodes(nodes_gdf, TEXT_WRAP_NAMES_LEN)
-    # plotter.plot_gpxs(gpxs_gdf, 1)
+    plotter.areas(areas_gdf)
+    # plotter.ways(ways_gdf, areas_gdf, [{'highway': 'motorway'}])
+    # plotter.ways(ways_gdf, areas_gdf, [{'highway': 'primary'}])
+    plotter.ways(ways_gdf, areas_gdf, None)
+    plotter.nodes(nodes_gdf, TEXT_WRAP_NAMES_LEN)
+    # plotter.gpxs(gpxs_gdf, 1)
     if (boundary_map_area_gdf is not None and not boundary_map_area_gdf.empty):
         # GdfUtils.remove_common_boundary_inaccuracy(boundary_map_area_gdf) # maybe turn off/on in settings
-        plotter.plot_area_boundary(area_gdf=boundary_map_area_gdf.to_crs(
+        plotter.area_boundary(area_gdf=boundary_map_area_gdf.to_crs(
             CRS_DISPLAY), linewidth=AREA_BOUNDARY_LINEWIDTH)
-
-    plotter.adjust_texts(TEXT_BOUNDS_OVERFLOW_THRESHOLD)
 
     if (not FIT_PAPER_SIZE or WANT_PREVIEW):
         plotter.clip(CRS_DISPLAY, GdfUtils.create_polygon_from_gdf_bounds(

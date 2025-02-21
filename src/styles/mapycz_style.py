@@ -2,7 +2,7 @@ from common.custom_types import *
 from common.map_enums import *
 
 #! edge linestyle is suported only dashed or not dashed on not solid lines,
-#! ploting is turned of by setting color to None
+#! ploting is turned of by setting color to None text color or icon color turn of by string "None" instead of None
 # ------------styles--------------
 OCEAN_WATER = '#8fb6db'
 
@@ -43,14 +43,6 @@ GPXS_STYLES: ElementStyles = [
 
 # -------------------nodes-------------------
 # styles that must be assigned to all node features
-nodes_mandatory_styles: ElementStyles = [
-    ([], {
-        StyleKey.COLOR: '#000000', StyleKey.ZINDEX: 1, StyleKey.ALPHA: 1, StyleKey.EDGE_ALPHA: 1,
-        StyleKey.TEXT_COLOR: '#000000', StyleKey.TEXT_FONT_SIZE: 5, StyleKey.TEXT_FONTFAMILY: 'DejaVu Sans',
-        StyleKey.TEXT_STYLE: 'normal', StyleKey.EDGE_COLOR: '#FFFFFF', StyleKey.TEXT_OUTLINE_WIDTH_RATIO: 0.2,
-        StyleKey.TEXT_WEIGHT: 'normal', StyleKey.TEXT_OUTLINE_COLOR: '#FFFFFF'
-    })
-]
 
 place_styles: ElementStyles = [
     ({'place': 'city'}, {
@@ -60,17 +52,22 @@ place_styles: ElementStyles = [
         "10-10": {StyleKey.TEXT_FONT_SIZE: 15}
     }),
     ({'place': 'town'}, {
-        StyleKey.TEXT_FONT_SIZE: 10, StyleKey.ZINDEX: 29
+        StyleKey.TEXT_FONT_SIZE: 15, StyleKey.ZINDEX: 29
     },
         {
-        "10-10": {StyleKey.TEXT_FONT_SIZE: 6}
+        "10-10": {StyleKey.TEXT_FONT_SIZE: 6, StyleKey.ICON: "o", StyleKey.COLOR: "#decda8", StyleKey.MIN_REQ_POINT: MinParts.MARKER_TEXT1,
+        StyleKey.TEXT1_POSITIONS: [TextPositions.TOP, TextPositions.BOTTOM, TextPositions.RIGHT], StyleKey.EDGE_WIDTH_RATIO:0.1, StyleKey.WIDTH: 2.8, 
+        StyleKey.EDGE_COLOR: "#a59b7a"}
     }),
 
     ({'place': 'village'}, {
         StyleKey.TEXT_FONT_SIZE: 10, StyleKey.ZINDEX: 28
     },
         {
-        "10-10": {StyleKey.TEXT_FONT_SIZE: 5}
+        "10-10": {StyleKey.TEXT_FONT_SIZE: 5},
+        "11-14": {StyleKey.TEXT_FONT_SIZE: 10, StyleKey.ICON: "o", StyleKey.COLOR: "#decda8", StyleKey.MIN_REQ_POINT: MinParts.MARKER_TEXT1,
+        StyleKey.TEXT1_POSITIONS: [TextPositions.TOP, TextPositions.BOTTOM, TextPositions.RIGHT], StyleKey.EDGE_WIDTH_RATIO:0.2, StyleKey.WIDTH: 4.5, 
+        StyleKey.EDGE_COLOR: "#a59b7a"}
     }),
 ]
 
@@ -86,41 +83,13 @@ place_styles: ElementStyles = [
 # # #     "d": 112,
 # # #     "marker": center_path(parse_path("M 100,10 L 40,198 L 190,78 L 10,78 L 160,198 z"))
 # # # }
-
+# text color or icon color turn of by string "None" instead of None
 natural_styles_nodes: ElementStyles = [
     ({'natural': 'peak'}, {
-        StyleKey.ICON: "^", StyleKey.COLOR: "#7f3016", StyleKey.MIN_REQ_PLOT: MinParts.MARKER_TEXT1_TEXT2, #StyleKey.MIN_REQ_PLOT: MinParts.MARKER_TEXT2,
+        StyleKey.ICON: "^", StyleKey.COLOR: "#7f3016", StyleKey.MIN_REQ_POINT: MinParts.MARKER, #StyleKey.MIN_REQ_POINT: MinParts.MARKER_TEXT2,
         StyleKey.TEXT_FONT_SIZE: 3, StyleKey.WIDTH: 3.6,  StyleKey.TEXT1_POSITIONS: [TextPositions.TOP], 
-        StyleKey.TEXT2_POSITIONS: [TextPositions.BOTTOM], StyleKey.EDGE_WIDTH_RATIO:0.1
-    }
-    )  # rozlišení - dict vs dict s 2 dict uvnitř
-    # ! dynamic new
-    # ({'natural': 'peak'}, {
-    #     StyleKey.ICON: "^", StyleKey.COLOR: "#7f3016",
-    #     StyleKey.TEXT_OUTLINE_WIDTH_RATIO: 0.1,  # StyleKey.TEXT_OUTLINE_WIDTH:50,
-    #     # ,
-    #     StyleKey.TEXT_FONT_SIZE: 400, StyleKey.WIDTH: 3.6, StyleKey.EDGE_WIDTH_RATIO: 0.2
-    # },
-    #     {
-    #     "1-20": {
-    #         StyleKey.TEXT_FONT_SIZE: 200, StyleKey.WIDTH: 2.4, StyleKey.EDGE_WIDTH_RATIO: 0.1
-    #     }
-    # }
-    # )
-    # old
-    #  ([('natural', 'peak')], {
-    #     StyleType.DEFAULT: {
-    #         StyleKey.ICON: "^", StyleKey.COLOR: "#7f3016",
-    #         StyleKey.TEXT_OUTLINE_WIDTH_RATIO: 0.1, #StyleKey.TEXT_OUTLINE_WIDTH:50,
-    #         StyleKey.TEXT_FONT_SIZE: 400, StyleKey.WIDTH: 3.6,StyleKey.EDGE_WIDTH_RATIO:0.2 #,
-    #     },
-    #     StyleType.ZOOM: {
-    #         "1-20": {
-    #             StyleKey.TEXT_FONT_SIZE: 200, StyleKey.WIDTH: 2.4, StyleKey.EDGE_WIDTH_RATIO:0.1
-    #             }
-    #         }
-    #     }
-    # )
+        StyleKey.TEXT2_POSITIONS: [TextPositions.BOTTOM], StyleKey.EDGE_WIDTH_RATIO: 0, StyleKey.MARKER_CHECK_OVERLAP: False
+    })  # rozlišení - dict vs dict s 2 dict uvnitř
 ]
 
 
@@ -130,9 +99,18 @@ nodes_styles_default: ElementStyles = [
        
     }),
     ({'place': ['city', 'town', 'village']}, {
-        StyleKey.TEXT_FONT_SIZE: 5, StyleKey.TEXT_OUTLINE_WIDTH_RATIO: 0.2, StyleKey.MIN_REQ_PLOT: MinParts.TEXT1,
-        StyleKey.TEXT1_POSITIONS: [TextPositions.TOP, TextPositions.BOTTOM, TextPositions.RIGHT],
+        StyleKey.TEXT_FONT_SIZE: 5, StyleKey.TEXT_OUTLINE_WIDTH_RATIO: 0.2, StyleKey.MIN_REQ_POINT: MinParts.TEXT1,
+        StyleKey.TEXT1_POSITIONS: [TextPositions.TOP, TextPositions.BOTTOM, TextPositions.RIGHT]
     }),
+]
+
+nodes_mandatory_styles: ElementStyles = [
+    ([], {
+        StyleKey.COLOR: '#000000', StyleKey.ZINDEX: 1, StyleKey.ALPHA: 1, StyleKey.EDGE_ALPHA: 1,
+        StyleKey.TEXT_COLOR: '#000000', StyleKey.TEXT_FONT_SIZE: 5, StyleKey.TEXT_FONTFAMILY: 'DejaVu Sans',
+        StyleKey.TEXT_STYLE: 'normal', StyleKey.EDGE_COLOR: '#FFFFFF', StyleKey.TEXT_OUTLINE_WIDTH_RATIO: 0.2,
+        StyleKey.TEXT_WEIGHT: 'normal', StyleKey.TEXT_OUTLINE_COLOR: '#FFFFFF', StyleKey.TEXT1_WRAP_LEN: 15, StyleKey.TEXT2_WRAP_LEN: 15
+    })
 ]
 
 NODES_STYLES: ElementStyles = [
