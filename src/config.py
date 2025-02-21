@@ -160,18 +160,22 @@ NODES_ADDITIONAL_COLUMNS = ['name', 'ele']
 WAYS_ADDITIONAL_COLUMNS = ['bridge', 'layer', 'tunnel']
 AREA_ADDITIONAL_COLUMNS = []
 
-NODES_NAMES_FROM_COLUMNS = [
+DERIVATE_COLUMNS_NODES = [
     ({'place': ''}, StyleKey.TEXT1 , 'name'),
     ({'natural': 'peak'}, StyleKey.TEXT1, 'name'),
-    ({'natural': 'peak'}, StyleKey.TEXT2, 'ele')]
-
+    ({'natural': 'peak'}, StyleKey.TEXT2, 'ele'),
+    ({StyleKey.MIN_REQ_LOAD:'~'}, StyleKey.MIN_REQ_LOAD, StyleKey.MIN_REQ_PLOT)]
+DERIVATE_COLUMNS_WAYS = []
+DERIVATE_COLUMNS_AREAS = []
 NODES_DONT_CATEGORIZE = [StyleKey.TEXT1_POSITIONS, StyleKey.TEXT2_POSITIONS]
+WAYS_DONT_CATEGORIZE = []
+AREAS_DONT_CATEGORIZE = []
 
 # wanted_ways: WantedFeatures
 wanted_nodes: WantedCategories = {
     # 'place': {'city'},
-    # # 'place': {'city', 'town'},
-    'place': {'city', 'town', 'village'},
+    'place': {'city', 'town'},
+    # 'place': {'city', 'town', 'village'},
     # 'place': {'village'},
     'natural': {'peak'}
 }

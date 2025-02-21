@@ -45,10 +45,10 @@ GPXS_STYLES: ElementStyles = [
 # styles that must be assigned to all node features
 nodes_mandatory_styles: ElementStyles = [
     ([], {
-        StyleKey.COLOR: '#000000', StyleKey.ZINDEX: 1, StyleKey.TEXT_FONT_SIZE_SCALE: 1, StyleKey.ALPHA: 1, StyleKey.EDGE_ALPHA: 1,
+        StyleKey.COLOR: '#000000', StyleKey.ZINDEX: 1, StyleKey.ALPHA: 1, StyleKey.EDGE_ALPHA: 1,
         StyleKey.TEXT_COLOR: '#000000', StyleKey.TEXT_FONT_SIZE: 5, StyleKey.TEXT_FONTFAMILY: 'DejaVu Sans',
-        StyleKey.TEXT_STYLE: 'normal', StyleKey.EDGE_COLOR: '#FFFFFF', StyleKey.TEXT_OUTLINE_WIDTH_RATIO: 0.5,
-        StyleKey.TEXT_WEIGHT: 'normal', StyleKey.TEXT_OUTLINE_COLOR: '#FFFFFF', StyleKey.WIDTH_SCALE: 1
+        StyleKey.TEXT_STYLE: 'normal', StyleKey.EDGE_COLOR: '#FFFFFF', StyleKey.TEXT_OUTLINE_WIDTH_RATIO: 0.2,
+        StyleKey.TEXT_WEIGHT: 'normal', StyleKey.TEXT_OUTLINE_COLOR: '#FFFFFF'
     })
 ]
 
@@ -57,13 +57,13 @@ place_styles: ElementStyles = [
         StyleKey.TEXT_FONT_SIZE: 25, StyleKey.ZINDEX: 30
     },
         {
-        "10-10": {StyleKey.TEXT_FONT_SIZE: 20}
+        "10-10": {StyleKey.TEXT_FONT_SIZE: 15}
     }),
     ({'place': 'town'}, {
-        StyleKey.TEXT_FONT_SIZE: 15, StyleKey.ZINDEX: 29
+        StyleKey.TEXT_FONT_SIZE: 10, StyleKey.ZINDEX: 29
     },
         {
-        "10-10": {StyleKey.TEXT_FONT_SIZE: 10}
+        "10-10": {StyleKey.TEXT_FONT_SIZE: 6}
     }),
 
     ({'place': 'village'}, {
@@ -89,8 +89,10 @@ place_styles: ElementStyles = [
 
 natural_styles_nodes: ElementStyles = [
     ({'natural': 'peak'}, {
-
-    },
+        StyleKey.ICON: "^", StyleKey.COLOR: "#7f3016", StyleKey.MIN_REQ_PLOT: MinParts.MARKER_TEXT1_TEXT2, #StyleKey.MIN_REQ_PLOT: MinParts.MARKER_TEXT2,
+        StyleKey.TEXT_FONT_SIZE: 3, StyleKey.WIDTH: 3.6,  StyleKey.TEXT1_POSITIONS: [TextPositions.TOP], 
+        StyleKey.TEXT2_POSITIONS: [TextPositions.BOTTOM], StyleKey.EDGE_WIDTH_RATIO:0.1
+    }
     )  # rozlišení - dict vs dict s 2 dict uvnitř
     # ! dynamic new
     # ({'natural': 'peak'}, {
@@ -125,11 +127,10 @@ natural_styles_nodes: ElementStyles = [
 nodes_styles_default: ElementStyles = [
     # natural must be before place - some peaks are also places
     ({'natural': ''}, {
-        StyleKey.ICON: "^", StyleKey.COLOR: "#7f3016",
-        StyleKey.TEXT_FONT_SIZE: 3, StyleKey.WIDTH: 3.6, StyleKey.EDGE_WIDTH_RATIO: 0.2
+       
     }),
-    ({'place': ''}, {
-        StyleKey.TEXT_FONT_SIZE: 5, StyleKey.TEXT_OUTLINE_WIDTH_RATIO: 0.2, StyleKey.POINT_MIN_PARTS: MinParts.TEXT1,
+    ({'place': ['city', 'town', 'village']}, {
+        StyleKey.TEXT_FONT_SIZE: 5, StyleKey.TEXT_OUTLINE_WIDTH_RATIO: 0.2, StyleKey.MIN_REQ_PLOT: MinParts.TEXT1,
         StyleKey.TEXT1_POSITIONS: [TextPositions.TOP, TextPositions.BOTTOM, TextPositions.RIGHT],
     }),
 ]

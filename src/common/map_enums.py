@@ -89,8 +89,8 @@ class StyleKey(Enum):
     TEXT2 = 62
     TEXT1_POSITIONS = 68
     TEXT2_POSITIONS = 65
-    POINT_MIN_PARTS = 63
-
+    MIN_REQ_PLOT = 63
+    MIN_REQ_LOAD = 64
     # calculated - cant be set by user
     # calculated like TEXT_FONT_SIZE * TEXT_OUTLINE_WIDTH_RATIO
     TEXT_OUTLINE_WIDTH = 17

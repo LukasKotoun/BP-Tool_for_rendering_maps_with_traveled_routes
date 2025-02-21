@@ -9,7 +9,7 @@ import pygeoops
 
 from modules.utils import Utils
 from osmium import FileProcessor
-from common.map_enums import WorldSides, StyleKey
+from common.map_enums import WorldSides, StyleKey, MinParts
 from common.custom_types import BoundsDict, DimensionsTuple, Point, WantedArea, RowsConditions, RowsConditionsAND
 from common.common_helpers import time_measurement
 
@@ -146,7 +146,7 @@ class GdfUtils:
 
     @staticmethod
     def create_empty_gdf(crs: str, columns=["geometry"]) -> gpd.GeoDataFrame:
-        if('geometry' not in columns):
+        if ('geometry' not in columns):
             columns.append('geometry')
         if (crs is None):
             return gpd.GeoDataFrame(columns=columns)
@@ -265,7 +265,7 @@ class GdfUtils:
     @staticmethod
     def remove_columns(gdf: gpd.GeoDataFrame, columns: list[str | StyleKey]) -> gpd.GeoDataFrame:
         gdf.drop(columns=columns, inplace=True, errors='ignore')
-    
+
     @staticmethod
     def change_bridges_and_tunnels(gdf, want_bridges: bool, want_tunnels: bool):
         gdf['layer'] = gdf.get('layer', 0)
@@ -489,55 +489,58 @@ class GdfUtils:
         filter_mask = pd.Series(True, index=gdf.index)
         for column_name, column_value in conditions.items():
             if column_name not in gdf.columns:
-                # handle missing columns
-                if (isinstance(column_value, list)):
-                    # If any value in the list start with "~", the columns can be skipped
-                    if any(str(v).startswith("~") for v in column_value):
+                # Handle missing columns
+                if isinstance(column_value, list):
+                    # If any value is a string starting with "~", we skip the column.
+                    if any(isinstance(v, str) and v.startswith("~") for v in column_value):
                         continue
                     else:
-                        # If none of the values start with "~", the column must exists
                         filter_mask &= False
                         break
-                # not equal to value after ~ or NA
-                elif column_value.startswith("~"):
+                elif isinstance(column_value, str) and column_value.startswith("~"):
                     continue
-                # column should equal the value or should not be NA (but column doesn't exist)
                 else:
                     filter_mask &= False
                     break
-
             else:
+                # Column exists in gdf
                 if isinstance(column_value, list):
-                    # start with all rows excluded
+                    # Start with all rows excluded
                     condition_mask = pd.Series(False, index=gdf.index)
-
                     if not column_value:
                         # If the list is empty, the column should not be NA
                         condition_mask |= gdf[column_name].notna()
                     else:
                         for value in column_value:
-                            if value == "":  # Not NA
-                                condition_mask |= gdf[column_name].notna()
-                            elif value == "~":  # Column should be NA
-                                condition_mask |= gdf[column_name].isna()
-                            # Not equal to value after ~
-                            elif value.startswith("~"):
-                                condition_mask |= (
-                                    gdf[column_name] != value[1:])
-                            else:  # Column equal the value
+                            if isinstance(value, str):
+                                if value == "":  # Not NA
+                                    condition_mask |= gdf[column_name].notna()
+                                elif value == "~":  # Column should be NA
+                                    condition_mask |= gdf[column_name].isna()
+                                elif value.startswith("~"):
+                                    condition_mask |= (
+                                        gdf[column_name] != value[1:])
+                                else:  # Column should equal the string value
+                                    condition_mask |= (
+                                        gdf[column_name] == value)
+                            else:
+                                # for non-string values, just check equality
                                 condition_mask |= (gdf[column_name] == value)
-                        filter_mask &= condition_mask
-
+                    filter_mask &= condition_mask
                 else:
-                    if column_value == '':  # Not NA
-                        filter_mask &= gdf[column_name].notna()
-                    elif column_value.startswith("~"):
-                        if column_value == "~":  # column should be NA
-                            filter_mask &= gdf[column_name].isna()
-                        else:  # column should not equal the value after ~
-                            filter_mask &= (
-                                gdf[column_name] != column_value[1:])
-                    else:  # column should equal the value
+                    if isinstance(column_value, str):
+                        if column_value == '':  # Not NA
+                            filter_mask &= gdf[column_name].notna()
+                        elif column_value.startswith("~"):
+                            if column_value == "~":  # Column should be NA
+                                filter_mask &= gdf[column_name].isna()
+                            else:  # Column should not equal the value after "~"
+                                filter_mask &= (
+                                    gdf[column_name] != column_value[1:])
+                        else:  # Column should equal the string value
+                            filter_mask &= (gdf[column_name] == column_value)
+                    else:
+                        # non-string condition values, just check equality
                         filter_mask &= (gdf[column_name] == column_value)
         return filter_mask
 
@@ -579,14 +582,38 @@ class GdfUtils:
     # -----------Others functions------------
     @staticmethod
     def get_groups_by_columns(gdf, group_cols, default_keys=None, dropna=False):
-        # get missing columns and replace with default key if missing   
+        # get missing columns and replace with default key if missing
         # todo make quicker - refactor
         if len(group_cols) != len(default_keys):
             default_keys = [None] * len(group_cols)
         for col, default in zip(group_cols, default_keys):
             if col not in gdf.columns:
                 gdf[col] = default
-                
-        if(len(group_cols) == 1):
+
+        if (len(group_cols) == 1):
             return gdf.groupby(group_cols[0], dropna=dropna, observed=False)
         return gdf.groupby(group_cols, dropna=dropna, observed=False)
+
+    @staticmethod
+    def validate_nodes(nodes_gdf: gpd.GeoDataFrame, map_area_gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
+        nodes_gdf = GdfUtils.get_rows_inside_area(
+            nodes_gdf, map_area_gdf)
+        # filter by min req
+        nodes_gdf = GdfUtils.filter_rows(nodes_gdf, [{StyleKey.MIN_REQ_LOAD: MinParts.MARKER, StyleKey.ICON: ''},
+                                                     {StyleKey.MIN_REQ_LOAD: MinParts.MARKER_TEXT1,
+                                                         StyleKey.ICON: '', StyleKey.TEXT1: ''},
+                                                     {StyleKey.MIN_REQ_LOAD: MinParts.MARKER_TEXT2,
+                                                         StyleKey.ICON: '', StyleKey.TEXT2: ''},
+                                                     {StyleKey.MIN_REQ_LOAD: MinParts.MARKER_TEXT1_TEXT2,
+                                                         StyleKey.ICON: '', StyleKey.TEXT1: '', StyleKey.TEXT2: ''},
+                                                     {StyleKey.MIN_REQ_LOAD: MinParts.TEXT1,
+                                                         StyleKey.TEXT1: ''},
+                                                     {StyleKey.MIN_REQ_LOAD: MinParts.TEXT2,
+                                                         StyleKey.TEXT2: ''},
+                                                     {StyleKey.MIN_REQ_LOAD: MinParts.TEXT1_TEXT2, StyleKey.TEXT1: '', StyleKey.TEXT2: ''}])
+
+        nodes_gdf = GdfUtils.filter_rows(nodes_gdf, [{StyleKey.ICON: ''},
+                                                     {StyleKey.TEXT1: ''},
+                                                     {StyleKey.TEXT2: ''}])
+
+        return nodes_gdf
