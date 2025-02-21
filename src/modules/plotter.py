@@ -490,7 +490,7 @@ class Plotter:
 
         def ways_on_bridges(gdf: gpd.GeoDataFrame):
             gdf = GdfUtils.filter_rows(
-                gdf, {StyleKey.ON_BRIDGE: ""})
+                gdf, {StyleKey.PLOT_ON_BRIDGE: ""})
             if (gdf.empty):
                 return
             self.__ways_normal(gdf, True, False)
