@@ -86,9 +86,9 @@ place_styles: ElementStyles = [
 # text color or icon color turn of by string "None" instead of None
 natural_styles_nodes: ElementStyles = [
     ({'natural': 'peak'}, {
-        StyleKey.ICON: "^", StyleKey.COLOR: "#7f3016", StyleKey.MIN_REQ_POINT: MinParts.MARKER, #StyleKey.MIN_REQ_POINT: MinParts.MARKER_TEXT2,
+        StyleKey.ICON: "^", StyleKey.COLOR: "#7f3016", StyleKey.MIN_REQ_POINT: MinParts.MARKER_TEXT2, #StyleKey.MIN_REQ_POINT: MinParts.MARKER_TEXT2,
         StyleKey.TEXT_FONT_SIZE: 3, StyleKey.WIDTH: 3.6,  StyleKey.TEXT1_POSITIONS: [TextPositions.TOP], 
-        StyleKey.TEXT2_POSITIONS: [TextPositions.BOTTOM], StyleKey.EDGE_WIDTH_RATIO: 0, StyleKey.MARKER_CHECK_OVERLAP: False
+        StyleKey.TEXT2_POSITIONS: [TextPositions.BOTTOM], StyleKey.EDGE_WIDTH_RATIO: 0, StyleKey.MARKER_CHECK_OVERLAP: True
     })  # rozlišení - dict vs dict s 2 dict uvnitř
 ]
 

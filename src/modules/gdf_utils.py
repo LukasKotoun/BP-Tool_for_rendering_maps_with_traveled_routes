@@ -486,6 +486,7 @@ class GdfUtils:
     @staticmethod
     def are_gdf_geometry_inside_geometry(gdf: gpd.GeoDataFrame, polygon: GeometryCollection) -> bool:
         return gdf['geometry'].within(polygon).all()
+        # todo check speed and try using sjoin
 
     @staticmethod
     def is_geometry_inside_geometry(inner: GeometryCollection, outer: GeometryCollection) -> bool:
@@ -612,13 +613,10 @@ class GdfUtils:
 
         return nodes_gdf
     
-    
     @staticmethod
-    @time_measurement("rowInsideArea")
     def get_rows_inside_area(gdf_rows: gpd.GeoDataFrame, gdf_area: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
-        # todo make quciker
-        return gdf_rows[gdf_rows.geometry.within(gdf_area.unary_union)].reset_index(drop=True)
-
+        return gpd.sjoin(gdf_rows, gdf_area, predicate='within', how='inner').reset_index(drop=True)
+    
     # -----------Others functions------------
     @staticmethod
     def get_groups_by_columns(gdf, group_cols, default_keys=None, dropna=False):

@@ -133,10 +133,8 @@ class OsmDataParser():
                 return not (OsmDataParser._apply_filters(self.outer_self.wanted_areas, area.tags) and OsmDataParser._apply_filters_not_allowed(self.outer_self.unwanted_areas_tags, area.tags))
  
         if (self.wanted_nodes):
-            fp_node: osmium.FileProcessor = osmium.FileProcessor(file_name)\
-                .with_locations()\
+            fp_node: osmium.FileProcessor = osmium.FileProcessor(file_name, osmium.osm.NODE)\
                 .with_filter(osmium.filter.EmptyTagFilter())\
-                .with_filter(osmium.filter.EntityFilter(osmium.osm.NODE))\
                 .with_filter(osmium.filter.KeyFilter(*self.wanted_nodes.keys()))\
                 .with_filter(ElementsFilter(self))\
                 .with_filter(osmium.filter.GeoInterfaceFilter(tags=self.nodes_columns))

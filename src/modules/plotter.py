@@ -590,15 +590,11 @@ class Plotter:
         #               linestyle=gpxs_gdf[StyleKey.LINESTYLE], alpha=gpxs_gdf[StyleKey.ALPHA],
         #               path_effects=[pe.Stroke(capstyle="round")])
 
-    def clip(self, crs: str, whole_map_polygon: Polygon, reqired_area_gdf: gpd.GeoDataFrame | None = None, clipped_area_color: str = 'white'):
+    def clip(self, crs: str, whole_map_polygon: Polygon, clipped_area_color: str = 'white'):
 
-        if (reqired_area_gdf is not None):
-            reqired_area_polygon = GdfUtils.create_polygon_from_gdf(
-                reqired_area_gdf)
-        else:
-            reqired_area_polygon = self.reqired_area_polygon
-
-        clipping_polygon = whole_map_polygon.difference(reqired_area_polygon)
+        if(not whole_map_polygon.is_valid):
+            return
+        clipping_polygon = whole_map_polygon.difference(self.reqired_area_polygon)
         if (not GdfUtils.is_geometry_inside_geometry(clipping_polygon, whole_map_polygon)):
             return
 
