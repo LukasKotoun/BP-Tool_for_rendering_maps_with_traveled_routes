@@ -39,17 +39,20 @@ class Plotter:
     TEXT_EXPAND_PERCENT = 10
 
     def __init__(self, requred_area_gdf: gpd.GeoDataFrame, paper_dimensions_mm: DimensionsTuple, map_object_scaling_factor: float,
-                 text_bounds_overflow_threshold: float, text_wrap_len: int):
+                 text_bounds_overflow_threshold: float, text_wrap_len: int, outer_reqired_area_gdf: gpd.GeoDataFrame | None = None):
         self.reqired_area_gdf: gpd.GeoDataFrame = requred_area_gdf
         self.reqired_area_polygon: Polygon = GdfUtils.create_polygon_from_gdf(
             self.reqired_area_gdf)
-
+        self.polygon_text_inside = GdfUtils.create_polygon_from_gdf(
+            self.reqired_area_gdf) if outer_reqired_area_gdf is None else GdfUtils.create_polygon_from_gdf(outer_reqired_area_gdf)
+        
         self.paper_dimensions_mm = paper_dimensions_mm
         self.map_object_scaling_factor: float = map_object_scaling_factor
         self.texts_and_markers_bboxs = []
         self.text_bounds_overflow_threshold = text_bounds_overflow_threshold
         self.text_wrap_len = text_wrap_len
 
+        
     def init(self, map_bg_color: str, bg_gdf: gpd.GeoDataFrame, area_zoom_preview: None | DimensionsTuple = None):
         self.fig, self.ax = plt.subplots(figsize=(self.paper_dimensions_mm[0]/self.MM_TO_INCH,
                                                   # convert mm to inch
@@ -66,6 +69,7 @@ class Plotter:
                 left=left_margin, right=right_margin, top=top_margin, bottom=bottom_margin)
         self.ax.axis('off')
         self.reqired_area_gdf.plot(ax=self.ax, color=map_bg_color)
+
         if (not bg_gdf.empty):
             bg_gdf.plot(ax=self.ax, color=bg_gdf[StyleKey.COLOR])
         self.reqired_area_polygon_display = Polygon(self.ax.transData.transform(
@@ -83,7 +87,7 @@ class Plotter:
             bbox_expanded = Utils.expand_bbox(bbox, self.TEXT_EXPAND_PERCENT)
         if (check_bbox_position):
             if (not Utils.check_bbox_position(bbox_expanded, bbox, self.texts_and_markers_bboxs, self.ax,
-                                              self.text_bounds_overflow_threshold, self.reqired_area_polygon)):
+                                              self.text_bounds_overflow_threshold, self.polygon_text_inside)):
                 text_annotation.remove()
                 return None
         if (store_bbox):
@@ -97,10 +101,11 @@ class Plotter:
             marker = marker[0]
         if (check_bbox_position or store_bbox):
             bbox = marker.get_tightbbox()
+            
             bbox_expanded = Utils.expand_bbox(bbox, self.TEXT_EXPAND_PERCENT)
         if (check_bbox_position):
             if (not Utils.check_bbox_position(bbox_expanded, bbox, self.texts_and_markers_bboxs, self.ax,
-                                              self.text_bounds_overflow_threshold, self.reqired_area_polygon)):
+                                              self.text_bounds_overflow_threshold, self.polygon_text_inside)):
                 marker.remove()
                 return None
         if (store_bbox):
@@ -151,7 +156,7 @@ class Plotter:
                 bbox_expanded = Utils.expand_bbox(
                     bbox, self.TEXT_EXPAND_PERCENT)
                 if (not Utils.check_bbox_position(bbox_expanded, bbox, self.texts_and_markers_bboxs, self.ax,
-                                                  self.text_bounds_overflow_threshold, self.reqired_area_polygon)):
+                                                  self.text_bounds_overflow_threshold, self.polygon_text_inside)):
                     text_anotation.remove()
                     text_anotation = None
                     continue
@@ -592,15 +597,16 @@ class Plotter:
 
     def clip(self, crs: str, whole_map_polygon: Polygon, clipped_area_color: str = 'white'):
 
-        if(not whole_map_polygon.is_valid):
+        if (not whole_map_polygon.is_valid):
             return
-        clipping_polygon = whole_map_polygon.difference(self.reqired_area_polygon)
+        
+        clipping_polygon = whole_map_polygon.difference(
+            self.reqired_area_polygon)
         if (not GdfUtils.is_geometry_inside_geometry(clipping_polygon, whole_map_polygon)):
             return
 
         clipping_polygon = gpd.GeoDataFrame(
             geometry=[clipping_polygon], crs=crs)
-
         clipping_polygon.plot(
             ax=self.ax, color=clipped_area_color, alpha=1, zorder=3)
 

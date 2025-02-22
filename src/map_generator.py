@@ -94,22 +94,22 @@ def calc_preview(map_area_gdf, paper_dimensions_mm):
         _type_: _description_
     """
 
-    outer_area_gdf = GdfUtils.get_whole_area_gdf(
+    outer_map_area_gdf = GdfUtils.get_whole_area_gdf(
         OUTER_AREA, CRS_OSM, CRS_DISPLAY)
-
-    outer_map_area_dimensions = GdfUtils.get_dimensions_gdf(outer_area_gdf)
+    outer_map_area_gdf = GdfUtils.combine_rows_gdf(outer_map_area_gdf, CRS_DISPLAY)
+    
+    outer_map_area_dimensions = GdfUtils.get_dimensions_gdf(outer_map_area_gdf)
     # map in meters for calc automatic orientation and same pdf sides proportions
     outer_paper_dimensions_mm = Utils.adjust_paper_dimensions(outer_map_area_dimensions, OUTER_PAPER_DIMENSIONS,
                                                               OUTER_GIVEN_SMALLER_PAPER_DIMENSION,
                                                               OUTER_WANTED_ORIENTATION)
     if (OUTER_FIT_PAPER_SIZE):
-        outer_area_gdf = GdfUtils.expand_area_fitPaperSize(
-            outer_area_gdf, outer_paper_dimensions_mm)
-        outer_map_area_dimensions = GdfUtils.get_dimensions_gdf(outer_area_gdf)
-    # outer_map_area_bounds = GdfUtils.get_bounds_gdf(GdfUtils.change_crs(outer_area_gdf, CRS_OSM)) # real scale cacl
+        outer_map_area_gdf = GdfUtils.expand_area_fitPaperSize(
+            outer_map_area_gdf, outer_paper_dimensions_mm)
+        outer_map_area_dimensions = GdfUtils.get_dimensions_gdf(outer_map_area_gdf)
+    # outer_map_area_bounds = GdfUtils.get_bounds_gdf(GdfUtils.change_crs(outer_map_area_gdf, CRS_OSM)) # real scale cacl
     # map_scale = Utils.get_scale(outer_map_area_bounds, outer_paper_dimensions_mm)
-    map_object_scaling_factor = (Utils.calc_map_object_scaling_factor(outer_map_area_dimensions, outer_paper_dimensions_mm)
-                                 * OBJECT_MULTIPLIER)
+    map_object_scaling_factor = Utils.calc_map_object_scaling_factor(outer_map_area_dimensions, outer_paper_dimensions_mm)
     # calc map factor for creating automatic array with wanted elements - for preview area (without area_zoom_preview)
     # ?? to doc - need because it will clip by required area - and that will be some big area in not clipping (cant use only first approach)
     # ?? req area je potom velká jako pdf stránka (přes celou stránku) a ne jako puvodně chtěná oblast a tedy by k žádnému zaříznutí nedošlo
@@ -132,7 +132,7 @@ def calc_preview(map_area_gdf, paper_dimensions_mm):
             map_area_dimensions, paper_dimensions_mm,
         )
 
-    return area_zoom_preview, map_object_scaling_factor, map_area_gdf
+    return area_zoom_preview, map_object_scaling_factor, map_area_gdf, outer_map_area_gdf
 
 
 @time_measurement("main")
@@ -188,9 +188,10 @@ def main():
 
     if (WANT_PREVIEW):
         (area_zoom_preview, map_object_scaling_factor,
-            map_area_gdf) = calc_preview(map_area_gdf, paper_dimensions_mm)
+            map_area_gdf, outer_map_area_gdf) = calc_preview(map_area_gdf, paper_dimensions_mm)
     else:
         area_zoom_preview = None
+        outer_map_area_gdf = None
         # todo - scale draw?
         # - map scale in real size
         # map_area_bounds = GdfUtils.get_bounds_gdf(GdfUtils.change_crs(map_area_gdf, CRS_OSM))
@@ -244,6 +245,7 @@ def main():
     # root_files_gpxs_gdf, folder_gpxs_gdf = gpx_manager.get_gpxs_gdf_splited()
     # send warning to FE?
     gpxs_gdf = gpx_manager.get_gpxs_gdf()
+    # mandatory - cant plot icons outside plot area
     nodes_gdf = GdfUtils.get_rows_inside_area(
             nodes_gdf, map_area_gdf)
     # get coastline and determine where is land and where water
@@ -286,10 +288,9 @@ def main():
     bg_gdf = bg_gdf.sort_values(by='area', ascending=False)
     areas_gdf['area'] = areas_gdf.geometry.area
     areas_gdf = areas_gdf.sort_values(by='area', ascending=False)
-
     # ------------plot------------ # todo to one function with settings in dict
     plotter = Plotter(map_area_gdf, paper_dimensions_mm,
-                      map_object_scaling_factor, TEXT_BOUNDS_OVERFLOW_THRESHOLD, TEXT_WRAP_NAMES_LEN)
+                      map_object_scaling_factor, TEXT_BOUNDS_OVERFLOW_THRESHOLD, TEXT_WRAP_NAMES_LEN, outer_map_area_gdf)
     plotter.init(
         GENERAL_DEFAULT_STYLES[StyleKey.COLOR], bg_gdf, area_zoom_preview)
     plotter.zoom(zoom_percent_padding=PERCENTAGE_PADDING)
@@ -305,6 +306,7 @@ def main():
             CRS_DISPLAY), linewidth=AREA_BOUNDARY_LINEWIDTH)
 
     if (not FIT_PAPER_SIZE or WANT_PREVIEW):
+        # todo find better way to create polygon for clipping  - for texts
         plotter.clip(CRS_DISPLAY, GdfUtils.create_polygon_from_gdf_bounds(
             nodes_gdf, ways_gdf, areas_gdf))
     plotter.generate_pdf(OUTPUT_PDF_NAME)

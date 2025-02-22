@@ -615,8 +615,10 @@ class GdfUtils:
     
     @staticmethod
     def get_rows_inside_area(gdf_rows: gpd.GeoDataFrame, gdf_area: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
-        return gpd.sjoin(gdf_rows, gdf_area, predicate='within', how='inner').reset_index(drop=True)
-    
+        return gdf_rows.loc[gpd.sjoin(gdf_rows, gdf_area, predicate="within").index]
+
+
+
     # -----------Others functions------------
     @staticmethod
     def get_groups_by_columns(gdf, group_cols, default_keys=None, dropna=False):
