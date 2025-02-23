@@ -113,24 +113,24 @@ def calc_preview(map_area_gdf, paper_dimensions_mm):
     # calc map factor for creating automatic array with wanted elements - for preview area (without area_zoom_preview)
     # ?? to doc - need because it will clip by required area - and that will be some big area in not clipping (cant use only first approach)
     # ?? req area je potom velká jako pdf stránka (přes celou stránku) a ne jako puvodně chtěná oblast a tedy by k žádnému zaříznutí nedošlo
-    if (FIT_PAPER_SIZE):
-        # všechny prvky i když to bude menší než papír - např. cesty mimo required area
-        area_zoom_preview = None
-        # calc bounds so area_zoom_preview will be 1 and will fill whole paper
-        paper_fill_bounds = Utils.calc_bounds_to_fill_paper_with_ratio(map_area_gdf.unary_union.centroid,
-                                                                       paper_dimensions_mm, outer_map_area_dimensions,
-                                                                       outer_paper_dimensions_mm)
-        # area will be changing -> create copy for bounds plotting
-        map_area_gdf = GdfUtils.create_gdf_from_bounds(
-            paper_fill_bounds, CRS_DISPLAY)
-    else:
-        # oříznuté okraje když to bude menší než papír
-        map_area_dimensions = GdfUtils.get_dimensions_gdf(map_area_gdf)
-        # if want clipping than instead of bounds calculation use zoom/unzoom - with using paper_fill_bounds it cant be clipped
-        area_zoom_preview = Utils.calc_zoom_for_smaller_area(
-            outer_map_area_dimensions, outer_paper_dimensions_mm,
-            map_area_dimensions, paper_dimensions_mm,
-        )
+    # if (FIT_PAPER_SIZE):
+    # všechny prvky i když to bude menší než papír - např. cesty mimo required area
+    area_zoom_preview = None
+    # calc bounds so area_zoom_preview will be 1 and will fill whole paper
+    paper_fill_bounds = Utils.calc_bounds_to_fill_paper_with_ratio(map_area_gdf.union_all().centroid,
+                                                                    paper_dimensions_mm, outer_map_area_dimensions,
+                                                                    outer_paper_dimensions_mm)
+    # area will be changing -> create copy for bounds plotting
+    map_area_gdf = GdfUtils.create_gdf_from_bounds(
+        paper_fill_bounds, CRS_DISPLAY)
+    # else:
+    #     # oříznuté okraje když to bude menší než papír
+    #     map_area_dimensions = GdfUtils.get_dimensions_gdf(map_area_gdf)
+    #     # if want clipping than instead of bounds calculation use zoom/unzoom - with using paper_fill_bounds it cant be clipped
+    #     area_zoom_preview = Utils.calc_zoom_for_smaller_area(
+    #         outer_map_area_dimensions, outer_paper_dimensions_mm,
+    #         map_area_dimensions, paper_dimensions_mm,
+    #     )
 
     return area_zoom_preview, map_object_scaling_factor, map_area_gdf, outer_map_area_gdf
 
@@ -164,7 +164,6 @@ def main():
         if (AREA_BOUNDARY == AreaBounds.COMBINED):
             # store comined areas (after row combination)
             boundary_map_area_gdf: gpd.GeoDataFrame = map_area_gdf.copy()
-
 
 
     # ------------get paper dimension (size and orientation)------------
@@ -282,7 +281,7 @@ def main():
     nodes_gdf = GdfUtils.sort_gdf_by_column(nodes_gdf, 'ele', ascending=False)
     ways_gdf = GdfUtils.sort_gdf_by_column(ways_gdf, StyleKey.ZINDEX)
     areas_gdf = GdfUtils.sort_gdf_by_column(areas_gdf, StyleKey.ZINDEX)
-
+    
     # order by area to plot smaller at the end
     bg_gdf['area'] = bg_gdf.area
     bg_gdf = bg_gdf.sort_values(by='area', ascending=False)
@@ -292,8 +291,7 @@ def main():
     plotter = Plotter(map_area_gdf, paper_dimensions_mm,
                       map_object_scaling_factor, TEXT_BOUNDS_OVERFLOW_THRESHOLD, TEXT_WRAP_NAMES_LEN, outer_map_area_gdf)
     plotter.init(
-        GENERAL_DEFAULT_STYLES[StyleKey.COLOR], bg_gdf, area_zoom_preview)
-    plotter.zoom(zoom_percent_padding=PERCENTAGE_PADDING)
+        GENERAL_DEFAULT_STYLES[StyleKey.COLOR], bg_gdf, area_zoom_preview, zoom_percent_padding=PERCENTAGE_PADDING)
     plotter.areas(areas_gdf)
     # plotter.ways(ways_gdf, areas_gdf, [{'highway': 'motorway'}])
     # plotter.ways(ways_gdf, areas_gdf, [{'highway': 'primary'}])
@@ -307,8 +305,7 @@ def main():
 
     if (not FIT_PAPER_SIZE or WANT_PREVIEW):
         # todo find better way to create polygon for clipping  - for texts
-        plotter.clip(CRS_DISPLAY, GdfUtils.create_polygon_from_gdf_bounds(
-            nodes_gdf, ways_gdf, areas_gdf))
+        plotter.clip(CRS_DISPLAY, PERCENTAGE_PADDING)
     plotter.generate_pdf(OUTPUT_PDF_NAME)
     # plotter.show_plot()
 

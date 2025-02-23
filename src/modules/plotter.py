@@ -3,12 +3,9 @@ import warnings
 
 import matplotlib.pyplot as plt
 import matplotlib.patheffects as pe
-# from matplotlib import line2d
 from matplotlib.lines import Line2D
 
-
 from matplotlib.text import Text, Annotation
-from matplotlib.backends.backend_agg import RendererAgg
 from matplotlib.transforms import Bbox
 import pandas as pd
 import geopandas as gpd
@@ -19,7 +16,7 @@ from shapely.geometry.linestring import LineString
 from shapely.geometry.multilinestring import MultiLineString
 from shapely.geometry.multipolygon import MultiPolygon
 from shapely.geometry import LinearRing, Point
-from adjustText import adjust_text
+# from adjustText import adjust_text
 from shapely.ops import linemerge, unary_union
 
 from config import *
@@ -36,24 +33,23 @@ class Plotter:
 
     MM_TO_INCH = 25.4
     DEFAULT_CUPSTYLE = "round"
-    TEXT_EXPAND_PERCENT = 10
+    TEXT_EXPAND_PERCENT = 4
 
     def __init__(self, requred_area_gdf: gpd.GeoDataFrame, paper_dimensions_mm: DimensionsTuple, map_object_scaling_factor: float,
                  text_bounds_overflow_threshold: float, text_wrap_len: int, outer_reqired_area_gdf: gpd.GeoDataFrame | None = None):
         self.reqired_area_gdf: gpd.GeoDataFrame = requred_area_gdf
         self.reqired_area_polygon: Polygon = GdfUtils.create_polygon_from_gdf(
             self.reqired_area_gdf)
-        self.polygon_text_inside = GdfUtils.create_polygon_from_gdf(
-            self.reqired_area_gdf) if outer_reqired_area_gdf is None else GdfUtils.create_polygon_from_gdf(outer_reqired_area_gdf)
         
+        self.outer_reqired_area_gdf = outer_reqired_area_gdf
         self.paper_dimensions_mm = paper_dimensions_mm
         self.map_object_scaling_factor: float = map_object_scaling_factor
         self.texts_and_markers_bboxs = []
         self.text_bounds_overflow_threshold = text_bounds_overflow_threshold
         self.text_wrap_len = text_wrap_len
 
-        
-    def init(self, map_bg_color: str, bg_gdf: gpd.GeoDataFrame, area_zoom_preview: None | DimensionsTuple = None):
+    def init(self, map_bg_color: str, bg_gdf: gpd.GeoDataFrame, area_zoom_preview: None | DimensionsTuple = None,
+             zoom_percent_padding=0):
         self.fig, self.ax = plt.subplots(figsize=(self.paper_dimensions_mm[0]/self.MM_TO_INCH,
                                                   # convert mm to inch
                                                   self.paper_dimensions_mm[1]/self.MM_TO_INCH))
@@ -68,44 +64,56 @@ class Plotter:
             self.fig.subplots_adjust(
                 left=left_margin, right=right_margin, top=top_margin, bottom=bottom_margin)
         self.ax.axis('off')
-        self.reqired_area_gdf.plot(ax=self.ax, color=map_bg_color)
+        self.zoom(zoom_percent_padding)
 
+        self.reqired_area_gdf.plot(ax=self.ax, color=map_bg_color)
         if (not bg_gdf.empty):
             bg_gdf.plot(ax=self.ax, color=bg_gdf[StyleKey.COLOR])
-        self.reqired_area_polygon_display = Polygon(self.ax.transData.transform(
-            np.array(self.reqired_area_polygon.exterior.coords)))
+        polygon_text_inside = GdfUtils.create_polygon_from_gdf(
+            self.reqired_area_gdf) if self.outer_reqired_area_gdf is None else GdfUtils.create_polygon_from_gdf(self.outer_reqired_area_gdf)
+        self.polygon_text_inside_display = Polygon(self.ax.transData.transform(
+            np.array(polygon_text_inside.exterior.coords)))
 
     def __text_on_point(self, row, text: str, text_wrap_len=0, store_bbox: bool = True, check_bbox_position: bool = True) -> Text | None:
         text = Utils.wrap_text(text, text_wrap_len)
-        text_annotation: Annotation = self.ax.text(row.geometry.x, row.geometry.y, text, color=row[StyleKey.TEXT_COLOR], fontsize=row[StyleKey.TEXT_FONT_SIZE], family=row[StyleKey.TEXT_FONTFAMILY],
-                                                   weight=row[StyleKey.TEXT_WEIGHT], style=row[StyleKey.TEXT_STYLE], ha='center', va='center', alpha=row[StyleKey.ALPHA],
-                                                   path_effects=[pe.withStroke(linewidth=row[StyleKey.TEXT_OUTLINE_WIDTH],
-                                                                               alpha=row[StyleKey.EDGE_ALPHA], foreground=row[StyleKey.TEXT_OUTLINE_COLOR])])
+        text_plot: Text = self.ax.text(row.geometry.x, row.geometry.y, text, color=row[StyleKey.TEXT_COLOR], fontsize=row[StyleKey.TEXT_FONT_SIZE], family=row[StyleKey.TEXT_FONTFAMILY],
+                                       weight=row[StyleKey.TEXT_WEIGHT], style=row[StyleKey.TEXT_STYLE], ha='center', va='center', alpha=row[StyleKey.ALPHA],
+                                       path_effects=[pe.withStroke(linewidth=row[StyleKey.TEXT_OUTLINE_WIDTH],
+                                                                   alpha=row[StyleKey.EDGE_ALPHA], foreground=row[StyleKey.TEXT_OUTLINE_COLOR])], zorder=5)
+        bbox = text_plot.get_tightbbox()
+        if (bbox is None):
+            # text is plotted outside of the figure
+            text_plot.remove()
+            return None
 
         if (check_bbox_position or store_bbox):
-            bbox = text_annotation.get_tightbbox()
             bbox_expanded = Utils.expand_bbox(bbox, self.TEXT_EXPAND_PERCENT)
         if (check_bbox_position):
             if (not Utils.check_bbox_position(bbox_expanded, bbox, self.texts_and_markers_bboxs, self.ax,
-                                              self.text_bounds_overflow_threshold, self.polygon_text_inside)):
-                text_annotation.remove()
+                                              self.text_bounds_overflow_threshold, self.polygon_text_inside_display)):
+                text_plot.remove()
                 return None
         if (store_bbox):
             self.texts_and_markers_bboxs.append(bbox_expanded)
-        return text_annotation
+        return text_plot
 
     def __marker(self, row, store_bbox: bool = True, check_bbox_position: bool = True) -> Line2D | None:
         marker: Line2D = self.ax.plot(row.geometry.x, row.geometry.y, marker=row[StyleKey.ICON], mfc=row[StyleKey.COLOR], ms=row[StyleKey.WIDTH],
                                       mec=row[StyleKey.EDGE_COLOR], mew=row[StyleKey.EDGEWIDTH], alpha=row[StyleKey.ALPHA])
         if (isinstance(marker, list)):
             marker = marker[0]
+        bbox = marker.get_tightbbox()
+        if (bbox is None):
+            # marker is plotted outside of the figure
+            marker.remove()
+            return None
+
+
         if (check_bbox_position or store_bbox):
-            bbox = marker.get_tightbbox()
-            
             bbox_expanded = Utils.expand_bbox(bbox, self.TEXT_EXPAND_PERCENT)
         if (check_bbox_position):
             if (not Utils.check_bbox_position(bbox_expanded, bbox, self.texts_and_markers_bboxs, self.ax,
-                                              self.text_bounds_overflow_threshold, self.polygon_text_inside)):
+                                              self.text_bounds_overflow_threshold, self.polygon_text_inside_display)):
                 marker.remove()
                 return None
         if (store_bbox):
@@ -141,6 +149,7 @@ class Plotter:
                 x_shift += marker_size
                 ha = 'left'
                 va = 'center'
+                # todo add other positions like top-left, top-right, bottom-left, bottom-right
             else:
                 warnings.warn(f"Unknown text position {position}")
                 continue
@@ -149,14 +158,19 @@ class Plotter:
                                                           family=row[StyleKey.TEXT_FONTFAMILY], alpha=row[StyleKey.ALPHA],
                                                           weight=row[StyleKey.TEXT_WEIGHT], style=row[StyleKey.TEXT_STYLE],
                                                           path_effects=[pe.withStroke(linewidth=row[StyleKey.TEXT_OUTLINE_WIDTH],
-                                                                                      alpha=row[StyleKey.EDGE_ALPHA], foreground=row[StyleKey.TEXT_OUTLINE_COLOR])])
+                                                                                      alpha=row[StyleKey.EDGE_ALPHA], foreground=row[StyleKey.TEXT_OUTLINE_COLOR])], zorder=5)
+            bbox = text_anotation.get_tightbbox()
+            if (bbox is None):
+                # text is plotted outside of the figure
+                text_anotation.remove()
+                text_anotation = None
+                continue
 
             if (check_bbox_position):
-                bbox = text_anotation.get_tightbbox()
                 bbox_expanded = Utils.expand_bbox(
                     bbox, self.TEXT_EXPAND_PERCENT)
                 if (not Utils.check_bbox_position(bbox_expanded, bbox, self.texts_and_markers_bboxs, self.ax,
-                                                  self.text_bounds_overflow_threshold, self.polygon_text_inside)):
+                                                  self.text_bounds_overflow_threshold, self.polygon_text_inside_display)):
                     text_anotation.remove()
                     text_anotation = None
                     continue
@@ -595,22 +609,25 @@ class Plotter:
         #               linestyle=gpxs_gdf[StyleKey.LINESTYLE], alpha=gpxs_gdf[StyleKey.ALPHA],
         #               path_effects=[pe.Stroke(capstyle="round")])
 
-    def clip(self, crs: str, whole_map_polygon: Polygon, clipped_area_color: str = 'white'):
+    def clip(self, crs: str, zoom_percentage_padding=0, clipped_area_color: str = 'white'):
+        whole_area_bounds = Utils.adjust_bounds_to_fill_paper(
+            GdfUtils.get_bounds_gdf(self.reqired_area_gdf), self.paper_dimensions_mm)
+        whole_area_bounds = Utils.expand_bounds_dict(
+            whole_area_bounds, 2 + zoom_percentage_padding)
+        whole_area_polygon = GdfUtils.create_polygon_from_bounds(
+            whole_area_bounds)
 
-        if (not whole_map_polygon.is_valid):
-            return
-        
-        clipping_polygon = whole_map_polygon.difference(
+        clipping_polygon = whole_area_polygon.difference(
             self.reqired_area_polygon)
-        if (not GdfUtils.is_geometry_inside_geometry(clipping_polygon, whole_map_polygon)):
+        if (not GdfUtils.is_geometry_inside_geometry(clipping_polygon, whole_area_polygon)):
             return
-
         clipping_polygon = gpd.GeoDataFrame(
             geometry=[clipping_polygon], crs=crs)
         clipping_polygon.plot(
             ax=self.ax, color=clipped_area_color, alpha=1, zorder=3)
 
     def area_boundary(self, area_gdf: gpd.GeoDataFrame | None = None, color: str = 'black', linewidth: float = 1):
+        # todo can add also color and width
         if (area_gdf is None):
             self.reqired_area_gdf.boundary.plot(
                 ax=self.ax, color=color, linewidth=linewidth*self.map_object_scaling_factor, zorder=3)
@@ -618,14 +635,15 @@ class Plotter:
             area_gdf.boundary.plot(
                 ax=self.ax, color=color, linewidth=linewidth*self.map_object_scaling_factor, zorder=3)
 
-    def zoom(self, zoom_percent_padding: float = 1):
+    def zoom(self, zoom_percent_padding: float = 0):
         zoom_padding = zoom_percent_padding / 100  # convert from percent
-
+        # set x and y limits by area that fit paper size for text overflow checking and area clipping
+        zoom_bounds = Utils.adjust_bounds_to_fill_paper(
+            GdfUtils.get_bounds_gdf(self.reqired_area_gdf), self.paper_dimensions_mm)
         zoom_bounds = GdfUtils.get_bounds_gdf(self.reqired_area_gdf)
         width, height = Utils.get_dimensions(zoom_bounds)
-
-        width_buffer = width * zoom_padding  # 1% of width
-        height_buffer = height * zoom_padding  # 1% of height
+        width_buffer = width * zoom_padding  # % of width
+        height_buffer = height * zoom_padding  # % of height
 
         self.ax.set_xlim([zoom_bounds[WorldSides.WEST] - width_buffer,
                          # Expand x limits

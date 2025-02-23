@@ -312,8 +312,25 @@ class Utils:
         expanded_bbox = Bbox.from_extents(bbox.x0 - expand_x, bbox.y0 - expand_y,
                                           bbox.x1 + expand_x, bbox.y1 + expand_y)
         return expanded_bbox
+    
+    @staticmethod
+    def expand_bounds_dict(bounds: BoundsDict, percent_expand: int = 0) -> Bbox:
+        if (percent_expand == 0):
+            return bounds
+        width = bounds[WorldSides.EAST] - bounds[WorldSides.WEST]
+        height = bounds[WorldSides.NORTH] - bounds[WorldSides.SOUTH]
+        expand_x = (width * percent_expand) / 100
+        expand_y = (height * percent_expand) / 100
+        return {
+            WorldSides.WEST: bounds[WorldSides.WEST] - expand_x,
+            WorldSides.EAST: bounds[WorldSides.EAST] + expand_x,
+            WorldSides.SOUTH: bounds[WorldSides.SOUTH] - expand_y,
+            WorldSides.NORTH: bounds[WorldSides.NORTH] + expand_y
+        }
+    
     @staticmethod
     def is_geometry_inside_geometry_threshold(inner: GeometryCollection, outer: GeometryCollection, threshold: float = 0.95) -> bool:
+
         bbox_area: float = inner.area
         intersection_area: float = inner.intersection(outer).area
         percentage_inside: float = intersection_area / bbox_area
@@ -328,10 +345,8 @@ class Utils:
                 return False
         if text_bounds_overflow_threshold == 0:
             return True
+        
         # check if bbox is inside required area
-        bbox_to_overflow = bbox_to_overflow.transformed(
-            ax.transData.inverted())
         bbox_polygon = geometry.box(
             bbox_to_overflow.x0, bbox_to_overflow.y0, bbox_to_overflow.x1, bbox_to_overflow.y1)
         return Utils.is_geometry_inside_geometry_threshold(bbox_polygon, reqired_area_polygon, text_bounds_overflow_threshold)
-        # return GdfUtils.is_geometry_inside_geometry_threshold(bbox_polygon, self.reqired_area_polygon_display, self.text_bounds_overflow_threshold)

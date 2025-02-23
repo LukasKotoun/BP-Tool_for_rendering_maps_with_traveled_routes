@@ -5,14 +5,14 @@ from common.map_enums import *
 # --------------------------------------------------------------map area--------------------------------------------------------------
 # OSM_INPUT_FILE_NAMES: str = ['../osm_files/vys.osm.pbf','../osm_files/jihmor.osm.pbf']
 # OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/vysJihE.osm.pbf'
-OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/jihmor.osm.pbf'
+OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/brno.osm.pbf'
 # OSM_INPUT_FILE_NAMES: str | list[str] = '../trebic.osm.pbf'
 # extract
 OSM_WANT_EXTRACT_AREA: bool = False
 # set if want osm file cutting using osmium command line tool (need to be uinstalled), If not set to None
 OSM_OUTPUT_FILE_NAME: None | str = '../osm_files/T.osm.pbf'
 
-OUTPUT_PDF_NAME: str = '../pdfs/divocina1'
+OUTPUT_PDF_NAME: str = '../pdfs/divocina'
 # with fill or false cliping is recomended 0
 # padding from page borders NOTE: must have same settings as the resulting one when generating for large format printing
 PERCENTAGE_PADDING = 0
@@ -47,14 +47,14 @@ PERCENTAGE_PADDING = 0
 # AREA: WantedArea = ["Brno, Česko"]
 # AREA: WantedArea = ["Jihomoravský kraj, Česko", "Kraj Vysočina, Česko"]
 # AREA: WantedArea = ["Kraj Vysočina, Česko"]
-AREA: WantedArea = ["Jihomoravský kraj, Česko"]
-# AREA: WantedArea = ["Česko"]
+# AREA: WantedArea = ["Jihomoravský kraj, Česko"]
+AREA: WantedArea = ["Česko"]
 # AREA: WantedArea = ["Okřešice, Česko"]
 # AREA: WantedArea = ["Třebíč, Česko"]
 # AREA: WantedArea = ["Okres Třebíč, Česko", "Třebíč, Česko", "Okres Jihlava, Česko"]
 # AREA: WantedArea = ["Texas, USA"]
 
-PAPER_DIMENSIONS: PaperSize | tuple[float | None, float | None] = PaperSize.A4.dimensions
+PAPER_DIMENSIONS: PaperSize | tuple[float | None, float | None] = PaperSize.A0.dimensions
 # PAPER_DIMENSIONS: PaperSize | tuple[float | None, float | None] = PaperSize.A4.dimensions
 # set own dimensions. If one is left as 'None' it will be automaticaly calculated using area size
 # PAPER_DIMENSIONS = (1100, None)
@@ -65,13 +65,13 @@ GIVEN_SMALLER_PAPER_DIMENSION: bool = True
 WANTED_ORIENTATION: MapOrientation = MapOrientation.AUTOMATIC
 
 # FIT_PAPER_SIZE recomended with PERCENTAGE_PADDING 0
-FIT_PAPER_SIZE = False
+FIT_PAPER_SIZE = True
 
 # bounds
 # COMBINED - one bound around area, SEPARATED - separated bounds around every area in AREA variable
 AREA_BOUNDARY = AreaBounds.SEPARATED
 EXPAND_AREA_BOUNDS_PLOT = False
-AREA_BOUNDARY_LINEWIDTH = 3
+AREA_BOUNDARY_LINEWIDTH = 30
 
 # text general
 TEXT_WRAP_NAMES_LEN = 15  # len or 0/None if not wrap (15 default)
@@ -90,14 +90,15 @@ WANT_PREVIEW: bool = False
 # OUTER_AREA: WantedArea = [(15.7034756,48.6941575), (15.9206889,48.6941186), (15.9198775, 48.5926164), (15.7030222, 48.5936264)] # zoom 13 - 0.012257255675006467
 
 # area for that you are creating smaller preview (bigger than normal area)
-OUTER_AREA: WantedArea = "Vysočina, Česko"
-# OUTER_AREA: WantedArea = "Česko"
+# OUTER_AREA: WantedArea =  "Vysočina, Česko"
+# OUTER_AREA: WantedArea =  ["Jihomoravský kraj, Česko", "Kraj Vysočina, Česko"]
+OUTER_AREA: WantedArea = "Česko"
 # OUTER_AREA: WantedArea = [(15.7396182, 49.3111173), (16.0273871, 49.3028839),
 #                     (16.0266146, 49.1439064), (15.6712219, 49.1928600)]
 
-# OUTER_PAPER_DIMENSIONS = PaperSize.A4.dimensions  # real paper size
+OUTER_PAPER_DIMENSIONS = PaperSize.A0.dimensions  # real paper size
 # or set own #if one is left none if will be automaticaly calculated by area size
-OUTER_PAPER_DIMENSIONS = (1100, None)
+# OUTER_PAPER_DIMENSIONS = (1100, None)
 # what side of paper was set (smaller true bigger false)(only if only one side in custom dimension was set)
 OUTER_GIVEN_SMALLER_PAPER_DIMENSION = True
 # set how will resulted paper be oriented, AUTOMATIC is Recommended
@@ -190,14 +191,14 @@ unwanted_nodes_tags: UnwantedTags = {
 
 wanted_ways: WantedCategories = {
     # 'waterway': set({}),
-    # 'highway': ['motorway', 'trunk','primary', 'secondary', 'tertiary'],
-    # 'highway': ['motorway', 'trunk', 'primary'],
+    'highway': ['motorway', 'trunk','primary', 'secondary', 'tertiary'],
+    # # 'highway': ['motorway', 'trunk', 'primary'],
     # 'highway': {'motorway', 'trunk', 'primary', 'secondary', 'tertiary', 'unclassified', 'residential', 'path', 'footway'},
-    # 'highway': {'tertiary'},
-    # 'highway':set({}),
+    # # # 'highway': {'tertiary'},
+    # # # 'highway':set({}),
     # 'railway': {'rail', 'tram'},
 
-    # # 'railway': {'rail'},
+    # # # # 'railway': {'rail'},
     # 'natural': {'coastline'}
 }
 
@@ -215,15 +216,15 @@ unwanted_ways_tags: UnwantedTags = {
 }
 
 wanted_areas: WantedCategories = {
-        # 'landuse': {'forest', 'residential', 'commercial', 'retail', 'industrial', 'farmland', 'meadow', 'grass'},
+        'landuse': {'forest', 'residential', 'commercial', 'retail', 'industrial', 'farmland', 'meadow', 'grass'},
    
-        # 'leisure': {'park', 'pitch', 'garden', 'golf_course', 'nature_reserve', 'playground', 'stadium', 'swimming_pool', 'sports_centre'},
-        # # 'leisure': {'park', 'pitch', 'garden', 'golf_course', 'playground', 'stadium', 'swimming_pool', 'sports_centre'},
-        # 'natural': {'wood', 'water', 'scrub', 'heath'},
-        # # # 'leisure': ['park', 'pitch', 'garden', 'golf_course', 'nature_reserve'],
-        # # 'water': set({}),
-        # 'boundary': {'national_park'},
-        # 'building': {'house','residential'},
+        'leisure': {'park', 'pitch', 'garden', 'golf_course', 'nature_reserve', 'playground', 'stadium', 'swimming_pool', 'sports_centre'},
+        # 'leisure': {'park', 'pitch', 'garden', 'golf_course', 'playground', 'stadium', 'swimming_pool', 'sports_centre'},
+        'natural': {'wood', 'water', 'scrub', 'heath'},
+        # # 'leisure': ['park', 'pitch', 'garden', 'golf_course', 'nature_reserve'],
+        'water': set({}),
+        'boundary': {'national_park'},
+        'building': {'house','residential'},
         # 'water': ['river','lake','reservoir'],
 }
 
