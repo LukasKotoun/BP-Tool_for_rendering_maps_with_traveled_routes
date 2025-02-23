@@ -640,7 +640,7 @@ class Plotter:
         # set x and y limits by area that fit paper size for text overflow checking and area clipping
         zoom_bounds = Utils.adjust_bounds_to_fill_paper(
             GdfUtils.get_bounds_gdf(self.reqired_area_gdf), self.paper_dimensions_mm)
-        zoom_bounds = GdfUtils.get_bounds_gdf(self.reqired_area_gdf)
+        # zoom_bounds = GdfUtils.get_bounds_gdf(self.reqired_area_gdf)
         width, height = Utils.get_dimensions(zoom_bounds)
         width_buffer = width * zoom_padding  # % of width
         height_buffer = height * zoom_padding  # % of height
