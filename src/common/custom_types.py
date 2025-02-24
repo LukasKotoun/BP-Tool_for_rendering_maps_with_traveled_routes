@@ -3,6 +3,9 @@ BoundsDict = dict[WorldSides, float]
 DimensionsTuple = tuple[float, float]
 Point = tuple[float, float]
 WantedArea = str | list[Point] | list[str | list[Point]]
+
+
+WantedAreas = list[dict[str, bool | int | list[list[float]|Point] | str]]
 OptDimensionsTuple = tuple[float | None, float | None]
 WantedCategories = dict[str, set[str]]
 UnwantedTags = dict[str, any]

@@ -15,7 +15,7 @@ OSM_OUTPUT_FILE_NAME: None | str = '../osm_files/T.osm.pbf'
 OUTPUT_PDF_NAME: str = '../pdfs/divocina'
 # with fill or false cliping is recomended 0
 # padding from page borders NOTE: must have same settings as the resulting one when generating for large format printing
-PERCENTAGE_PADDING = 0
+PERCENTAGE_PADDING = 0 # todo solve this - remove or use in calculations of sizes
 
 # AREA: WantedArea = [(-18.14143,65.68868),(-18.08538,65.68868),(-18.08538,65.67783),(-18.14143,65.67783)] #island
 # AREA: WantedArea = [(6.94872,4.84293),(6.99314,4.84293),(6.99314,4.81603),(6.94872,4.81603)] #afrika
@@ -46,15 +46,25 @@ PERCENTAGE_PADDING = 0
 # AREA: WantedArea = ["Česko","Vysočina, Česko", "Jihomoravský kraj, Česko"]
 # AREA: WantedArea = ["Brno, Česko"]
 # AREA: WantedArea = ["Jihomoravský kraj, Česko", "Kraj Vysočina, Česko"]
+# AREA: WantedArea = [{"area": "Jihomoravský kraj, Česko", "plot": True, "category": 2, "width": 1, "color": "black"},
+#                     {"area": "Kraj Vysočina, Česko", "plot": True, "category": 1, "width": 1, "color": "black"},
+#                      {"area": "Pardubický kraj, Česko", "plot": True, "category": 2, "width": 1, "color": "black"},
+#                       {"area": "Jihočeský kraj, Česko", "plot": True, "category": 1, "width": 1, "color": "black"}]
+AREA: WantedArea = [{"area": "Brno, Česko", "plot": True, "category": 0, "width": 1, "color": "black"}]
+
+# change width to small, medium, big
+
+
 # AREA: WantedArea = ["Kraj Vysočina, Česko"]
 # AREA: WantedArea = ["Jihomoravský kraj, Česko"]
-AREA: WantedArea = ["Česko"]
+# AREA: WantedArea = ["Česko"]
 # AREA: WantedArea = ["Okřešice, Česko"]
 # AREA: WantedArea = ["Třebíč, Česko"]
 # AREA: WantedArea = ["Okres Třebíč, Česko", "Třebíč, Česko", "Okres Jihlava, Česko"]
 # AREA: WantedArea = ["Texas, USA"]
-
-PAPER_DIMENSIONS: PaperSize | tuple[float | None, float | None] = PaperSize.A0.dimensions
+AREA_DICT_KEYS = {"area": str | list, "plot": bool, "category": int, "width": int, "color": str}
+AREAS_MAPPING_DICT = {"width": StyleKey.WIDTH, "color": StyleKey.COLOR}
+PAPER_DIMENSIONS: PaperSize | tuple[float | None, float | None] = PaperSize.A4.dimensions
 # PAPER_DIMENSIONS: PaperSize | tuple[float | None, float | None] = PaperSize.A4.dimensions
 # set own dimensions. If one is left as 'None' it will be automaticaly calculated using area size
 # PAPER_DIMENSIONS = (1100, None)
@@ -65,18 +75,18 @@ GIVEN_SMALLER_PAPER_DIMENSION: bool = True
 WANTED_ORIENTATION: MapOrientation = MapOrientation.AUTOMATIC
 
 # FIT_PAPER_SIZE recomended with PERCENTAGE_PADDING 0
-FIT_PAPER_SIZE = True
+FIT_PAPER_SIZE = False
 
 # bounds
 # COMBINED - one bound around area, SEPARATED - separated bounds around every area in AREA variable
 AREA_BOUNDARY = AreaBounds.SEPARATED
 EXPAND_AREA_BOUNDS_PLOT = False
-AREA_BOUNDARY_LINEWIDTH = 30
+AREA_BOUNDARY_LINEWIDTH = 5
 
 # text general
 TEXT_WRAP_NAMES_LEN = 15  # len or 0/None if not wrap (15 default)
 # if allow is false set threashold (0-1) how much of text must be inside
-TEXT_BOUNDS_OVERFLOW_THRESHOLD = 0.97
+TEXT_BOUNDS_OVERFLOW_THRESHOLD = 0
 
 
 # plot as bridge (True)  or normal way (False)
@@ -86,13 +96,15 @@ PLOT_TUNNELS = True
 
 # --------------------------------------------------------------preview--------------------------------------------------------------
 # NOTE: must have same settings as the resulting one when generating for large format printing
-WANT_PREVIEW: bool = False
+WANT_PREVIEW: bool = True
 # OUTER_AREA: WantedArea = [(15.7034756,48.6941575), (15.9206889,48.6941186), (15.9198775, 48.5926164), (15.7030222, 48.5936264)] # zoom 13 - 0.012257255675006467
 
 # area for that you are creating smaller preview (bigger than normal area)
 # OUTER_AREA: WantedArea =  "Vysočina, Česko"
-# OUTER_AREA: WantedArea =  ["Jihomoravský kraj, Česko", "Kraj Vysočina, Česko"]
-OUTER_AREA: WantedArea = "Česko"
+
+OUTER_AREA: WantedArea =  [{"area": "Jihomoravský kraj, Česko", "plot": True, "category": 2, "width": 1, "color": "black"},
+                    {"area": "Kraj Vysočina, Česko", "plot": True, "category": 1, "width": 1, "color": "black"}]
+# OUTER_AREA: WantedArea = "Česko"
 # OUTER_AREA: WantedArea = [(15.7396182, 49.3111173), (16.0273871, 49.3028839),
 #                     (16.0266146, 49.1439064), (15.6712219, 49.1928600)]
 
@@ -105,7 +117,7 @@ OUTER_GIVEN_SMALLER_PAPER_DIMENSION = True
 OUTER_WANTED_ORIENTATION = MapOrientation.AUTOMATIC
 
 # expand area
-OUTER_FIT_PAPER_SIZE = False
+OUTER_FIT_PAPER_SIZE = True
  
 # ------------constants--------------
 # world 3857
@@ -191,7 +203,7 @@ unwanted_nodes_tags: UnwantedTags = {
 
 wanted_ways: WantedCategories = {
     # 'waterway': set({}),
-    'highway': ['motorway', 'trunk','primary', 'secondary', 'tertiary'],
+    # 'highway': ['motorway', 'trunk','primary', 'secondary', 'tertiary'],
     # # 'highway': ['motorway', 'trunk', 'primary'],
     # 'highway': {'motorway', 'trunk', 'primary', 'secondary', 'tertiary', 'unclassified', 'residential', 'path', 'footway'},
     # # # 'highway': {'tertiary'},
@@ -216,16 +228,16 @@ unwanted_ways_tags: UnwantedTags = {
 }
 
 wanted_areas: WantedCategories = {
-        'landuse': {'forest', 'residential', 'commercial', 'retail', 'industrial', 'farmland', 'meadow', 'grass'},
+#         'landuse': {'forest', 'residential', 'commercial', 'retail', 'industrial', 'farmland', 'meadow', 'grass'},
    
-        'leisure': {'park', 'pitch', 'garden', 'golf_course', 'nature_reserve', 'playground', 'stadium', 'swimming_pool', 'sports_centre'},
-        # 'leisure': {'park', 'pitch', 'garden', 'golf_course', 'playground', 'stadium', 'swimming_pool', 'sports_centre'},
-        'natural': {'wood', 'water', 'scrub', 'heath'},
-        # # 'leisure': ['park', 'pitch', 'garden', 'golf_course', 'nature_reserve'],
-        'water': set({}),
-        'boundary': {'national_park'},
-        'building': {'house','residential'},
-        # 'water': ['river','lake','reservoir'],
+#         'leisure': {'park', 'pitch', 'garden', 'golf_course', 'nature_reserve', 'playground', 'stadium', 'swimming_pool', 'sports_centre'},
+#         # 'leisure': {'park', 'pitch', 'garden', 'golf_course', 'playground', 'stadium', 'swimming_pool', 'sports_centre'},
+#         'natural': {'wood', 'water', 'scrub', 'heath'},
+#         # # 'leisure': ['park', 'pitch', 'garden', 'golf_course', 'nature_reserve'],
+#         'water': set({}),
+#         'boundary': {'national_park'},
+#         'building': {'house','residential'},
+#         # 'water': ['river','lake','reservoir'],
 }
 
 unwanted_areas_tags: UnwantedTags = {

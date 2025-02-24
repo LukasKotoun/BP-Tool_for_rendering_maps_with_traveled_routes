@@ -40,7 +40,7 @@ class Plotter:
         self.reqired_area_gdf: gpd.GeoDataFrame = requred_area_gdf
         self.reqired_area_polygon: Polygon = GdfUtils.create_polygon_from_gdf(
             self.reqired_area_gdf)
-        
+
         self.outer_reqired_area_gdf = outer_reqired_area_gdf
         self.paper_dimensions_mm = paper_dimensions_mm
         self.map_object_scaling_factor: float = map_object_scaling_factor
@@ -71,8 +71,9 @@ class Plotter:
             bg_gdf.plot(ax=self.ax, color=bg_gdf[StyleKey.COLOR])
         polygon_text_inside = GdfUtils.create_polygon_from_gdf(
             self.reqired_area_gdf) if self.outer_reqired_area_gdf is None else GdfUtils.create_polygon_from_gdf(self.outer_reqired_area_gdf)
-        self.polygon_text_inside_display = Polygon(self.ax.transData.transform(
-            np.array(polygon_text_inside.exterior.coords)))
+
+        self.polygon_text_inside_display = GdfUtils.transform_geometry_to_display(
+            self.ax, polygon_text_inside)
 
     def __text_on_point(self, row, text: str, text_wrap_len=0, store_bbox: bool = True, check_bbox_position: bool = True) -> Text | None:
         text = Utils.wrap_text(text, text_wrap_len)
@@ -107,7 +108,6 @@ class Plotter:
             # marker is plotted outside of the figure
             marker.remove()
             return None
-
 
         if (check_bbox_position or store_bbox):
             bbox_expanded = Utils.expand_bbox(bbox, self.TEXT_EXPAND_PERCENT)
@@ -624,16 +624,20 @@ class Plotter:
         clipping_polygon = gpd.GeoDataFrame(
             geometry=[clipping_polygon], crs=crs)
         clipping_polygon.plot(
-            ax=self.ax, color=clipped_area_color, alpha=1, zorder=3)
+            ax=self.ax, color=clipped_area_color, alpha=1, zorder=5)
+        # by this z order clip (5) or non clip overflowed text (3)
 
-    def area_boundary(self, area_gdf: gpd.GeoDataFrame | None = None, color: str = 'black', linewidth: float = 1):
-        # todo can add also color and width
-        if (area_gdf is None):
-            self.reqired_area_gdf.boundary.plot(
-                ax=self.ax, color=color, linewidth=linewidth*self.map_object_scaling_factor, zorder=3)
-        else:
-            area_gdf.boundary.plot(
-                ax=self.ax, color=color, linewidth=linewidth*self.map_object_scaling_factor, zorder=3)
+    def area_boundary(self, boundary_map_area_gdf: gpd.GeoDataFrame, color: str = 'black', linewidth: float = 1):
+
+        boundary_map_area_gdf_with, boundary_map_area_gdf_without = GdfUtils.filter_rows(
+            boundary_map_area_gdf, {StyleKey.WIDTH: '', StyleKey.COLOR: ''}, compl=True)
+        if (not boundary_map_area_gdf_with.empty):
+            boundary_map_area_gdf_with.boundary.plot(
+                ax=self.ax, color=boundary_map_area_gdf_with[StyleKey.COLOR], linewidth=boundary_map_area_gdf[StyleKey.WIDTH], zorder=5)
+        if (not boundary_map_area_gdf_without.empty):
+            boundary_map_area_gdf_without.boundary.plot(
+                ax=self.ax, color=color, linewidth=linewidth, zorder=5)
+        # by this z order clip (5) or non clip overflowed text (4)
 
     def zoom(self, zoom_percent_padding: float = 0):
         zoom_padding = zoom_percent_padding / 100  # convert from percent

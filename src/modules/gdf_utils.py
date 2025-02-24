@@ -6,14 +6,15 @@ import geopandas as gpd
 import pandas as pd
 import osmnx as ox
 import pygeoops
+from shapely.geometry.multipolygon import MultiPolygon
 
 from modules.utils import Utils
 from osmium import FileProcessor
 from common.map_enums import WorldSides, StyleKey, MinParts
-from common.custom_types import BoundsDict, DimensionsTuple, Point, WantedArea, RowsConditions, RowsConditionsAND
+from common.custom_types import BoundsDict, DimensionsTuple, Point, WantedAreas, RowsConditions, RowsConditionsAND, WantedArea
 from common.common_helpers import time_measurement
 import textwrap
-
+import numpy as np
 from shapely.ops import unary_union, split, linemerge
 
 # todo remove unused and refactor
@@ -25,24 +26,16 @@ class GdfUtils:
     @staticmethod
     def get_area_gdf(area: str | list[Point], fromCrs: str, toCrs: str | None = None) -> gpd.GeoDataFrame:
         if isinstance(area, str):
-            if area.endswith('.geojson'):
-                reqired_area_gdf: gpd.GeoDataFrame = gpd.read_file(
-                    area)  # Get area from geojson file
-                if reqired_area_gdf.empty:
-                    raise ValueError("Given GeoJSON file is empty.")
-                return reqired_area_gdf
-            else:
-                try:
-                    # need internet connection
-                    reqired_area_gdf: gpd.GeoDataFrame = ox.geocode_to_gdf(
-                        area)  # Get from place name
-                except:
-                    raise ValueError(
-                        "The requested location has not been found.")
-                if (reqired_area_gdf.empty):
-                    raise ValueError(
-                        "The requested location has not been found.")
-
+            try:
+                # need internet connection
+                reqired_area_gdf: gpd.GeoDataFrame = ox.geocode_to_gdf(
+                    area)  # Get from place name
+            except:
+                raise ValueError(
+                    "The requested location has not been found.")
+            if (reqired_area_gdf.empty):
+                raise ValueError(
+                    "The requested location has not been found.")
         elif isinstance(area, list):  # get area from coordinates
             try:
                 area_polygon = Polygon(area)
@@ -56,24 +49,49 @@ class GdfUtils:
             return reqired_area_gdf
         else:
             return reqired_area_gdf.to_crs(toCrs)
+        
+    @staticmethod
+    def map_gdf_columns(gdf, mapping_dict):
+        """Replace GeoDataFrame column names with enums if in mapping, otherwise keep them unchanged."""
+        gdf.columns = [mapping_dict.get(col, col) for col in gdf.columns]
+        return gdf
 
     @staticmethod
     @time_measurement("spojeni")
-    def get_whole_area_gdf(whole_area: WantedArea, fromCrs: str, toCrs: str | None = None) -> gpd.GeoDataFrame:
-        if (isinstance(whole_area, str) or (isinstance(whole_area, list) and len(whole_area) == 1)  # normal area
-                or (isinstance(whole_area, list) and all(isinstance(item, tuple) and len(item) == 2 for item in whole_area))):
-            if ((isinstance(whole_area, list) and len(whole_area) == 1)):  # one area in list
-                return GdfUtils.get_area_gdf(whole_area[0], fromCrs, toCrs)
-            else:
-                return GdfUtils.get_area_gdf(whole_area, fromCrs, toCrs)
-        elif (isinstance(whole_area, list)):  # area from multiple areas
+    def get_whole_area_gdf(wanted_areas: WantedAreas, key_with_area, fromCrs: str, toCrs: str | None = None) -> gpd.GeoDataFrame:
+        if (len(wanted_areas) == 1):
+            wanted_area = wanted_areas[0]
+            if (key_with_area not in wanted_area):
+                raise ValueError(
+                    "Missing key with area in dict with wanted area.")
+            area_gdf = GdfUtils.get_area_gdf(
+                wanted_area[key_with_area], fromCrs=fromCrs, toCrs=toCrs)
+            wanted_area.pop(key_with_area, None)
+            return area_gdf.assign(**wanted_area)
+        else:
             areas_gdf_list: list[gpd.GeoDataFrame] = []
-            for area in whole_area:
-                areas_gdf_list.append(GdfUtils.get_area_gdf(
-                    area, fromCrs, toCrs))  # store areas to list of areas
+            for wanted_area in wanted_areas:
+                if (key_with_area not in wanted_area):
+                    raise ValueError(
+                        "Missing key with area in dict with wanted area.")
+                area_gdf = GdfUtils.get_area_gdf(
+                    wanted_area[key_with_area], fromCrs=fromCrs, toCrs=toCrs)
+                wanted_area.pop(key_with_area, None)
+                areas_gdf_list.append(area_gdf.assign(**wanted_area))
             return GdfUtils.combine_gdfs(areas_gdf_list)
-        else:  # area cannot be created
-            raise ValueError("Invalid area format.")
+
+    @staticmethod
+    def get_areas_borders_gdf(gdf, combine_by):
+        # Separate rows with category == 0 and nonzero categories.
+        gdf_zero, gdf_nonzero = GdfUtils.filter_rows(
+            gdf, {combine_by: 0}, compl=True)
+        if not gdf_nonzero.empty:
+            gdf_dissolved = gdf_nonzero.dissolve(by='category', as_index=False)
+        else:
+            gdf_dissolved = gdf_nonzero.copy()
+
+        # Combine the dissolved nonzero rows with the category 0 rows.
+        return GdfUtils.combine_gdfs([gdf_dissolved, gdf_zero])
 
     @staticmethod
     def get_bounds_gdf(*gdfs: gpd.GeoDataFrame, toCrs: str | None = None) -> BoundsDict:
@@ -264,32 +282,11 @@ class GdfUtils:
 
     # ------------editing gdf------------
     @staticmethod
-    def remove_columns(gdf: gpd.GeoDataFrame, columns: list[str | StyleKey]) -> gpd.GeoDataFrame:
-        gdf.drop(columns=columns, inplace=True, errors='ignore')
-
-    @staticmethod
-    def change_bridges_and_tunnels(gdf, want_bridges: bool, want_tunnels: bool):
-        gdf['layer'] = gdf.get('layer', 0)
-        gdf.loc[GdfUtils.get_rows_filter(
-            gdf, {'tunnel': '~', 'bridge': '~'}), 'layer'] = 0
-        if (not want_bridges and not want_tunnels):
-            gdf['layer'] = 0
-            GdfUtils.remove_columns(gdf, ['bridge', 'tunnel'])
-
-        if (not want_bridges):
-            if ('layer' in gdf):
-                # set layer to 0 in bridges - as normal ways
-                gdf.loc[GdfUtils.get_rows_filter(
-                    gdf, {'bridge': ''}), 'layer'] = 0
-            GdfUtils.remove_columns(gdf, ['bridge'])
-
-        if (not want_tunnels):
-            if ('layer' in gdf):
-                # set layer to 0 in tunnels - as normal ways
-                gdf.loc[GdfUtils.get_rows_filter(
-                    gdf, {'tunnel': ''}), 'layer'] = 0
-            GdfUtils.remove_columns(gdf, ['tunnel'])
-        return
+    def remove_columns(gdf: gpd.GeoDataFrame, columns: list[str | StyleKey], neg = False) -> gpd.GeoDataFrame:
+        if(neg):
+            gdf.drop(columns=[col for col in gdf.columns if col not in columns], inplace=True, errors='ignore')
+        else:
+            gdf.drop(columns=columns, inplace=True, errors='ignore')
 
     @staticmethod  # column and multipliers must be numeric otherwise it will throw error
     def multiply_column_gdf(gdf, column: StyleKey | str, multipliers: list[str | StyleKey] = [], scaling=None, filter: RowsConditions = []):
@@ -320,13 +317,13 @@ class GdfUtils:
         if (base_column not in gdf):
             gdf[new_column] = gdf.get(new_column, fill)
             return
-        
+
         # multiply rows where column value is not empty
         rows_filter = GdfUtils.get_rows_filter(gdf, filter)
         gdf.loc[rows_filter, new_column] = gdf.loc[rows_filter, base_column]
         if multipliers or scaling is not None:
             GdfUtils.multiply_column_gdf(gdf, new_column, multipliers, scaling)
-            
+
     # @staticmethod
     # @time_measurement("wrapText")
     # def wrap_text_gdf(gdf: gpd.GeoDataFrame, columns: list=[], default_wrap = 0) -> None:
@@ -337,7 +334,7 @@ class GdfUtils:
 
     #     for column_text, column_wrap_len  in columns:
     #         gdf[column_text] = gdf.apply(lambda row: wrap_text_with_width(row.get(column_text, None), row.get(column_wrap_len, default_wrap)), axis=1)
-            
+
     @staticmethod
     def change_columns_to_categorical(gdf: gpd.GeoDataFrame, columns: list) -> None:
         for column in columns:
@@ -402,16 +399,16 @@ class GdfUtils:
         Returns:
             gpd.GeoDataFrame: _description_
         """
-        columns_ignore = [*columns_ignore, 'geometry']
+        columns_ignore = [*columns_ignore, gdf.geometry.name]
         # if dont want remove columns and than...
         columns = [
             col for col in gdf.columns if col not in columns_ignore]
         # merge all lines with same values in 'columns'
         merged = gdf.groupby(columns, dropna=False, observed=True).agg({
-            'geometry': GdfUtils.merge_lines_safe
+            gdf.geometry.name: GdfUtils.merge_lines_safe
         })
         merged_gdf = gpd.GeoDataFrame(
-            merged, geometry='geometry', crs=gdf.crs).reset_index()
+            merged, geometry=gdf.geometry.name, crs=gdf.crs).reset_index()
         return merged_gdf
 
     @staticmethod
@@ -467,7 +464,7 @@ class GdfUtils:
 
         # work by creating from 2 seperated areas row with combined area and one row with original area
         # # remove small gaps between areas - does not work always but better then above??
-        boundary_gdf["geometry"] = boundary_gdf["geometry"].buffer(0)
+        boundary_gdf[boundary_gdf.geometry.name] = boundary_gdf["geometry"].buffer(0)
         for i, row in boundary_gdf.iterrows():
             # find areas that share a boundary with row
             neighbors = boundary_gdf[boundary_gdf.geometry.touches(
@@ -475,8 +472,8 @@ class GdfUtils:
             for _, neighbor in neighbors.iterrows():
                 # merge the border of the current area and neighbor
                 merged_border = row.geometry.union(neighbor.geometry)
-                boundary_gdf.at[i, 'geometry'] = merged_border
-
+                boundary_gdf.at[i, boundary_gdf.geometry.name] = merged_border
+        return boundary_gdf
     # ------------Bool operations------------
     #! not used
     @staticmethod
@@ -485,14 +482,12 @@ class GdfUtils:
 
     @staticmethod
     def are_gdf_geometry_inside_geometry(gdf: gpd.GeoDataFrame, polygon: GeometryCollection) -> bool:
-        return gdf['geometry'].within(polygon).all()
+        return gdf[gdf.geometry.name].within(polygon).all()
         # todo check speed and try using sjoin
 
     @staticmethod
     def is_geometry_inside_geometry(inner: GeometryCollection, outer: GeometryCollection) -> bool:
         return outer.contains(inner)
-
-
 
     # ------------Filtering------------
 
@@ -585,14 +580,16 @@ class GdfUtils:
                 return gdf[~filter_mask].reset_index(drop=True)
             else:
                 return gdf[filter_mask].reset_index(drop=True)
-            
+
     def filter_invalid_texts(gdf):
         return GdfUtils.filter_rows(gdf, {StyleKey.TEXT_FONT_SIZE: '', StyleKey.TEXT_OUTLINE_WIDTH: '', StyleKey.TEXT_COLOR: '',
-                                         StyleKey.TEXT_OUTLINE_COLOR: '', StyleKey.TEXT_FONTFAMILY: '', StyleKey.TEXT_WEIGHT: '',
-                                         StyleKey.TEXT_STYLE: '', StyleKey.ALPHA: '', StyleKey.EDGE_ALPHA: ''})
+                                          StyleKey.TEXT_OUTLINE_COLOR: '', StyleKey.TEXT_FONTFAMILY: '', StyleKey.TEXT_WEIGHT: '',
+                                          StyleKey.TEXT_STYLE: '', StyleKey.ALPHA: '', StyleKey.EDGE_ALPHA: ''})
+
     def filter_invalid_markers(gdf):
         return GdfUtils.filter_rows(gdf, {StyleKey.ICON: '', StyleKey.COLOR: '', StyleKey.WIDTH: '',
-                                         StyleKey.EDGEWIDTH: '', StyleKey.EDGE_COLOR: '', StyleKey.ALPHA: ''})
+                                          StyleKey.EDGEWIDTH: '', StyleKey.EDGE_COLOR: '', StyleKey.ALPHA: ''})
+
     @staticmethod
     def filter_invalid_nodes_min_req(nodes_gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
         nodes_gdf = GdfUtils.filter_rows(nodes_gdf, [{StyleKey.MIN_REQ_POINT: MinParts.MARKER, StyleKey.ICON: '', StyleKey.COLOR: ''},
@@ -612,14 +609,13 @@ class GdfUtils:
                                                      {StyleKey.TEXT2: ''}])
 
         return nodes_gdf
-    
+
     @staticmethod
     def get_rows_inside_area(gdf_rows: gpd.GeoDataFrame, gdf_area: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
         return gdf_rows.loc[gpd.sjoin(gdf_rows, gdf_area, predicate="within").index]
 
-
-
     # -----------Others functions------------
+
     @staticmethod
     def get_groups_by_columns(gdf, group_cols, default_keys=None, dropna=False):
         # get missing columns and replace with default key if missing
@@ -634,3 +630,31 @@ class GdfUtils:
             return gdf.groupby(group_cols[0], dropna=dropna, observed=False)
         return gdf.groupby(group_cols, dropna=dropna, observed=False)
 
+
+
+    def transform_geometry_to_display(ax, geometry):
+        """
+        Converts a Polygon or MultiPolygon to a new geometry in display (plot) coordinates
+        
+        Args:
+            ax: Matplotlib Axes object used for transformation.
+            geometry: A Shapely Polygon or MultiPolygon in data coordinates.
+
+        Returns:
+            A new Shapely Polygon or MultiPolygon transformed to display coordinates.
+        """
+
+        def transform_polygon(polygon):
+            coords = np.array(polygon.exterior.coords)
+            transformed_coords = ax.transData.transform(coords)
+            return Polygon(transformed_coords)
+        
+        if isinstance(geometry, Polygon):
+            return transform_polygon(geometry)
+
+        elif isinstance(geometry, MultiPolygon):
+            transformed_polygons = [transform_polygon(p) for p in geometry.geoms]
+            return MultiPolygon(transformed_polygons)
+
+        else:
+            raise ValueError("Unsupported geometry type: must be Polygon or MultiPolygon")
