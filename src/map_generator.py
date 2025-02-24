@@ -52,6 +52,10 @@ def gdfs_prepare_columns(gpxs_gdf, nodes_gdf, ways_gdf, areas_gdf, map_object_sc
 
     GdfUtils.create_derivated_columns(gpxs_gdf, StyleKey.EDGEWIDTH, StyleKey.WIDTH, [
                                       StyleKey.EDGE_WIDTH_RATIO])
+    GdfUtils.create_derivated_columns(gpxs_gdf, StyleKey.START_ICON_EDGEWIDTH, StyleKey.START_ICON_WIDHT, [
+                                      StyleKey.START_ICON_EDGE_RATIO])
+    GdfUtils.create_derivated_columns(gpxs_gdf, StyleKey.FINISH_ICON_EDGEWIDTH, StyleKey.FINISH_ICON_WIDHT, [
+                                      StyleKey.FINISH_ICON_EDGE_RATIO])
     # ----nodes----
     # set base width - scale by muplitpliers and object scaling factor
     GdfUtils.multiply_column_gdf(nodes_gdf, StyleKey.WIDTH, [
@@ -174,7 +178,7 @@ def main():
     # convert and validate formats from FE
     wanted_areas_to_display = ReceivedStructureProcessor.validate_and_convert_areas_strucutre(
         AREA, allowed_keys_and_types=AREA_DICT_KEYS, key_with_area="area")
-
+    
     # ------------get map area and calc paper sizes, and calc preview
     if (isinstance(OSM_INPUT_FILE_NAMES, list) and len(OSM_INPUT_FILE_NAMES) > 1 and OSM_WANT_EXTRACT_AREA == False):
         print("Multiple files feature (list of osm files) is avilable only with option OSM_WANT_EXTRACT_AREA")
@@ -191,7 +195,7 @@ def main():
     # ------------store bounds to plot and combine area rows in gdf to 1 row------------
     boundary_map_area_gdf = GdfUtils.get_areas_borders_gdf(
         GdfUtils.filter_rows(map_area_gdf, {'plot': True}), 'category')
-    boundary_map_area_gdf = GdfUtils.map_gdf_columns(
+    boundary_map_area_gdf = GdfUtils.map_gdf_column_names(
         boundary_map_area_gdf, AREAS_MAPPING_DICT)
     GdfUtils.remove_columns(boundary_map_area_gdf, [
                             boundary_map_area_gdf.geometry.name, *AREAS_MAPPING_DICT.values()], True)
@@ -210,13 +214,10 @@ def main():
         map_area_gdf = GdfUtils.expand_area_fitPaperSize(
             map_area_gdf, paper_dimensions_mm)
         map_area_dimensions = GdfUtils.get_dimensions_gdf(map_area_gdf)
-    # store bounds as rows
+        
     if (FIT_PAPER_SIZE and EXPAND_AREA_BOUNDS_PLOT):
-        if (boundary_map_area_gdf is not None):
-            boundary_map_area_gdf = GdfUtils.combine_gdfs(
-                [boundary_map_area_gdf, map_area_gdf.copy()])
-        else:
-            boundary_map_area_gdf = map_area_gdf.copy()
+        boundary_map_area_gdf = GdfUtils.combine_gdfs(
+            [boundary_map_area_gdf, map_area_gdf.copy()])
 
     if (WANT_PREVIEW):
         (area_zoom_preview, map_object_scaling_factor,
@@ -292,6 +293,7 @@ def main():
     # prepare ways function
     change_bridges_and_tunnels(ways_gdf, PLOT_BRIDGES, PLOT_TUNNELS)
     ways_gdf = GdfUtils.merge_lines_gdf(ways_gdf, [])
+    # gpxs_gdf = GdfUtils.merge_lines_gdf(gpxs_gdf, [])
 
     # assing zoom specific styles
     StyleAssigner.assign_styles(gpxs_gdf, GPXS_STYLES)
@@ -329,11 +331,12 @@ def main():
                       map_object_scaling_factor, TEXT_BOUNDS_OVERFLOW_THRESHOLD, TEXT_WRAP_NAMES_LEN, outer_map_area_gdf)
     plotter.init(
         GENERAL_DEFAULT_STYLES[StyleKey.COLOR], bg_gdf, area_zoom_preview, zoom_percent_padding=PERCENTAGE_PADDING)
+    plotter.nodes(nodes_gdf, TEXT_WRAP_NAMES_LEN)
     plotter.areas(areas_gdf)
     # plotter.ways(ways_gdf, areas_gdf, [{'highway': 'motorway'}])
     # plotter.ways(ways_gdf, areas_gdf, [{'highway': 'primary'}])
     plotter.ways(ways_gdf, areas_gdf, None)
-    # plotter.gpxs(gpxs_gdf, 1)
+    plotter.gpxs(gpxs_gdf)
     # if want clip text
     if (not FIT_PAPER_SIZE or WANT_PREVIEW):
         # todo find better way to create polygon for clipping  - for texts
@@ -341,9 +344,8 @@ def main():
     if (not boundary_map_area_gdf.empty):
         # GdfUtils.remove_common_boundary_inaccuracy(boundary_map_area_gdf) # maybe turn off/on in settings
         plotter.area_boundary(boundary_map_area_gdf,
-                              color="black", linewidth=AREA_BOUNDARY_LINEWIDTH)
+                              color="black")
     # if dont want clip text
-    plotter.nodes(nodes_gdf, TEXT_WRAP_NAMES_LEN)
 
   
     plotter.generate_pdf(OUTPUT_PDF_NAME)

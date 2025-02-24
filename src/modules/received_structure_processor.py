@@ -4,10 +4,13 @@ from common.map_enums import StyleKey
 
 
 class ReceivedStructureProcessor:
+
+    # def validate_and_convert_paper_dimensions
+    @staticmethod
     def map_dict_keys(input_dict, mapping_dict):
         """Replace dictionary keys with values in mapping_dict if in mapping_dict, otherwise keep them unchanged."""
         return {mapping_dict.get(key, key): value for key, value in input_dict.items()}
-
+    
     @staticmethod
     def validate_and_convert_area_cordinates(polygon_points: list[list[int | float]]):
         """Validate and convert the area cordinates.
@@ -47,6 +50,7 @@ class ReceivedStructureProcessor:
                 if not isinstance(dict[key], type_):
                     return False
         return True
+    
     @staticmethod
     def validate_and_convert_areas_strucutre(areas_structures: list[dict], allowed_keys_and_types: dict[str, type], key_with_area = "area"):
         if not isinstance(areas_structures, list):
@@ -76,3 +80,9 @@ class ReceivedStructureProcessor:
             edited_data.append(new_item)
 
         return edited_data
+
+    # in this function create maping of style names to style keys
+    # also add mapping of specific values of keys to specific values
+    @staticmethod
+    def validate_and_convert_styles(styles: list, style_names_mapping, style_values_mapping):
+        pass

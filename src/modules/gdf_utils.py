@@ -51,7 +51,7 @@ class GdfUtils:
             return reqired_area_gdf.to_crs(toCrs)
         
     @staticmethod
-    def map_gdf_columns(gdf, mapping_dict):
+    def map_gdf_column_names(gdf, mapping_dict):
         """Replace GeoDataFrame column names with enums if in mapping, otherwise keep them unchanged."""
         gdf.columns = [mapping_dict.get(col, col) for col in gdf.columns]
         return gdf
@@ -340,6 +340,8 @@ class GdfUtils:
         for column in columns:
             if (column in gdf):
                 gdf[column] = gdf[column].astype("category")
+                
+
 
     @staticmethod
     def combine_rows_gdf(gdf: gpd.GeoDataFrame, toCrs: int) -> gpd.GeoDataFrame:
@@ -580,12 +582,14 @@ class GdfUtils:
                 return gdf[~filter_mask].reset_index(drop=True)
             else:
                 return gdf[filter_mask].reset_index(drop=True)
-
+            
+    # todo move somewhere else 
+    @staticmethod
     def filter_invalid_texts(gdf):
         return GdfUtils.filter_rows(gdf, {StyleKey.TEXT_FONT_SIZE: '', StyleKey.TEXT_OUTLINE_WIDTH: '', StyleKey.TEXT_COLOR: '',
                                           StyleKey.TEXT_OUTLINE_COLOR: '', StyleKey.TEXT_FONTFAMILY: '', StyleKey.TEXT_WEIGHT: '',
                                           StyleKey.TEXT_STYLE: '', StyleKey.ALPHA: '', StyleKey.EDGE_ALPHA: ''})
-
+    @staticmethod
     def filter_invalid_markers(gdf):
         return GdfUtils.filter_rows(gdf, {StyleKey.ICON: '', StyleKey.COLOR: '', StyleKey.WIDTH: '',
                                           StyleKey.EDGEWIDTH: '', StyleKey.EDGE_COLOR: '', StyleKey.ALPHA: ''})

@@ -10,6 +10,29 @@ GENERAL_DEFAULT_STYLES: FeatureStyles = {StyleKey.COLOR: '#EDEDE0',  StyleKey.ZI
                                          StyleKey.WIDTH: 1, StyleKey.LINESTYLE: '-',
                                          StyleKey.ALPHA: 1, StyleKey.EDGE_COLOR: None, StyleKey.EDGE_LINESTYLE: '-'}
 
+# !!! icon from svg
+from svgpath2mpl import parse_path
+def center_path(p):
+    p.vertices -= p.vertices.mean(axis=0)
+    return p
+
+asd = center_path(parse_path("""
+  M 5,25 A 20,20 0 1,1 45,25 A 20,20 0 1,1 5,25 Z
+  M 15,7 L 7,15 L 15,15 Z
+  M 25,5 L 35,5 L 35,15 L 25,15 Z
+  M 35,15 L 45,15 L 45,25 L 35,25 Z
+  M 15,6 L 6,15 L 15,15 Z
+  M 15,15 L 25,15 L 25,25 L 15,25 Z
+  M 25,25 L 35,25 L 35,35 L 25,35 Z
+  M 5,25 L 15,25 L 15,35 L 5,35 Z
+  M 45,35 L 35,45 L 35,35 Z
+  M 15,35 L 25,35 L 25,45 L 15,45 Z
+  M 25,25 A 21,21 0 1,1 25,25 Z
+"""))
+
+test = {
+    "marker": center_path(parse_path("M 100,10 L 40,198 L 190,78 L 10,78 L 160,198 z"))
+}
 
 # -------------------gpx-------------------
 root_files_styles: ElementStyles = [
@@ -18,19 +41,28 @@ root_files_styles: ElementStyles = [
 
 folders_styles: ElementStyles = [
     ({'folder': 'pěšky'}, {StyleKey.COLOR: "Blue"}),
-    ({'folder': 'Kolo testování'}, {StyleKey.WIDTH: 40, StyleKey.ALPHA: 0.7}),
+    ({'folder': 'Kolo testování'}, {StyleKey.WIDTH: 1, StyleKey.ALPHA: 0.7}),
     ({'folder': 'Kolo'}, {StyleKey.COLOR: "Purple"}),
 ]
 
 gpxs_styles_default: ElementStyles = [
-    ({'fileName': ''}, {StyleKey.COLOR: 'Red', StyleKey.WIDTH: 40,
+    ({'fileName': ''}, {StyleKey.COLOR: 'Red', StyleKey.WIDTH: 1,
      StyleKey.ALPHA: 0.7,  StyleKey.ZINDEX: 0}),
-    ({'folder': ''}, {StyleKey.COLOR: 'Orange', StyleKey.WIDTH: 40,
+    ({'folder': ''}, {StyleKey.COLOR: 'Orange', StyleKey.WIDTH: 1,
      StyleKey.ALPHA: 0.7,  StyleKey.ZINDEX: 0}),
 ]
 
 gpxs_mandatory_styles: ElementStyles = [
-    ([], {StyleKey.COLOR: 'Green', StyleKey.ALPHA: 1.0, StyleKey.LINESTYLE: "-"})
+    ([], {StyleKey.COLOR: 'Green', StyleKey.WIDTH: 1, StyleKey.ALPHA: 1.0, StyleKey.LINESTYLE: "-",
+        # StyleKey.START_ICON:  center_path(parse_path("M 100,10 L 40,198 L 190,78 L 10,78 L 160,198 z")),
+        StyleKey.START_ICON: parse_path("M384 192c0 87.4-117 243-168.3 307.2c-12.3 15.3-35.1 15.3-47.4 0C117 435 0 279.4 0 192C0 86 86 0 192 0S384 86 384 192z"),
+        # StyleKey.START_ICON: asd,
+        StyleKey.FINISH_ICON: "o",
+        StyleKey.START_ICON_WIDHT: 2, StyleKey.START_ICON_EDGE_RATIO: 0.1,
+        StyleKey.START_ICON_COLOR: "#18ac0d", StyleKey.START_ICON_EDGE_COLOR: "#FFFFFF", StyleKey.START_ICON_ALPHA: 1.0,
+        StyleKey.FINISH_ICON_WIDHT: 2, StyleKey.FINISH_ICON_EDGE_RATIO: 0.1,
+        StyleKey.FINISH_ICON_COLOR: "white", StyleKey.FINISH_ICON_EDGE_COLOR: "#FFFFFF", StyleKey.FINISH_ICON_ALPHA: 1.0,
+    })
 ]
 
 GPXS_STYLES: ElementStyles = [
@@ -71,18 +103,7 @@ place_styles: ElementStyles = [
     }),
 ]
 
-# !!! icon from svg
-# # # from svgpath2mpl import parse_path
-# # # finis = parse_path("M 100,10 L 40,198 L 190,78 L 10,78 L 160,198 z")
-# # # finis = parse_path("M 0,0 L 0,100 L 100,100 L 100,0 z")
-# # # def center_path(p):
-# # #     p.vertices -= p.vertices.mean(axis=0)
-# # #     return p
 
-# # # test = {
-# # #     "d": 112,
-# # #     "marker": center_path(parse_path("M 100,10 L 40,198 L 190,78 L 10,78 L 160,198 z"))
-# # # }
 # text color or icon color turn of by string "None" instead of None
 natural_styles_nodes: ElementStyles = [
     ({'natural': 'peak'}, {

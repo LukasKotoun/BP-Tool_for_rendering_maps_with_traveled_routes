@@ -16,6 +16,7 @@ from shapely.geometry.linestring import LineString
 from shapely.geometry.multilinestring import MultiLineString
 from shapely.geometry.multipolygon import MultiPolygon
 from shapely.geometry import LinearRing, Point
+import shapely
 # from adjustText import adjust_text
 from shapely.ops import linemerge, unary_union
 
@@ -74,13 +75,13 @@ class Plotter:
 
         self.polygon_text_inside_display = GdfUtils.transform_geometry_to_display(
             self.ax, polygon_text_inside)
-
-    def __text_on_point(self, row, text: str, text_wrap_len=0, store_bbox: bool = True, check_bbox_position: bool = True) -> Text | None:
+    # todo add type textPointTuple and change to ittertuple
+    def __text_on_point(self, row, text: str, text_wrap_len=0, store_bbox: bool = True, check_bbox_position: bool = True, zorder = 3) -> Text | None:
         text = Utils.wrap_text(text, text_wrap_len)
-        text_plot: Text = self.ax.text(row.geometry.x, row.geometry.y, text, color=row[StyleKey.TEXT_COLOR], fontsize=row[StyleKey.TEXT_FONT_SIZE], family=row[StyleKey.TEXT_FONTFAMILY],
+        text_plot: Text = self.ax.text(row['geometry'].x, row['geometry'].y, text, color=row[StyleKey.TEXT_COLOR], fontsize=row[StyleKey.TEXT_FONT_SIZE], family=row[StyleKey.TEXT_FONTFAMILY],
                                        weight=row[StyleKey.TEXT_WEIGHT], style=row[StyleKey.TEXT_STYLE], ha='center', va='center', alpha=row[StyleKey.ALPHA],
                                        path_effects=[pe.withStroke(linewidth=row[StyleKey.TEXT_OUTLINE_WIDTH],
-                                                                   alpha=row[StyleKey.EDGE_ALPHA], foreground=row[StyleKey.TEXT_OUTLINE_COLOR])], zorder=5)
+                                                                   alpha=row[StyleKey.EDGE_ALPHA], foreground=row[StyleKey.TEXT_OUTLINE_COLOR])], zorder=zorder)
         bbox = text_plot.get_tightbbox()
         if (bbox is None):
             # text is plotted outside of the figure
@@ -97,10 +98,10 @@ class Plotter:
         if (store_bbox):
             self.texts_and_markers_bboxs.append(bbox_expanded)
         return text_plot
-
-    def __marker(self, row, store_bbox: bool = True, check_bbox_position: bool = True) -> Line2D | None:
-        marker: Line2D = self.ax.plot(row.geometry.x, row.geometry.y, marker=row[StyleKey.ICON], mfc=row[StyleKey.COLOR], ms=row[StyleKey.WIDTH],
-                                      mec=row[StyleKey.EDGE_COLOR], mew=row[StyleKey.EDGEWIDTH], alpha=row[StyleKey.ALPHA])
+    
+    def __marker(self, row, store_bbox: bool = True, check_bbox_position: bool = True, zorder = 2) -> Line2D | None:
+        marker: Line2D = self.ax.plot(row['geometry'].x, row['geometry'].y, marker=row[StyleKey.ICON], mfc=row[StyleKey.COLOR], ms=row[StyleKey.WIDTH],
+                                      mec=row[StyleKey.EDGE_COLOR], mew=row[StyleKey.EDGEWIDTH], alpha=row[StyleKey.ALPHA], zorder=zorder)
         if (isinstance(marker, list)):
             marker = marker[0]
         bbox = marker.get_tightbbox()
@@ -119,10 +120,10 @@ class Plotter:
         if (store_bbox):
             self.texts_and_markers_bboxs.append(bbox_expanded)
         return marker
-
-    def __marker_annotation(self, row, text: str, text_positions: list[TextPositions], text_wrap_len: int = 0, check_bbox_position: bool = True) -> Annotation | None:
+    # todo add type markerAnnotation
+    def __marker_annotation(self, row, text: str, text_positions: list[TextPositions], text_wrap_len: int = 0, check_bbox_position: bool = True, zorder = 3) -> Annotation | None:
         text = Utils.wrap_text(text, text_wrap_len)
-        x, y = row.geometry.x, row.geometry.y
+        x, y = row['geometry'].x, row['geometry'].y
         marker_size = row[StyleKey.WIDTH]
         ha = 'center'
         va = 'center'
@@ -158,7 +159,7 @@ class Plotter:
                                                           family=row[StyleKey.TEXT_FONTFAMILY], alpha=row[StyleKey.ALPHA],
                                                           weight=row[StyleKey.TEXT_WEIGHT], style=row[StyleKey.TEXT_STYLE],
                                                           path_effects=[pe.withStroke(linewidth=row[StyleKey.TEXT_OUTLINE_WIDTH],
-                                                                                      alpha=row[StyleKey.EDGE_ALPHA], foreground=row[StyleKey.TEXT_OUTLINE_COLOR])], zorder=5)
+                                                                                      alpha=row[StyleKey.EDGE_ALPHA], foreground=row[StyleKey.TEXT_OUTLINE_COLOR])], zorder=zorder)
             bbox = text_anotation.get_tightbbox()
             if (bbox is None):
                 # text is plotted outside of the figure
@@ -177,11 +178,11 @@ class Plotter:
             return text_anotation
         return None
 
-    def __marker_with_one_annotation(self, row, text_row=StyleKey.TEXT1, store_bbox: bool = True) -> tuple[Line2D, Text]:
+    def __marker_with_one_annotation(self, row, text_row=StyleKey.TEXT1, store_bbox: bool = True, zorder = 3) -> tuple[Line2D, Text]:
         if (row[StyleKey.MIN_REQ_POINT] in {MinParts.TEXT1_TEXT2, MinParts.MARKER_TEXT1_TEXT2}):
             return (None, None)
         marker = self.__marker(row, store_bbox=False, check_bbox_position=row.get(
-            StyleKey.MARKER_CHECK_OVERLAP, True))
+            StyleKey.MARKER_CHECK_OVERLAP, True), zorder=zorder)
         # if node must have marker return None
         if (marker is None and row[StyleKey.MIN_REQ_POINT] in {MinParts.MARKER, MinParts.MARKER_TEXT1, MinParts.MARKER_TEXT2}):
             return (None, None)
@@ -191,7 +192,7 @@ class Plotter:
         text_positions = row[StyleKey.TEXT1_POSITIONS if text_row ==
                              StyleKey.TEXT1 else StyleKey.TEXT2_POSITIONS]
         text_annotation = self.__marker_annotation(
-            row, row[text_row], text_positions, text_wrap_len, True)
+            row, row[text_row], text_positions, text_wrap_len, True, zorder)
         # node text does not return None
         if (text_annotation is None and row[StyleKey.MIN_REQ_POINT] in [MinParts.TEXT1, MinParts.TEXT2, MinParts.MARKER_TEXT1, MinParts.MARKER_TEXT2]):
             if (marker is not None):
@@ -208,16 +209,16 @@ class Plotter:
                     Utils.expand_bbox(text_annotation.get_tightbbox(), self.TEXT_EXPAND_PERCENT))
         return (marker, text_annotation)
 
-    def __marker_with_two_annotations(self, row, store_bbox: bool = True) -> tuple[Line2D, Text, Text]:
+    def __marker_with_two_annotations(self, row, store_bbox: bool = True, zorder = 3) -> tuple[Line2D, Text, Text]:
         marker = self.__marker(row, store_bbox=False, check_bbox_position=row.get(
-            StyleKey.MARKER_CHECK_OVERLAP, True))
+            StyleKey.MARKER_CHECK_OVERLAP, True), zorder=zorder)
         # if node must have marker return None
         if (marker is None and row[StyleKey.MIN_REQ_POINT] in [MinParts.MARKER, MinParts.MARKER_TEXT1, MinParts.MARKER_TEXT2, MinParts.MARKER_TEXT1_TEXT2]):
             return (None, None, None)
 
         text1_wrap_len = row.get(StyleKey.TEXT1_WRAP_LEN, self.text_wrap_len)
         text1 = self.__marker_annotation(
-            row, row[StyleKey.TEXT1], row[StyleKey.TEXT1_POSITIONS], text1_wrap_len, True)
+            row, row[StyleKey.TEXT1], row[StyleKey.TEXT1_POSITIONS], text1_wrap_len, True, zorder)
         if (text1 is None and row[StyleKey.MIN_REQ_POINT] in [MinParts.TEXT1, MinParts.MARKER_TEXT1, MinParts.MARKER_TEXT1_TEXT2, MinParts.TEXT1_TEXT2]):
             if (marker is not None):
                 marker.remove()
@@ -225,7 +226,7 @@ class Plotter:
 
         text2_wrap_len = row.get(StyleKey.TEXT2_WRAP_LEN, self.text_wrap_len)
         text2 = self.__marker_annotation(
-            row, row[StyleKey.TEXT2], row[StyleKey.TEXT2_POSITIONS], text2_wrap_len, True)
+            row, row[StyleKey.TEXT2], row[StyleKey.TEXT2_POSITIONS], text2_wrap_len, True, zorder)
         if (text2 is None and row[StyleKey.MIN_REQ_POINT] in [MinParts.TEXT2, MinParts.TEXT1_TEXT2, MinParts.MARKER_TEXT2, MinParts.MARKER_TEXT1_TEXT2]):
             if (marker is not None):
                 marker.remove()
@@ -315,7 +316,7 @@ class Plotter:
                 markers_with_two_annotations)
             self.__markers_gdf(markers)
 
-    def __line_edges(self, lines_gdf, cupstyle: str = None):
+    def __line_edges(self, lines_gdf, cupstyle: str = None, zorder = 2):
         edge_lines_gdf = GdfUtils.filter_rows(lines_gdf, {
             StyleKey.EDGE_COLOR: '', StyleKey.EDGE_LINESTYLE: '', StyleKey.EDGEWIDTH: '', StyleKey.EDGE_ALPHA: ''})
 
@@ -334,9 +335,9 @@ class Plotter:
                                       linewidth=edge_lines_group_gdf[StyleKey.EDGEWIDTH],
                                       linestyle=edge_lines_group_gdf[StyleKey.EDGE_LINESTYLE],
                                       alpha=edge_lines_group_gdf[StyleKey.EDGE_ALPHA],
-                                      path_effects=[pe.Stroke(capstyle=capstyle)])
+                                      path_effects=[pe.Stroke(capstyle=capstyle)], zorder=zorder)
 
-    def __line(self, lines_gdf, cupstyle: str = None):
+    def __line(self, lines_gdf, cupstyle: str = None, zorder = 2):
         lines_gdf = GdfUtils.filter_rows(lines_gdf, {
             StyleKey.COLOR: '', StyleKey.LINESTYLE: '', StyleKey.WIDTH: '', StyleKey.ALPHA: ''})
         if (lines_gdf.empty):
@@ -346,7 +347,6 @@ class Plotter:
 
         groups = GdfUtils.get_groups_by_columns(
             lines_gdf, [StyleKey.LINE_CUP], [self.DEFAULT_CUPSTYLE], False)
-
         for capstyle, lines_group_gdf in groups:
             if (pd.isna(capstyle)):
                 capstyle = self.DEFAULT_CUPSTYLE
@@ -355,9 +355,9 @@ class Plotter:
                                  linewidth=lines_group_gdf[StyleKey.WIDTH],
                                  linestyle=lines_group_gdf[StyleKey.LINESTYLE],
                                  alpha=lines_group_gdf[StyleKey.ALPHA],
-                                 path_effects=[pe.Stroke(capstyle=capstyle)])
+                                 path_effects=[pe.Stroke(capstyle=capstyle)], zorder=zorder)
 
-    def __dashed_with_edge_dashed(self, gdf: gpd.GeoDataFrame, line_cupstyle: str = None, edge_cupstyle: str = None):
+    def __dashed_with_edge_dashed(self, gdf: gpd.GeoDataFrame, line_cupstyle: str = None, edge_cupstyle: str = None, zorder = 2):
         if (gdf.empty):
             return
         gdf = GdfUtils.filter_rows(gdf, {StyleKey.COLOR: '', StyleKey.EDGE_COLOR: '',
@@ -384,9 +384,9 @@ class Plotter:
                            linewidth=gdf_group[StyleKey.WIDTH], alpha=gdf_group[StyleKey.ALPHA], path_effects=[
                 pe.Stroke(
                     linewidth=edge_width, foreground=edge_color, alpha=edge_alpha,
-                    capstyle=edge_cup), pe.Normal(), pe.Stroke(capstyle=line_cup)])
+                    capstyle=edge_cup), pe.Normal(), pe.Stroke(capstyle=line_cup)], zorder=zorder)
 
-    def __dashed_with_edge_solid(self, gdf: gpd.GeoDataFrame, line_cupstyle: str = None, edge_cupstyle: str = None):
+    def __dashed_with_edge_solid(self, gdf: gpd.GeoDataFrame, line_cupstyle: str = None, edge_cupstyle: str = None, zorder = 2):
         if (gdf.empty):
             return
         gdf = GdfUtils.filter_rows(gdf, {StyleKey.EDGE_COLOR: '', StyleKey.COLOR: '',
@@ -425,22 +425,22 @@ class Plotter:
                         gpd.GeoSeries(line).plot(ax=self.ax, color=edge_color,
                                                  linewidth=edge_linewidth,
                                                  alpha=edge_alpha, path_effects=[
-                                                     pe.Stroke(capstyle=edge_cup)])
+                                                     pe.Stroke(capstyle=edge_cup)], zorder=zorder)
 
                         gpd.GeoSeries(line).plot(ax=self.ax, color=color, linewidth=linewidth,
                                                  alpha=alpha, linestyle=linestyle, path_effects=[
-                                                     pe.Stroke(capstyle=line_cup)])
+                                                     pe.Stroke(capstyle=line_cup)], zorder=zorder)
                 else:
                     gpd.GeoSeries(geom).plot(ax=self.ax, color=edge_color,
                                              linewidth=edge_linewidth,
                                              alpha=edge_alpha, path_effects=[
-                                                 pe.Stroke(capstyle=edge_cup)])
+                                                 pe.Stroke(capstyle=edge_cup)], zorder=zorder)
 
                     gpd.GeoSeries(geom).plot(ax=self.ax, color=color, linewidth=linewidth,
                                              alpha=alpha, linestyle=linestyle, path_effects=[
-                                                 pe.Stroke(capstyle=line_cup)])
+                                                 pe.Stroke(capstyle=line_cup)], zorder=zorder)
 
-    def __ways_normal(self, gdf: gpd.GeoDataFrame, plotEdges: bool = False, cross_roads_by_zindex=False, line_cupstyle: str = None, edge_cupstyle: str = None):
+    def __ways_normal(self, gdf: gpd.GeoDataFrame, plotEdges: bool = False, cross_roads_by_zindex=False, line_cupstyle: str = None, edge_cupstyle: str = None, zorder = 2):
         """Plot ways based on z-index and capstyles. 
 
         Args:
@@ -453,7 +453,7 @@ class Plotter:
         if (plotEdges and not cross_roads_by_zindex):
             # plot edge where line is solid or only edge is ploted
             self.__line_edges(GdfUtils.filter_rows(
-                gdf, [{StyleKey.LINESTYLE: ['-', 'solid']}, {StyleKey.COLOR: '~'}]), edge_cupstyle)
+                gdf, [{StyleKey.LINESTYLE: ['-', 'solid']}, {StyleKey.COLOR: '~'}]), edge_cupstyle, zorder)
 
         groups = GdfUtils.get_groups_by_columns(
             gdf, [StyleKey.ZINDEX], [], False)
@@ -461,7 +461,7 @@ class Plotter:
             # crossroads only on ways with same zindex
             if (plotEdges and cross_roads_by_zindex):
                 self.__line_edges(GdfUtils.filter_rows(
-                    gdf, [{StyleKey.LINESTYLE: ['-', 'solid']}, {StyleKey.COLOR: '~'}]), edge_cupstyle)
+                    gdf, [{StyleKey.LINESTYLE: ['-', 'solid']}, {StyleKey.COLOR: '~'}]), edge_cupstyle, zorder)
             # lines - line is solid or edge does not exists, dashed_with_edge_lines - line is dashed and edge exists
             rest_lines, dashed_with_edge_lines = GdfUtils.filter_rows(
                 ways_group_gdf, [{StyleKey.LINESTYLE: ['-', 'solid']}, {StyleKey.EDGE_COLOR: '~'}], compl=True)
@@ -470,12 +470,12 @@ class Plotter:
                 dashed_with_edge_lines, {StyleKey.EDGE_LINESTYLE: ['-', 'solid']}, compl=True)
 
             self.__dashed_with_edge_dashed(
-                ways_dashed_edge_dashed, line_cupstyle, edge_cupstyle)
+                ways_dashed_edge_dashed, line_cupstyle, edge_cupstyle, zorder)
             self.__dashed_with_edge_solid(
-                ways_dashed_edge_solid, line_cupstyle, edge_cupstyle)
-            self.__line(rest_lines, line_cupstyle)
+                ways_dashed_edge_solid, line_cupstyle, edge_cupstyle, zorder)
+            self.__line(rest_lines, line_cupstyle, zorder)
 
-    def __bridges(self, bridges_gdf: gpd.GeoDataFrame):
+    def __bridges(self, bridges_gdf: gpd.GeoDataFrame, zorder = 2):
         if (bridges_gdf.empty):
             return
         # can be merged edges and center -- using pe
@@ -492,7 +492,7 @@ class Plotter:
                      linewidth=gdf[StyleKey.BRIDGE_EDGE_WIDTH],
                      linestyle=gdf[StyleKey.EDGE_LINESTYLE],
                      alpha=gdf[StyleKey.EDGE_ALPHA],
-                     path_effects=[pe.Stroke(capstyle="butt")])
+                     path_effects=[pe.Stroke(capstyle="butt")], zorder=zorder)
 
         def bridges_center(gdf: gpd.GeoDataFrame):
             gdf = GdfUtils.filter_rows(
@@ -505,14 +505,14 @@ class Plotter:
                      linewidth=gdf[StyleKey.BRIDGE_WIDTH],
                      linestyle=gdf[StyleKey.LINESTYLE],
                      alpha=gdf[StyleKey.ALPHA],
-                     path_effects=[pe.Stroke(capstyle="butt")])
+                     path_effects=[pe.Stroke(capstyle="butt")], zorder=zorder)
 
         def ways_on_bridges(gdf: gpd.GeoDataFrame):
             gdf = GdfUtils.filter_rows(
                 gdf, {StyleKey.PLOT_ON_BRIDGE: ""})
             if (gdf.empty):
                 return
-            self.__ways_normal(gdf, True, False)
+            self.__ways_normal(gdf, True, False, zorder=zorder)
 
         groups = GdfUtils.get_groups_by_columns(
             bridges_gdf, ['layer'], [], False)
@@ -521,11 +521,11 @@ class Plotter:
             bridges_center(bridge_layer_gdf.copy())
             ways_on_bridges(bridge_layer_gdf.copy())
 
-    def __tunnels(self, tunnels_gdf):
+    def __tunnels(self, tunnels_gdf, zorder = 2):
         if (tunnels_gdf.empty):
             return
         for layer, tunnel_layer_gdf in tunnels_gdf.groupby("layer"):
-            self.__ways_normal(tunnel_layer_gdf, True, False)
+            self.__ways_normal(tunnel_layer_gdf, True, False, zorder=zorder)
 
     @time_measurement("wayplot")
     def ways(self, ways_gdf: gpd.GeoDataFrame, areas_ways_gdf: gpd.GeoDataFrame, over_filter=None):
@@ -591,8 +591,72 @@ class Plotter:
     def gpxs(self, gpxs_gdf: gpd.GeoDataFrame):
         if (gpxs_gdf.empty):
             return
+        self.__ways_normal(gpxs_gdf, True, False, zorder=5)
 
-        self.__ways_normal(gpxs_gdf, True, False)
+        def get_first_point(geometry):
+            if isinstance(geometry, LineString):
+                # Directly access first and last points for LineString
+                first_point = shapely.Point(geometry.coords[0])
+            elif isinstance(geometry, MultiLineString):
+                # For MultiLineString, get first and last points from each LineString
+                first_point = shapely.Point(geometry.geoms[0].coords[0])  # First point of the first LineString
+            else:
+                raise ValueError("Unsupported geometry type")
+
+            return first_point
+        def get_last_point(geometry):
+            if isinstance(geometry, LineString):
+                # Directly access first and last points for LineString
+                first_point = shapely.Point(geometry.coords[-1])
+            elif isinstance(geometry, MultiLineString):
+                # For MultiLineString, get first and last points from each LineString
+                first_point = shapely.Point(geometry.geoms[-1].coords[-1])  # First point of the first LineString
+            else:
+                raise ValueError("Unsupported geometry type")
+
+            return first_point
+
+        
+        gpx_start_icons= GdfUtils.filter_rows(gpxs_gdf, {StyleKey.START_ICON: '', StyleKey.START_ICON_WIDHT: '',
+                                                         StyleKey.START_ICON_COLOR: '', StyleKey.START_ICON_EDGE_COLOR: '',
+                                                         StyleKey.START_ICON_EDGEWIDTH: '', StyleKey.START_ICON_ALPHA: ''})
+        gpx_finish_icons= GdfUtils.filter_rows(gpxs_gdf, {StyleKey.FINISH_ICON: '', StyleKey.FINISH_ICON_WIDHT: '',
+                                                         StyleKey.FINISH_ICON_COLOR: '', StyleKey.FINISH_ICON_EDGE_COLOR: '',
+                                                         StyleKey.FINISH_ICON_EDGEWIDTH: '', StyleKey.FINISH_ICON_ALPHA: ''})
+        
+        for row in gpx_finish_icons.iterrows():
+            style_rename_mapping = {
+                StyleKey.FINISH_ICON: StyleKey.ICON,
+                StyleKey.FINISH_ICON_COLOR: StyleKey.COLOR,
+                StyleKey.FINISH_ICON_EDGE_COLOR: StyleKey.EDGE_COLOR,
+                StyleKey.FINISH_ICON_WIDHT: StyleKey.WIDTH,
+                StyleKey.FINISH_ICON_EDGEWIDTH: StyleKey.EDGEWIDTH,
+                StyleKey.FINISH_ICON_ALPHA: StyleKey.ALPHA,
+                "geometry": "geometry"
+                }
+            # Filter and rename the style keys
+            style_data = {new_key: row[1][old_key] for old_key, new_key in style_rename_mapping.items()}
+            style_data['geometry'] = get_last_point(row[1].geometry)
+            # Convert it to a tuple (can include the index or any other data if needed)
+            self.__marker(style_data, False, False, 4)
+            
+        for row in gpx_start_icons.iterrows():
+            style_rename_mapping = {
+                StyleKey.START_ICON: StyleKey.ICON,
+                StyleKey.START_ICON_COLOR: StyleKey.COLOR,
+                StyleKey.START_ICON_EDGE_COLOR: StyleKey.EDGE_COLOR,
+                StyleKey.START_ICON_WIDHT: StyleKey.WIDTH,
+                StyleKey.START_ICON_EDGEWIDTH: StyleKey.EDGEWIDTH,
+                StyleKey.START_ICON_ALPHA: StyleKey.ALPHA,
+                "geometry": "geometry"
+                }
+            # Filter and rename the style keys
+            style_data = {new_key: row[1][old_key] for old_key, new_key in style_rename_mapping.items()}
+            style_data['geometry'] = get_first_point(row[1].geometry)
+            # Convert it to a tuple (can include the index or any other data if needed)
+            self.__marker(style_data, False, False, 4)
+
+            
         # for marker ploting remap icons to row with different tags and use marker plot function
 
         # gpxs_edge_gdf = GdfUtils.filter_rows(
