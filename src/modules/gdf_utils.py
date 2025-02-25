@@ -591,24 +591,24 @@ class GdfUtils:
                                           Style.TEXT_STYLE.name: '', Style.ALPHA.name: '', Style.EDGE_ALPHA.name: ''})
     @staticmethod
     def filter_invalid_markers(gdf):
-        return GdfUtils.filter_rows(gdf, {Style.ICON.name: '', Style.COLOR.name: '', Style.WIDTH.name: '',
+        return GdfUtils.filter_rows(gdf, {Style.MARKER.name: '', Style.COLOR.name: '', Style.WIDTH.name: '',
                                           Style.EDGEWIDTH.name: '', Style.EDGE_COLOR.name: '', Style.ALPHA.name: ''})
 
     @staticmethod
     def filter_invalid_nodes_min_req(nodes_gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
-        nodes_gdf = GdfUtils.filter_rows(nodes_gdf, [{Style.MIN_REQ_POINT.name: MinParts.MARKER.name, Style.ICON.name: '', Style.COLOR.name: ''},
+        nodes_gdf = GdfUtils.filter_rows(nodes_gdf, [{Style.MIN_REQ_POINT.name: MinParts.MARKER.name, Style.MARKER.name: '', Style.COLOR.name: ''},
                                                      {Style.MIN_REQ_POINT.name: MinParts.MARKER_TEXT1.name,
-                                                         Style.ICON.name: '', Style.TEXT1.name: ''},
+                                                         Style.MARKER.name: '', Style.TEXT1.name: ''},
                                                      {Style.MIN_REQ_POINT.name: MinParts.MARKER_TEXT2.name,
-                                                         Style.ICON.name: '', Style.TEXT2.name: ''},
+                                                         Style.MARKER.name: '', Style.TEXT2.name: ''},
                                                      {Style.MIN_REQ_POINT.name: MinParts.MARKER_TEXT1_TEXT2.name,
-                                                         Style.ICON.name: '', Style.TEXT1.name: '', Style.TEXT2.name: ''},
+                                                         Style.MARKER.name: '', Style.TEXT1.name: '', Style.TEXT2.name: ''},
                                                      {Style.MIN_REQ_POINT.name: MinParts.TEXT1.name,
                                                          Style.TEXT1.name: ''},
                                                      {Style.MIN_REQ_POINT.name: MinParts.TEXT2.name,
                                                          Style.TEXT2.name: ''},
                                                      {Style.MIN_REQ_POINT.name: MinParts.TEXT1_TEXT2.name, Style.TEXT1.name: '', Style.TEXT2.name: ''}])
-        nodes_gdf = GdfUtils.filter_rows(nodes_gdf, [{Style.ICON.name: ''},
+        nodes_gdf = GdfUtils.filter_rows(nodes_gdf, [{Style.MARKER.name: ''},
                                                      {Style.TEXT1.name: ''},
                                                      {Style.TEXT2.name: ''}])
 

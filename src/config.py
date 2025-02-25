@@ -125,7 +125,7 @@ CRS_DISPLAY = "EPSG:3857"
 FONT_AWESOME_PATH = "./common/fonts/FontAwesome6Free-Solid-900.otf"
 # MATERIAL_DESIGN_PATH = "./common/fonts/MaterialSymbolsOutlined-VariableFont_FILL,GRAD,opsz,wght.ttf"
 MATERIAL_DESIGN_PATH = "./common/fonts/MaterialSymbolsRounded-VariableFont_FILL,GRAD,opsz,wght.ttf"
-# todo add more icons from google material design
+# todo add more MARKERs from google material design
 font_awesome_prop = fm.FontProperties(fname=FONT_AWESOME_PATH)
 material_desigh_prop = fm.FontProperties(fname=MATERIAL_DESIGN_PATH)
 # --------------------------------------------------------------gpx settings--------------------------------------------------------------

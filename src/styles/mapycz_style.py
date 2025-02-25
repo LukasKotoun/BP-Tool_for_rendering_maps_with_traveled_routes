@@ -3,7 +3,7 @@ from common.map_enums import *
 from config import font_awesome_prop, material_desigh_prop
 
 #! edge linestyle is suported only dashed or not dashed on not solid lines,
-#! ploting is turned of by setting color to None text color or icon color turn of by string "None" instead of None
+#! ploting is turned of by setting color to None text color or MARKER color turn of by string "None" instead of None
 # ------------styles--------------
 OCEAN_WATER = '#8fb6db'
 
@@ -33,12 +33,12 @@ gpxs_styles_default: ElementStyles = [
 
 gpxs_mandatory_styles: ElementStyles = [
     ([], {Style.COLOR.name: 'Green', Style.WIDTH.name: 1, Style.ALPHA.name: 1.0, Style.LINESTYLE.name: "-",
-        Style.START_ICON.name: "o",
-        Style.START_ICON_WIDHT.name: 2, Style.START_ICON_EDGE_RATIO.name: 0.1,
-        Style.START_ICON_COLOR.name: "#18ac0d", Style.START_ICON_EDGE_COLOR.name: "#FFFFFF", Style.START_ICON_ALPHA.name: 1.0,
-        Style.FINISH_ICON.name: "\uf11e",
-        Style.FINISH_ICON_WIDHT.name: 5, Style.FINISH_ICON_EDGE_RATIO.name: 0.1,
-        Style.FINISH_ICON_COLOR.name: "#000000", Style.FINISH_ICON_EDGE_COLOR.name: "#FFFFFF", Style.FINISH_ICON_ALPHA.name: 1.0,
+        Style.START_MARKER.name: "o",
+        Style.START_MARKER_WIDHT.name: 2, Style.START_MARKER_EDGE_RATIO.name: 0.1,
+        Style.START_MARKER_COLOR.name: "#18ac0d", Style.START_MARKER_EDGE_COLOR.name: "#FFFFFF", Style.START_MARKER_ALPHA.name: 1.0,
+        Style.FINISH_MARKER.name: "\uf11e",
+        Style.FINISH_MARKER_WIDHT.name: 5, Style.FINISH_MARKER_EDGE_RATIO.name: 0.1,
+        Style.FINISH_MARKER_COLOR.name: "#000000", Style.FINISH_MARKER_EDGE_COLOR.name: "#FFFFFF", Style.FINISH_MARKER_ALPHA.name: 1.0,
         Style.FINISH_MARKER_FONT_PROPERTIES.name: font_awesome_prop
     })
 ]
@@ -65,7 +65,7 @@ place_styles: ElementStyles = [
         Style.TEXT_FONT_SIZE.name: 15, Style.ZINDEX.name: 29
     },
         {
-        "10-10": {Style.TEXT_FONT_SIZE.name: 6, Style.ICON.name: "o", Style.COLOR.name: "#decda8", Style.MIN_REQ_POINT.name: MinParts.MARKER_TEXT1.name,
+        "10-10": {Style.TEXT_FONT_SIZE.name: 6, Style.MARKER.name: "o", Style.COLOR.name: "#decda8", Style.MIN_REQ_POINT.name: MinParts.MARKER_TEXT1.name,
         Style.TEXT1_POSITIONS.name: [TextPositions.TOP.name, TextPositions.BOTTOM.name, TextPositions.RIGHT.name], Style.EDGE_WIDTH_RATIO.name:0.1, Style.WIDTH.name: 2.8, 
         Style.EDGE_COLOR.name: "#a59b7a"}
     }),
@@ -75,18 +75,18 @@ place_styles: ElementStyles = [
     },
         {
         "10-10": {Style.TEXT_FONT_SIZE.name: 5},
-        "11-14": {Style.TEXT_FONT_SIZE.name: 10, Style.ICON.name: "o", Style.COLOR.name: "#decda8", Style.MIN_REQ_POINT.name: MinParts.MARKER_TEXT1.name,
+        "11-14": {Style.TEXT_FONT_SIZE.name: 10, Style.MARKER.name: "o", Style.COLOR.name: "#decda8", Style.MIN_REQ_POINT.name: MinParts.MARKER_TEXT1.name,
         Style.TEXT1_POSITIONS.name: [TextPositions.TOP.name, TextPositions.BOTTOM.name, TextPositions.RIGHT.name], Style.EDGE_WIDTH_RATIO.name:0.2, Style.WIDTH.name: 4.5, 
         Style.EDGE_COLOR.name: "#a59b7a"}
     }),
 ]
 
 
-# text color or icon color turn of by string "None" instead of None
+# text color or MARKER color turn of by string "None" instead of None
 natural_styles_nodes: ElementStyles = [
     ({'natural': 'peak'}, {
-        # Style.ICON.name: "^", 
-        Style.ICON.name: "\uf11e", 
+        # Style.MARKER.name: "^", 
+        Style.MARKER.name: "\uf11e", 
         Style.MARKER_HORIZONTAL_ALIGN.name: "center", Style.MARKER_VERTICAL_ALIGN.name: "center",
         Style.MARKER_FONT_PROPERTIES.name: material_desigh_prop,
         Style.COLOR.name: "#7f3016", Style.MIN_REQ_POINT.name: MinParts.MARKER_TEXT2.name, #Style.MIN_REQ_POINT.name: MinParts.MARKER_TEXT2.name,

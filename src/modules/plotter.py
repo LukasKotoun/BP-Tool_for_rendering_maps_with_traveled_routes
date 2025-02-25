@@ -104,13 +104,13 @@ class Plotter:
         if (pd.notna(font_properties)):
             # va = row.get(Style.MARKER_VERTICAL_ALIGN.name, "center")
             # ha = row.get(Style.MARKER_HORIZONTAL_ALIGN.name, "center")
-            marker: Text = self.ax.text(row['geometry'].x, row['geometry'].y, row[Style.ICON.name], color=row[Style.COLOR.name], fontsize=row[Style.WIDTH.name],
+            marker: Text = self.ax.text(row['geometry'].x, row['geometry'].y, row[Style.MARKER.name], color=row[Style.COLOR.name], fontsize=row[Style.WIDTH.name],
                                   font_properties=font_properties, alpha=row[Style.ALPHA.name],
                                   path_effects=[pe.withStroke(linewidth=row[Style.EDGEWIDTH.name],
                                                               alpha=row[Style.ALPHA.name], foreground=row[Style.EDGE_COLOR.name])],
                                   zorder=zorder)
         else:
-            marker: Line2D = self.ax.plot(row['geometry'].x, row['geometry'].y, marker=row[Style.ICON.name], mfc=row[Style.COLOR.name], ms=row[Style.WIDTH.name],
+            marker: Line2D = self.ax.plot(row['geometry'].x, row['geometry'].y, marker=row[Style.MARKER.name], mfc=row[Style.COLOR.name], ms=row[Style.WIDTH.name],
                                           mec=row[Style.EDGE_COLOR.name], mew=row[Style.EDGEWIDTH.name], alpha=row[Style.ALPHA.name],
                                           zorder=zorder)
         if (isinstance(marker, list)):
@@ -308,13 +308,13 @@ class Plotter:
             nodes_gdf, [Style.ZINDEX.name], [], False)
         for zindex, nodes_group_gdf in sorted(groups, key=lambda x: x[0], reverse=True):
             markers_with_two_annotations, group_rest = GdfUtils.filter_rows(
-                nodes_group_gdf, {Style.ICON.name: '', Style.TEXT1.name: '', Style.TEXT2.name: ''}, compl=True)
+                nodes_group_gdf, {Style.MARKER.name: '', Style.TEXT1.name: '', Style.TEXT2.name: ''}, compl=True)
 
             markers_with_one_annotation, group_rest = GdfUtils.filter_rows(
-                group_rest, [{Style.ICON.name: '', Style.TEXT1.name: ''}, {Style.ICON.name: '', Style.TEXT2.name: ''}], compl=True)
+                group_rest, [{Style.MARKER.name: '', Style.TEXT1.name: ''}, {Style.MARKER.name: '', Style.TEXT2.name: ''}], compl=True)
 
             markers, group_rest = GdfUtils.filter_rows(
-                group_rest, {Style.ICON.name: ''}, compl=True)
+                group_rest, {Style.MARKER.name: ''}, compl=True)
 
             texts = GdfUtils.filter_rows(
                 group_rest, [{Style.TEXT1.name: ''}, {Style.TEXT2.name: ''}])
@@ -629,24 +629,24 @@ class Plotter:
 
             return first_point
 
-        gpx_start_icons = GdfUtils.filter_rows(gpxs_gdf, {Style.START_ICON.name: '', Style.START_ICON_WIDHT.name: '',
-                                                          Style.START_ICON_COLOR.name: '', Style.START_ICON_EDGE_COLOR.name: '',
-                                                          Style.START_ICON_EDGEWIDTH.name: '', Style.START_ICON_ALPHA.name: ''})
-        gpx_finish_icons = GdfUtils.filter_rows(gpxs_gdf, {Style.FINISH_ICON.name: '', Style.FINISH_ICON_WIDHT.name: '',
-                                                           Style.FINISH_ICON_COLOR.name: '', Style.FINISH_ICON_EDGE_COLOR.name: '',
-                                                           Style.FINISH_ICON_EDGEWIDTH.name: '', Style.FINISH_ICON_ALPHA.name: ''})
+        gpx_start_MARKERs = GdfUtils.filter_rows(gpxs_gdf, {Style.START_MARKER.name: '', Style.START_MARKER_WIDHT.name: '',
+                                                          Style.START_MARKER_COLOR.name: '', Style.START_MARKER_EDGE_COLOR.name: '',
+                                                          Style.START_MARKER_EDGEWIDTH.name: '', Style.START_MARKER_ALPHA.name: ''})
+        gpx_finish_MARKERs = GdfUtils.filter_rows(gpxs_gdf, {Style.FINISH_MARKER.name: '', Style.FINISH_MARKER_WIDHT.name: '',
+                                                           Style.FINISH_MARKER_COLOR.name: '', Style.FINISH_MARKER_EDGE_COLOR.name: '',
+                                                           Style.FINISH_MARKER_EDGEWIDTH.name: '', Style.FINISH_MARKER_ALPHA.name: ''})
 
         # todo in tuple only remove previfx from all keys
-        for row in gpx_finish_icons.itertuples():
+        for row in gpx_finish_MARKERs.itertuples():
             print(row)
-        for row in gpx_finish_icons.iterrows():
+        for row in gpx_finish_MARKERs.iterrows():
             style_rename_mapping = {
-                Style.FINISH_ICON.name: Style.ICON.name,
-                Style.FINISH_ICON_COLOR.name: Style.COLOR.name,
-                Style.FINISH_ICON_EDGE_COLOR.name: Style.EDGE_COLOR.name,
-                Style.FINISH_ICON_WIDHT.name: Style.WIDTH.name,
-                Style.FINISH_ICON_EDGEWIDTH.name: Style.EDGEWIDTH.name,
-                Style.FINISH_ICON_ALPHA.name: Style.ALPHA.name,
+                Style.FINISH_MARKER.name: Style.MARKER.name,
+                Style.FINISH_MARKER_COLOR.name: Style.COLOR.name,
+                Style.FINISH_MARKER_EDGE_COLOR.name: Style.EDGE_COLOR.name,
+                Style.FINISH_MARKER_WIDHT.name: Style.WIDTH.name,
+                Style.FINISH_MARKER_EDGEWIDTH.name: Style.EDGEWIDTH.name,
+                Style.FINISH_MARKER_ALPHA.name: Style.ALPHA.name,
                 Style.FINISH_MARKER_FONT_PROPERTIES.name: Style.MARKER_FONT_PROPERTIES.name,
                 "geometry": "geometry"
             }
@@ -657,14 +657,14 @@ class Plotter:
             # Convert it to a tuple (can include the index or any other data if needed)
             self.__marker(style_data, True, True, 10)
 
-        for row in gpx_start_icons.iterrows():
+        for row in gpx_start_MARKERs.iterrows():
             style_rename_mapping = {
-                Style.START_ICON.name: Style.ICON.name,
-                Style.START_ICON_COLOR.name: Style.COLOR.name,
-                Style.START_ICON_EDGE_COLOR.name: Style.EDGE_COLOR.name,
-                Style.START_ICON_WIDHT.name: Style.WIDTH.name,
-                Style.START_ICON_EDGEWIDTH.name: Style.EDGEWIDTH.name,
-                Style.START_ICON_ALPHA.name: Style.ALPHA.name,
+                Style.START_MARKER.name: Style.MARKER.name,
+                Style.START_MARKER_COLOR.name: Style.COLOR.name,
+                Style.START_MARKER_EDGE_COLOR.name: Style.EDGE_COLOR.name,
+                Style.START_MARKER_WIDHT.name: Style.WIDTH.name,
+                Style.START_MARKER_EDGEWIDTH.name: Style.EDGEWIDTH.name,
+                Style.START_MARKER_ALPHA.name: Style.ALPHA.name,
                 Style.START_MARKER_FONT_PROPERTIES.name: Style.MARKER_FONT_PROPERTIES.name,
                 "geometry": "geometry"
             }
@@ -676,7 +676,7 @@ class Plotter:
             # Convert it to a tuple (can include the index or any other data if needed)
             self.__marker(style_data,  True, True, 10)
 
-        # for marker ploting remap icons to row with different tags and use marker plot function
+        # for marker ploting remap MARKERs to row with different tags and use marker plot function
 
         # gpxs_edge_gdf = GdfUtils.filter_rows(
         #     gpxs_gdf, {Style.EDGE_COLOR.name: '', Style.EDGE_LINESTYLE.name: '', Style.WIDTH.name: ''})

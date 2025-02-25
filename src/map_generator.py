@@ -52,10 +52,10 @@ def gdfs_prepare_columns(gpxs_gdf, nodes_gdf, ways_gdf, areas_gdf, map_object_sc
 
     GdfUtils.create_derivated_columns(gpxs_gdf, Style.EDGEWIDTH.name, Style.WIDTH.name, [
                                       Style.EDGE_WIDTH_RATIO.name])
-    GdfUtils.create_derivated_columns(gpxs_gdf, Style.START_ICON_EDGEWIDTH.name, Style.START_ICON_WIDHT.name, [
-                                      Style.START_ICON_EDGE_RATIO.name])
-    GdfUtils.create_derivated_columns(gpxs_gdf, Style.FINISH_ICON_EDGEWIDTH.name, Style.FINISH_ICON_WIDHT.name, [
-                                      Style.FINISH_ICON_EDGE_RATIO.name])
+    GdfUtils.create_derivated_columns(gpxs_gdf, Style.START_MARKER_EDGEWIDTH.name, Style.START_MARKER_WIDHT.name, [
+                                      Style.START_MARKER_EDGE_RATIO.name])
+    GdfUtils.create_derivated_columns(gpxs_gdf, Style.FINISH_MARKER_EDGEWIDTH.name, Style.FINISH_MARKER_WIDHT.name, [
+                                      Style.FINISH_MARKER_EDGE_RATIO.name])
     # ----nodes----
     # set base width - scale by muplitpliers and object scaling factor
     GdfUtils.multiply_column_gdf(nodes_gdf, Style.WIDTH.name, [
@@ -66,7 +66,7 @@ def gdfs_prepare_columns(gpxs_gdf, nodes_gdf, ways_gdf, areas_gdf, map_object_sc
     GdfUtils.create_derivated_columns(nodes_gdf, Style.TEXT_OUTLINE_WIDTH.name, Style.TEXT_FONT_SIZE.name, [
                                       Style.TEXT_OUTLINE_WIDTH_RATIO.name])
 
-    # edge - icons size and ways width
+    # edge - MARKERs size and ways width
     GdfUtils.create_derivated_columns(nodes_gdf, Style.EDGEWIDTH.name, Style.WIDTH.name, [
                                       # ?? maybe remove ...
                                       Style.EDGE_WIDTH_RATIO.name])
