@@ -44,32 +44,32 @@ def change_bridges_and_tunnels(gdf, want_bridges: bool, want_tunnels: bool):
 def gdfs_prepare_columns(gpxs_gdf, nodes_gdf, ways_gdf, areas_gdf, map_object_scaling_factor):
     # ----gpx----
     # gpx - is needed in this? will be setted in FE?
-    # GdfUtils.multiply_column_gdf(gpxs_gdf, StyleKey.WIDTH, [
-    #                              StyleKey.WIDTH_SCALE, StyleKey.FE_WIDTH_SCALE], map_object_scaling_factor)
+    # GdfUtils.multiply_column_gdf(gpxs_gdf, Style.WIDTH.name, [
+    #                              Style.WIDTH_SCALE.name, Style.FE_WIDTH_SCALE.name], map_object_scaling_factor)
     GdfUtils.change_columns_to_numeric(nodes_gdf, ['ele'])
     if ('ele' in nodes_gdf.columns):
         nodes_gdf['ele'] = nodes_gdf['ele'].round(0).astype('Int64')
 
-    GdfUtils.create_derivated_columns(gpxs_gdf, StyleKey.EDGEWIDTH, StyleKey.WIDTH, [
-                                      StyleKey.EDGE_WIDTH_RATIO])
-    GdfUtils.create_derivated_columns(gpxs_gdf, StyleKey.START_ICON_EDGEWIDTH, StyleKey.START_ICON_WIDHT, [
-                                      StyleKey.START_ICON_EDGE_RATIO])
-    GdfUtils.create_derivated_columns(gpxs_gdf, StyleKey.FINISH_ICON_EDGEWIDTH, StyleKey.FINISH_ICON_WIDHT, [
-                                      StyleKey.FINISH_ICON_EDGE_RATIO])
+    GdfUtils.create_derivated_columns(gpxs_gdf, Style.EDGEWIDTH.name, Style.WIDTH.name, [
+                                      Style.EDGE_WIDTH_RATIO.name])
+    GdfUtils.create_derivated_columns(gpxs_gdf, Style.START_ICON_EDGEWIDTH.name, Style.START_ICON_WIDHT.name, [
+                                      Style.START_ICON_EDGE_RATIO.name])
+    GdfUtils.create_derivated_columns(gpxs_gdf, Style.FINISH_ICON_EDGEWIDTH.name, Style.FINISH_ICON_WIDHT.name, [
+                                      Style.FINISH_ICON_EDGE_RATIO.name])
     # ----nodes----
     # set base width - scale by muplitpliers and object scaling factor
-    GdfUtils.multiply_column_gdf(nodes_gdf, StyleKey.WIDTH, [
-        StyleKey.WIDTH_SCALE, StyleKey.FE_WIDTH_SCALE], None)
-    GdfUtils.multiply_column_gdf(nodes_gdf, StyleKey.TEXT_FONT_SIZE, [
-        StyleKey.TEXT_FONT_SIZE_SCALE, StyleKey.FE_TEXT_FONT_SIZE_SCALE], None)
+    GdfUtils.multiply_column_gdf(nodes_gdf, Style.WIDTH.name, [
+        Style.WIDTH_SCALE.name, Style.FE_WIDTH_SCALE.name], None)
+    GdfUtils.multiply_column_gdf(nodes_gdf, Style.TEXT_FONT_SIZE.name, [
+        Style.TEXT_FONT_SIZE_SCALE.name, Style.FE_TEXT_FONT_SIZE_SCALE.name], None)
     # text outline
-    GdfUtils.create_derivated_columns(nodes_gdf, StyleKey.TEXT_OUTLINE_WIDTH, StyleKey.TEXT_FONT_SIZE, [
-                                      StyleKey.TEXT_OUTLINE_WIDTH_RATIO])
+    GdfUtils.create_derivated_columns(nodes_gdf, Style.TEXT_OUTLINE_WIDTH.name, Style.TEXT_FONT_SIZE.name, [
+                                      Style.TEXT_OUTLINE_WIDTH_RATIO.name])
 
     # edge - icons size and ways width
-    GdfUtils.create_derivated_columns(nodes_gdf, StyleKey.EDGEWIDTH, StyleKey.WIDTH, [
+    GdfUtils.create_derivated_columns(nodes_gdf, Style.EDGEWIDTH.name, Style.WIDTH.name, [
                                       # ?? maybe remove ...
-                                      StyleKey.EDGE_WIDTH_RATIO])
+                                      Style.EDGE_WIDTH_RATIO.name])
     old_column_remove = []
     for filter, new_column, old_column, fill in DERIVATE_COLUMNS_NODES:
         GdfUtils.create_derivated_columns(
@@ -78,42 +78,42 @@ def gdfs_prepare_columns(gpxs_gdf, nodes_gdf, ways_gdf, areas_gdf, map_object_sc
     # call wrap text - by styles or other struct?
 
     # remove columns used for calculating
-    GdfUtils.remove_columns(nodes_gdf, [StyleKey.WIDTH_SCALE, StyleKey.FE_WIDTH_SCALE,
-                                        StyleKey.TEXT_FONT_SIZE_SCALE, StyleKey.FE_TEXT_FONT_SIZE_SCALE,
-                                        StyleKey.EDGE_WIDTH_RATIO, StyleKey.TEXT_OUTLINE_WIDTH_RATIO, *old_column_remove])
+    GdfUtils.remove_columns(nodes_gdf, [Style.WIDTH_SCALE.name, Style.FE_WIDTH_SCALE.name,
+                                        Style.TEXT_FONT_SIZE_SCALE.name, Style.FE_TEXT_FONT_SIZE_SCALE.name,
+                                        Style.EDGE_WIDTH_RATIO.name, Style.TEXT_OUTLINE_WIDTH_RATIO.name, *old_column_remove])
 
     # ----ways----
-    GdfUtils.multiply_column_gdf(ways_gdf, StyleKey.WIDTH, [
+    GdfUtils.multiply_column_gdf(ways_gdf, Style.WIDTH.name, [
         # if i will be creationg function with continues width scaling than multiply only by FEwidthscale
-        StyleKey.WIDTH_SCALE, StyleKey.FE_WIDTH_SCALE], map_object_scaling_factor)
+        Style.WIDTH_SCALE.name, Style.FE_WIDTH_SCALE.name], map_object_scaling_factor)
 
-    GdfUtils.create_derivated_columns(ways_gdf, StyleKey.EDGEWIDTH, StyleKey.WIDTH, [
-        StyleKey.EDGE_WIDTH_RATIO])
-    GdfUtils.create_derivated_columns(ways_gdf, StyleKey.BRIDGE_WIDTH, StyleKey.WIDTH, [     # calc bridge size only for bridges
-                                      StyleKey.BRIDGE_WIDTH_RATIO], {'bridge': ''})
-    GdfUtils.create_derivated_columns(ways_gdf, StyleKey.BRIDGE_EDGE_WIDTH, StyleKey.BRIDGE_WIDTH, [
-                                      StyleKey.BRIDGE_EDGE_WIDTH_RATIO], {'bridge': ''})
+    GdfUtils.create_derivated_columns(ways_gdf, Style.EDGEWIDTH.name, Style.WIDTH.name, [
+        Style.EDGE_WIDTH_RATIO.name])
+    GdfUtils.create_derivated_columns(ways_gdf, Style.BRIDGE_WIDTH.name, Style.WIDTH.name, [     # calc bridge size only for bridges
+                                      Style.BRIDGE_WIDTH_RATIO.name], {'bridge': ''})
+    GdfUtils.create_derivated_columns(ways_gdf, Style.BRIDGE_EDGE_WIDTH.name, Style.BRIDGE_WIDTH.name, [
+                                      Style.BRIDGE_EDGE_WIDTH_RATIO.name], {'bridge': ''})
 
     for filter, new_column, old_column in DERIVATE_COLUMNS_WAYS:
         GdfUtils.create_derivated_columns(
             ways_gdf, new_column, old_column, filter=filter)
 
-    GdfUtils.remove_columns(ways_gdf, [StyleKey.WIDTH_SCALE, StyleKey.FE_WIDTH_SCALE,
-                                       StyleKey.EDGE_WIDTH_RATIO, StyleKey.BRIDGE_WIDTH_RATIO, StyleKey.BRIDGE_EDGE_WIDTH_RATIO])
+    GdfUtils.remove_columns(ways_gdf, [Style.WIDTH_SCALE.name, Style.FE_WIDTH_SCALE.name,
+                                       Style.EDGE_WIDTH_RATIO.name, Style.BRIDGE_WIDTH_RATIO.name, Style.BRIDGE_EDGE_WIDTH_RATIO.name])
 
     # ----areas----
-    GdfUtils.multiply_column_gdf(areas_gdf, StyleKey.WIDTH, [
-        StyleKey.WIDTH_SCALE, StyleKey.FE_WIDTH_SCALE], map_object_scaling_factor)
+    GdfUtils.multiply_column_gdf(areas_gdf, Style.WIDTH.name, [
+        Style.WIDTH_SCALE.name, Style.FE_WIDTH_SCALE.name], map_object_scaling_factor)
 
-    GdfUtils.create_derivated_columns(areas_gdf, StyleKey.EDGEWIDTH, StyleKey.WIDTH, [
-                                      StyleKey.EDGE_WIDTH_RATIO])
+    GdfUtils.create_derivated_columns(areas_gdf, Style.EDGEWIDTH.name, Style.WIDTH.name, [
+                                      Style.EDGE_WIDTH_RATIO.name])
 
     for filter, new_column, old_column in DERIVATE_COLUMNS_AREAS:
         GdfUtils.create_derivated_columns(
             areas_gdf, new_column, old_column, filter=filter)
 
-    GdfUtils.remove_columns(areas_gdf, [StyleKey.WIDTH_SCALE, StyleKey.FE_WIDTH_SCALE,
-                                        StyleKey.EDGE_WIDTH_RATIO])
+    GdfUtils.remove_columns(areas_gdf, [Style.WIDTH_SCALE.name, Style.FE_WIDTH_SCALE.name,
+                                        Style.EDGE_WIDTH_RATIO.name])
 
 
 def calc_preview(map_area_gdf, paper_dimensions_mm):
@@ -286,7 +286,7 @@ def main():
     coast_gdf, ways_gdf = GdfUtils.filter_rows(
         ways_gdf, {'natural': 'coastline'}, compl=True)
     bg_gdf = GdfUtils.create_bg_gdf(
-        map_area_gdf, coast_gdf, OCEAN_WATER, GENERAL_DEFAULT_STYLES[StyleKey.COLOR])
+        map_area_gdf, coast_gdf, OCEAN_WATER, GENERAL_DEFAULT_STYLES[Style.COLOR.name])
     # prepare nodes
     # round ele to int
 
@@ -311,13 +311,13 @@ def main():
     # ------------filter some elements out------------
     nodes_gdf = GdfUtils.filter_invalid_nodes_min_req(nodes_gdf)
 
-    # GdfUtils.wrap_text_gdf(nodes_gdf, [(StyleKey.TEXT1, StyleKey.TEXT1_WRAP_LEN), (StyleKey.TEXT2, StyleKey.TEXT2_WRAP_LEN)])
+    # GdfUtils.wrap_text_gdf(nodes_gdf, [(Style.TEXT1.name, Style.TEXT1_WRAP_LEN.name), (Style.TEXT2.name, Style.TEXT2_WRAP_LEN.name)])
     # todo algorithm for peaks
 
     # -----sort-----
     nodes_gdf = GdfUtils.sort_gdf_by_column(nodes_gdf, 'ele', ascending=False)
-    ways_gdf = GdfUtils.sort_gdf_by_column(ways_gdf, StyleKey.ZINDEX)
-    areas_gdf = GdfUtils.sort_gdf_by_column(areas_gdf, StyleKey.ZINDEX)
+    ways_gdf = GdfUtils.sort_gdf_by_column(ways_gdf, Style.ZINDEX.name)
+    areas_gdf = GdfUtils.sort_gdf_by_column(areas_gdf, Style.ZINDEX.name)
 
     # order by area to plot smaller at the end
     bg_gdf['area'] = bg_gdf.area
@@ -330,7 +330,7 @@ def main():
     plotter = Plotter(map_area_gdf, paper_dimensions_mm,
                       map_object_scaling_factor, TEXT_BOUNDS_OVERFLOW_THRESHOLD, TEXT_WRAP_NAMES_LEN, outer_map_area_gdf)
     plotter.init(
-        GENERAL_DEFAULT_STYLES[StyleKey.COLOR], bg_gdf, area_zoom_preview, zoom_percent_padding=PERCENTAGE_PADDING)
+        GENERAL_DEFAULT_STYLES[Style.COLOR.name], bg_gdf, area_zoom_preview, zoom_percent_padding=PERCENTAGE_PADDING)
     plotter.nodes(nodes_gdf, TEXT_WRAP_NAMES_LEN)
     plotter.areas(areas_gdf)
     # plotter.ways(ways_gdf, areas_gdf, [{'highway': 'motorway'}])

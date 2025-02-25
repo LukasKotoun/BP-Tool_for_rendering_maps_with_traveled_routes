@@ -10,7 +10,7 @@ from shapely.geometry.multipolygon import MultiPolygon
 
 from modules.utils import Utils
 from osmium import FileProcessor
-from common.map_enums import WorldSides, StyleKey, MinParts
+from common.map_enums import WorldSides, Style, MinParts
 from common.custom_types import BoundsDict, DimensionsTuple, Point, WantedAreas, RowsConditions, RowsConditionsAND, WantedArea
 from common.common_helpers import time_measurement
 import textwrap
@@ -104,27 +104,27 @@ class GdfUtils:
             gdf_edit = gdf
             if (toCrs is not None):
                 gdf_edit = gdf.to_crs(toCrs)
-            # [WorldSides.WEST, WorldSides.SOUTH, WorldSides.EAST, WorldSides.NORTH]
+            # [WorldSides.WEST.name, WorldSides.SOUTH.name, WorldSides.EAST.name, WorldSides.NORTH.name]
             bounds: tuple[float] = gdf_edit.total_bounds
             west = min(west, bounds[0])
             south = min(south, bounds[1])
             east = max(east, bounds[2])
             north = max(north, bounds[3])
         return {
-            WorldSides.WEST: west,
-            WorldSides.SOUTH: south,
-            WorldSides.EAST: east,
-            WorldSides.NORTH: north
+            WorldSides.WEST.name: west,
+            WorldSides.SOUTH.name: south,
+            WorldSides.EAST.name: east,
+            WorldSides.NORTH.name: north
         }
 
     @staticmethod
     def get_polygon_bounds(polygon: Polygon) -> BoundsDict:
-        # [WorldSides.WEST, WorldSides.SOUTH, WorldSides.EAST, WorldSides.NORTH]
+        # [WorldSides.WEST.name, WorldSides.SOUTH.name, WorldSides.EAST.name, WorldSides.NORTH.name]
         bounds: tuple[float] = polygon.bounds
-        return {WorldSides.WEST: bounds[0],
-                WorldSides.SOUTH: bounds[1],
-                WorldSides.EAST: bounds[2],
-                WorldSides.NORTH: bounds[3]}
+        return {WorldSides.WEST.name: bounds[0],
+                WorldSides.SOUTH.name: bounds[1],
+                WorldSides.EAST.name: bounds[2],
+                WorldSides.NORTH.name: bounds[3]}
 
     @staticmethod
     def get_dimensions_gdf(gdf: gpd.GeoDataFrame) -> DimensionsTuple:
@@ -141,12 +141,12 @@ class GdfUtils:
     @staticmethod
     def create_polygon_from_bounds(area_bounds: BoundsDict) -> Polygon:
         return Polygon([
-            (area_bounds[WorldSides.EAST], area_bounds[WorldSides.SOUTH]),
-            (area_bounds[WorldSides.EAST], area_bounds[WorldSides.NORTH]),
-            (area_bounds[WorldSides.WEST], area_bounds[WorldSides.NORTH]),
-            (area_bounds[WorldSides.WEST], area_bounds[WorldSides.SOUTH]),
+            (area_bounds[WorldSides.EAST.name], area_bounds[WorldSides.SOUTH.name]),
+            (area_bounds[WorldSides.EAST.name], area_bounds[WorldSides.NORTH.name]),
+            (area_bounds[WorldSides.WEST.name], area_bounds[WorldSides.NORTH.name]),
+            (area_bounds[WorldSides.WEST.name], area_bounds[WorldSides.SOUTH.name]),
             # Closing the polygon
-            (area_bounds[WorldSides.EAST], area_bounds[WorldSides.SOUTH])
+            (area_bounds[WorldSides.EAST.name], area_bounds[WorldSides.SOUTH.name])
         ])
 
     @staticmethod
@@ -272,7 +272,7 @@ class GdfUtils:
                         color = water_color  # polygon is on left side of splitter
                     else:
                         color = land_color  # polygon is on left side of splitter
-                bg_data.append({"geometry": geom, StyleKey.COLOR: color})
+                bg_data.append({"geometry": geom, Style.COLOR.name: color})
         # create gdf from data
         if (bg_data == []):
             return GdfUtils.create_empty_gdf(map_area_gdf.crs)
@@ -282,14 +282,14 @@ class GdfUtils:
 
     # ------------editing gdf------------
     @staticmethod
-    def remove_columns(gdf: gpd.GeoDataFrame, columns: list[str | StyleKey], neg = False) -> gpd.GeoDataFrame:
+    def remove_columns(gdf: gpd.GeoDataFrame, columns: list[str | Style], neg = False) -> gpd.GeoDataFrame:
         if(neg):
             gdf.drop(columns=[col for col in gdf.columns if col not in columns], inplace=True, errors='ignore')
         else:
             gdf.drop(columns=columns, inplace=True, errors='ignore')
 
     @staticmethod  # column and multipliers must be numeric otherwise it will throw error
-    def multiply_column_gdf(gdf, column: StyleKey | str, multipliers: list[str | StyleKey] = [], scaling=None, filter: RowsConditions = []):
+    def multiply_column_gdf(gdf, column: Style | str, multipliers: list[str | Style] = [], scaling=None, filter: RowsConditions = []):
         if (column not in gdf):
             return
         # multiply rows where column value is not empty
@@ -311,7 +311,7 @@ class GdfUtils:
                     column] *= gdf.loc[rows_with_multipler, multiplier]
 
     @staticmethod  # column and multipliers must be numeric otherwise it will throw error
-    def create_derivated_columns(gdf, new_column: StyleKey | str, base_column: StyleKey | str, multipliers: list[str | StyleKey] = [],
+    def create_derivated_columns(gdf, new_column: Style | str, base_column: Style | str, multipliers: list[str | Style] = [],
                                  filter: RowsConditions | RowsConditionsAND = [], fill: any = 0, scaling=None):
         # create new column with fill if base not exists
         if (base_column not in gdf):
@@ -387,7 +387,7 @@ class GdfUtils:
 
     @time_measurement("mergeLines")
     @staticmethod
-    def merge_lines_gdf(gdf: gpd.GeoDataFrame, columns_ignore: list[str | StyleKey] = []) -> gpd.GeoDataFrame:
+    def merge_lines_gdf(gdf: gpd.GeoDataFrame, columns_ignore: list[str | Style] = []) -> gpd.GeoDataFrame:
         """Merge lines in GeoDataFrame to one line if they have same values in columns (except columns in columns_ignore).
         If want_bridges is True, merge all lines with same values in columns. If False, merge all lines with same values but ignore bridges.
         To merging geoms is used function merge_lines_safe that uses unary_union and linemerge from shapely.ops.
@@ -396,7 +396,7 @@ class GdfUtils:
         Args:
             gdf (gpd.GeoDataFrame): _description_
             want_bridges (bool): _description_
-            columns_ignore (list[str  |  StyleKey], optional): _description_. Defaults to [].
+            columns_ignore (list[str  |  Style], optional): _description_. Defaults to [].
 
         Returns:
             gpd.GeoDataFrame: _description_
@@ -425,7 +425,7 @@ class GdfUtils:
         return GdfUtils.create_gdf_from_bounds(Utils.adjust_bounds_to_fill_paper(bounds, pdf_dim), area_gdf.crs, None)
 
     @staticmethod
-    def sort_gdf_by_column(gdf: gpd.GeoDataFrame, column_name: StyleKey, ascending: bool = True, na_position: str = 'first') -> gpd.GeoDataFrame:
+    def sort_gdf_by_column(gdf: gpd.GeoDataFrame, column_name: Style, ascending: bool = True, na_position: str = 'first') -> gpd.GeoDataFrame:
         if (gdf.empty):
             return gdf
         if (column_name in gdf):
@@ -586,31 +586,31 @@ class GdfUtils:
     # todo move somewhere else 
     @staticmethod
     def filter_invalid_texts(gdf):
-        return GdfUtils.filter_rows(gdf, {StyleKey.TEXT_FONT_SIZE: '', StyleKey.TEXT_OUTLINE_WIDTH: '', StyleKey.TEXT_COLOR: '',
-                                          StyleKey.TEXT_OUTLINE_COLOR: '', StyleKey.TEXT_FONTFAMILY: '', StyleKey.TEXT_WEIGHT: '',
-                                          StyleKey.TEXT_STYLE: '', StyleKey.ALPHA: '', StyleKey.EDGE_ALPHA: ''})
+        return GdfUtils.filter_rows(gdf, {Style.TEXT_FONT_SIZE.name: '', Style.TEXT_OUTLINE_WIDTH.name: '', Style.TEXT_COLOR.name: '',
+                                          Style.TEXT_OUTLINE_COLOR.name: '', Style.TEXT_FONTFAMILY.name: '', Style.TEXT_WEIGHT.name: '',
+                                          Style.TEXT_STYLE.name: '', Style.ALPHA.name: '', Style.EDGE_ALPHA.name: ''})
     @staticmethod
     def filter_invalid_markers(gdf):
-        return GdfUtils.filter_rows(gdf, {StyleKey.ICON: '', StyleKey.COLOR: '', StyleKey.WIDTH: '',
-                                          StyleKey.EDGEWIDTH: '', StyleKey.EDGE_COLOR: '', StyleKey.ALPHA: ''})
+        return GdfUtils.filter_rows(gdf, {Style.ICON.name: '', Style.COLOR.name: '', Style.WIDTH.name: '',
+                                          Style.EDGEWIDTH.name: '', Style.EDGE_COLOR.name: '', Style.ALPHA.name: ''})
 
     @staticmethod
     def filter_invalid_nodes_min_req(nodes_gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
-        nodes_gdf = GdfUtils.filter_rows(nodes_gdf, [{StyleKey.MIN_REQ_POINT: MinParts.MARKER, StyleKey.ICON: '', StyleKey.COLOR: ''},
-                                                     {StyleKey.MIN_REQ_POINT: MinParts.MARKER_TEXT1,
-                                                         StyleKey.ICON: '', StyleKey.TEXT1: ''},
-                                                     {StyleKey.MIN_REQ_POINT: MinParts.MARKER_TEXT2,
-                                                         StyleKey.ICON: '', StyleKey.TEXT2: ''},
-                                                     {StyleKey.MIN_REQ_POINT: MinParts.MARKER_TEXT1_TEXT2,
-                                                         StyleKey.ICON: '', StyleKey.TEXT1: '', StyleKey.TEXT2: ''},
-                                                     {StyleKey.MIN_REQ_POINT: MinParts.TEXT1,
-                                                         StyleKey.TEXT1: ''},
-                                                     {StyleKey.MIN_REQ_POINT: MinParts.TEXT2,
-                                                         StyleKey.TEXT2: ''},
-                                                     {StyleKey.MIN_REQ_POINT: MinParts.TEXT1_TEXT2, StyleKey.TEXT1: '', StyleKey.TEXT2: ''}])
-        nodes_gdf = GdfUtils.filter_rows(nodes_gdf, [{StyleKey.ICON: ''},
-                                                     {StyleKey.TEXT1: ''},
-                                                     {StyleKey.TEXT2: ''}])
+        nodes_gdf = GdfUtils.filter_rows(nodes_gdf, [{Style.MIN_REQ_POINT.name: MinParts.MARKER.name, Style.ICON.name: '', Style.COLOR.name: ''},
+                                                     {Style.MIN_REQ_POINT.name: MinParts.MARKER_TEXT1.name,
+                                                         Style.ICON.name: '', Style.TEXT1.name: ''},
+                                                     {Style.MIN_REQ_POINT.name: MinParts.MARKER_TEXT2.name,
+                                                         Style.ICON.name: '', Style.TEXT2.name: ''},
+                                                     {Style.MIN_REQ_POINT.name: MinParts.MARKER_TEXT1_TEXT2.name,
+                                                         Style.ICON.name: '', Style.TEXT1.name: '', Style.TEXT2.name: ''},
+                                                     {Style.MIN_REQ_POINT.name: MinParts.TEXT1.name,
+                                                         Style.TEXT1.name: ''},
+                                                     {Style.MIN_REQ_POINT.name: MinParts.TEXT2.name,
+                                                         Style.TEXT2.name: ''},
+                                                     {Style.MIN_REQ_POINT.name: MinParts.TEXT1_TEXT2.name, Style.TEXT1.name: '', Style.TEXT2.name: ''}])
+        nodes_gdf = GdfUtils.filter_rows(nodes_gdf, [{Style.ICON.name: ''},
+                                                     {Style.TEXT1.name: ''},
+                                                     {Style.TEXT2.name: ''}])
 
         return nodes_gdf
 

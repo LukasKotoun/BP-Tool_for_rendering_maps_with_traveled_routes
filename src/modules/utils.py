@@ -6,6 +6,7 @@ from common.custom_types import DimensionsTuple, OptDimensionsTuple
 from shapely.geometry import LineString
 from shapely.ops import linemerge
 import textwrap
+import pandas as pd
 from common.common_helpers import time_measurement
 from shapely import geometry
 
@@ -117,10 +118,10 @@ class Utils:
 
     @staticmethod
     def get_dimensions(bounds: BoundsDict) -> DimensionsTuple:
-        width = abs(bounds[WorldSides.EAST] -
-                    bounds[WorldSides.WEST])  # east - west
-        height = abs(bounds[WorldSides.NORTH] -
-                     bounds[WorldSides.SOUTH])  # north - south
+        width = abs(bounds[WorldSides.EAST.name] -
+                    bounds[WorldSides.WEST.name])  # east - west
+        height = abs(bounds[WorldSides.NORTH.name] -
+                     bounds[WorldSides.SOUTH.name])  # north - south
         return width, height
 
     # funkce která na zakladě střed, a pomeru velikosti vetší oblasti a papíru zjistí potřebnou velikost oblasti a vrátí ji jako polygon
@@ -152,10 +153,10 @@ class Utils:
         new_height = pdf_dim[1] * pdf_to_area_ratio_bigger[1]
 
         return Utils.adjust_bounds_to_fill_paper({
-            WorldSides.WEST: center_point.x - (new_width / 2),
-            WorldSides.EAST: center_point.x + (new_width / 2),
-            WorldSides.SOUTH: center_point.y - (new_height / 2),
-            WorldSides.NORTH: center_point.y + (new_height / 2)
+            WorldSides.WEST.name: center_point.x - (new_width / 2),
+            WorldSides.EAST.name: center_point.x + (new_width / 2),
+            WorldSides.SOUTH.name: center_point.y - (new_height / 2),
+            WorldSides.NORTH.name: center_point.y + (new_height / 2)
         }, pdf_dim)
 
     @staticmethod
@@ -182,16 +183,16 @@ class Utils:
             # w/h == pw/ph => w = h * (pw/ph)
             new_width = height * paper_aspect_ratio
             width_diff = (new_width - width) / 2
-            area_bounds[WorldSides.WEST] -= width_diff
-            area_bounds[WorldSides.EAST] += width_diff
+            area_bounds[WorldSides.WEST.name] -= width_diff
+            area_bounds[WorldSides.EAST.name] += width_diff
         else:
             # Current aspect have longer width to height ratio than paper => adjust height
             # Expand height
             # w/h == pw/ph => h = w / (pw/ph)
             new_height = width / paper_aspect_ratio
             height_diff = (new_height - height) / 2
-            area_bounds[WorldSides.SOUTH] -= height_diff
-            area_bounds[WorldSides.NORTH] += height_diff
+            area_bounds[WorldSides.SOUTH.name] -= height_diff
+            area_bounds[WorldSides.NORTH.name] += height_diff
 
         return area_bounds
 
@@ -237,13 +238,13 @@ class Utils:
     @staticmethod
     def get_scale(map_bounds, paper_dimensions_mm):
         # Use middle longitude for vertical distance
-        midx = (map_bounds[WorldSides.NORTH] +
-                map_bounds[WorldSides.SOUTH]) / 2
+        midx = (map_bounds[WorldSides.NORTH.name] +
+                map_bounds[WorldSides.SOUTH.name]) / 2
 
-        height = Utils.get_distance((map_bounds[WorldSides.NORTH], map_bounds[WorldSides.WEST]), (
-            map_bounds[WorldSides.SOUTH], map_bounds[WorldSides.WEST]))
+        height = Utils.get_distance((map_bounds[WorldSides.NORTH.name], map_bounds[WorldSides.WEST.name]), (
+            map_bounds[WorldSides.SOUTH.name], map_bounds[WorldSides.WEST.name]))
         width = Utils.get_distance(
-            (midx, map_bounds[WorldSides.WEST]), (midx, map_bounds[WorldSides.EAST]))
+            (midx, map_bounds[WorldSides.WEST.name]), (midx, map_bounds[WorldSides.EAST.name]))
         # Calculate the scale for width and height
         scale_width = width / paper_dimensions_mm[0]
         scale_height = height / paper_dimensions_mm[1]
@@ -254,7 +255,7 @@ class Utils:
         return scale
 
     @staticmethod
-    def count_missing_values(keys: list[str], styles: FeaturesCategoryStyle, missing_style: StyleKey) -> int:
+    def count_missing_values(keys: list[str], styles: FeaturesCategoryStyle, missing_style: Style) -> int:
         count = 0
         for key in keys:
             if key not in styles or missing_style not in styles[key].keys():
@@ -317,16 +318,23 @@ class Utils:
     def expand_bounds_dict(bounds: BoundsDict, percent_expand: int = 0) -> Bbox:
         if (percent_expand == 0):
             return bounds
-        width = bounds[WorldSides.EAST] - bounds[WorldSides.WEST]
-        height = bounds[WorldSides.NORTH] - bounds[WorldSides.SOUTH]
+        width = bounds[WorldSides.EAST.name] - bounds[WorldSides.WEST.name]
+        height = bounds[WorldSides.NORTH.name] - bounds[WorldSides.SOUTH.name]
         expand_x = (width * percent_expand) / 100
         expand_y = (height * percent_expand) / 100
         return {
-            WorldSides.WEST: bounds[WorldSides.WEST] - expand_x,
-            WorldSides.EAST: bounds[WorldSides.EAST] + expand_x,
-            WorldSides.SOUTH: bounds[WorldSides.SOUTH] - expand_y,
-            WorldSides.NORTH: bounds[WorldSides.NORTH] + expand_y
+            WorldSides.WEST.name: bounds[WorldSides.WEST.name] - expand_x,
+            WorldSides.EAST.name: bounds[WorldSides.EAST.name] + expand_x,
+            WorldSides.SOUTH.name: bounds[WorldSides.SOUTH.name] - expand_y,
+            WorldSides.NORTH.name: bounds[WorldSides.NORTH.name] + expand_y
         }
+        
+    @staticmethod
+    def get_value(row, column_name: str, default_value: any=None):
+        value = getattr(row, column_name, None)
+        if pd.isna(value):
+            return default_value
+        return value
     
     @staticmethod
     def is_geometry_inside_geometry_threshold(inner: GeometryCollection, outer: GeometryCollection, threshold: float = 0.95) -> bool:

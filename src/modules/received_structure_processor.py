@@ -1,4 +1,4 @@
-from common.map_enums import StyleKey
+from common.map_enums import Style
 
 # todo add functions to check for color and linestyle validity
 

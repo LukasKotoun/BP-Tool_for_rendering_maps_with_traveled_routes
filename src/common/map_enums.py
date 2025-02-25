@@ -8,13 +8,6 @@ class ColorMode(Enum):
     SHADE = 3
     PALETTE = 4
 
-
-class BboxCheckSettings(Enum):
-    NONE = 1
-    TEXT = 2
-    MARKER = 3
-    ALL = 4
-
 # what part of point with text can be removed without removing whole object (marker and texts)
 # na začátku jeden velký filtr tohoto v jednom gdf, a nechat jen ty co sedí: např {removable_part: RemovablePart.NOTHING, ikona, text1, }
 # mohl bych dát jeden dict do settings který by prošel data nastavil správně sloupce - tedy text1 a text2 by vlastně zkopíroval vždy podle filtru
@@ -25,22 +18,22 @@ class BboxCheckSettings(Enum):
 
 
 class MinParts(Enum):  # minimum parts that must node have. If not whole node object is removed
-    MARKER_TEXT1_TEXT2 = 1
-    MARKER_TEXT1 = 6
-    MARKER_TEXT2 = 7
-    MARKER = 2
-    TEXT1 = 3
-    TEXT2 = 4
-    TEXT1_TEXT2 = 5
+    MARKER_TEXT1_TEXT2 = "MARKER_TEXT1_TEXT2"
+    MARKER_TEXT1 = "MARKER_TEXT1"
+    MARKER_TEXT2 = "MARKER_TEXT2"
+    MARKER = "MARKER"
+    TEXT1 = "TEXT1"
+    TEXT2 = "TEXT2"
+    TEXT1_TEXT2 = "TEXT1_TEXT2"
 
 class TextPositions(Enum):  # minimum parts that must node have. If not whole node object is removed
-    TOP = 1
-    BOTTOM = 2
-    LEFT = 3
-    RIGHT = 4
+    TOP = "TOP"
+    BOTTOM = "BOTTOM"
+    LEFT = "LEFT"
+    RIGHT = "RIGHT"
 
 
-class StyleKey(Enum):
+class Style(Enum):
     # general
     COLOR = "COLOR"
     ALPHA = "ALPHA"
@@ -126,22 +119,11 @@ class StyleKey(Enum):
     FINISH_ICON_EDGEWIDTH = "FINISH_ICON_EDGEWIDTH"
 
 
-class StyleType(Enum):
-    DEFAULT = 1
-    ZOOM = 2
-
-
-class AreaBounds(Enum):
-    NONE = 1
-    COMBINED = 2
-    SEPARATED = 3
-
-
 class WorldSides(Enum):
-    WEST = 'west'
-    EAST = 'east'
-    NORTH = 'north'
-    SOUTH = 'south'
+    WEST = 'WEST'
+    EAST = 'EAST'
+    NORTH = 'NORTH'
+    SOUTH = 'SOUTH'
 
 
 class PaperSize(Enum):

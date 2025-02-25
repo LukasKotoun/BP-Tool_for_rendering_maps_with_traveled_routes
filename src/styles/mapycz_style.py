@@ -7,39 +7,39 @@ from config import font_awesome_prop, material_desigh_prop
 # ------------styles--------------
 OCEAN_WATER = '#8fb6db'
 
-GENERAL_DEFAULT_STYLES: FeatureStyles = {StyleKey.COLOR: '#EDEDE0',  StyleKey.ZINDEX: 0,
-                                         StyleKey.WIDTH: 1, StyleKey.LINESTYLE: '-',
-                                         StyleKey.ALPHA: 1, StyleKey.EDGE_COLOR: None, StyleKey.EDGE_LINESTYLE: '-'}
+GENERAL_DEFAULT_STYLES: FeatureStyles = {Style.COLOR.name: '#EDEDE0',  Style.ZINDEX.name: 0,
+                                         Style.WIDTH.name: 1, Style.LINESTYLE.name: '-',
+                                         Style.ALPHA.name: 1, Style.EDGE_COLOR.name: None, Style.EDGE_LINESTYLE.name: '-'}
 
 
 
 # -------------------gpx-------------------
 root_files_styles: ElementStyles = [
-    ({'fileName': 'Grilovačka.gpx'}, {StyleKey.COLOR: "Red"}),
+    ({'fileName': 'Grilovačka.gpx'}, {Style.COLOR.name: "Red"}),
 ]
 
 folders_styles: ElementStyles = [
-    ({'folder': 'pěšky'}, {StyleKey.COLOR: "Blue"}),
-    ({'folder': 'Kolo testování'}, {StyleKey.WIDTH: 1, StyleKey.ALPHA: 0.7}),
-    ({'folder': 'Kolo'}, {StyleKey.COLOR: "Purple"}),
+    ({'folder': 'pěšky'}, {Style.COLOR.name: "Blue"}),
+    ({'folder': 'Kolo testování'}, {Style.WIDTH.name: 1, Style.ALPHA.name: 0.7}),
+    ({'folder': 'Kolo'}, {Style.COLOR.name: "Purple"}),
 ]
 
 gpxs_styles_default: ElementStyles = [
-    ({'fileName': ''}, {StyleKey.COLOR: 'Red', StyleKey.WIDTH: 1,
-     StyleKey.ALPHA: 0.7,  StyleKey.ZINDEX: 0}),
-    ({'folder': ''}, {StyleKey.COLOR: 'Orange', StyleKey.WIDTH: 1,
-     StyleKey.ALPHA: 0.7,  StyleKey.ZINDEX: 0}),
+    ({'fileName': ''}, {Style.COLOR.name: 'Red', Style.WIDTH.name: 1,
+     Style.ALPHA.name: 0.7,  Style.ZINDEX.name: 0}),
+    ({'folder': ''}, {Style.COLOR.name: 'Orange', Style.WIDTH.name: 1,
+     Style.ALPHA.name: 0.7,  Style.ZINDEX.name: 0}),
 ]
 
 gpxs_mandatory_styles: ElementStyles = [
-    ([], {StyleKey.COLOR: 'Green', StyleKey.WIDTH: 1, StyleKey.ALPHA: 1.0, StyleKey.LINESTYLE: "-",
-        StyleKey.START_ICON: "o",
-        StyleKey.START_ICON_WIDHT: 2, StyleKey.START_ICON_EDGE_RATIO: 0.1,
-        StyleKey.START_ICON_COLOR: "#18ac0d", StyleKey.START_ICON_EDGE_COLOR: "#FFFFFF", StyleKey.START_ICON_ALPHA: 1.0,
-        StyleKey.FINISH_ICON: "\uf11e",
-        StyleKey.FINISH_ICON_WIDHT: 5, StyleKey.FINISH_ICON_EDGE_RATIO: 0.1,
-        StyleKey.FINISH_ICON_COLOR: "#000000", StyleKey.FINISH_ICON_EDGE_COLOR: "#FFFFFF", StyleKey.FINISH_ICON_ALPHA: 1.0,
-        StyleKey.FINISH_MARKER_FONT_PROPERTIES: font_awesome_prop
+    ([], {Style.COLOR.name: 'Green', Style.WIDTH.name: 1, Style.ALPHA.name: 1.0, Style.LINESTYLE.name: "-",
+        Style.START_ICON.name: "o",
+        Style.START_ICON_WIDHT.name: 2, Style.START_ICON_EDGE_RATIO.name: 0.1,
+        Style.START_ICON_COLOR.name: "#18ac0d", Style.START_ICON_EDGE_COLOR.name: "#FFFFFF", Style.START_ICON_ALPHA.name: 1.0,
+        Style.FINISH_ICON.name: "\uf11e",
+        Style.FINISH_ICON_WIDHT.name: 5, Style.FINISH_ICON_EDGE_RATIO.name: 0.1,
+        Style.FINISH_ICON_COLOR.name: "#000000", Style.FINISH_ICON_EDGE_COLOR.name: "#FFFFFF", Style.FINISH_ICON_ALPHA.name: 1.0,
+        Style.FINISH_MARKER_FONT_PROPERTIES.name: font_awesome_prop
     })
 ]
 
@@ -56,43 +56,42 @@ GPXS_STYLES: ElementStyles = [
 
 place_styles: ElementStyles = [
     ({'place': 'city'}, {
-        StyleKey.TEXT_FONT_SIZE: 25, StyleKey.ZINDEX: 30
+        Style.TEXT_FONT_SIZE.name: 25, Style.ZINDEX.name: 30
     },
         {
-        "10-10": {StyleKey.TEXT_FONT_SIZE: 15}
+        "10-10": {Style.TEXT_FONT_SIZE.name: 15}
     }),
     ({'place': 'town'}, {
-        StyleKey.TEXT_FONT_SIZE: 15, StyleKey.ZINDEX: 29
+        Style.TEXT_FONT_SIZE.name: 15, Style.ZINDEX.name: 29
     },
         {
-        "10-10": {StyleKey.TEXT_FONT_SIZE: 6, StyleKey.ICON: "o", StyleKey.COLOR: "#decda8", StyleKey.MIN_REQ_POINT: MinParts.MARKER_TEXT1,
-        StyleKey.TEXT1_POSITIONS: [TextPositions.TOP, TextPositions.BOTTOM, TextPositions.RIGHT], StyleKey.EDGE_WIDTH_RATIO:0.1, StyleKey.WIDTH: 2.8, 
-        StyleKey.EDGE_COLOR: "#a59b7a"}
+        "10-10": {Style.TEXT_FONT_SIZE.name: 6, Style.ICON.name: "o", Style.COLOR.name: "#decda8", Style.MIN_REQ_POINT.name: MinParts.MARKER_TEXT1.name,
+        Style.TEXT1_POSITIONS.name: [TextPositions.TOP.name, TextPositions.BOTTOM.name, TextPositions.RIGHT.name], Style.EDGE_WIDTH_RATIO.name:0.1, Style.WIDTH.name: 2.8, 
+        Style.EDGE_COLOR.name: "#a59b7a"}
     }),
 
     ({'place': 'village'}, {
-        StyleKey.TEXT_FONT_SIZE: 10, StyleKey.ZINDEX: 28
+        Style.TEXT_FONT_SIZE.name: 10, Style.ZINDEX.name: 28
     },
         {
-        "10-10": {StyleKey.TEXT_FONT_SIZE: 5},
-        "11-14": {StyleKey.TEXT_FONT_SIZE: 10, StyleKey.ICON: "o", StyleKey.COLOR: "#decda8", StyleKey.MIN_REQ_POINT: MinParts.MARKER_TEXT1,
-        StyleKey.TEXT1_POSITIONS: [TextPositions.TOP, TextPositions.BOTTOM, TextPositions.RIGHT], StyleKey.EDGE_WIDTH_RATIO:0.2, StyleKey.WIDTH: 4.5, 
-        StyleKey.EDGE_COLOR: "#a59b7a"}
+        "10-10": {Style.TEXT_FONT_SIZE.name: 5},
+        "11-14": {Style.TEXT_FONT_SIZE.name: 10, Style.ICON.name: "o", Style.COLOR.name: "#decda8", Style.MIN_REQ_POINT.name: MinParts.MARKER_TEXT1.name,
+        Style.TEXT1_POSITIONS.name: [TextPositions.TOP.name, TextPositions.BOTTOM.name, TextPositions.RIGHT.name], Style.EDGE_WIDTH_RATIO.name:0.2, Style.WIDTH.name: 4.5, 
+        Style.EDGE_COLOR.name: "#a59b7a"}
     }),
 ]
 
 
 # text color or icon color turn of by string "None" instead of None
-print(font_awesome_prop)
 natural_styles_nodes: ElementStyles = [
     ({'natural': 'peak'}, {
-        # StyleKey.ICON: "^", 
-        StyleKey.ICON: "\uf11e", 
-        StyleKey.MARKER_HORIZONTAL_ALIGN: "center", StyleKey.MARKER_VERTICAL_ALIGN: "center",
-        StyleKey.MARKER_FONT_PROPERTIES: material_desigh_prop,
-        StyleKey.COLOR: "#7f3016", StyleKey.MIN_REQ_POINT: MinParts.MARKER_TEXT2, #StyleKey.MIN_REQ_POINT: MinParts.MARKER_TEXT2,
-        StyleKey.TEXT_FONT_SIZE: 3, StyleKey.WIDTH: 3.6,  StyleKey.TEXT1_POSITIONS: [TextPositions.TOP], 
-        StyleKey.TEXT2_POSITIONS: [TextPositions.BOTTOM], StyleKey.EDGE_WIDTH_RATIO: 0, StyleKey.MARKER_CHECK_OVERLAP: True
+        # Style.ICON.name: "^", 
+        Style.ICON.name: "\uf11e", 
+        Style.MARKER_HORIZONTAL_ALIGN.name: "center", Style.MARKER_VERTICAL_ALIGN.name: "center",
+        Style.MARKER_FONT_PROPERTIES.name: material_desigh_prop,
+        Style.COLOR.name: "#7f3016", Style.MIN_REQ_POINT.name: MinParts.MARKER_TEXT2.name, #Style.MIN_REQ_POINT.name: MinParts.MARKER_TEXT2.name,
+        Style.TEXT_FONT_SIZE.name: 3, Style.WIDTH.name: 3.6,  Style.TEXT1_POSITIONS.name: [TextPositions.TOP.name], 
+        Style.TEXT2_POSITIONS.name: [TextPositions.BOTTOM.name], Style.EDGE_WIDTH_RATIO.name: 0, Style.MARKER_CHECK_OVERLAP.name: True
 
     })  # rozlišení - dict vs dict s 2 dict uvnitř
 ]
@@ -104,17 +103,17 @@ nodes_styles_default: ElementStyles = [
        
     }),
     ({'place': ['city', 'town', 'village']}, {
-        StyleKey.TEXT_FONT_SIZE: 5, StyleKey.TEXT_OUTLINE_WIDTH_RATIO: 0.2, StyleKey.MIN_REQ_POINT: MinParts.TEXT1,
-        StyleKey.TEXT1_POSITIONS: [TextPositions.TOP, TextPositions.BOTTOM, TextPositions.RIGHT]
+        Style.TEXT_FONT_SIZE.name: 5, Style.TEXT_OUTLINE_WIDTH_RATIO.name: 0.2, Style.MIN_REQ_POINT.name: MinParts.TEXT1.name,
+        Style.TEXT1_POSITIONS.name: [TextPositions.TOP.name, TextPositions.BOTTOM.name, TextPositions.RIGHT.name]
     }),
 ]
 
 nodes_mandatory_styles: ElementStyles = [
     ([], {
-        StyleKey.COLOR: '#000000', StyleKey.ZINDEX: 1, StyleKey.ALPHA: 1, StyleKey.EDGE_ALPHA: 1,
-        StyleKey.TEXT_COLOR: '#000000', StyleKey.TEXT_FONT_SIZE: 5, StyleKey.TEXT_FONTFAMILY: 'DejaVu Sans',
-        StyleKey.TEXT_STYLE: 'normal', StyleKey.EDGE_COLOR: '#FFFFFF', StyleKey.TEXT_OUTLINE_WIDTH_RATIO: 0.2,
-        StyleKey.TEXT_WEIGHT: 'normal', StyleKey.TEXT_OUTLINE_COLOR: '#FFFFFF', StyleKey.TEXT_WRAP_LEN: 15
+        Style.COLOR.name: '#000000', Style.ZINDEX.name: 1, Style.ALPHA.name: 1, Style.EDGE_ALPHA.name: 1,
+        Style.TEXT_COLOR.name: '#000000', Style.TEXT_FONT_SIZE.name: 5, Style.TEXT_FONTFAMILY.name: 'DejaVu Sans',
+        Style.TEXT_STYLE.name: 'normal', Style.EDGE_COLOR.name: '#FFFFFF', Style.TEXT_OUTLINE_WIDTH_RATIO.name: 0.2,
+        Style.TEXT_WEIGHT.name: 'normal', Style.TEXT_OUTLINE_COLOR.name: '#FFFFFF', Style.TEXT_WRAP_LEN.name: 15
     })
 ]
 
@@ -130,76 +129,76 @@ NODES_STYLES: ElementStyles = [
 # styles that must be assigned to all way features
 ways_mandatory_styles: ElementStyles = [
     ([], {
-        StyleKey.COLOR: '#EDEDE0', StyleKey.ALPHA: 1.0, StyleKey.WIDTH: 1, StyleKey.LINESTYLE: '-',
-        StyleKey.EDGE_WIDTH_RATIO: 1 + 0.3, StyleKey.EDGE_ALPHA: 1,
-        StyleKey.EDGE_COLOR: None, StyleKey.EDGE_LINESTYLE: '-', StyleKey.WIDTH_SCALE: 1, StyleKey.FE_WIDTH_SCALE: 1,
+        Style.COLOR.name: '#EDEDE0', Style.ALPHA.name: 1.0, Style.WIDTH.name: 1, Style.LINESTYLE.name: '-',
+        Style.EDGE_WIDTH_RATIO.name: 1 + 0.3, Style.EDGE_ALPHA.name: 1,
+        Style.EDGE_COLOR.name: None, Style.EDGE_LINESTYLE.name: '-', Style.WIDTH_SCALE.name: 1, Style.FE_WIDTH_SCALE.name: 1,
     }),
     ({'bridge': ''}, {
-        StyleKey.BRIDGE_WIDTH_RATIO: 1, StyleKey.BRIDGE_EDGE_WIDTH_RATIO: 1 + 0.3,
+        Style.BRIDGE_WIDTH_RATIO.name: 1, Style.BRIDGE_EDGE_WIDTH_RATIO.name: 1 + 0.3,
         # on bridge (will be bridge edge)
-        StyleKey.BRIDGE_COLOR: "#FFFFFF", StyleKey.BRIDGE_EDGE_COLOR: "#7D7D7D", StyleKey.PLOT_ON_BRIDGE: True
+        Style.BRIDGE_COLOR.name: "#FFFFFF", Style.BRIDGE_EDGE_COLOR.name: "#7D7D7D", Style.PLOT_ON_BRIDGE.name: True
     }),
 ]
 
 # add highway bridge and tunnel styles
 # highway_styles_tunnels: FeaturesCategoryStyle = {
-#     'motorway': {StyleKey.COLOR: '#8cd25f', StyleKey.ZINDEX: 7, StyleKey.WIDTH: 32, StyleKey.EDGE_COLOR: "#5E9346"..},
+#     'motorway': {Style.COLOR.name: '#8cd25f', Style.ZINDEX.name: 7, Style.WIDTH.name: 32, Style.EDGE_COLOR.name: "#5E9346"..},
 # }
 
 
 highway_styles: ElementStyles = [
-    ({'highway': '', 'bridge': ''}, {StyleKey.EDGE_COLOR: None}),
-    ({'highway': 'motorway'}, {StyleKey.COLOR: '#8cd25f', StyleKey.ZINDEX: 7,
-     StyleKey.WIDTH: 32, StyleKey.EDGE_COLOR: "#5E9346"}),
-    ({'highway': 'trunk'}, {StyleKey.COLOR: '#FDC364', StyleKey.ZINDEX: 6,
-     StyleKey.WIDTH: 26, StyleKey.EDGE_COLOR: "#E19532"}),
-    ({'highway': 'primary'}, {StyleKey.COLOR: '#FDC364', StyleKey.ZINDEX: 5,
-     StyleKey.WIDTH: 22, StyleKey.EDGE_COLOR: "#E19532"}),
-    ({'highway': 'secondary'}, {StyleKey.COLOR: '#F7ED60',
-     StyleKey.ZINDEX: 4, StyleKey.WIDTH: 20, StyleKey.EDGE_COLOR: "#c1b42a"}),
-    ({'highway': 'tertiary'}, {StyleKey.COLOR: '#FFFFFF',
-     StyleKey.ZINDEX: 3, StyleKey.WIDTH: 16}),
-    ({'highway': 'unclassified'}, {StyleKey.COLOR: '#FFFFFF'}),
-    ({'highway': 'road'}, {StyleKey.COLOR: '#FFFFFF'}),
-    ({'highway': 'footway'}, {StyleKey.COLOR: '#FFFFFF',
-     StyleKey.BRIDGE_COLOR: "#FFFFFF"}),
-    ({'highway': 'steps'}, {StyleKey.COLOR: '#8f8364', StyleKey.LINESTYLE: "--",
-     StyleKey.EDGE_COLOR: None, StyleKey.PLOT_ON_BRIDGE: None}),
-    ({'highway': 'path'}, {StyleKey.COLOR: '#8f8364', StyleKey.LINESTYLE: "--",
-     StyleKey.EDGE_COLOR: None, StyleKey.BRIDGE_COLOR: "#FFFFFF", StyleKey.PLOT_ON_BRIDGE: None}),
-    ({'highway': 'track'}, {StyleKey.COLOR: '#8f8364', StyleKey.LINESTYLE: "--",
-     StyleKey.EDGE_COLOR: None, StyleKey.BRIDGE_COLOR: "#FFFFFF", StyleKey.PLOT_ON_BRIDGE: None}),
-    ({'highway': 'residential'}, {StyleKey.COLOR: '#FFFFFF'})
+    ({'highway': '', 'bridge': ''}, {Style.EDGE_COLOR.name: None}),
+    ({'highway': 'motorway'}, {Style.COLOR.name: '#8cd25f', Style.ZINDEX.name: 7,
+     Style.WIDTH.name: 32, Style.EDGE_COLOR.name: "#5E9346"}),
+    ({'highway': 'trunk'}, {Style.COLOR.name: '#FDC364', Style.ZINDEX.name: 6,
+     Style.WIDTH.name: 26, Style.EDGE_COLOR.name: "#E19532"}),
+    ({'highway': 'primary'}, {Style.COLOR.name: '#FDC364', Style.ZINDEX.name: 5,
+     Style.WIDTH.name: 22, Style.EDGE_COLOR.name: "#E19532"}),
+    ({'highway': 'secondary'}, {Style.COLOR.name: '#F7ED60',
+     Style.ZINDEX.name: 4, Style.WIDTH.name: 20, Style.EDGE_COLOR.name: "#c1b42a"}),
+    ({'highway': 'tertiary'}, {Style.COLOR.name: '#FFFFFF',
+     Style.ZINDEX.name: 3, Style.WIDTH.name: 16}),
+    ({'highway': 'unclassified'}, {Style.COLOR.name: '#FFFFFF'}),
+    ({'highway': 'road'}, {Style.COLOR.name: '#FFFFFF'}),
+    ({'highway': 'footway'}, {Style.COLOR.name: '#FFFFFF',
+     Style.BRIDGE_COLOR.name: "#FFFFFF"}),
+    ({'highway': 'steps'}, {Style.COLOR.name: '#8f8364', Style.LINESTYLE.name: "--",
+     Style.EDGE_COLOR.name: None, Style.PLOT_ON_BRIDGE.name: None}),
+    ({'highway': 'path'}, {Style.COLOR.name: '#8f8364', Style.LINESTYLE.name: "--",
+     Style.EDGE_COLOR.name: None, Style.BRIDGE_COLOR.name: "#FFFFFF", Style.PLOT_ON_BRIDGE.name: None}),
+    ({'highway': 'track'}, {Style.COLOR.name: '#8f8364', Style.LINESTYLE.name: "--",
+     Style.EDGE_COLOR.name: None, Style.BRIDGE_COLOR.name: "#FFFFFF", Style.PLOT_ON_BRIDGE.name: None}),
+    ({'highway': 'residential'}, {Style.COLOR.name: '#FFFFFF'})
 ]
 
 
 railway_styles: ElementStyles = [
     ({'railway': 'rail'}, {
-        StyleKey.COLOR: '#FFFFFF', StyleKey.WIDTH: 10,
-        StyleKey.BRIDGE_EDGE_COLOR: '#5D5D5D', StyleKey.BRIDGE_COLOR: "#FFFFFF",
-        StyleKey.EDGE_COLOR: '#5D5D5D', StyleKey.BRIDGE_WIDTH_RATIO: 1 + 1.7,
+        Style.COLOR.name: '#FFFFFF', Style.WIDTH.name: 10,
+        Style.BRIDGE_EDGE_COLOR.name: '#5D5D5D', Style.BRIDGE_COLOR.name: "#FFFFFF",
+        Style.EDGE_COLOR.name: '#5D5D5D', Style.BRIDGE_WIDTH_RATIO.name: 1 + 1.7,
         # todo control after function to calculating width
-        StyleKey.BRIDGE_EDGE_WIDTH_RATIO: 1 + 0.4,
-        StyleKey.LINESTYLE: (0, (5, 5)), StyleKey.EDGE_WIDTH_RATIO: 1 + 0.4
+        Style.BRIDGE_EDGE_WIDTH_RATIO.name: 1 + 0.4,
+        Style.LINESTYLE.name: (0, (5, 5)), Style.EDGE_WIDTH_RATIO.name: 1 + 0.4
     }),
 
     ({'railway': 'tram'}, {
-        StyleKey.COLOR: '#404040',  StyleKey.WIDTH: 4
+        Style.COLOR.name: '#404040',  Style.WIDTH.name: 4
     })
 ]
 
 
 ways_styles_default: ElementStyles = [
     ({'highway': ''}, {
-        StyleKey.COLOR: '#FFFFFF', StyleKey.BRIDGE_EDGE_COLOR: "#7D7D7D",
-        StyleKey.ZINDEX: 1, StyleKey.WIDTH: 8, StyleKey.EDGE_COLOR: "#B0A78D"
+        Style.COLOR.name: '#FFFFFF', Style.BRIDGE_EDGE_COLOR.name: "#7D7D7D",
+        Style.ZINDEX.name: 1, Style.WIDTH.name: 8, Style.EDGE_COLOR.name: "#B0A78D"
     }),
     ({'railway': ''}, {
-        StyleKey.COLOR: '#FFFFFF', StyleKey.ZINDEX: 100, StyleKey.WIDTH: 8
+        Style.COLOR.name: '#FFFFFF', Style.ZINDEX.name: 100, Style.WIDTH.name: 8
     }),
     ({'waterway': ''}, {
-        StyleKey.COLOR: '#8FB8DB', StyleKey.WIDTH: 8,
-        StyleKey.ZINDEX: 0, StyleKey.EDGE_COLOR: None
+        Style.COLOR.name: '#8FB8DB', Style.WIDTH.name: 8,
+        Style.ZINDEX.name: 0, Style.EDGE_COLOR.name: None
     }),
 ]
 
@@ -214,54 +213,54 @@ WAYS_STYLES: ElementStyles = [
 # -------------------areas-------------------
 area_mandatory_styles: ElementStyles = [
     ([], {
-        StyleKey.COLOR: '#EDEDE0', StyleKey.ALPHA: 1.0
+        Style.COLOR.name: '#EDEDE0', Style.ALPHA.name: 1.0
     })
 ]
 
 landuse_styles: ElementStyles = [
-    ({'landuse': 'farmland'}, {StyleKey.COLOR: '#EDEDE0'}),
-    ({'landuse': 'forest'}, {StyleKey.COLOR: '#9FC98D'}),
-    ({'landuse': 'meadow'}, {StyleKey.COLOR: '#B7DEA6'}),
-    ({'landuse': 'grass'}, {StyleKey.COLOR: '#B7DEA6', StyleKey.ZINDEX: 1}),
-    ({'landuse': 'residential'}, {StyleKey.COLOR: '#E2D4AF'}),
-    ({'landuse': 'industrial'}, {StyleKey.COLOR: '#DFDBD1'}),
-    ({'landuse': 'basin'}, {StyleKey.COLOR: '#8FB8DB', StyleKey.ZINDEX: 1}),
-    ({'landuse': 'salt_pond'}, {StyleKey.COLOR: '#8FB8DB', StyleKey.ZINDEX: 1}),
+    ({'landuse': 'farmland'}, {Style.COLOR.name: '#EDEDE0'}),
+    ({'landuse': 'forest'}, {Style.COLOR.name: '#9FC98D'}),
+    ({'landuse': 'meadow'}, {Style.COLOR.name: '#B7DEA6'}),
+    ({'landuse': 'grass'}, {Style.COLOR.name: '#B7DEA6', Style.ZINDEX.name: 1}),
+    ({'landuse': 'residential'}, {Style.COLOR.name: '#E2D4AF'}),
+    ({'landuse': 'industrial'}, {Style.COLOR.name: '#DFDBD1'}),
+    ({'landuse': 'basin'}, {Style.COLOR.name: '#8FB8DB', Style.ZINDEX.name: 1}),
+    ({'landuse': 'salt_pond'}, {Style.COLOR.name: '#8FB8DB', Style.ZINDEX.name: 1}),
 ]
 
 leisure_styles: ElementStyles = [
-    ({'leisure': 'swimming_pool'}, {StyleKey.COLOR: '#8FB8DB'}),
-    ({'leisure': 'golf_course'}, {StyleKey.COLOR: '#DCE9B9'}),
-    ({'leisure': 'playground'}, {StyleKey.COLOR: '#DCE9B9'}),
-    ({'leisure': 'pitch'}, {StyleKey.COLOR: '#DCE9B9'}),
-    ({'leisure': 'sports_centre'}, {StyleKey.COLOR: '#9FC98D'}),
-    ({'leisure': 'nature_reserve'}, {StyleKey.COLOR: None, StyleKey.EDGE_COLOR: '#97BB72',
-                                     StyleKey.WIDTH: 80, StyleKey.ZINDEX: 1,
-                                     StyleKey.EDGE_ALPHA: 0.85, StyleKey.EDGE_LINESTYLE: '-'})
+    ({'leisure': 'swimming_pool'}, {Style.COLOR.name: '#8FB8DB'}),
+    ({'leisure': 'golf_course'}, {Style.COLOR.name: '#DCE9B9'}),
+    ({'leisure': 'playground'}, {Style.COLOR.name: '#DCE9B9'}),
+    ({'leisure': 'pitch'}, {Style.COLOR.name: '#DCE9B9'}),
+    ({'leisure': 'sports_centre'}, {Style.COLOR.name: '#9FC98D'}),
+    ({'leisure': 'nature_reserve'}, {Style.COLOR.name: None, Style.EDGE_COLOR.name: '#97BB72',
+                                     Style.WIDTH.name: 80, Style.ZINDEX.name: 1,
+                                     Style.EDGE_ALPHA.name: 0.85, Style.EDGE_LINESTYLE.name: '-'})
 ]
 
 building_styles: ElementStyles = [
-    ({'building': 'house'}, {StyleKey.COLOR: 'grey'}),
-    ({'building': 'residential'}, {StyleKey.COLOR: 'grey'}),
+    ({'building': 'house'}, {Style.COLOR.name: 'grey'}),
+    ({'building': 'residential'}, {Style.COLOR.name: 'grey'}),
 ]
 
 natural_styles: ElementStyles = [
-    ({'natural': 'wood'}, {StyleKey.COLOR: '#9FC98D'}),
-    ({'natural': 'water'}, {StyleKey.COLOR: '#8FB8DB'}),
-    ({'natural': 'scrub'}, {StyleKey.COLOR: '#B7DEA6'}),
-    ({'natural': 'heath'}, {StyleKey.COLOR: '#B7DEA6'}),
+    ({'natural': 'wood'}, {Style.COLOR.name: '#9FC98D'}),
+    ({'natural': 'water'}, {Style.COLOR.name: '#8FB8DB'}),
+    ({'natural': 'scrub'}, {Style.COLOR.name: '#B7DEA6'}),
+    ({'natural': 'heath'}, {Style.COLOR.name: '#B7DEA6'}),
 ]
 
 area_styles_default: ElementStyles = [
-    ({'building': ''}, {StyleKey.COLOR: '#B7DEA6'}),
-    ({'landuse': ''},  {StyleKey.COLOR: '#EDEDE0'}),
-    ({'water': ''}, {StyleKey.COLOR: '#8FB8DB'}),
-    ({'leisure': ''}, {StyleKey.COLOR: '#EDEDE0'}),
-    ({'natural': ''}, {StyleKey.COLOR: '#B7DEA6'}),
+    ({'building': ''}, {Style.COLOR.name: '#B7DEA6'}),
+    ({'landuse': ''},  {Style.COLOR.name: '#EDEDE0'}),
+    ({'water': ''}, {Style.COLOR.name: '#8FB8DB'}),
+    ({'leisure': ''}, {Style.COLOR.name: '#EDEDE0'}),
+    ({'natural': ''}, {Style.COLOR.name: '#B7DEA6'}),
     ({'boundary': ''}, {
-        StyleKey.COLOR: None, StyleKey.EDGE_COLOR: '#97BB72',
-        StyleKey.WIDTH: 80, StyleKey.EDGE_LINESTYLE: '-',
-        StyleKey.ZINDEX: 1, StyleKey.EDGE_ALPHA: 0.85
+        Style.COLOR.name: None, Style.EDGE_COLOR.name: '#97BB72',
+        Style.WIDTH.name: 80, Style.EDGE_LINESTYLE.name: '-',
+        Style.ZINDEX.name: 1, Style.EDGE_ALPHA.name: 0.85
     })
 ]
 

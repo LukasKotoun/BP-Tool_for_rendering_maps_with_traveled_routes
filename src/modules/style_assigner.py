@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import to_rgba
 
 from modules.utils import Utils
-from common.map_enums import StyleKey, ColorMode, StyleType
+from common.map_enums import Style, ColorMode
 from common.custom_types import FeaturesCategoriesStyles, WantedCategories, FeatureStyles, FeaturesCategoryStyle, ElementStyles
 
 # element or static or map element and gpx...?
@@ -45,7 +45,7 @@ class StyleAssigner:
     def assign_styles(gdf: GeoDataFrame, conditons_styles: ElementStyles, dont_categorize: list[str] = [])  -> None:
         if(gdf.empty):
             return
-        new_styles: StyleKey = set()
+        new_styles: Style = set()
         # assign styles from most general to most specific by writing to columns in styles
         for conditons, styles in reversed(conditons_styles): # assing from least specific to most specific
             filtered_rows: pd.Series = GdfUtils.get_rows_filter(gdf, conditons)
@@ -110,7 +110,7 @@ class StyleAssigner:
         # if not given (different styling for root and folders), calculate how many colors are missing
         if (max_color_count is None):
             max_color_count = Utils.count_missing_values(
-                keys, existing_styles, StyleKey.COLOR)
+                keys, existing_styles, Style.COLOR.name)
         if (colors_used is None):
             colors_used = 0
 
@@ -128,11 +128,11 @@ class StyleAssigner:
                 for key in keys:
                     if key not in existing_styles:
                         existing_styles[key] = {
-                            StyleKey.COLOR: cmap(colors_used)}
+                            Style.COLOR.name: cmap(colors_used)}
                         colors_used += 1
-                    elif (StyleKey.COLOR not in existing_styles[key].keys()):
+                    elif (Style.COLOR.name not in existing_styles[key].keys()):
                         existing_styles[key].update(
-                            {StyleKey.COLOR: cmap(colors_used)})
+                            {Style.COLOR.name: cmap(colors_used)})
                         colors_used += 1
             # continues
             else:
@@ -141,11 +141,11 @@ class StyleAssigner:
                 for key in keys:
                     if key not in existing_styles:
                         existing_styles[key] = {
-                            StyleKey.COLOR: cmap(norm(colors_used))}
+                            Style.COLOR.name: cmap(norm(colors_used))}
                         colors_used += 1
-                    elif (StyleKey.COLOR not in existing_styles[key].keys()):
+                    elif (Style.COLOR.name not in existing_styles[key].keys()):
                         existing_styles[key].update(
-                            {StyleKey.COLOR: cmap(norm(colors_used))})
+                            {Style.COLOR.name: cmap(norm(colors_used))})
                         colors_used += 1
                         
         elif (mode == ColorMode.SHADE):
@@ -155,11 +155,11 @@ class StyleAssigner:
             for key in keys:
                 if key not in existing_styles:
                     existing_styles[key] = {
-                        StyleKey.COLOR: colors[colors_used]}
+                        Style.COLOR.name: colors[colors_used]}
                     colors_used += 1
-                elif (StyleKey.COLOR not in existing_styles[key].keys()):
+                elif (Style.COLOR.name not in existing_styles[key].keys()):
                     existing_styles[key].update(
-                        {StyleKey.COLOR: colors[colors_used]})
+                        {Style.COLOR.name: colors[colors_used]})
                     colors_used += 1
         else:
             warnings.warn(

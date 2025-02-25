@@ -62,7 +62,7 @@ AREA: WantedArea = [{"area": "Brno, Česko", "plot": True, "category": 0, "width
 # AREA: WantedArea = ["Texas, USA"]
 
 AREA_DICT_KEYS = {"area": str | list, "plot": bool, "category": int, "width": int | float, "color": str}
-AREAS_MAPPING_DICT = {"width": StyleKey.WIDTH, "color": StyleKey.COLOR}
+AREAS_MAPPING_DICT = {"width": Style.WIDTH.name, "color": Style.COLOR.name}
 PAPER_DIMENSIONS: PaperSize | tuple[float | None, float | None] = PaperSize.A4.dimensions
 # PAPER_DIMENSIONS: PaperSize | tuple[float | None, float | None] = PaperSize.A4.dimensions
 # set own dimensions. If one is left as 'None' it will be automaticaly calculated using area size
@@ -122,7 +122,7 @@ CRS_OSM = "EPSG:4326"
 CRS_CALC = "EPSG:3857"  # europe 25833 - calculating map scale and scaling factor
 CRS_DISPLAY = "EPSG:3857"
 
-FONT_AWESOME_PATH = "./common/fontawesome/FontAwesome6Free-Solid-900.otf"
+FONT_AWESOME_PATH = "./common/fonts/FontAwesome6Free-Solid-900.otf"
 # MATERIAL_DESIGN_PATH = "./common/fonts/MaterialSymbolsOutlined-VariableFont_FILL,GRAD,opsz,wght.ttf"
 MATERIAL_DESIGN_PATH = "./common/fonts/MaterialSymbolsRounded-VariableFont_FILL,GRAD,opsz,wght.ttf"
 # todo add more icons from google material design
@@ -172,15 +172,15 @@ WAYS_ADDITIONAL_COLUMNS = ['bridge', 'layer', 'tunnel']
 AREA_ADDITIONAL_COLUMNS = []
 
 DERIVATE_COLUMNS_NODES = [
-    ({'place': ''}, StyleKey.TEXT1 , 'name', None),
-    ({'natural': 'peak'}, StyleKey.TEXT1, 'name', None), # try to set with filter in derivated columns
-    ({'natural': 'peak'}, StyleKey.TEXT2, 'ele', None),
+    ({'place': ''}, Style.TEXT1.name , 'name', None),
+    ({'natural': 'peak'}, Style.TEXT1.name, 'name', None), # try to set with filter in derivated columns
+    ({'natural': 'peak'}, Style.TEXT2.name, 'ele', None),
 ]
 
 
 DERIVATE_COLUMNS_WAYS = []
 DERIVATE_COLUMNS_AREAS = []
-NODES_DONT_CATEGORIZE = [StyleKey.TEXT1_POSITIONS, StyleKey.TEXT2_POSITIONS]
+NODES_DONT_CATEGORIZE = [Style.TEXT1_POSITIONS.name, Style.TEXT2_POSITIONS.name]
 WAYS_DONT_CATEGORIZE = []
 AREAS_DONT_CATEGORIZE = []
 
