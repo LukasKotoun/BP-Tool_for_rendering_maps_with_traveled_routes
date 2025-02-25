@@ -1,20 +1,12 @@
 from enum import Enum
 from typing import Literal
-
-
 class ColorMode(Enum):
     DEFAULT = 1
     SINGLE = 2
     SHADE = 3
     PALETTE = 4
 
-# what part of point with text can be removed without removing whole object (marker and texts)
-# na začátku jeden velký filtr tohoto v jednom gdf, a nechat jen ty co sedí: např {removable_part: RemovablePart.NOTHING, ikona, text1, }
-# mohl bych dát jeden dict do settings který by prošel data nastavil správně sloupce - tedy text1 a text2 by vlastně zkopíroval vždy podle filtru
-# [({filter}, nový sloupce, původní sloupce)
-# [({filter}, text1, name) - pro všechny nodes
-# [({filter}, text2, ele) - pro některé
-# a pak filtr podle removable_part nebo přejmenovat minimum
+
 
 
 class MinParts(Enum):  # minimum parts that must node have. If not whole node object is removed

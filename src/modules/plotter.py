@@ -25,6 +25,7 @@ from modules.utils import Utils
 from modules.gdf_utils import GdfUtils
 from common.common_helpers import time_measurement
 import numpy as np
+from collections import namedtuple
 
 
 from shapely.ops import unary_union, split, linemerge
@@ -76,12 +77,12 @@ class Plotter:
         self.polygon_text_inside_display = GdfUtils.transform_geometry_to_display(
             self.ax, polygon_text_inside)
 
-    def __text_on_point(self, row, text: str, text_wrap_len=0, store_bbox: bool = True, check_bbox_position: bool = True, zorder=3) -> Text | None:
+    def __text_on_point(self, row: TextRow, text: str, text_wrap_len=0, store_bbox: bool = True, check_bbox_position: bool = True, zorder=3) -> Text | None:
         text = Utils.wrap_text(text, text_wrap_len)
-        text_plot: Text = self.ax.text(row['geometry'].x, row['geometry'].y, text, color=row[Style.TEXT_COLOR.name], fontsize=row[Style.TEXT_FONT_SIZE.name], family=row[Style.TEXT_FONTFAMILY.name],
-                                       weight=row[Style.TEXT_WEIGHT.name], style=row[Style.TEXT_STYLE.name], ha='center', va='center', alpha=row[Style.ALPHA.name],
-                                       path_effects=[pe.withStroke(linewidth=row[Style.TEXT_OUTLINE_WIDTH.name],
-                                                                   alpha=row[Style.EDGE_ALPHA.name], foreground=row[Style.TEXT_OUTLINE_COLOR.name])], zorder=zorder)
+        text_plot: Text = self.ax.text(row.geometry.x, row.geometry.y, text, color=row.TEXT_COLOR, fontsize=row.TEXT_FONT_SIZE, family=row.TEXT_FONTFAMILY,
+                                       weight=row.TEXT_WEIGHT, style=row.TEXT_STYLE, ha='center', va='center', alpha=row.ALPHA,
+                                       path_effects=[pe.withStroke(linewidth=row.TEXT_OUTLINE_WIDTH,
+                                                                   alpha=row.EDGE_ALPHA, foreground=row.TEXT_OUTLINE_COLOR)], zorder=zorder)
         bbox = text_plot.get_tightbbox()
         if (bbox is None):
             # text is plotted outside of the figure
@@ -99,19 +100,19 @@ class Plotter:
             self.texts_and_markers_bboxs.append(bbox_expanded)
         return text_plot
 
-    def __marker(self, row, store_bbox: bool = True, check_bbox_position: bool = True, zorder=2) -> Line2D | None:
-        font_properties = row.get(Style.MARKER_FONT_PROPERTIES.name, None)
+    def __marker(self, row: MarkerRow, store_bbox: bool = True, check_bbox_position: bool = True, zorder=2) -> Line2D | None:
+        font_properties =  Utils.get_value(row, Style.MARKER_FONT_PROPERTIES.name, None)
         if (pd.notna(font_properties)):
-            # va = row.get(Style.MARKER_VERTICAL_ALIGN.name, "center")
-            # ha = row.get(Style.MARKER_HORIZONTAL_ALIGN.name, "center")
-            marker: Text = self.ax.text(row['geometry'].x, row['geometry'].y, row[Style.MARKER.name], color=row[Style.COLOR.name], fontsize=row[Style.WIDTH.name],
-                                  font_properties=font_properties, alpha=row[Style.ALPHA.name],
-                                  path_effects=[pe.withStroke(linewidth=row[Style.EDGEWIDTH.name],
-                                                              alpha=row[Style.ALPHA.name], foreground=row[Style.EDGE_COLOR.name])],
-                                  zorder=zorder)
+            va = Utils.get_value(row, Style.MARKER_VERTICAL_ALIGN.name, "center")
+            ha = Utils.get_value(row, Style.MARKER_HORIZONTAL_ALIGN.name, "center")
+            marker: Text = self.ax.text(row.geometry.x, row.geometry.y, row.MARKER, color=row.COLOR, fontsize=row.WIDTH,
+                                  font_properties=font_properties, alpha=row.ALPHA,
+                                  path_effects=[pe.withStroke(linewidth=row.EDGEWIDTH,
+                                                              alpha=row.ALPHA, foreground=row.EDGE_COLOR)],
+                                  zorder=zorder, va=va, ha=ha)
         else:
-            marker: Line2D = self.ax.plot(row['geometry'].x, row['geometry'].y, marker=row[Style.MARKER.name], mfc=row[Style.COLOR.name], ms=row[Style.WIDTH.name],
-                                          mec=row[Style.EDGE_COLOR.name], mew=row[Style.EDGEWIDTH.name], alpha=row[Style.ALPHA.name],
+            marker: Line2D = self.ax.plot(row.geometry.x, row.geometry.y, marker=row.MARKER, mfc=row.COLOR, ms=row.WIDTH,
+                                          mec=row.EDGE_COLOR, mew=row.EDGEWIDTH, alpha=row.ALPHA,
                                           zorder=zorder)
         if (isinstance(marker, list)):
             marker = marker[0]
@@ -132,10 +133,9 @@ class Plotter:
             self.texts_and_markers_bboxs.append(bbox_expanded)
         return marker
 
-    def __marker_annotation(self, row, text: str, text_positions: list[TextPositions], text_wrap_len: int = 0, check_bbox_position: bool = True, zorder=3) -> Annotation | None:
+    def __marker_annotation(self, row: TextRow, text: str, marker_size: float, text_positions: list[TextPositions], text_wrap_len: int = 0, check_bbox_position: bool = True, zorder=3) -> Annotation | None:
         text = Utils.wrap_text(text, text_wrap_len)
-        x, y = row['geometry'].x, row['geometry'].y
-        marker_size = row[Style.WIDTH.name]
+        x, y = row.geometry.x, row.geometry.y
         ha = 'center'
         va = 'center'
 
@@ -166,11 +166,11 @@ class Plotter:
                 warnings.warn(f"Unknown text position {position}")
                 continue
             text_anotation: Annotation = self.ax.annotate(text, (x, y), textcoords="offset points", xytext=(x_shift, y_shift), ha=ha, va=va,
-                                                          color=row[Style.TEXT_COLOR.name], fontsize=row[Style.TEXT_FONT_SIZE.name],
-                                                          family=row[Style.TEXT_FONTFAMILY.name], alpha=row[Style.ALPHA.name],
-                                                          weight=row[Style.TEXT_WEIGHT.name], style=row[Style.TEXT_STYLE.name],
-                                                          path_effects=[pe.withStroke(linewidth=row[Style.TEXT_OUTLINE_WIDTH.name],
-                                                                                      alpha=row[Style.EDGE_ALPHA.name], foreground=row[Style.TEXT_OUTLINE_COLOR.name])], zorder=zorder)
+                                                          color=row.TEXT_COLOR, fontsize=row.TEXT_FONT_SIZE,
+                                                          family=row.TEXT_FONTFAMILY, alpha=row.ALPHA,
+                                                          weight=row.TEXT_WEIGHT, style=row.TEXT_STYLE,
+                                                          path_effects=[pe.withStroke(linewidth=row.TEXT_OUTLINE_WIDTH,
+                                                                                      alpha=row.EDGE_ALPHA, foreground=row.TEXT_OUTLINE_COLOR)], zorder=zorder)
             bbox = text_anotation.get_tightbbox()
             if (bbox is None):
                 # text is plotted outside of the figure
@@ -189,23 +189,27 @@ class Plotter:
             return text_anotation
         return None
 
-    def __marker_with_one_annotation(self, row, text_row=Style.TEXT1.name, store_bbox: bool = True, zorder=3) -> tuple[Line2D, Text]:
-        if (row[Style.MIN_REQ_POINT.name] in {MinParts.TEXT1_TEXT2.name, MinParts.MARKER_TEXT1_TEXT2.name}):
+    def __marker_with_one_annotation(self, row: MarkerOneAnotationRow, text_row=Style.TEXT1.name, store_bbox: bool = True, zorder=3) -> tuple[Line2D, Text]:
+        if (row.MIN_REQ_POINT in {MinParts.TEXT1_TEXT2.name, MinParts.MARKER_TEXT1_TEXT2.name}):
             return (None, None)
-        marker = self.__marker(row, store_bbox=False, check_bbox_position=row.get(
-            Style.MARKER_CHECK_OVERLAP.name, True), zorder=zorder)
+        marker = self.__marker(row, store_bbox=False, check_bbox_position=Utils.get_value(row, Style.MARKER_CHECK_OVERLAP.name, True),
+                               zorder=zorder)
         # if node must have marker return None
-        if (marker is None and row[Style.MIN_REQ_POINT.name] in {MinParts.MARKER.name, MinParts.MARKER_TEXT1.name, MinParts.MARKER_TEXT2.name}):
+        if (marker is None and row.MIN_REQ_POINT in {MinParts.MARKER.name, MinParts.MARKER_TEXT1.name, MinParts.MARKER_TEXT2.name}):
             return (None, None)
 
-        text_wrap_len = row.get(Style.TEXT_WRAP_LEN.name, self.text_wrap_len)
-        
-        text_positions = row[Style.TEXT1_POSITIONS.name if text_row ==
-                             Style.TEXT1.name else Style.TEXT2_POSITIONS.name]
+        text_wrap_len = Utils.get_value(row, Style.TEXT_WRAP_LEN.name, self.text_wrap_len)
+        if(text_row == Style.TEXT1.name):
+            text = row.TEXT1
+            text_positions = row.TEXT1_POSITIONS
+        else:
+            text = row.TEXT2
+            text_positions = row.TEXT2_POSITIONS    
         text_annotation = self.__marker_annotation(
-            row, row[text_row], text_positions, text_wrap_len, True, zorder)
+            row, text, row.WIDTH, text_positions, text_wrap_len, True, zorder)
+        
         # node text does not return None
-        if (text_annotation is None and row[Style.MIN_REQ_POINT.name] in [MinParts.TEXT1.name, MinParts.TEXT2.name, MinParts.MARKER_TEXT1.name, MinParts.MARKER_TEXT2.name]):
+        if (text_annotation is None and row.MIN_REQ_POINT in [MinParts.TEXT1.name, MinParts.TEXT2.name, MinParts.MARKER_TEXT1.name, MinParts.MARKER_TEXT2.name]):
             if (marker is not None):
                 marker.remove()
             return (None, None)
@@ -220,24 +224,24 @@ class Plotter:
                     Utils.expand_bbox(text_annotation.get_tightbbox(), self.TEXT_EXPAND_PERCENT))
         return (marker, text_annotation)
 
-    def __marker_with_two_annotations(self, row, store_bbox: bool = True, zorder=3) -> tuple[Line2D, Text, Text]:
-        marker = self.__marker(row, store_bbox=False, check_bbox_position=row.get(
-            Style.MARKER_CHECK_OVERLAP.name, True), zorder=zorder)
+    def __marker_with_two_annotations(self, row: MarkerTwoAnotationRow, store_bbox: bool = True, zorder=3) -> tuple[Line2D, Text, Text]:
+        marker = self.__marker(row, store_bbox=False, check_bbox_position=Utils.get_value(row, Style.MARKER_CHECK_OVERLAP.name, True),
+                               zorder=zorder)
         # if node must have marker return None
-        if (marker is None and row[Style.MIN_REQ_POINT.name] in [MinParts.MARKER.name, MinParts.MARKER_TEXT1.name, MinParts.MARKER_TEXT2.name, MinParts.MARKER_TEXT1_TEXT2.name]):
+        if (marker is None and row.MIN_REQ_POINT in [MinParts.MARKER.name, MinParts.MARKER_TEXT1.name, MinParts.MARKER_TEXT2.name, MinParts.MARKER_TEXT1_TEXT2.name]):
             return (None, None, None)
 
-        text_wrap_len = row.get(Style.TEXT_WRAP_LEN.name, self.text_wrap_len)
+        text_wrap_len = Utils.get_value(row, Style.TEXT_WRAP_LEN.name, self.text_wrap_len)
         text1 = self.__marker_annotation(
-            row, row[Style.TEXT1.name], row[Style.TEXT1_POSITIONS.name], text_wrap_len, True, zorder)
-        if (text1 is None and row[Style.MIN_REQ_POINT.name] in [MinParts.TEXT1.name, MinParts.MARKER_TEXT1.name, MinParts.MARKER_TEXT1_TEXT2.name, MinParts.TEXT1_TEXT2.name]):
+            row, row.TEXT1, row.WIDTH, row.TEXT1_POSITIONS, text_wrap_len, True, zorder)
+        if (text1 is None and row.MIN_REQ_POINT in [MinParts.TEXT1.name, MinParts.MARKER_TEXT1.name, MinParts.MARKER_TEXT1_TEXT2.name, MinParts.TEXT1_TEXT2.name]):
             if (marker is not None):
                 marker.remove()
             return (None, None, None)
 
         text2 = self.__marker_annotation(
-            row, row[Style.TEXT2.name], row[Style.TEXT2_POSITIONS.name], text_wrap_len, True, zorder)
-        if (text2 is None and row[Style.MIN_REQ_POINT.name] in [MinParts.TEXT2.name, MinParts.TEXT1_TEXT2.name, MinParts.MARKER_TEXT2.name, MinParts.MARKER_TEXT1_TEXT2.name]):
+            row, row.TEXT2, row.WIDTH, row.TEXT2_POSITIONS, text_wrap_len, True, zorder)
+        if (text2 is None and row.MIN_REQ_POINT in [MinParts.TEXT2.name, MinParts.TEXT1_TEXT2.name, MinParts.MARKER_TEXT2.name, MinParts.MARKER_TEXT1_TEXT2.name]):
             if (marker is not None):
                 marker.remove()
             if (text1 is not None):
@@ -258,47 +262,48 @@ class Plotter:
 
     def __text_gdf_on_points(self, gdf: gpd.GeoDataFrame, store_bbox: bool = True):
         gdf = GdfUtils.filter_invalid_texts(gdf)
-        texts1 = GdfUtils.filter_rows(
-            gdf, [{Style.TEXT1.name: ''}])
-        texts2 = GdfUtils.filter_rows(
-            gdf, [{Style.TEXT2.name: ''}])
+        texts = GdfUtils.filter_rows(
+            gdf, [{Style.TEXT1.name: ''}, {Style.TEXT2.name: ''}])
 
-        for row in texts1.iterrows():
-            self.__text_on_point(
-                row[1], row[1][Style.TEXT1.name], row[1].get(Style.TEXT_WRAP_LEN.name, self.text_wrap_len), store_bbox, True)
-
-        for row in texts2.iterrows():
-            self.__text_on_point(
-                row[1], row[1][Style.TEXT2.name], row[1].get(Style.TEXT_WRAP_LEN.name, self.text_wrap_len), store_bbox, True)
+        for row in texts.itertuples(index=False):
+            text =  Utils.get_value(row, Style.TEXT1.name, None)
+            if(text is not None):
+                self.__text_on_point(
+                    row, text, Utils.get_value(row, Style.TEXT_WRAP_LEN.name, self.text_wrap_len), store_bbox, True)
+            else:
+                text =  Utils.get_value(row, Style.TEXT2.name, None)
+                self.__text_on_point(
+                row, text, Utils.get_value(row, Style.TEXT_WRAP_LEN.name, self.text_wrap_len), store_bbox, True)
+           
 
     def __markers_gdf(self, gdf: gpd.GeoDataFrame, store_bbox: bool = True):
         gdf = GdfUtils.filter_invalid_markers(gdf)
-        for row in gdf.iterrows():
-            self.__marker(row[1], store_bbox=store_bbox,
-                          check_bbox_position=row[1].get(Style.MARKER_CHECK_OVERLAP.name, True))
+        for row in gdf.itertuples(index=False):
+            self.__marker(row, store_bbox=store_bbox,
+                          check_bbox_position=Utils.get_value(row, Style.MARKER_CHECK_OVERLAP.name, True))
 
     def __markers_gdf_with_one_annotation(self, gdf: gpd.GeoDataFrame, store_bbox: bool = True):
         gdf = GdfUtils.filter_invalid_markers(gdf)
         gdf = GdfUtils.filter_invalid_texts(gdf)
-        texts1 = GdfUtils.filter_rows(
-            gdf, [{Style.TEXT1.name: '', Style.TEXT1_POSITIONS.name: ''}])
-        texts2 = GdfUtils.filter_rows(
-            gdf, [{Style.TEXT2.name: '', Style.TEXT2_POSITIONS.name: ''}])
-
-        for row in texts1.iterrows():
-            self.__marker_with_one_annotation(
-                row[1], Style.TEXT1.name, store_bbox)
-        for row in texts2.iterrows():
-            self.__marker_with_one_annotation(
-                row[1], Style.TEXT2.name, store_bbox)
+        texts = GdfUtils.filter_rows(
+            gdf, [{Style.TEXT1.name: '', Style.TEXT1_POSITIONS.name: ''}, {Style.TEXT2.name: '', Style.TEXT2_POSITIONS.name: ''}])
+        for row in gdf.itertuples(index=False):
+            text1 =  Utils.get_value(row, Style.TEXT1.name, None)
+            if(text1 is not None):
+                self.__marker_with_one_annotation(
+                    row, Style.TEXT1.name, store_bbox)
+            else:
+                self.__marker_with_one_annotation(
+                    row, Style.TEXT2.name, store_bbox)
+                
 
     def __markers_gdf_with_two_annotations(self, gdf: gpd.GeoDataFrame, store_bbox: bool = True):
         gdf = GdfUtils.filter_invalid_markers(gdf)
         gdf = GdfUtils.filter_invalid_texts(gdf)
         texts1 = GdfUtils.filter_rows(
             gdf, [{Style.TEXT1.name: '', Style.TEXT1_POSITIONS.name: '', Style.TEXT2.name: '', Style.TEXT2_POSITIONS.name: ''}])
-        for row in gdf.iterrows():
-            self.__marker_with_two_annotations(row[1], store_bbox)
+        for row in gdf.itertuples(index=False):
+            self.__marker_with_two_annotations(row, store_bbox)
 
     @time_measurement("nodePlot")
     def nodes(self, nodes_gdf: gpd.GeoDataFrame, wrap_len: int | None):
@@ -488,7 +493,6 @@ class Plotter:
     def __bridges(self, bridges_gdf: gpd.GeoDataFrame, zorder=2):
         if (bridges_gdf.empty):
             return
-        # can be merged edges and center -- using pe
 
         def bridges_edges(gdf: gpd.GeoDataFrame):
             gdf = GdfUtils.filter_rows(
@@ -602,95 +606,64 @@ class Plotter:
         if (gpxs_gdf.empty):
             return
         self.__ways_normal(gpxs_gdf, True, False, zorder=5)
-
+        
+        # todo to geom class
         def get_first_point(geometry):
             if isinstance(geometry, LineString):
-                # Directly access first and last points for LineString
                 first_point = shapely.Point(geometry.coords[0])
             elif isinstance(geometry, MultiLineString):
-                # For MultiLineString, get first and last points from each LineString
-                # First point of the first LineString
                 first_point = shapely.Point(geometry.geoms[0].coords[0])
             else:
                 raise ValueError("Unsupported geometry type")
 
             return first_point
-
         def get_last_point(geometry):
             if isinstance(geometry, LineString):
-                # Directly access first and last points for LineString
                 first_point = shapely.Point(geometry.coords[-1])
             elif isinstance(geometry, MultiLineString):
-                # For MultiLineString, get first and last points from each LineString
-                # First point of the first LineString
                 first_point = shapely.Point(geometry.geoms[-1].coords[-1])
             else:
                 raise ValueError("Unsupported geometry type")
 
             return first_point
 
-        gpx_start_MARKERs = GdfUtils.filter_rows(gpxs_gdf, {Style.START_MARKER.name: '', Style.START_MARKER_WIDHT.name: '',
+        gpx_start_markers = GdfUtils.filter_rows(gpxs_gdf, {Style.START_MARKER.name: '', Style.START_MARKER_WIDHT.name: '',
                                                           Style.START_MARKER_COLOR.name: '', Style.START_MARKER_EDGE_COLOR.name: '',
                                                           Style.START_MARKER_EDGEWIDTH.name: '', Style.START_MARKER_ALPHA.name: ''})
-        gpx_finish_MARKERs = GdfUtils.filter_rows(gpxs_gdf, {Style.FINISH_MARKER.name: '', Style.FINISH_MARKER_WIDHT.name: '',
+        gpx_finish_markers = GdfUtils.filter_rows(gpxs_gdf, {Style.FINISH_MARKER.name: '', Style.FINISH_MARKER_WIDHT.name: '',
                                                            Style.FINISH_MARKER_COLOR.name: '', Style.FINISH_MARKER_EDGE_COLOR.name: '',
                                                            Style.FINISH_MARKER_EDGEWIDTH.name: '', Style.FINISH_MARKER_ALPHA.name: ''})
 
-        # todo in tuple only remove previfx from all keys
-        for row in gpx_finish_MARKERs.itertuples():
-            print(row)
-        for row in gpx_finish_MARKERs.iterrows():
-            style_rename_mapping = {
-                Style.FINISH_MARKER.name: Style.MARKER.name,
-                Style.FINISH_MARKER_COLOR.name: Style.COLOR.name,
-                Style.FINISH_MARKER_EDGE_COLOR.name: Style.EDGE_COLOR.name,
-                Style.FINISH_MARKER_WIDHT.name: Style.WIDTH.name,
-                Style.FINISH_MARKER_EDGEWIDTH.name: Style.EDGEWIDTH.name,
-                Style.FINISH_MARKER_ALPHA.name: Style.ALPHA.name,
-                Style.FINISH_MARKER_FONT_PROPERTIES.name: Style.MARKER_FONT_PROPERTIES.name,
-                "geometry": "geometry"
-            }
-            # Filter and rename the style keys
-            style_data = {new_key: row[1][old_key]
-                          for old_key, new_key in style_rename_mapping.items()}
-            style_data['geometry'] = get_last_point(row[1].geometry)
-            # Convert it to a tuple (can include the index or any other data if needed)
-            self.__marker(style_data, True, True, 10)
 
-        for row in gpx_start_MARKERs.iterrows():
-            style_rename_mapping = {
-                Style.START_MARKER.name: Style.MARKER.name,
-                Style.START_MARKER_COLOR.name: Style.COLOR.name,
-                Style.START_MARKER_EDGE_COLOR.name: Style.EDGE_COLOR.name,
-                Style.START_MARKER_WIDHT.name: Style.WIDTH.name,
-                Style.START_MARKER_EDGEWIDTH.name: Style.EDGEWIDTH.name,
-                Style.START_MARKER_ALPHA.name: Style.ALPHA.name,
-                Style.START_MARKER_FONT_PROPERTIES.name: Style.MARKER_FONT_PROPERTIES.name,
-                "geometry": "geometry"
-            }
-        
-            # Filter and rename the style keys
-            style_data = {new_key: row[1].get(old_key, None)
-                          for old_key, new_key in style_rename_mapping.items()}
-            style_data['geometry'] = get_first_point(row[1].geometry)
-            # Convert it to a tuple (can include the index or any other data if needed)
-            self.__marker(style_data,  True, True, 10)
-
-        # for marker ploting remap MARKERs to row with different tags and use marker plot function
-
-        # gpxs_edge_gdf = GdfUtils.filter_rows(
-        #     gpxs_gdf, {Style.EDGE_COLOR.name: '', Style.EDGE_LINESTYLE.name: '', Style.WIDTH.name: ''})
-        # self.__line_edges(gpxs_gdf)
-        # if (not gpxs_edge_gdf.empty):
-        #     gpxs_edge_gdf.plot(ax=self.ax, color=gpxs_gdf[Style.EDGE_COLOR.name], linewidth=gpxs_gdf[Style.WIDTH.name],
-        #                        linestyle=gpxs_gdf[Style.EDGE_LINESTYLE.name], alpha=gpxs_gdf[Style.ALPHA.name],
-        #                        path_effects=[pe.Stroke(capstyle="round")])
-
-        # gpxs_gdf[Style.WIDTH.name] = gpxs_gdf[Style.WIDTH.name] * \
-        #     self.map_object_scaling_factor * line_width_multiplier
-        # gpxs_gdf.plot(ax=self.ax, color=gpxs_gdf[Style.COLOR.name], linewidth=gpxs_gdf[Style.WIDTH.name],
-        #               linestyle=gpxs_gdf[Style.LINESTYLE.name], alpha=gpxs_gdf[Style.ALPHA.name],
-        #               path_effects=[pe.Stroke(capstyle="round")])
+        for row in gpx_finish_markers.itertuples():
+            mapped_row: MarkerRow = MarkerRow(
+                geometry=get_last_point(row.geometry),
+                MARKER=row.FINISH_MARKER,
+                COLOR=row.FINISH_MARKER_COLOR,
+                WIDTH=row.FINISH_MARKER_WIDHT,
+                ALPHA=row.FINISH_MARKER_ALPHA,
+                EDGEWIDTH=row.FINISH_MARKER_EDGEWIDTH,
+                EDGE_COLOR=row.FINISH_MARKER_EDGE_COLOR,
+                MARKER_FONT_PROPERTIES=Utils.get_value(row, Style.FINISH_MARKER_FONT_PROPERTIES.name, None),
+                MARKER_HORIZONTAL_ALIGN=Utils.get_value(row, Style.FINISH_MARKER_HORIZONTAL_ALIGN.name, "center"),
+                MARKER_VERTICAL_ALIGN=Utils.get_value(row, Style.FINISH_MARKER_VERTICAL_ALIGN.name, "center"),
+            )
+            self.__marker(mapped_row, False, False, 5)
+         
+        for row in gpx_start_markers.itertuples():
+            mapped_row: MarkerRow = MarkerRow(
+                geometry=get_first_point(row.geometry),
+                MARKER=row.START_MARKER,
+                COLOR=row.START_MARKER_COLOR,
+                WIDTH=row.START_MARKER_WIDHT,
+                ALPHA=row.START_MARKER_ALPHA,
+                EDGEWIDTH=row.START_MARKER_EDGEWIDTH,
+                EDGE_COLOR=row.START_MARKER_EDGE_COLOR,
+                MARKER_FONT_PROPERTIES=Utils.get_value(row, Style.START_MARKER_FONT_PROPERTIES.name, None),
+                MARKER_HORIZONTAL_ALIGN=Utils.get_value(row, Style.START_MARKER_HORIZONTAL_ALIGN.name, "center"),
+                MARKER_VERTICAL_ALIGN=Utils.get_value(row, Style.START_MARKER_VERTICAL_ALIGN.name, "center"),
+            )
+            self.__marker(mapped_row, False, False, 5)
 
     def clip(self, crs: str, zoom_percentage_padding=0, clipped_area_color: str = 'white'):
         whole_area_bounds = Utils.adjust_bounds_to_fill_paper(

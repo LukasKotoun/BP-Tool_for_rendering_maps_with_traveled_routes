@@ -37,6 +37,7 @@ gpxs_mandatory_styles: ElementStyles = [
         Style.START_MARKER_WIDHT.name: 2, Style.START_MARKER_EDGE_RATIO.name: 0.1,
         Style.START_MARKER_COLOR.name: "#18ac0d", Style.START_MARKER_EDGE_COLOR.name: "#FFFFFF", Style.START_MARKER_ALPHA.name: 1.0,
         Style.FINISH_MARKER.name: "\uf11e",
+        Style.FINISH_MARKER_HORIZONTAL_ALIGN.name: "left", Style.FINISH_MARKER_VERTICAL_ALIGN.name: "bottom",
         Style.FINISH_MARKER_WIDHT.name: 5, Style.FINISH_MARKER_EDGE_RATIO.name: 0.1,
         Style.FINISH_MARKER_COLOR.name: "#000000", Style.FINISH_MARKER_EDGE_COLOR.name: "#FFFFFF", Style.FINISH_MARKER_ALPHA.name: 1.0,
         Style.FINISH_MARKER_FONT_PROPERTIES.name: font_awesome_prop
@@ -85,10 +86,8 @@ place_styles: ElementStyles = [
 # text color or MARKER color turn of by string "None" instead of None
 natural_styles_nodes: ElementStyles = [
     ({'natural': 'peak'}, {
-        # Style.MARKER.name: "^", 
-        Style.MARKER.name: "\uf11e", 
-        Style.MARKER_HORIZONTAL_ALIGN.name: "center", Style.MARKER_VERTICAL_ALIGN.name: "center",
-        Style.MARKER_FONT_PROPERTIES.name: material_desigh_prop,
+        Style.MARKER.name: "^", 
+        Style.MARKER_HORIZONTAL_ALIGN.name: "center", Style.MARKER_VERTICAL_ALIGN.name: None,
         Style.COLOR.name: "#7f3016", Style.MIN_REQ_POINT.name: MinParts.MARKER_TEXT2.name, #Style.MIN_REQ_POINT.name: MinParts.MARKER_TEXT2.name,
         Style.TEXT_FONT_SIZE.name: 3, Style.WIDTH.name: 3.6,  Style.TEXT1_POSITIONS.name: [TextPositions.TOP.name], 
         Style.TEXT2_POSITIONS.name: [TextPositions.BOTTOM.name], Style.EDGE_WIDTH_RATIO.name: 0, Style.MARKER_CHECK_OVERLAP.name: True
