@@ -1,5 +1,6 @@
 from common.custom_types import *
 from common.map_enums import *
+import matplotlib.font_manager as fm
 
 
 # --------------------------------------------------------------map area--------------------------------------------------------------
@@ -41,8 +42,6 @@ PERCENTAGE_PADDING = 0 # todo solve this - remove or use in calculations of size
 # AREA: WantedArea = [(0.3733594, 54.1375764), (27.5538867, 54.1118236),(27.5538867, 40.9478483), (0.3294142, 41.1136006)]  # zoom 6 - 0.000095
 
 
-# AREA: WantedArea = [[(15.7396182, 49.3111173), (16.0273871, 49.3028839),
-#                     (16.0266146, 49.1439064), (15.6712219, 49.1928600)]]  # trebic
 # AREA: WantedArea = ["Česko","Vysočina, Česko", "Jihomoravský kraj, Česko"]
 # AREA: WantedArea = ["Brno, Česko"]
 # AREA: WantedArea = ["Jihomoravský kraj, Česko", "Kraj Vysočina, Česko"]
@@ -50,10 +49,9 @@ PERCENTAGE_PADDING = 0 # todo solve this - remove or use in calculations of size
 #                     {"area": "Kraj Vysočina, Česko", "plot": True, "category": 1, "width": 1, "color": "black"},
 #                      {"area": "Pardubický kraj, Česko", "plot": True, "category": 2, "width": 1, "color": "black"},
 #                       {"area": "Jihočeský kraj, Česko", "plot": True, "category": 1, "width": 1, "color": "black"}]
+# nastavení šířky asi jako číslo ale na fe small medium a big 
+# AREA: WantedArea = [{"area": "Třebíč, Česko", "plot": True, "category": 0, "width": 1, "color": "black"}]
 AREA: WantedArea = [{"area": "Brno, Česko", "plot": True, "category": 0, "width": 1, "color": "black"}]
-
-# change width to small, medium, big
-
 
 # AREA: WantedArea = ["Kraj Vysočina, Česko"]
 # AREA: WantedArea = ["Jihomoravský kraj, Česko"]
@@ -62,7 +60,8 @@ AREA: WantedArea = [{"area": "Brno, Česko", "plot": True, "category": 0, "width
 # AREA: WantedArea = ["Třebíč, Česko"]
 # AREA: WantedArea = ["Okres Třebíč, Česko", "Třebíč, Česko", "Okres Jihlava, Česko"]
 # AREA: WantedArea = ["Texas, USA"]
-AREA_DICT_KEYS = {"area": str | list, "plot": bool, "category": int, "width": int, "color": str}
+
+AREA_DICT_KEYS = {"area": str | list, "plot": bool, "category": int, "width": int | float, "color": str}
 AREAS_MAPPING_DICT = {"width": StyleKey.WIDTH, "color": StyleKey.COLOR}
 PAPER_DIMENSIONS: PaperSize | tuple[float | None, float | None] = PaperSize.A4.dimensions
 # PAPER_DIMENSIONS: PaperSize | tuple[float | None, float | None] = PaperSize.A4.dimensions
@@ -76,17 +75,13 @@ WANTED_ORIENTATION: MapOrientation = MapOrientation.AUTOMATIC
 
 # FIT_PAPER_SIZE recomended with PERCENTAGE_PADDING 0
 FIT_PAPER_SIZE = False
+EXPAND_AREA_BOUNDS_PLOT = True
 
-# bounds
-# COMBINED - one bound around area, SEPARATED - separated bounds around every area in AREA variable
-AREA_BOUNDARY = AreaBounds.SEPARATED
-EXPAND_AREA_BOUNDS_PLOT = False
-AREA_BOUNDARY_LINEWIDTH = 5
 
 # text general
 TEXT_WRAP_NAMES_LEN = 15  # len or 0/None if not wrap (15 default)
 # if allow is false set threashold (0-1) how much of text must be inside
-TEXT_BOUNDS_OVERFLOW_THRESHOLD = 0
+TEXT_BOUNDS_OVERFLOW_THRESHOLD = 0.97
 
 
 # plot as bridge (True)  or normal way (False)
@@ -96,7 +91,7 @@ PLOT_TUNNELS = True
 
 # --------------------------------------------------------------preview--------------------------------------------------------------
 # NOTE: must have same settings as the resulting one when generating for large format printing
-WANT_PREVIEW: bool = True
+WANT_PREVIEW: bool = False
 # OUTER_AREA: WantedArea = [(15.7034756,48.6941575), (15.9206889,48.6941186), (15.9198775, 48.5926164), (15.7030222, 48.5936264)] # zoom 13 - 0.012257255675006467
 
 # area for that you are creating smaller preview (bigger than normal area)
@@ -127,7 +122,12 @@ CRS_OSM = "EPSG:4326"
 CRS_CALC = "EPSG:3857"  # europe 25833 - calculating map scale and scaling factor
 CRS_DISPLAY = "EPSG:3857"
 
-
+FONT_AWESOME_PATH = "./common/fontawesome/FontAwesome6Free-Solid-900.otf"
+# MATERIAL_DESIGN_PATH = "./common/fonts/MaterialSymbolsOutlined-VariableFont_FILL,GRAD,opsz,wght.ttf"
+MATERIAL_DESIGN_PATH = "./common/fonts/MaterialSymbolsRounded-VariableFont_FILL,GRAD,opsz,wght.ttf"
+# todo add more icons from google material design
+font_awesome_prop = fm.FontProperties(fname=FONT_AWESOME_PATH)
+material_desigh_prop = fm.FontProperties(fname=MATERIAL_DESIGN_PATH)
 # --------------------------------------------------------------gpx settings--------------------------------------------------------------
 
 # zooms: scaling values for center of each zoom level 
@@ -150,7 +150,7 @@ ZOOM_MAPPING: dict[int, float] = {
 
 # this will come from FE:
 
-GPX_FOLDER: str = '../gpxs/trebic2'
+GPX_FOLDER: str = '../gpxs/brno'
 ROOT_FILES_COLOR_MODE: ColorMode = ColorMode.DEFAULT
 ROOT_FILES_COLOR_OR_PALLET: str = "Set1"
 ROOT_FILES_COLOR_DIS_PALLET = True

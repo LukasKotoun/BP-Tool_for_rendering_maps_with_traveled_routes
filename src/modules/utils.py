@@ -333,6 +333,8 @@ class Utils:
 
         bbox_area: float = inner.area
         intersection_area: float = inner.intersection(outer).area
+        if(bbox_area == 0):
+            return False
         percentage_inside: float = intersection_area / bbox_area
         return percentage_inside >= threshold
     
