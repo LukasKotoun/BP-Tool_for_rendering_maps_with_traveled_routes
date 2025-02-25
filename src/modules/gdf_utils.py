@@ -1,27 +1,21 @@
 import warnings
 
-from shapely import geometry
-from shapely.geometry import Polygon, GeometryCollection, MultiLineString, LineString
 import geopandas as gpd
 import pandas as pd
 import osmnx as ox
-import pygeoops
-from shapely.geometry.multipolygon import MultiPolygon
+import numpy as np
+from shapely.geometry import Polygon, GeometryCollection, MultiLineString, LineString, Point
+from osmium import FileProcessor
+from shapely.ops import split
 
 from modules.utils import Utils
-from osmium import FileProcessor
+from modules.geom_utils import GeomUtils
 from common.map_enums import WorldSides, Style, MinParts
-from common.custom_types import BoundsDict, DimensionsTuple, Point, WantedAreas, RowsConditions, RowsConditionsAND, WantedArea
+from common.custom_types import BoundsDict, DimensionsTuple, WantedAreas, RowsConditions, RowsConditionsAND, WantedArea
 from common.common_helpers import time_measurement
-import textwrap
-import numpy as np
-from shapely.ops import unary_union, split, linemerge
-
-# todo remove unused and refactor
 
 
 class GdfUtils:
-
     # ------------getting informations------------
     @staticmethod
     def get_area_gdf(area: str | list[Point], fromCrs: str, toCrs: str | None = None) -> gpd.GeoDataFrame:
@@ -32,7 +26,7 @@ class GdfUtils:
                     area)  # Get from place name
             except:
                 raise ValueError(
-                    "The requested location has not been found.")
+                    "The requested location has not been found.") # todo should be validated on FE
             if (reqired_area_gdf.empty):
                 raise ValueError(
                     "The requested location has not been found.")
@@ -117,37 +111,14 @@ class GdfUtils:
             WorldSides.NORTH.name: north
         }
 
-    @staticmethod
-    def get_polygon_bounds(polygon: Polygon) -> BoundsDict:
-        # [WorldSides.WEST.name, WorldSides.SOUTH.name, WorldSides.EAST.name, WorldSides.NORTH.name]
-        bounds: tuple[float] = polygon.bounds
-        return {WorldSides.WEST.name: bounds[0],
-                WorldSides.SOUTH.name: bounds[1],
-                WorldSides.EAST.name: bounds[2],
-                WorldSides.NORTH.name: bounds[3]}
-
+ 
     @staticmethod
     def get_dimensions_gdf(gdf: gpd.GeoDataFrame) -> DimensionsTuple:
         bounds = GdfUtils.get_bounds_gdf(gdf)
         return Utils.get_dimensions(bounds)
 
-    @staticmethod
-    def get_dimensions_polygon(polygon: gpd.GeoDataFrame) -> DimensionsTuple:
-        bounds = GdfUtils.get_polygon_bounds(polygon)
-        return Utils.get_dimensions(bounds)
-
     # ------------creating------------
 
-    @staticmethod
-    def create_polygon_from_bounds(area_bounds: BoundsDict) -> Polygon:
-        return Polygon([
-            (area_bounds[WorldSides.EAST.name], area_bounds[WorldSides.SOUTH.name]),
-            (area_bounds[WorldSides.EAST.name], area_bounds[WorldSides.NORTH.name]),
-            (area_bounds[WorldSides.WEST.name], area_bounds[WorldSides.NORTH.name]),
-            (area_bounds[WorldSides.WEST.name], area_bounds[WorldSides.SOUTH.name]),
-            # Closing the polygon
-            (area_bounds[WorldSides.EAST.name], area_bounds[WorldSides.SOUTH.name])
-        ])
 
     @staticmethod
     def create_gdf_from_geometry_and_attributes(geometry: list, tags: list[dict], fromCrs: str) -> gpd.GeoDataFrame:
@@ -173,7 +144,7 @@ class GdfUtils:
 
     @staticmethod
     def create_gdf_from_bounds(area_bounds: BoundsDict, fromCrs: str, toCrs: str | None = None) -> gpd.GeoDataFrame:
-        return GdfUtils.create_gdf_from_polygon(GdfUtils.create_polygon_from_bounds(area_bounds), fromCrs, toCrs)
+        return GdfUtils.create_gdf_from_polygon(GeomUtils.create_polygon_from_bounds(area_bounds), fromCrs, toCrs)
 
     @staticmethod
     def create_gdf_from_polygon(area_polygon: Polygon, fromCrs: str, toCrs: str | None = None) -> gpd.GeoDataFrame:
@@ -181,11 +152,6 @@ class GdfUtils:
             return gpd.GeoDataFrame(geometry=[area_polygon], crs=fromCrs)
         else:
             return gpd.GeoDataFrame(geometry=[area_polygon], crs=fromCrs).to_crs(toCrs)
-
-    @staticmethod
-    def create_polygon_from_gdf_bounds(*gdfs: gpd.GeoDataFrame, toCrs: str | None = None) -> Polygon:
-        bounds = GdfUtils.get_bounds_gdf(*gdfs, toCrs=toCrs)
-        return GdfUtils.create_polygon_from_bounds(bounds)
 
     @staticmethod
     def create_polygon_from_gdf(*gdfs: gpd.GeoDataFrame, toCrs: str | None = None) -> Polygon:
@@ -204,16 +170,17 @@ class GdfUtils:
             return combined_gdf.unary_union
 
     @staticmethod
-    def create_bg_gdf(map_area_gdf: gpd.GeoDataFrame, costline_gdf: gpd.GeoDataFrame, water_color: str, land_color: str) -> gpd.GeoDataFrame:
+    def create_background_gdf(map_area_gdf: gpd.GeoDataFrame, costline_gdf: gpd.GeoDataFrame, water_color: str, land_color: str) -> gpd.GeoDataFrame:
+# todo check if geom and splitter are different
         def check_same_orientation(geom, splitter):
             # get intersetion by orientation of geom
             geom_orientation_inter = geom.intersection(splitter)
-            geom_orientation_inter = GdfUtils.merge_lines_safe(
+            geom_orientation_inter = GeomUtils.merge_lines_safe(
                 geom_orientation_inter)
 
             # get intersetion by orientation of splitter
             split_orientation_inter = splitter.intersection(geom)
-            split_orientation_inter = GdfUtils.merge_lines_safe(
+            split_orientation_inter = GeomUtils.merge_lines_safe(
                 split_orientation_inter)
             if (not geom_orientation_inter.equals(split_orientation_inter)):
                 return None
@@ -242,13 +209,13 @@ class GdfUtils:
 
             return None
 
+
         if (costline_gdf.empty):
             return GdfUtils.create_empty_gdf(map_area_gdf.crs)
         bg_data = []
         required_area_polygon = GdfUtils.create_polygon_from_gdf(map_area_gdf)
         # split one by one
-        # splitters = linemerge(costline_gdf.geometry.unary_union)
-        splitters = GdfUtils.merge_lines_safe(costline_gdf.geometry)
+        splitters = GeomUtils.merge_lines_safe(costline_gdf.geometry)
         splitters = list(splitters.geoms) if isinstance(
             splitters, MultiLineString) else [splitters]
         for splitter in splitters:
@@ -324,60 +291,18 @@ class GdfUtils:
         if multipliers or scaling is not None:
             GdfUtils.multiply_column_gdf(gdf, new_column, multipliers, scaling)
 
-    # @staticmethod
-    # @time_measurement("wrapText")
-    # def wrap_text_gdf(gdf: gpd.GeoDataFrame, columns: list=[], default_wrap = 0) -> None:
-    #     def wrap_text_with_width(text, width):
-    #         if pd.isna(text) or pd.isna(width) or int(width) == 0:
-    #             return text  # Skip wrapping if text or width is None
-    #         return textwrap.fill(str(text), width=int(width)) # Ensure width is an integer
-
-    #     for column_text, column_wrap_len  in columns:
-    #         gdf[column_text] = gdf.apply(lambda row: wrap_text_with_width(row.get(column_text, None), row.get(column_wrap_len, default_wrap)), axis=1)
-
     @staticmethod
     def change_columns_to_categorical(gdf: gpd.GeoDataFrame, columns: list) -> None:
         for column in columns:
             if (column in gdf):
                 gdf[column] = gdf[column].astype("category")
                 
-
-
     @staticmethod
     def combine_rows_gdf(gdf: gpd.GeoDataFrame, toCrs: int) -> gpd.GeoDataFrame:
         if (len(gdf) == 1):
             return gdf.to_crs(toCrs)
         return gpd.GeoDataFrame(geometry=[gdf.to_crs(toCrs).geometry.unary_union], crs=toCrs)
 
-    # todo to normal utils
-    @staticmethod
-    def merge_lines_safe(geoms):
-        unioned = unary_union(geoms)
-        if unioned.is_empty:
-            return unioned
-        if unioned.geom_type == "LineString":
-            return unioned
-        if unioned.geom_type == "MultiLineString":
-            try:
-                return linemerge(unioned)
-            except Exception as e:
-                print(f"linemerge failed on MultiLineString: {e}")
-                return unioned
-        if unioned.geom_type == "GeometryCollection":
-            lines = [geom for geom in unioned if geom.geom_type in [
-                "LineString", "MultiLineString"]]
-            if not lines:
-                return unioned
-            elif len(lines) == 1:
-                return lines[0]
-            else:
-                # merge the extracted line geometries from geometry collection
-                try:
-                    return linemerge(MultiLineString(lines))
-                except Exception as e:
-                    print(f"linemerge failed on extracted lines: {e}")
-                    return MultiLineString(lines)
-        return unioned
 
     @staticmethod
     def change_columns_to_numeric(gdf: gpd.GeoDataFrame, columns: list[str]) -> None:
@@ -407,7 +332,7 @@ class GdfUtils:
             col for col in gdf.columns if col not in columns_ignore]
         # merge all lines with same values in 'columns'
         merged = gdf.groupby(columns, dropna=False, observed=True).agg({
-            gdf.geometry.name: GdfUtils.merge_lines_safe
+            gdf.geometry.name: GeomUtils.merge_lines_safe
         })
         merged_gdf = gpd.GeoDataFrame(
             merged, geometry=gdf.geometry.name, crs=gdf.crs).reset_index()
@@ -420,7 +345,7 @@ class GdfUtils:
         return pd.concat(gdfs, ignore_index=True)  # concat to one gdf
 
     @staticmethod
-    def expand_area_fitPaperSize(area_gdf: gpd.GeoDataFrame, pdf_dim: DimensionsTuple):
+    def expand_gdf_area_fitPaperSize(area_gdf: gpd.GeoDataFrame, pdf_dim: DimensionsTuple):
         bounds: BoundsDict = GdfUtils.get_bounds_gdf(area_gdf)
         return GdfUtils.create_gdf_from_bounds(Utils.adjust_bounds_to_fill_paper(bounds, pdf_dim), area_gdf.crs, None)
 
@@ -477,22 +402,16 @@ class GdfUtils:
                 boundary_gdf.at[i, boundary_gdf.geometry.name] = merged_border
         return boundary_gdf
     # ------------Bool operations------------
-    #! not used
-    @staticmethod
-    def is_geometry_inside_bounds(area_bounds: BoundsDict, polygon: GeometryCollection) -> bool:
-        return GdfUtils.is_geometry_inside_geometry(GdfUtils.create_polygon_from_bounds(area_bounds), polygon)
 
     @staticmethod
     def are_gdf_geometry_inside_geometry(gdf: gpd.GeoDataFrame, polygon: GeometryCollection) -> bool:
         return gdf[gdf.geometry.name].within(polygon).all()
         # todo check speed and try using sjoin
 
-    @staticmethod
-    def is_geometry_inside_geometry(inner: GeometryCollection, outer: GeometryCollection) -> bool:
-        return outer.contains(inner)
+
 
     # ------------Filtering------------
-
+    @staticmethod
     def get_rows_filter_AND(gdf: gpd.GeoDataFrame, conditions: RowsConditionsAND) -> pd.Series:
         filter_mask = pd.Series(True, index=gdf.index)
         for column_name, column_value in conditions.items():
@@ -583,7 +502,7 @@ class GdfUtils:
             else:
                 return gdf[filter_mask].reset_index(drop=True)
             
-    # todo move somewhere else 
+    # todo move somewhere else - to plotter
     @staticmethod
     def filter_invalid_texts(gdf):
         return GdfUtils.filter_rows(gdf, {Style.TEXT_FONT_SIZE.name: '', Style.TEXT_OUTLINE_WIDTH.name: '', Style.TEXT_COLOR.name: '',
@@ -636,29 +555,3 @@ class GdfUtils:
 
 
 
-    def transform_geometry_to_display(ax, geometry):
-        """
-        Converts a Polygon or MultiPolygon to a new geometry in display (plot) coordinates
-        
-        Args:
-            ax: Matplotlib Axes object used for transformation.
-            geometry: A Shapely Polygon or MultiPolygon in data coordinates.
-
-        Returns:
-            A new Shapely Polygon or MultiPolygon transformed to display coordinates.
-        """
-
-        def transform_polygon(polygon):
-            coords = np.array(polygon.exterior.coords)
-            transformed_coords = ax.transData.transform(coords)
-            return Polygon(transformed_coords)
-        
-        if isinstance(geometry, Polygon):
-            return transform_polygon(geometry)
-
-        elif isinstance(geometry, MultiPolygon):
-            transformed_polygons = [transform_polygon(p) for p in geometry.geoms]
-            return MultiPolygon(transformed_polygons)
-
-        else:
-            raise ValueError("Unsupported geometry type: must be Polygon or MultiPolygon")

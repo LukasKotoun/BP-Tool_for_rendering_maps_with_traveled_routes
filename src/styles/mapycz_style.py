@@ -1,6 +1,6 @@
-from common.custom_types import *
-from common.map_enums import *
-from config import font_awesome_prop, material_desigh_prop
+from common.custom_types import ElementStyles, FeatureStyles
+from common.map_enums import Style, TextPositions, MinParts
+from config import font_awesome_prop, material_design_prop
 
 #! edge linestyle is suported only dashed or not dashed on not solid lines,
 #! ploting is turned of by setting color to None text color or MARKER color turn of by string "None" instead of None

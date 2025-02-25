@@ -1,10 +1,10 @@
 from enum import Enum
 from typing import Literal
 class ColorMode(Enum):
-    DEFAULT = 1
-    SINGLE = 2
-    SHADE = 3
-    PALETTE = 4
+    DEFAULT = "DEFAULT"
+    SINGLE = "SINGLE"
+    SHADE = "SHADE"
+    PALETTE = "PALETTE"
 
 
 
@@ -135,6 +135,6 @@ class PaperSize(Enum):
 
 
 class MapOrientation(Enum):
-    AUTOMATIC = 1
-    LANDSCAPE = 2
-    PORTRAIT = 3
+    AUTOMATIC = "AUTOMATIC"
+    LANDSCAPE = "LANDSCAPE"
+    PORTRAIT = "PORTRAIT"

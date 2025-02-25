@@ -11,10 +11,14 @@ class OsmDataPreprocessor:
     def __init__(self, osm_input_files: list[str] | str, osm_output_file: str = None):
         # Can be a string (place name) or a list of coordinates
         self.osm_input_files: list[str] | str = osm_input_files
-        self.osm_output_file = osm_output_file
+        if osm_output_file is None:
+            # todo add some ranomd hash
+            self.osm_output_file = f'extract_output_{datetime.now().strftime("%Y%m%d%H%M%S")}.osm.pbf'
+        else:
+            self.osm_output_file = osm_output_file
 
     def __create_tmp_geojson(self, reqired_area_gdf: GeoDataFrame) -> str:
-        # create tmp file for osmium extraction
+        # create tmp file with polygon representing reqired area for osmium extraction
         with tempfile.NamedTemporaryFile(delete=False, suffix=".geojson") as temp_geojson:
             reqired_area_gdf.to_file(temp_geojson.name, driver="GeoJSON")
             return temp_geojson.name

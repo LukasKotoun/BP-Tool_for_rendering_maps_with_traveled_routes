@@ -1,34 +1,22 @@
-from typing import Generator
 import warnings
 
 import matplotlib.pyplot as plt
 import matplotlib.patheffects as pe
 from matplotlib.lines import Line2D
-
 from matplotlib.text import Text, Annotation
 from matplotlib.transforms import Bbox
 import pandas as pd
-import geopandas as gpd
-import numpy as np
-from shapely import geometry
-from shapely.geometry.polygon import Polygon
-from shapely.geometry.linestring import LineString
-from shapely.geometry.multilinestring import MultiLineString
-from shapely.geometry.multipolygon import MultiPolygon
-from shapely.geometry import LinearRing, Point
-import shapely
-# from adjustText import adjust_text
-from shapely.ops import linemerge, unary_union
+from geopandas import GeoDataFrame, GeoSeries
+from shapely.geometry import Point, LineString, MultiLineString, Polygon
 
-from config import *
+from common.custom_types import DimensionsTuple, MarkerRow, MarkerOneAnotationRow, MarkerTwoAnotationRow, TextRow
+from common.map_enums import Style, MinParts, TextPositions, WorldSides
 from modules.utils import Utils
 from modules.gdf_utils import GdfUtils
+from modules.geom_utils import GeomUtils
+
 from common.common_helpers import time_measurement
-import numpy as np
-from collections import namedtuple
 
-
-from shapely.ops import unary_union, split, linemerge
 
 
 class Plotter:
@@ -37,36 +25,27 @@ class Plotter:
     DEFAULT_CUPSTYLE = "round"
     TEXT_EXPAND_PERCENT = 4
 
-    def __init__(self, requred_area_gdf: gpd.GeoDataFrame, paper_dimensions_mm: DimensionsTuple, map_object_scaling_factor: float,
-                 text_bounds_overflow_threshold: float, text_wrap_len: int, outer_reqired_area_gdf: gpd.GeoDataFrame | None = None):
-        self.reqired_area_gdf: gpd.GeoDataFrame = requred_area_gdf
+    def __init__(self, requred_area_gdf: GeoDataFrame, paper_dimensions_mm: DimensionsTuple, map_object_scaling_factor: float,
+                 text_bounds_overflow_threshold: float, text_wrap_len: int, outer_reqired_area_gdf: GeoDataFrame | None = None):
+        self.reqired_area_gdf: GeoDataFrame = requred_area_gdf
         self.reqired_area_polygon: Polygon = GdfUtils.create_polygon_from_gdf(
             self.reqired_area_gdf)
 
         self.outer_reqired_area_gdf = outer_reqired_area_gdf
         self.paper_dimensions_mm = paper_dimensions_mm
         self.map_object_scaling_factor: float = map_object_scaling_factor
-        self.texts_and_markers_bboxs = []
+        self.texts_and_markers_bboxs: list[Bbox] = []
         self.text_bounds_overflow_threshold = text_bounds_overflow_threshold
         self.text_wrap_len = text_wrap_len
 
-    def init(self, map_bg_color: str, bg_gdf: gpd.GeoDataFrame, area_zoom_preview: None | DimensionsTuple = None,
-             zoom_percent_padding=0):
+    def init(self, map_bg_color: str, bg_gdf: GeoDataFrame, area_zoom_preview: None | DimensionsTuple = None):
         self.fig, self.ax = plt.subplots(figsize=(self.paper_dimensions_mm[0]/self.MM_TO_INCH,
                                                   # convert mm to inch
                                                   self.paper_dimensions_mm[1]/self.MM_TO_INCH))
-        if (area_zoom_preview is None):
-            self.fig.subplots_adjust(
-                left=0, right=1, top=1, bottom=0)  # No margins
-        else:
-            left_margin = (1 - area_zoom_preview[0])/2
-            right_margin = 1 - left_margin
-            bottom_margin = (1 - area_zoom_preview[1])/2
-            top_margin = 1 - bottom_margin
-            self.fig.subplots_adjust(
-                left=left_margin, right=right_margin, top=top_margin, bottom=bottom_margin)
+        self.fig.subplots_adjust(
+                left=0, right=1, top=1, bottom=0)
         self.ax.axis('off')
-        self.zoom(zoom_percent_padding)
+        self.zoom()
 
         self.reqired_area_gdf.plot(ax=self.ax, color=map_bg_color)
         if (not bg_gdf.empty):
@@ -74,7 +53,7 @@ class Plotter:
         polygon_text_inside = GdfUtils.create_polygon_from_gdf(
             self.reqired_area_gdf) if self.outer_reqired_area_gdf is None else GdfUtils.create_polygon_from_gdf(self.outer_reqired_area_gdf)
 
-        self.polygon_text_inside_display = GdfUtils.transform_geometry_to_display(
+        self.polygon_text_inside_display = GeomUtils.transform_geometry_to_display(
             self.ax, polygon_text_inside)
 
     def __text_on_point(self, row: TextRow, text: str, text_wrap_len=0, store_bbox: bool = True, check_bbox_position: bool = True, zorder=3) -> Text | None:
@@ -260,7 +239,7 @@ class Plotter:
                 self.texts_and_markers_bboxs.append(
                     Utils.expand_bbox(text2.get_tightbbox(), self.TEXT_EXPAND_PERCENT))
 
-    def __text_gdf_on_points(self, gdf: gpd.GeoDataFrame, store_bbox: bool = True):
+    def __text_gdf_on_points(self, gdf: GeoDataFrame, store_bbox: bool = True):
         gdf = GdfUtils.filter_invalid_texts(gdf)
         texts = GdfUtils.filter_rows(
             gdf, [{Style.TEXT1.name: ''}, {Style.TEXT2.name: ''}])
@@ -276,13 +255,13 @@ class Plotter:
                 row, text, Utils.get_value(row, Style.TEXT_WRAP_LEN.name, self.text_wrap_len), store_bbox, True)
            
 
-    def __markers_gdf(self, gdf: gpd.GeoDataFrame, store_bbox: bool = True):
+    def __markers_gdf(self, gdf: GeoDataFrame, store_bbox: bool = True):
         gdf = GdfUtils.filter_invalid_markers(gdf)
         for row in gdf.itertuples(index=False):
             self.__marker(row, store_bbox=store_bbox,
                           check_bbox_position=Utils.get_value(row, Style.MARKER_CHECK_OVERLAP.name, True))
 
-    def __markers_gdf_with_one_annotation(self, gdf: gpd.GeoDataFrame, store_bbox: bool = True):
+    def __markers_gdf_with_one_annotation(self, gdf: GeoDataFrame, store_bbox: bool = True):
         gdf = GdfUtils.filter_invalid_markers(gdf)
         gdf = GdfUtils.filter_invalid_texts(gdf)
         texts = GdfUtils.filter_rows(
@@ -297,7 +276,7 @@ class Plotter:
                     row, Style.TEXT2.name, store_bbox)
                 
 
-    def __markers_gdf_with_two_annotations(self, gdf: gpd.GeoDataFrame, store_bbox: bool = True):
+    def __markers_gdf_with_two_annotations(self, gdf: GeoDataFrame, store_bbox: bool = True):
         gdf = GdfUtils.filter_invalid_markers(gdf)
         gdf = GdfUtils.filter_invalid_texts(gdf)
         texts1 = GdfUtils.filter_rows(
@@ -306,7 +285,7 @@ class Plotter:
             self.__marker_with_two_annotations(row, store_bbox)
 
     @time_measurement("nodePlot")
-    def nodes(self, nodes_gdf: gpd.GeoDataFrame, wrap_len: int | None):
+    def nodes(self, nodes_gdf: GeoDataFrame, wrap_len: int | None):
         if (nodes_gdf.empty):
             return
         groups = GdfUtils.get_groups_by_columns(
@@ -372,7 +351,7 @@ class Plotter:
                                  alpha=lines_group_gdf[Style.ALPHA.name],
                                  path_effects=[pe.Stroke(capstyle=capstyle)], zorder=zorder)
 
-    def __dashed_with_edge_dashed(self, gdf: gpd.GeoDataFrame, line_cupstyle: str = None, edge_cupstyle: str = None, zorder=2):
+    def __dashed_with_edge_dashed(self, gdf: GeoDataFrame, line_cupstyle: str = None, edge_cupstyle: str = None, zorder=2):
         if (gdf.empty):
             return
         gdf = GdfUtils.filter_rows(gdf, {Style.COLOR.name: '', Style.EDGE_COLOR.name: '',
@@ -401,7 +380,7 @@ class Plotter:
                     linewidth=edge_width, foreground=edge_color, alpha=edge_alpha,
                     capstyle=edge_cup), pe.Normal(), pe.Stroke(capstyle=line_cup)], zorder=zorder)
 
-    def __dashed_with_edge_solid(self, gdf: gpd.GeoDataFrame, line_cupstyle: str = None, edge_cupstyle: str = None, zorder=2):
+    def __dashed_with_edge_solid(self, gdf: GeoDataFrame, line_cupstyle: str = None, edge_cupstyle: str = None, zorder=2):
         if (gdf.empty):
             return
         gdf = GdfUtils.filter_rows(gdf, {Style.EDGE_COLOR.name: '', Style.COLOR.name: '',
@@ -437,29 +416,29 @@ class Plotter:
             for geom in gdf_group.geometry:
                 if isinstance(geom, MultiLineString):
                     for line in geom.geoms:  # Extract each LineString
-                        gpd.GeoSeries(line).plot(ax=self.ax, color=edge_color,
+                        GeoSeries(line).plot(ax=self.ax, color=edge_color,
                                                  linewidth=edge_linewidth,
                                                  alpha=edge_alpha, path_effects=[
                                                      pe.Stroke(capstyle=edge_cup)], zorder=zorder)
 
-                        gpd.GeoSeries(line).plot(ax=self.ax, color=color, linewidth=linewidth,
+                        GeoSeries(line).plot(ax=self.ax, color=color, linewidth=linewidth,
                                                  alpha=alpha, linestyle=linestyle, path_effects=[
                                                      pe.Stroke(capstyle=line_cup)], zorder=zorder)
                 else:
-                    gpd.GeoSeries(geom).plot(ax=self.ax, color=edge_color,
+                    GeoSeries(geom).plot(ax=self.ax, color=edge_color,
                                              linewidth=edge_linewidth,
                                              alpha=edge_alpha, path_effects=[
                                                  pe.Stroke(capstyle=edge_cup)], zorder=zorder)
 
-                    gpd.GeoSeries(geom).plot(ax=self.ax, color=color, linewidth=linewidth,
+                    GeoSeries(geom).plot(ax=self.ax, color=color, linewidth=linewidth,
                                              alpha=alpha, linestyle=linestyle, path_effects=[
                                                  pe.Stroke(capstyle=line_cup)], zorder=zorder)
 
-    def __ways_normal(self, gdf: gpd.GeoDataFrame, plotEdges: bool = False, cross_roads_by_zindex=False, line_cupstyle: str = None, edge_cupstyle: str = None, zorder=2):
+    def __ways_normal(self, gdf: GeoDataFrame, plotEdges: bool = False, cross_roads_by_zindex=False, line_cupstyle: str = None, edge_cupstyle: str = None, zorder=2):
         """Plot ways based on z-index and capstyles. 
 
         Args:
-            gdf (gpd.GeoDataFrame): _description_
+            gdf (GeoDataFrame): _description_
             plotEdges (bool, optional): _description_. Defaults to False.
         """
         if (gdf.empty):
@@ -490,11 +469,11 @@ class Plotter:
                 ways_dashed_edge_solid, line_cupstyle, edge_cupstyle, zorder)
             self.__line(rest_lines, line_cupstyle, zorder)
 
-    def __bridges(self, bridges_gdf: gpd.GeoDataFrame, zorder=2):
+    def __bridges(self, bridges_gdf: GeoDataFrame, zorder=2):
         if (bridges_gdf.empty):
             return
 
-        def bridges_edges(gdf: gpd.GeoDataFrame):
+        def bridges_edges(gdf: GeoDataFrame):
             gdf = GdfUtils.filter_rows(
                 gdf, {Style.BRIDGE_EDGE_COLOR.name: '', Style.BRIDGE_EDGE_WIDTH.name: '',
                       Style.EDGE_LINESTYLE.name: '', Style.EDGE_ALPHA.name: ''})
@@ -508,7 +487,7 @@ class Plotter:
                      alpha=gdf[Style.EDGE_ALPHA.name],
                      path_effects=[pe.Stroke(capstyle="butt")], zorder=zorder)
 
-        def bridges_center(gdf: gpd.GeoDataFrame):
+        def bridges_center(gdf: GeoDataFrame):
             gdf = GdfUtils.filter_rows(
                 gdf, {Style.BRIDGE_WIDTH.name: '', Style.BRIDGE_COLOR.name: '',
                       Style.LINESTYLE.name: '', Style.ALPHA.name: ''})
@@ -521,7 +500,7 @@ class Plotter:
                      alpha=gdf[Style.ALPHA.name],
                      path_effects=[pe.Stroke(capstyle="butt")], zorder=zorder)
 
-        def ways_on_bridges(gdf: gpd.GeoDataFrame):
+        def ways_on_bridges(gdf: GeoDataFrame):
             gdf = GdfUtils.filter_rows(
                 gdf, {Style.PLOT_ON_BRIDGE.name: ""})
             if (gdf.empty):
@@ -542,7 +521,7 @@ class Plotter:
             self.__ways_normal(tunnel_layer_gdf, True, False, zorder=zorder)
 
     @time_measurement("wayplot")
-    def ways(self, ways_gdf: gpd.GeoDataFrame, areas_ways_gdf: gpd.GeoDataFrame, over_filter=None):
+    def ways(self, ways_gdf: GeoDataFrame, areas_ways_gdf: GeoDataFrame, over_filter=None):
         if (ways_gdf.empty):
             return
 
@@ -576,7 +555,7 @@ class Plotter:
                 ways_gdf, over_filter), True, True, 'butt', 'butt')
 
     @time_measurement("areaPlot")
-    def areas(self, areas_gdf: gpd.GeoDataFrame):
+    def areas(self, areas_gdf: GeoDataFrame):
         if (areas_gdf.empty):
             return
         # plot face
@@ -602,7 +581,7 @@ class Plotter:
                 path_effects=[pe.Stroke(capstyle=capstyle)])
 
     @time_measurement("gpxsPlot")
-    def gpxs(self, gpxs_gdf: gpd.GeoDataFrame):
+    def gpxs(self, gpxs_gdf: GeoDataFrame):
         if (gpxs_gdf.empty):
             return
         self.__ways_normal(gpxs_gdf, True, False, zorder=5)
@@ -610,18 +589,18 @@ class Plotter:
         # todo to geom class
         def get_first_point(geometry):
             if isinstance(geometry, LineString):
-                first_point = shapely.Point(geometry.coords[0])
+                first_point = Point(geometry.coords[0])
             elif isinstance(geometry, MultiLineString):
-                first_point = shapely.Point(geometry.geoms[0].coords[0])
+                first_point = Point(geometry.geoms[0].coords[0])
             else:
                 raise ValueError("Unsupported geometry type")
 
             return first_point
         def get_last_point(geometry):
             if isinstance(geometry, LineString):
-                first_point = shapely.Point(geometry.coords[-1])
+                first_point = Point(geometry.coords[-1])
             elif isinstance(geometry, MultiLineString):
-                first_point = shapely.Point(geometry.geoms[-1].coords[-1])
+                first_point = Point(geometry.geoms[-1].coords[-1])
             else:
                 raise ValueError("Unsupported geometry type")
 
@@ -665,25 +644,25 @@ class Plotter:
             )
             self.__marker(mapped_row, False, False, 5)
 
-    def clip(self, crs: str, zoom_percentage_padding=0, clipped_area_color: str = 'white'):
+    def clip(self, clipped_area_color: str = 'white'):
         whole_area_bounds = Utils.adjust_bounds_to_fill_paper(
             GdfUtils.get_bounds_gdf(self.reqired_area_gdf), self.paper_dimensions_mm)
         whole_area_bounds = Utils.expand_bounds_dict(
-            whole_area_bounds, 2 + zoom_percentage_padding)
-        whole_area_polygon = GdfUtils.create_polygon_from_bounds(
+            whole_area_bounds, 2)
+        whole_area_polygon = GeomUtils.create_polygon_from_bounds(
             whole_area_bounds)
 
         clipping_polygon = whole_area_polygon.difference(
             self.reqired_area_polygon)
-        if (not GdfUtils.is_geometry_inside_geometry(clipping_polygon, whole_area_polygon)):
+        if (not GeomUtils.is_geometry_inside_geometry(clipping_polygon, whole_area_polygon)):
             return
-        clipping_polygon = gpd.GeoDataFrame(
-            geometry=[clipping_polygon], crs=crs)
+        clipping_polygon = GeoDataFrame(
+            geometry=[clipping_polygon], crs=self.reqired_area_gdf.crs)
         clipping_polygon.plot(
             ax=self.ax, color=clipped_area_color, alpha=1, zorder=5)
         # by this z order clip (5) or non clip overflowed text (3)
 
-    def area_boundary(self, boundary_map_area_gdf: gpd.GeoDataFrame, color: str = 'black', linewidth: float = 1):
+    def area_boundary(self, boundary_map_area_gdf: GeoDataFrame, color: str = 'black', linewidth: float = 1):
 
         boundary_map_area_gdf_with, boundary_map_area_gdf_without = GdfUtils.filter_rows(
             boundary_map_area_gdf, {Style.WIDTH.name: '', Style.COLOR.name: ''}, compl=True)
@@ -695,22 +674,18 @@ class Plotter:
                 ax=self.ax, color=color, linewidth=linewidth, zorder=5)
         # by this z order clip (5) or non clip overflowed text (4)
 
-    def zoom(self, zoom_percent_padding: float = 0):
-        zoom_padding = zoom_percent_padding / 100  # convert from percent
+    def zoom(self):
         # set x and y limits by area that fit paper size for text overflow checking and area clipping
         zoom_bounds = Utils.adjust_bounds_to_fill_paper(
             GdfUtils.get_bounds_gdf(self.reqired_area_gdf), self.paper_dimensions_mm)
         # zoom_bounds = GdfUtils.get_bounds_gdf(self.reqired_area_gdf)
         width, height = Utils.get_dimensions(zoom_bounds)
-        width_buffer = width * zoom_padding  # % of width
-        height_buffer = height * zoom_padding  # % of height
-
-        self.ax.set_xlim([zoom_bounds[WorldSides.WEST.name] - width_buffer,
+        self.ax.set_xlim([zoom_bounds[WorldSides.WEST.name],
                          # Expand x limits
-                          zoom_bounds[WorldSides.EAST.name] + width_buffer])
-        self.ax.set_ylim([zoom_bounds[WorldSides.SOUTH.name] - height_buffer,
+                          zoom_bounds[WorldSides.EAST.name]])
+        self.ax.set_ylim([zoom_bounds[WorldSides.SOUTH.name],
                          # Expand y limits
-                          zoom_bounds[WorldSides.NORTH.name] + height_buffer])
+                          zoom_bounds[WorldSides.NORTH.name]])
 
     def generate_pdf(self, pdf_name: str):
         plt.savefig(f'{pdf_name}.pdf', format='pdf',

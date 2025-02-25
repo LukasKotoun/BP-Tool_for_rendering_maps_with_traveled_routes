@@ -1,22 +1,21 @@
-from common.custom_types import *
-from common.map_enums import *
+import warnings
 import matplotlib.font_manager as fm
+
+from common.custom_types import UnwantedTags, WantedArea, WantedCategories
+from common.map_enums import Style, ColorMode, PaperSize, MapOrientation
 
 
 # --------------------------------------------------------------map area--------------------------------------------------------------
 # OSM_INPUT_FILE_NAMES: str = ['../osm_files/vys.osm.pbf','../osm_files/jihmor.osm.pbf']
 # OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/vysJihE.osm.pbf'
-OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/brno.osm.pbf'
+OSM_INPUT_FILE_NAMES: str | list[str] = ['../osm_files/trebic.osm.pbf']
 # OSM_INPUT_FILE_NAMES: str | list[str] = '../trebic.osm.pbf'
-# extract
+# extract - will be always true
 OSM_WANT_EXTRACT_AREA: bool = False
 # set if want osm file cutting using osmium command line tool (need to be uinstalled), If not set to None
 OSM_OUTPUT_FILE_NAME: None | str = '../osm_files/T.osm.pbf'
 
 OUTPUT_PDF_NAME: str = '../pdfs/divocina'
-# with fill or false cliping is recomended 0
-# padding from page borders NOTE: must have same settings as the resulting one when generating for large format printing
-PERCENTAGE_PADDING = 0 # todo solve this - remove or use in calculations of sizes
 
 # AREA: WantedArea = [(-18.14143,65.68868),(-18.08538,65.68868),(-18.08538,65.67783),(-18.14143,65.67783)] #island
 # AREA: WantedArea = [(6.94872,4.84293),(6.99314,4.84293),(6.99314,4.81603),(6.94872,4.81603)] #afrika
@@ -50,8 +49,10 @@ PERCENTAGE_PADDING = 0 # todo solve this - remove or use in calculations of size
 #                      {"area": "Pardubický kraj, Česko", "plot": True, "category": 2, "width": 1, "color": "black"},
 #                       {"area": "Jihočeský kraj, Česko", "plot": True, "category": 1, "width": 1, "color": "black"}]
 # nastavení šířky asi jako číslo ale na fe small medium a big 
-# AREA: WantedArea = [{"area": "Třebíč, Česko", "plot": True, "category": 0, "width": 1, "color": "black"}]
-AREA: WantedArea = [{"area": "Brno, Česko", "plot": True, "category": 0, "width": 1, "color": "black"}]
+AREA: WantedArea = [{"area": "Třebíč, Česko", "plot": True, "category": 0, "width": 1, "color": "black"}]
+# AREA: WantedArea = [{"area": "Jihomoravský kraj, Česko", "plot": True, "category": 2, "width": 1, "color": "black"},
+#                     {"area": "Kraj Vysočina, Česko", "plot": True, "category": 1, "width": 1, "color": "black"},
+#                     {"area": "Třebíč, Česko", "plot": True, "category": 0, "width": 1, "color": "black"}]
 
 # AREA: WantedArea = ["Kraj Vysočina, Česko"]
 # AREA: WantedArea = ["Jihomoravský kraj, Česko"]
@@ -73,9 +74,8 @@ GIVEN_SMALLER_PAPER_DIMENSION: bool = True
 # set how will resulted paper be oriented, AUTOMATIC is Recommended
 WANTED_ORIENTATION: MapOrientation = MapOrientation.AUTOMATIC
 
-# FIT_PAPER_SIZE recomended with PERCENTAGE_PADDING 0
-FIT_PAPER_SIZE = False
-EXPAND_AREA_BOUNDS_PLOT = True
+FIT_PAPER_SIZE = True
+FIT_PAPER_SIZE_BOUNDS_PLOT = True
 
 
 # text general
@@ -91,12 +91,13 @@ PLOT_TUNNELS = True
 
 # --------------------------------------------------------------preview--------------------------------------------------------------
 # NOTE: must have same settings as the resulting one when generating for large format printing
-WANT_PREVIEW: bool = False
+WANT_PREVIEW: bool = True 
 # OUTER_AREA: WantedArea = [(15.7034756,48.6941575), (15.9206889,48.6941186), (15.9198775, 48.5926164), (15.7030222, 48.5936264)] # zoom 13 - 0.012257255675006467
 
 # area for that you are creating smaller preview (bigger than normal area)
 # OUTER_AREA: WantedArea =  "Vysočina, Česko"
 
+# OUTER_AREA: WantedArea =  [{"area": "Třebíč, Česko", "plot": True, "category": 2, "width": 1, "color": "black"}]
 OUTER_AREA: WantedArea =  [{"area": "Jihomoravský kraj, Česko", "plot": True, "category": 2, "width": 1, "color": "black"},
                     {"area": "Kraj Vysočina, Česko", "plot": True, "category": 1, "width": 1, "color": "black"}]
 # OUTER_AREA: WantedArea = "Česko"
@@ -113,7 +114,8 @@ OUTER_WANTED_ORIENTATION = MapOrientation.AUTOMATIC
 
 # expand area
 OUTER_FIT_PAPER_SIZE = True
- 
+
+# load
 # ------------constants--------------
 # world 3857
 CRS_OSM = "EPSG:4326"
@@ -122,15 +124,24 @@ CRS_OSM = "EPSG:4326"
 CRS_CALC = "EPSG:3857"  # europe 25833 - calculating map scale and scaling factor
 CRS_DISPLAY = "EPSG:3857"
 
-FONT_AWESOME_PATH = "./common/fonts/FontAwesome6Free-Solid-900.otf"
-# MATERIAL_DESIGN_PATH = "./common/fonts/MaterialSymbolsOutlined-VariableFont_FILL,GRAD,opsz,wght.ttf"
-MATERIAL_DESIGN_PATH = "./common/fonts/MaterialSymbolsRounded-VariableFont_FILL,GRAD,opsz,wght.ttf"
-# todo add more MARKERs from google material design
-font_awesome_prop = fm.FontProperties(fname=FONT_AWESOME_PATH)
-material_desigh_prop = fm.FontProperties(fname=MATERIAL_DESIGN_PATH)
+try:
+    FONT_AWESOME_PATH = "./common/fonts/FontAwesome6Free-Solid-900.otf"
+    font_awesome_prop = fm.FontProperties(fname=FONT_AWESOME_PATH)
+except:
+    font_awesome_prop = None
+    warnings.warn("Font awesome not found")
+try:
+    MATERIAL_DESIGN_PATH = "./common/fonts/MaterialSymbolsRounded-VariableFont_FILL,GRAD,opsz,wght.ttf"
+    material_design_prop = fm.FontProperties(fname=MATERIAL_DESIGN_PATH)
+except:
+    material_design_prop = None
+    warnings.warn("Font awesome not found")
+
+    
 # --------------------------------------------------------------gpx settings--------------------------------------------------------------
 
 # zooms: scaling values for center of each zoom level 
+# zoom level: scaling value
 ZOOM_MAPPING: dict[int, float] = {
     19: 0.7832305,
     18: 0.3925486,
@@ -177,7 +188,6 @@ DERIVATE_COLUMNS_NODES = [
     ({'natural': 'peak'}, Style.TEXT2.name, 'ele', None),
 ]
 
-
 DERIVATE_COLUMNS_WAYS = []
 DERIVATE_COLUMNS_AREAS = []
 NODES_DONT_CATEGORIZE = [Style.TEXT1_POSITIONS.name, Style.TEXT2_POSITIONS.name]
@@ -205,13 +215,13 @@ wanted_ways: WantedCategories = {
     # 'waterway': set({}),
     # 'highway': ['motorway', 'trunk','primary', 'secondary', 'tertiary'],
     # # 'highway': ['motorway', 'trunk', 'primary'],
-    # 'highway': {'motorway', 'trunk', 'primary', 'secondary', 'tertiary', 'unclassified', 'residential', 'path', 'footway'},
+    'highway': {'motorway', 'trunk', 'primary', 'secondary', 'tertiary', 'unclassified', 'residential', 'path', 'footway'},
     # # # 'highway': {'tertiary'},
     # # # 'highway':set({}),
-    # 'railway': {'rail', 'tram'},
+    'railway': {'rail', 'tram'},
 
     # # # # 'railway': {'rail'},
-    # 'natural': {'coastline'}
+    'natural': {'coastline'}
 }
 
 unwanted_ways_tags: UnwantedTags = {

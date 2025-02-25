@@ -1,17 +1,12 @@
 import warnings
 
 import osmium
-from shapely import wkt
-import shapely.wkb as wkb
-import pandas as pd
 import geopandas as gpd
-from typing import Callable
 from osmium.osm.types import TagList, Node, Way, Area
-from shapely.geometry import Point, LineString, Polygon
-from modules.gdf_utils import GdfUtils
 
-from common.common_helpers import time_measurement
+from modules.gdf_utils import GdfUtils
 from common.custom_types import WantedCategories, UnwantedTags
+from common.common_helpers import time_measurement
 
 class OsmDataParser():
 
@@ -123,13 +118,13 @@ class OsmDataParser():
             def __init__(self, outer_self):
                 self.outer_self = outer_self
                 
-            def node(self, node):
+            def node(self, node: Node):
                 return not (OsmDataParser._apply_filters(self.outer_self.wanted_nodes, node.tags) and OsmDataParser._apply_filters_not_allowed(self.outer_self.unwanted_nodes_tags, node.tags))
             
-            def way(self, way):
+            def way(self, way: Way):
                 return not (OsmDataParser._apply_filters(self.outer_self.wanted_ways, way.tags) and OsmDataParser._apply_filters_not_allowed(self.outer_self.unwanted_ways_tags, way.tags))
             
-            def area(self, area):
+            def area(self, area: Area):
                 return not (OsmDataParser._apply_filters(self.outer_self.wanted_areas, area.tags) and OsmDataParser._apply_filters_not_allowed(self.outer_self.unwanted_areas_tags, area.tags))
  
         if (self.wanted_nodes):

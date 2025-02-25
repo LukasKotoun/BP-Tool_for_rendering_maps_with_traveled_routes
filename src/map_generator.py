@@ -1,5 +1,4 @@
 import warnings
-import geopandas as gpd
 
 from config import *
 from styles.mapycz_style import GENERAL_DEFAULT_STYLES, STYLES, GPXS_STYLES, OCEAN_WATER
@@ -10,14 +9,12 @@ from modules.osm_data_parser import OsmDataParser
 from modules.style_assigner import StyleAssigner
 from modules.plotter import Plotter
 from modules.gpx_manager import GpxManager
-from common.common_helpers import time_measurement
-import pandas as pd
-from osmium.filter import GeoInterfaceFilter
 from modules.received_structure_processor import ReceivedStructureProcessor
-import osmium
 
+from common.common_helpers import time_measurement
 
-def change_bridges_and_tunnels(gdf, want_bridges: bool, want_tunnels: bool):
+# todo some class or utils..
+def process_bridges_and_tunnels(gdf, want_bridges: bool, want_tunnels: bool):
     gdf['layer'] = gdf.get('layer', 0)
     gdf.loc[GdfUtils.get_rows_filter(
         gdf, {'tunnel': '~', 'bridge': '~'}), 'layer'] = 0
@@ -139,20 +136,20 @@ def calc_preview(map_area_gdf, paper_dimensions_mm):
                                                               OUTER_GIVEN_SMALLER_PAPER_DIMENSION,
                                                               OUTER_WANTED_ORIENTATION)
     if (OUTER_FIT_PAPER_SIZE):
-        outer_map_area_gdf = GdfUtils.expand_area_fitPaperSize(
+        outer_map_area_gdf = GdfUtils.expand_gdf_area_fitPaperSize(
             outer_map_area_gdf, outer_paper_dimensions_mm)
         outer_map_area_dimensions = GdfUtils.get_dimensions_gdf(
             outer_map_area_gdf)
-    # outer_map_area_bounds = GdfUtils.get_bounds_gdf(GdfUtils.change_crs(outer_map_area_gdf, CRS_OSM)) # real scale cacl
-    # map_scale = Utils.get_scale(outer_map_area_bounds, outer_paper_dimensions_mm)
+        # for testing - should be same as normal area after preview calc
+    #outer map scale
+            # outer_map_area_bounds = GdfUtils.get_bounds_gdf(GdfUtils.change_crs(outer_map_area_gdf, CRS_OSM)) # real scale cacl
+            # map_scale = Utils.get_scale(outer_map_area_bounds, outer_paper_dimensions_mm)
+            # print(map_scale)
     map_object_scaling_factor = Utils.calc_map_object_scaling_factor(
         outer_map_area_dimensions, outer_paper_dimensions_mm)
     # calc map factor for creating automatic array with wanted elements - for preview area (without area_zoom_preview)
     # ?? to doc - need because it will clip by required area - and that will be some big area in not clipping (cant use only first approach)
     # ?? req area je potom velká jako pdf stránka (přes celou stránku) a ne jako puvodně chtěná oblast a tedy by k žádnému zaříznutí nedošlo
-    # if (FIT_PAPER_SIZE):
-    # všechny prvky i když to bude menší než papír - např. cesty mimo required area
-    area_zoom_preview = None
     # calc bounds so area_zoom_preview will be 1 and will fill whole paper
     paper_fill_bounds = Utils.calc_bounds_to_fill_paper_with_ratio(map_area_gdf.union_all().centroid,
                                                                    paper_dimensions_mm, outer_map_area_dimensions,
@@ -160,29 +157,17 @@ def calc_preview(map_area_gdf, paper_dimensions_mm):
     # area will be changing -> create copy for bounds plotting
     map_area_gdf = GdfUtils.create_gdf_from_bounds(
         paper_fill_bounds, CRS_DISPLAY)
-    # else:
-    #     # oříznuté okraje když to bude menší než papír
-    #     map_area_dimensions = GdfUtils.get_dimensions_gdf(map_area_gdf)
-    #     # if want clipping than instead of bounds calculation use zoom/unzoom - with using paper_fill_bounds it cant be clipped
-    #     area_zoom_preview = Utils.calc_zoom_for_smaller_area(
-    #         outer_map_area_dimensions, outer_paper_dimensions_mm,
-    #         map_area_dimensions, paper_dimensions_mm,
-    #     )
-
-    return area_zoom_preview, map_object_scaling_factor, map_area_gdf, outer_map_area_gdf
+  
+    return map_object_scaling_factor, map_area_gdf, outer_map_area_gdf
 
 
 @time_measurement("main")
-def main():
-
-    # convert and validate formats from FE
+def main() -> None:
+    remove_extracted_output_file = (OUTPUT_PDF_NAME == None and OSM_WANT_EXTRACT_AREA)
+    # convert and validate formats from FE - and handle exceptions
     wanted_areas_to_display = ReceivedStructureProcessor.validate_and_convert_areas_strucutre(
         AREA, allowed_keys_and_types=AREA_DICT_KEYS, key_with_area="area")
-    
-    # ------------get map area and calc paper sizes, and calc preview
-    if (isinstance(OSM_INPUT_FILE_NAMES, list) and len(OSM_INPUT_FILE_NAMES) > 1 and OSM_WANT_EXTRACT_AREA == False):
-        print("Multiple files feature (list of osm files) is avilable only with option OSM_WANT_EXTRACT_AREA")
-        return
+
     # if are for preview is not specified, use whole area
     if (WANT_PREVIEW and AREA == None):
         # will not happen in preview
@@ -201,61 +186,55 @@ def main():
                             boundary_map_area_gdf.geometry.name, *AREAS_MAPPING_DICT.values()], True)
 
     # todo edit or remove ...
-    boundary_map_area_gdf = GdfUtils.remove_common_boundary_inaccuracy(boundary_map_area_gdf)
+    # boundary_map_area_gdf = GdfUtils.remove_common_boundary_inaccuracy(
+    #     boundary_map_area_gdf)
 
     map_area_gdf = GdfUtils.combine_rows_gdf(map_area_gdf, CRS_DISPLAY)
-
     # ------------get paper dimension (size and orientation)------------
     map_area_dimensions = GdfUtils.get_dimensions_gdf(map_area_gdf)
     paper_dimensions_mm = Utils.adjust_paper_dimensions(map_area_dimensions, PAPER_DIMENSIONS,
                                                         GIVEN_SMALLER_PAPER_DIMENSION, WANTED_ORIENTATION)
-    # ------------expand area custom (before get paper dimension)------------
-    if (FIT_PAPER_SIZE):
-        map_area_gdf = GdfUtils.expand_area_fitPaperSize(
-            map_area_gdf, paper_dimensions_mm)
-        map_area_dimensions = GdfUtils.get_dimensions_gdf(map_area_gdf)
-        
-    if (FIT_PAPER_SIZE and EXPAND_AREA_BOUNDS_PLOT):
-        boundary_map_area_gdf = GdfUtils.combine_gdfs(
-            [boundary_map_area_gdf, map_area_gdf.copy()])
+
 
     if (WANT_PREVIEW):
-        (area_zoom_preview, map_object_scaling_factor,
+        # one endpoint
+        (map_object_scaling_factor,
             map_area_gdf, outer_map_area_gdf) = calc_preview(map_area_gdf, paper_dimensions_mm)
     else:
-        area_zoom_preview = None
+        # another endpoint
+        if (FIT_PAPER_SIZE):
+            map_area_gdf = GdfUtils.expand_gdf_area_fitPaperSize(
+                map_area_gdf, paper_dimensions_mm)
+            map_area_dimensions = GdfUtils.get_dimensions_gdf(map_area_gdf)
+ 
+            if(FIT_PAPER_SIZE_BOUNDS_PLOT):
+                boundary_map_area_gdf = GdfUtils.combine_gdfs(
+                    [boundary_map_area_gdf, map_area_gdf.copy()])
         outer_map_area_gdf = None
-        # todo - scale draw?
         # - map scale in real size
-        # map_area_bounds = GdfUtils.get_bounds_gdf(GdfUtils.change_crs(map_area_gdf, CRS_OSM))
-        # map_scale = Utils.get_scale(map_area_bounds, paper_dimensions_mm)
         # - scaling factor and for zoom calc in webmercato
         map_object_scaling_factor = Utils.calc_map_object_scaling_factor(map_area_dimensions,
-                                                                         paper_dimensions_mm)
-
+                                                                        paper_dimensions_mm)
+    map_area_bounds = GdfUtils.get_bounds_gdf(GdfUtils.change_crs(map_area_gdf, CRS_OSM))
+    map_scale = Utils.get_scale(map_area_bounds, paper_dimensions_mm)
+    print(map_scale)
     zoom_level = Utils.get_zoom_level(
         map_object_scaling_factor, ZOOM_MAPPING, 0.1)
     print(f"Zoom level: {zoom_level}")
 
     # ------------get elements from osm file------------
-    if (OSM_WANT_EXTRACT_AREA):
-        # todo output file as tmp generated if name is none
-        if (OSM_OUTPUT_FILE_NAME is None):
-            print("Output file is none, cant extract")
-            return
-        # todo check if osmium is instaled else return?
-        osm_data_preprocessor = OsmDataPreprocessor(
-            OSM_INPUT_FILE_NAMES, OSM_OUTPUT_FILE_NAME)
-        osm_file_name = osm_data_preprocessor.extract_areas(
-            map_area_gdf, CRS_OSM)
-    else:
-        # todo function check osm file existence or in validator before?
-        # list have length of 1 (checked in validator)
-        if (isinstance(OSM_INPUT_FILE_NAMES, list)):
-            osm_file_name = OSM_INPUT_FILE_NAMES[0]
+    try:
+        if (OSM_WANT_EXTRACT_AREA):
+            # todo check if osmium is instaled else return?
+            osm_data_preprocessor = OsmDataPreprocessor(
+                OSM_INPUT_FILE_NAMES, OSM_OUTPUT_FILE_NAME)
+            osm_file_name = osm_data_preprocessor.extract_areas(
+                map_area_gdf, CRS_OSM)
         else:
-            osm_file_name = OSM_INPUT_FILE_NAMES
-
+            osm_file_name = OSM_INPUT_FILE_NAMES[0]
+    except:
+        warnings.warn("Error while extracting area from osm file.")
+        return
     # ------------Working in display CRS------------
     map_area_gdf = GdfUtils.change_crs(map_area_gdf, CRS_DISPLAY)
     boundary_map_area_gdf = GdfUtils.change_crs(
@@ -273,25 +252,25 @@ def main():
         osm_file_name, CRS_OSM, CRS_DISPLAY)
 
     # ------------gpxs------------
+    # from FE
     gpx_manager = GpxManager(GPX_FOLDER, CRS_DISPLAY)
-    # root_files_gpxs_gdf, folder_gpxs_gdf = gpx_manager.get_gpxs_gdf_splited()
-    # send warning to FE?
     gpxs_gdf = gpx_manager.get_gpxs_gdf()
 
-    # nodes_gdf = GdfUtils.get_rows_inside_area(
-    # nodes_gdf, outer_map_area_gdf)
-    nodes_gdf = GdfUtils.get_rows_inside_area(
-        nodes_gdf, map_area_gdf)
+    if (outer_map_area_gdf is not None):
+        nodes_gdf = GdfUtils.get_rows_inside_area(
+            nodes_gdf, outer_map_area_gdf)
+    else:
+        nodes_gdf = GdfUtils.get_rows_inside_area(
+            nodes_gdf, map_area_gdf)
+        
     # get coastline and determine where is land and where water
     coast_gdf, ways_gdf = GdfUtils.filter_rows(
         ways_gdf, {'natural': 'coastline'}, compl=True)
-    bg_gdf = GdfUtils.create_bg_gdf(
+    bg_gdf = GdfUtils.create_background_gdf(
         map_area_gdf, coast_gdf, OCEAN_WATER, GENERAL_DEFAULT_STYLES[Style.COLOR.name])
-    # prepare nodes
-    # round ele to int
-
+    
     # prepare ways function
-    change_bridges_and_tunnels(ways_gdf, PLOT_BRIDGES, PLOT_TUNNELS)
+    process_bridges_and_tunnels(ways_gdf, PLOT_BRIDGES, PLOT_TUNNELS)
     ways_gdf = GdfUtils.merge_lines_gdf(ways_gdf, [])
     # gpxs_gdf = GdfUtils.merge_lines_gdf(gpxs_gdf, [])
 
@@ -324,13 +303,18 @@ def main():
     bg_gdf = bg_gdf.sort_values(by='area', ascending=False)
     areas_gdf['area'] = areas_gdf.geometry.area
     areas_gdf = areas_gdf.sort_values(by='area', ascending=False)
-    # ------------plot------------ # todo to one function with settings in dict
+
+    # ------------plot------------
     # todo add checks for errors in plotting cals if dict from fe is not correct
+    plotter_settings = {"map_area_gdf": map_area_gdf, "paper_dimensions_mm": paper_dimensions_mm,
+                        "map_object_scaling_factor": map_object_scaling_factor, "text_bounds_overflow_threshold": TEXT_BOUNDS_OVERFLOW_THRESHOLD,
+                        "text_wrap_names_len": TEXT_WRAP_NAMES_LEN, "outer_map_area_gdf": outer_map_area_gdf, "map_bg_color": GENERAL_DEFAULT_STYLES[Style.COLOR.name],
+                        'ways_over_filter': None}
 
     plotter = Plotter(map_area_gdf, paper_dimensions_mm,
                       map_object_scaling_factor, TEXT_BOUNDS_OVERFLOW_THRESHOLD, TEXT_WRAP_NAMES_LEN, outer_map_area_gdf)
     plotter.init(
-        GENERAL_DEFAULT_STYLES[Style.COLOR.name], bg_gdf, area_zoom_preview, zoom_percent_padding=PERCENTAGE_PADDING)
+        GENERAL_DEFAULT_STYLES[Style.COLOR.name], bg_gdf)
     plotter.nodes(nodes_gdf, TEXT_WRAP_NAMES_LEN)
     plotter.areas(areas_gdf)
     # plotter.ways(ways_gdf, areas_gdf, [{'highway': 'motorway'}])
@@ -338,19 +322,14 @@ def main():
     plotter.ways(ways_gdf, areas_gdf, None)
     plotter.gpxs(gpxs_gdf)
     # if want clip text
-    if (not FIT_PAPER_SIZE or WANT_PREVIEW):
-        # todo find better way to create polygon for clipping  - for texts
-        plotter.clip(CRS_DISPLAY, PERCENTAGE_PADDING)
+    plotter.clip()
     if (not boundary_map_area_gdf.empty):
         # GdfUtils.remove_common_boundary_inaccuracy(boundary_map_area_gdf) # maybe turn off/on in settings
         plotter.area_boundary(boundary_map_area_gdf,
                               color="black")
-    # if dont want clip text
 
-  
     plotter.generate_pdf(OUTPUT_PDF_NAME)
-    # plotter.show_plot()
-
+    # plotter.show_plot()   
 
 if __name__ == "__main__":
     main()

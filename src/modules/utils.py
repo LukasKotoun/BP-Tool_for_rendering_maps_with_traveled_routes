@@ -1,19 +1,16 @@
 import math
-from shapely.geometry import Point
 
-from config import *
-from common.custom_types import DimensionsTuple, OptDimensionsTuple
-from shapely.geometry import LineString
-from shapely.ops import linemerge
 import textwrap
 import pandas as pd
-from common.common_helpers import time_measurement
 from shapely import geometry
-
-from pyproj import Geod
+from shapely.geometry import Point
 from matplotlib.transforms import Bbox
-from shapely.geometry import Polygon, GeometryCollection
 
+from modules.geom_utils import GeomUtils
+from common.custom_types import DimensionsTuple, OptDimensionsTuple, BoundsDict, FeaturesCategoryStyle
+from common.map_enums import Style, MapOrientation, PaperSize, WorldSides
+
+from common.common_helpers import time_measurement
 
 class Utils:
     @staticmethod
@@ -124,7 +121,6 @@ class Utils:
                      bounds[WorldSides.SOUTH.name])  # north - south
         return width, height
 
-    # funkce která na zakladě střed, a pomeru velikosti vetší oblasti a papíru zjistí potřebnou velikost oblasti a vrátí ji jako polygon
     @staticmethod
     def calc_bounds_to_fill_paper_with_ratio(center_point: Point, pdf_dim: DimensionsTuple,
                                              bigger_area_dim: DimensionsTuple, bigger_pdf_dim: DimensionsTuple) -> BoundsDict:
@@ -196,16 +192,6 @@ class Utils:
 
         return area_bounds
 
-    # -> Any:
-    def calc_scaling_factor_multiplier(x, min_val, max_val, a=1.894, b=-0.8257):
-        # a and b derived from points f(0.4)=1 and f(0.0004)=300
-        # a = 0.15
-        a = 0.212
-        b = -0.7953
-        # a = 0.385
-        # b = -0.7953
-        y = a * x**b
-        return max(min(y, max_val), min_val)
 
     @staticmethod
     def calc_map_object_scaling_factor(map_dimensions_m, paper_dimensions_mm, multiply_factor=1):
@@ -222,18 +208,10 @@ class Utils:
         map_scaling_factor = (map_dimensions_m[0] + map_dimensions_m[1])
         paper_scaling_factor = (
             paper_dimensions_mm[0] + paper_dimensions_mm[1])
-        map_scaling_factor2 = min(
-            paper_dimensions_mm[0]/map_dimensions_m[0], paper_dimensions_mm[1] / map_dimensions_m[1])
-        print(map_scaling_factor2)
-        print(paper_scaling_factor/map_scaling_factor)
+        # map_scaling_factor2 = min(
+        #     paper_dimensions_mm[0]/map_dimensions_m[0], paper_dimensions_mm[1] / map_dimensions_m[1])
+        # print(map_scaling_factor2)
         return paper_scaling_factor / map_scaling_factor
-
-    @staticmethod
-    def get_distance(point1: Point, point2: Point):
-        geod = Geod(ellps="WGS84")
-        _, _, distance_m = geod.inv(point1[1], point1[0], point2[1], point2[0])
-        return distance_m
-        # return map_scaling_factor
 
     @staticmethod
     def get_scale(map_bounds, paper_dimensions_mm):
@@ -241,9 +219,9 @@ class Utils:
         midx = (map_bounds[WorldSides.NORTH.name] +
                 map_bounds[WorldSides.SOUTH.name]) / 2
 
-        height = Utils.get_distance((map_bounds[WorldSides.NORTH.name], map_bounds[WorldSides.WEST.name]), (
+        height = GeomUtils.get_distance((map_bounds[WorldSides.NORTH.name], map_bounds[WorldSides.WEST.name]), (
             map_bounds[WorldSides.SOUTH.name], map_bounds[WorldSides.WEST.name]))
-        width = Utils.get_distance(
+        width = GeomUtils.get_distance(
             (midx, map_bounds[WorldSides.WEST.name]), (midx, map_bounds[WorldSides.EAST.name]))
         # Calculate the scale for width and height
         scale_width = width / paper_dimensions_mm[0]
@@ -254,6 +232,7 @@ class Utils:
 
         return scale
 
+    #! not used
     @staticmethod
     def count_missing_values(keys: list[str], styles: FeaturesCategoryStyle, missing_style: Style) -> int:
         count = 0
@@ -279,20 +258,7 @@ class Utils:
 
         return zooms[-1][0]  # lowest level
 
-    # @staticmethod
-    # def get_direct_folders_name(root_folder_path: str) -> list[str]:
-    #     """_summary_
-
-    #     Args:
-    #         root_folder_path (str): _description_
-
-    #     Returns:
-    #         list[str]: _description_
-    #     """
-    #     pass
-
     @staticmethod
-    # @time_measurement("wr")
     def wrap_text(text, width):
         if (text is None):
             return None
@@ -337,16 +303,6 @@ class Utils:
         return value
     
     @staticmethod
-    def is_geometry_inside_geometry_threshold(inner: GeometryCollection, outer: GeometryCollection, threshold: float = 0.95) -> bool:
-
-        bbox_area: float = inner.area
-        intersection_area: float = inner.intersection(outer).area
-        if(bbox_area == 0):
-            return False
-        percentage_inside: float = intersection_area / bbox_area
-        return percentage_inside >= threshold
-    
-    @staticmethod
     def check_bbox_position(bbox_to_overlap: Bbox, bbox_to_overflow: Bbox, bbox_list: list[Bbox], ax,
                             text_bounds_overflow_threshold, reqired_area_polygon) -> bool:
         # check overlap with other bbox
@@ -359,4 +315,4 @@ class Utils:
         # check if bbox is inside required area
         bbox_polygon = geometry.box(
             bbox_to_overflow.x0, bbox_to_overflow.y0, bbox_to_overflow.x1, bbox_to_overflow.y1)
-        return Utils.is_geometry_inside_geometry_threshold(bbox_polygon, reqired_area_polygon, text_bounds_overflow_threshold)
+        return GeomUtils.is_geometry_inside_geometry_threshold(bbox_polygon, reqired_area_polygon, text_bounds_overflow_threshold)

@@ -1,6 +1,7 @@
 from common.map_enums import WorldSides, Style, TextPositions, MinParts
-from typing import Literal, NamedTuple, Optional
+from typing import NamedTuple, Optional
 from collections import namedtuple
+
 BoundsDict = dict[WorldSides, float]
 DimensionsTuple = tuple[float, float]
 Point = tuple[float, float]
