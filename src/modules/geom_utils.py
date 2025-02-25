@@ -108,3 +108,53 @@ class GeomUtils:
         geod = Geod(ellps="WGS84")
         _, _, distance_m = geod.inv(point1[1], point1[0], point2[1], point2[0])
         return distance_m
+    
+    @staticmethod
+    def check_same_orientation(geom: Polygon | MultiPolygon, splitter: LineString | MultiLineString) -> bool:
+        if(geom.is_empty or splitter.is_empty):
+            return None
+        # get intersetion by orientation of geom
+        inter_by_geom_orientation = geom.intersection(splitter)
+        if(not isinstance(inter_by_geom_orientation, LineString | MultiLineString) 
+        or inter_by_geom_orientation.is_empty):
+            return None
+        
+        inter_by_geom_orientation = GeomUtils.merge_lines_safe(
+            inter_by_geom_orientation)
+
+        # get intersetion by orientation of splitter
+        inter_by_splitter_orientation = splitter.intersection(geom)
+        inter_by_splitter_orientation = GeomUtils.merge_lines_safe(
+            inter_by_splitter_orientation)
+        
+        # should be same as inter_by_geom_orientation
+        if(not isinstance(inter_by_splitter_orientation, LineString | MultiLineString)
+            or inter_by_splitter_orientation.is_empty):
+            return None
+    
+        if (not inter_by_geom_orientation.equals(inter_by_splitter_orientation)):
+            return None
+        
+        # if both are linestring can compare
+        if (isinstance(inter_by_geom_orientation, LineString) and isinstance(inter_by_splitter_orientation, LineString)):
+            return list(inter_by_geom_orientation.coords) == list(inter_by_splitter_orientation.coords)
+
+        # check if there is mulitlinestring or create list from linestring for for loop
+        if isinstance(inter_by_geom_orientation, MultiLineString):
+            geom_lines = list(inter_by_geom_orientation.geoms)
+        else:
+            geom_lines = [inter_by_geom_orientation]
+
+        if isinstance(inter_by_splitter_orientation, MultiLineString):
+            split_lines = list(inter_by_splitter_orientation.geoms)
+        else:
+            split_lines = [inter_by_splitter_orientation]
+
+        # if some is multilinestring find components that are equal and check if it is equal by direction
+        for g_line in geom_lines:
+            for s_line in split_lines:
+                if g_line.equals(s_line):  # Check if they are the same
+                    # check if they are same by orientation
+                    return list(g_line.coords) == list(s_line.coords)
+
+        return None

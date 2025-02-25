@@ -1,6 +1,7 @@
 import warnings
 
 import geopandas as gpd
+from geopandas import GeoDataFrame
 import pandas as pd
 import osmnx as ox
 import numpy as np
@@ -18,11 +19,11 @@ from common.common_helpers import time_measurement
 class GdfUtils:
     # ------------getting informations------------
     @staticmethod
-    def get_area_gdf(area: str | list[Point], fromCrs: str, toCrs: str | None = None) -> gpd.GeoDataFrame:
+    def get_area_gdf(area: str | list[Point], fromCrs: str, toCrs: str | None = None) -> GeoDataFrame:
         if isinstance(area, str):
             try:
                 # need internet connection
-                reqired_area_gdf: gpd.GeoDataFrame = ox.geocode_to_gdf(
+                reqired_area_gdf: GeoDataFrame = ox.geocode_to_gdf(
                     area)  # Get from place name
             except:
                 raise ValueError(
@@ -52,7 +53,7 @@ class GdfUtils:
 
     @staticmethod
     @time_measurement("spojeni")
-    def get_whole_area_gdf(wanted_areas: WantedAreas, key_with_area, fromCrs: str, toCrs: str | None = None) -> gpd.GeoDataFrame:
+    def get_whole_area_gdf(wanted_areas: WantedAreas, key_with_area, fromCrs: str, toCrs: str | None = None) -> GeoDataFrame:
         if (len(wanted_areas) == 1):
             wanted_area = wanted_areas[0]
             if (key_with_area not in wanted_area):
@@ -63,7 +64,7 @@ class GdfUtils:
             wanted_area.pop(key_with_area, None)
             return area_gdf.assign(**wanted_area)
         else:
-            areas_gdf_list: list[gpd.GeoDataFrame] = []
+            areas_gdf_list: list[GeoDataFrame] = []
             for wanted_area in wanted_areas:
                 if (key_with_area not in wanted_area):
                     raise ValueError(
@@ -88,7 +89,7 @@ class GdfUtils:
         return GdfUtils.combine_gdfs([gdf_dissolved, gdf_zero])
 
     @staticmethod
-    def get_bounds_gdf(*gdfs: gpd.GeoDataFrame, toCrs: str | None = None) -> BoundsDict:
+    def get_bounds_gdf(*gdfs: GeoDataFrame, toCrs: str | None = None) -> BoundsDict:
         west = float('inf')
         south = float('inf')
         east = float('-inf')
@@ -113,7 +114,7 @@ class GdfUtils:
 
  
     @staticmethod
-    def get_dimensions_gdf(gdf: gpd.GeoDataFrame) -> DimensionsTuple:
+    def get_dimensions_gdf(gdf: GeoDataFrame) -> DimensionsTuple:
         bounds = GdfUtils.get_bounds_gdf(gdf)
         return Utils.get_dimensions(bounds)
 
@@ -121,13 +122,13 @@ class GdfUtils:
 
 
     @staticmethod
-    def create_gdf_from_geometry_and_attributes(geometry: list, tags: list[dict], fromCrs: str) -> gpd.GeoDataFrame:
-        return gpd.GeoDataFrame(pd.DataFrame(tags).assign(
+    def create_gdf_from_geometry_and_attributes(geometry: list, tags: list[dict], fromCrs: str) -> GeoDataFrame:
+        return GeoDataFrame(pd.DataFrame(tags).assign(
             geometry=geometry), crs=fromCrs)
 
     @staticmethod
-    def create_gdf_from_file_processor(fp: FileProcessor, fromCrs: str, columns=[]) -> gpd.GeoDataFrame:
-        gdf = gpd.GeoDataFrame.from_features(fp)
+    def create_gdf_from_file_processor(fp: FileProcessor, fromCrs: str, columns=[]) -> GeoDataFrame:
+        gdf = GeoDataFrame.from_features(fp)
         if (gdf.empty):
             # create gdf with column geometry
             return GdfUtils.create_empty_gdf(fromCrs)
@@ -135,26 +136,26 @@ class GdfUtils:
             return gdf.set_crs(fromCrs)
 
     @staticmethod
-    def create_empty_gdf(crs: str, columns=["geometry"]) -> gpd.GeoDataFrame:
+    def create_empty_gdf(crs: str, columns=["geometry"]) -> GeoDataFrame:
         if ('geometry' not in columns):
             columns.append('geometry')
         if (crs is None):
-            return gpd.GeoDataFrame(columns=columns)
-        return gpd.GeoDataFrame(columns=columns, crs=crs)
+            return GeoDataFrame(columns=columns)
+        return GeoDataFrame(columns=columns, crs=crs)
 
     @staticmethod
-    def create_gdf_from_bounds(area_bounds: BoundsDict, fromCrs: str, toCrs: str | None = None) -> gpd.GeoDataFrame:
+    def create_gdf_from_bounds(area_bounds: BoundsDict, fromCrs: str, toCrs: str | None = None) -> GeoDataFrame:
         return GdfUtils.create_gdf_from_polygon(GeomUtils.create_polygon_from_bounds(area_bounds), fromCrs, toCrs)
 
     @staticmethod
-    def create_gdf_from_polygon(area_polygon: Polygon, fromCrs: str, toCrs: str | None = None) -> gpd.GeoDataFrame:
+    def create_gdf_from_polygon(area_polygon: Polygon, fromCrs: str, toCrs: str | None = None) -> GeoDataFrame:
         if (toCrs is None):
-            return gpd.GeoDataFrame(geometry=[area_polygon], crs=fromCrs)
+            return GeoDataFrame(geometry=[area_polygon], crs=fromCrs)
         else:
-            return gpd.GeoDataFrame(geometry=[area_polygon], crs=fromCrs).to_crs(toCrs)
+            return GeoDataFrame(geometry=[area_polygon], crs=fromCrs).to_crs(toCrs)
 
     @staticmethod
-    def create_polygon_from_gdf(*gdfs: gpd.GeoDataFrame, toCrs: str | None = None) -> Polygon:
+    def create_polygon_from_gdf(*gdfs: GeoDataFrame, toCrs: str | None = None) -> Polygon:
         if (len(gdfs) == 1):
             if (toCrs is None):
                 return gdfs[0].unary_union
@@ -162,54 +163,15 @@ class GdfUtils:
             return gdf_edit.unary_union
         else:
             if (toCrs is None):
-                combined_gdf = gpd.GeoDataFrame(
+                combined_gdf = GeoDataFrame(
                     pd.concat(gdfs, ignore_index=True), crs=gdfs[0].crs)
             else:
-                combined_gdf = gpd.GeoDataFrame(
+                combined_gdf = GeoDataFrame(
                     pd.concat(gdfs, ignore_index=True), crs=gdfs[0].crs).to_crs(toCrs)
             return combined_gdf.unary_union
 
     @staticmethod
-    def create_background_gdf(map_area_gdf: gpd.GeoDataFrame, costline_gdf: gpd.GeoDataFrame, water_color: str, land_color: str) -> gpd.GeoDataFrame:
-# todo check if geom and splitter are different
-        def check_same_orientation(geom, splitter):
-            # get intersetion by orientation of geom
-            geom_orientation_inter = geom.intersection(splitter)
-            geom_orientation_inter = GeomUtils.merge_lines_safe(
-                geom_orientation_inter)
-
-            # get intersetion by orientation of splitter
-            split_orientation_inter = splitter.intersection(geom)
-            split_orientation_inter = GeomUtils.merge_lines_safe(
-                split_orientation_inter)
-            if (not geom_orientation_inter.equals(split_orientation_inter)):
-                return None
-
-            # if both are linestring can compare
-            if (isinstance(geom_orientation_inter, LineString) and isinstance(split_orientation_inter, LineString)):
-                return list(geom_orientation_inter.coords) == list(split_orientation_inter.coords)
-
-            # check if there is mulitlinestring or create empty list for FOR loop
-            if isinstance(geom_orientation_inter, MultiLineString):
-                geom_lines = list(geom_orientation_inter.geoms)
-            else:
-                geom_lines = [geom_orientation_inter]
-
-            if isinstance(split_orientation_inter, MultiLineString):
-                split_lines = list(split_orientation_inter.geoms)
-            else:
-                split_lines = [split_orientation_inter]
-
-            # if some is multilinestring find components that are equal and check if it is equal by direction
-            for g_line in geom_lines:
-                for s_line in split_lines:
-                    if g_line.equals(s_line):  # Check if they are the same
-                        # check if they are same by orientation
-                        return list(g_line.coords) == list(s_line.coords)
-
-            return None
-
-
+    def create_background_gdf(map_area_gdf: GeoDataFrame, costline_gdf: GeoDataFrame, water_color: str, land_color: str) -> GeoDataFrame:
         if (costline_gdf.empty):
             return GdfUtils.create_empty_gdf(map_area_gdf.crs)
         bg_data = []
@@ -225,7 +187,7 @@ class GdfUtils:
                 continue
             # check if geom is on right or left of splitter
             for geom in geometry_collection.geoms:
-                same_orientation = check_same_orientation(geom, splitter)
+                same_orientation = GeomUtils.check_same_orientation(geom, splitter)
                 if (same_orientation is None):
                     continue
                 color = ""
@@ -243,13 +205,13 @@ class GdfUtils:
         # create gdf from data
         if (bg_data == []):
             return GdfUtils.create_empty_gdf(map_area_gdf.crs)
-        bg_gdf = gpd.GeoDataFrame(
+        bg_gdf = GeoDataFrame(
             bg_data, geometry="geometry", crs=map_area_gdf.crs)
         return bg_gdf
 
     # ------------editing gdf------------
     @staticmethod
-    def remove_columns(gdf: gpd.GeoDataFrame, columns: list[str | Style], neg = False) -> gpd.GeoDataFrame:
+    def remove_columns(gdf: GeoDataFrame, columns: list[str | Style], neg = False) -> GeoDataFrame:
         if(neg):
             gdf.drop(columns=[col for col in gdf.columns if col not in columns], inplace=True, errors='ignore')
         else:
@@ -292,39 +254,39 @@ class GdfUtils:
             GdfUtils.multiply_column_gdf(gdf, new_column, multipliers, scaling)
 
     @staticmethod
-    def change_columns_to_categorical(gdf: gpd.GeoDataFrame, columns: list) -> None:
+    def change_columns_to_categorical(gdf: GeoDataFrame, columns: list) -> None:
         for column in columns:
             if (column in gdf):
                 gdf[column] = gdf[column].astype("category")
                 
     @staticmethod
-    def combine_rows_gdf(gdf: gpd.GeoDataFrame, toCrs: int) -> gpd.GeoDataFrame:
+    def combine_rows_gdf(gdf: GeoDataFrame, toCrs: int) -> GeoDataFrame:
         if (len(gdf) == 1):
             return gdf.to_crs(toCrs)
-        return gpd.GeoDataFrame(geometry=[gdf.to_crs(toCrs).geometry.unary_union], crs=toCrs)
+        return GeoDataFrame(geometry=[gdf.to_crs(toCrs).geometry.unary_union], crs=toCrs)
 
 
     @staticmethod
-    def change_columns_to_numeric(gdf: gpd.GeoDataFrame, columns: list[str]) -> None:
+    def change_columns_to_numeric(gdf: GeoDataFrame, columns: list[str]) -> None:
         for column in columns:
             if (column in gdf):
                 gdf[column] = pd.to_numeric(gdf[column], errors='coerce')
 
     @time_measurement("mergeLines")
     @staticmethod
-    def merge_lines_gdf(gdf: gpd.GeoDataFrame, columns_ignore: list[str | Style] = []) -> gpd.GeoDataFrame:
+    def merge_lines_gdf(gdf: GeoDataFrame, columns_ignore: list[str | Style] = []) -> GeoDataFrame:
         """Merge lines in GeoDataFrame to one line if they have same values in columns (except columns in columns_ignore).
         If want_bridges is True, merge all lines with same values in columns. If False, merge all lines with same values but ignore bridges.
         To merging geoms is used function merge_lines_safe that uses unary_union and linemerge from shapely.ops.
         It should merge multiple lines that are one line and that should prevents creating artifacts in plot.
 
         Args:
-            gdf (gpd.GeoDataFrame): _description_
+            gdf (GeoDataFrame): _description_
             want_bridges (bool): _description_
             columns_ignore (list[str  |  Style], optional): _description_. Defaults to [].
 
         Returns:
-            gpd.GeoDataFrame: _description_
+            GeoDataFrame: _description_
         """
         columns_ignore = [*columns_ignore, gdf.geometry.name]
         # if dont want remove columns and than...
@@ -334,23 +296,23 @@ class GdfUtils:
         merged = gdf.groupby(columns, dropna=False, observed=True).agg({
             gdf.geometry.name: GeomUtils.merge_lines_safe
         })
-        merged_gdf = gpd.GeoDataFrame(
+        merged_gdf = GeoDataFrame(
             merged, geometry=gdf.geometry.name, crs=gdf.crs).reset_index()
         return merged_gdf
 
     @staticmethod
-    def combine_gdfs(gdfs: list[gpd.GeoDataFrame]) -> gpd.GeoDataFrame:
+    def combine_gdfs(gdfs: list[GeoDataFrame]) -> GeoDataFrame:
         if (len(gdfs) == 1):
             return gdfs[0]
         return pd.concat(gdfs, ignore_index=True)  # concat to one gdf
 
     @staticmethod
-    def expand_gdf_area_fitPaperSize(area_gdf: gpd.GeoDataFrame, pdf_dim: DimensionsTuple):
+    def expand_gdf_area_fitPaperSize(area_gdf: GeoDataFrame, pdf_dim: DimensionsTuple):
         bounds: BoundsDict = GdfUtils.get_bounds_gdf(area_gdf)
         return GdfUtils.create_gdf_from_bounds(Utils.adjust_bounds_to_fill_paper(bounds, pdf_dim), area_gdf.crs, None)
 
     @staticmethod
-    def sort_gdf_by_column(gdf: gpd.GeoDataFrame, column_name: Style, ascending: bool = True, na_position: str = 'first') -> gpd.GeoDataFrame:
+    def sort_gdf_by_column(gdf: GeoDataFrame, column_name: Style, ascending: bool = True, na_position: str = 'first') -> GeoDataFrame:
         if (gdf.empty):
             return gdf
         if (column_name in gdf):
@@ -358,19 +320,19 @@ class GdfUtils:
         warnings.warn("Cannot sort - unexisting column name")
         return gdf
 
-    def change_crs(gdf: gpd.GeoDataFrame, toCrs: str) -> gpd.GeoDataFrame:
+    def change_crs(gdf: GeoDataFrame, toCrs: str) -> GeoDataFrame:
         if (gdf.empty):
             return gdf.set_crs(toCrs)
         return gdf.to_crs(toCrs)
 
     @staticmethod  # does not work if area is inside of another area - use or not use - by gap
     @time_measurement("inacurrate")
-    def remove_common_boundary_inaccuracy(boundary_gdf: gpd.GeoDataFrame) -> None:
+    def remove_common_boundary_inaccuracy(boundary_gdf: GeoDataFrame) -> None:
         """Remove common boundary inaccuracy in given GeoDataFrame 
         by shifting the common border of the one area to the neigbour area.
 
         Args:
-            boundary_gdf (gpd.GeoDataFrame): Gdf with boundaries.
+            boundary_gdf (GeoDataFrame): Gdf with boundaries.
         """
         # # by shifting area...
         # boundary_gdf['area'] = boundary_gdf.geometry.area
@@ -404,7 +366,7 @@ class GdfUtils:
     # ------------Bool operations------------
 
     @staticmethod
-    def are_gdf_geometry_inside_geometry(gdf: gpd.GeoDataFrame, polygon: GeometryCollection) -> bool:
+    def are_gdf_geometry_inside_geometry(gdf: GeoDataFrame, polygon: GeometryCollection) -> bool:
         return gdf[gdf.geometry.name].within(polygon).all()
         # todo check speed and try using sjoin
 
@@ -412,7 +374,7 @@ class GdfUtils:
 
     # ------------Filtering------------
     @staticmethod
-    def get_rows_filter_AND(gdf: gpd.GeoDataFrame, conditions: RowsConditionsAND) -> pd.Series:
+    def get_rows_filter_AND(gdf: GeoDataFrame, conditions: RowsConditionsAND) -> pd.Series:
         filter_mask = pd.Series(True, index=gdf.index)
         for column_name, column_value in conditions.items():
             if column_name not in gdf.columns:
@@ -471,7 +433,7 @@ class GdfUtils:
                         filter_mask &= (gdf[column_name] == column_value)
         return filter_mask
 
-    def get_rows_filter(gdf: gpd.GeoDataFrame, conditions: RowsConditions | RowsConditionsAND) -> pd.Series:
+    def get_rows_filter(gdf: GeoDataFrame, conditions: RowsConditions | RowsConditionsAND) -> pd.Series:
         filter_mask = pd.Series(False, index=gdf.index)
         # if is not list
         if isinstance(conditions, dict):
@@ -483,13 +445,13 @@ class GdfUtils:
             filter_mask |= GdfUtils.get_rows_filter_AND(gdf, and_conditions)
         return filter_mask
 
-    def filter_rows(gdf: gpd.GeoDataFrame, conditions: RowsConditions | RowsConditionsAND,
-                    neg: bool = False, compl: bool = False) -> gpd.GeoDataFrame:
+    def filter_rows(gdf: GeoDataFrame, conditions: RowsConditions | RowsConditionsAND,
+                    neg: bool = False, compl: bool = False) -> GeoDataFrame:
         filter_mask = GdfUtils.get_rows_filter(gdf, conditions)
         return GdfUtils.return_filtered(gdf, filter_mask, neg, compl)
 
     @staticmethod
-    def return_filtered(gdf: gpd.GeoDataFrame, filter_mask: pd.Series, neg: bool = False,
+    def return_filtered(gdf: GeoDataFrame, filter_mask: pd.Series, neg: bool = False,
                         compl: bool = False):
         if (compl):
             if (neg):
@@ -514,7 +476,7 @@ class GdfUtils:
                                           Style.EDGEWIDTH.name: '', Style.EDGE_COLOR.name: '', Style.ALPHA.name: ''})
 
     @staticmethod
-    def filter_invalid_nodes_min_req(nodes_gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
+    def filter_invalid_nodes_min_req(nodes_gdf: GeoDataFrame) -> GeoDataFrame:
         nodes_gdf = GdfUtils.filter_rows(nodes_gdf, [{Style.MIN_REQ_POINT.name: MinParts.MARKER.name, Style.MARKER.name: '', Style.COLOR.name: ''},
                                                      {Style.MIN_REQ_POINT.name: MinParts.MARKER_TEXT1.name,
                                                          Style.MARKER.name: '', Style.TEXT1.name: ''},
@@ -534,7 +496,7 @@ class GdfUtils:
         return nodes_gdf
 
     @staticmethod
-    def get_rows_inside_area(gdf_rows: gpd.GeoDataFrame, gdf_area: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
+    def get_rows_inside_area(gdf_rows: GeoDataFrame, gdf_area: GeoDataFrame) -> GeoDataFrame:
         return gdf_rows.loc[gpd.sjoin(gdf_rows, gdf_area, predicate="within").index]
 
     # -----------Others functions------------

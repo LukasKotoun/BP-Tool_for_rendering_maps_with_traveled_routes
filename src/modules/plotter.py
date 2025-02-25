@@ -613,7 +613,6 @@ class Plotter:
                                                            Style.FINISH_MARKER_COLOR.name: '', Style.FINISH_MARKER_EDGE_COLOR.name: '',
                                                            Style.FINISH_MARKER_EDGEWIDTH.name: '', Style.FINISH_MARKER_ALPHA.name: ''})
 
-
         for row in gpx_finish_markers.itertuples():
             mapped_row: MarkerRow = MarkerRow(
                 geometry=get_last_point(row.geometry),
