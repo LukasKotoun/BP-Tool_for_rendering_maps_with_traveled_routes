@@ -77,9 +77,9 @@ place_styles: ElementStyles = [
     },
         {
         "10-10": {Style.TEXT_FONT_SIZE.name: 5},
-        "11-14": {Style.TEXT_FONT_SIZE.name: 8, Style.MARKER.name: "o", Style.COLOR.name: "#decda8", Style.MIN_REQ_POINT.name: MinParts.MARKER_TEXT1.name,
-        Style.TEXT1_POSITIONS.name: [TextPositions.TOP.name, TextPositions.BOTTOM.name, TextPositions.RIGHT.name], Style.EDGE_WIDTH_RATIO.name:0.2, Style.WIDTH.name: 4.5, 
-        Style.EDGE_COLOR.name: "#a59b7a"}
+        "11-14": {Style.TEXT_FONT_SIZE.name: 8, Style.MARKER.name: "o", Style.COLOR.name: "#decda8", Style.MIN_REQ_POINT.name: MinParts.MARKER.name,
+        Style.TEXT1_POSITIONS.name: [TextPositions.TOP.name, TextPositions.BOTTOM.name, TextPositions.RIGHT.name], Style.EDGE_WIDTH_RATIO.name:0.2,
+        Style.WIDTH.name: 60.5, Style.EDGE_COLOR.name: "#a59b7a", Style.MARKER_ABOVE_OTHERS.name: True}
     }),
 ]
 
@@ -89,8 +89,8 @@ natural_styles_nodes: ElementStyles = [
     ({'natural': 'peak'}, {
         Style.MARKER.name: "^", 
         Style.MARKER_HORIZONTAL_ALIGN.name: "center", Style.MARKER_VERTICAL_ALIGN.name: None,
-        Style.COLOR.name: "#7f3016", Style.MIN_REQ_POINT.name: MinParts.MARKER_TEXT2.name, #Style.MIN_REQ_POINT.name: MinParts.MARKER_TEXT2.name,
-        Style.TEXT_FONT_SIZE.name: 3, Style.WIDTH.name: 3.6,  Style.TEXT1_POSITIONS.name: [TextPositions.TOP.name], 
+        Style.COLOR.name: "#7f3016", Style.MIN_REQ_POINT.name: MinParts.MARKER.name, #Style.MIN_REQ_POINT.name: MinParts.MARKER_TEXT2.name,
+        Style.TEXT_FONT_SIZE.name: 3, Style.WIDTH.name: 120.6,  Style.TEXT1_POSITIONS.name: [TextPositions.TOP.name], 
         Style.TEXT2_POSITIONS.name: [TextPositions.BOTTOM.name], Style.EDGE_WIDTH_RATIO.name: 0
 
     })  # rozlišení - dict vs dict s 2 dict uvnitř
