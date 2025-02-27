@@ -284,7 +284,7 @@ def main() -> None:
             nodes_gdf, map_area_gdf)
     gdfs_convert_loaded_columns(gpxs_gdf, nodes_gdf, ways_gdf, areas_gdf)
 
-    # todo - by zoom also without eval - in some zoom turn off and set min req to only point?
+    # todo - by zoom also without eval - in some zoom turn off and set min req to only point? add to fe settings
     nodes_gdf = GdfUtils.filter_peaks_by_prominence(
         nodes_gdf, map_scale*10*2, map_scale/10)
     # todo filter out peak with very small elevation - to its prominence  - if ele is 4x smaller than prominence
@@ -312,7 +312,7 @@ def main() -> None:
     gdfs_prepare_styled_columns(gpxs_gdf, nodes_gdf, ways_gdf,
                          areas_gdf, map_object_scaling_factor)
     # ------------filter some elements out------------
-    nodes_gdf = GdfUtils.check_nodes_min_req(nodes_gdf)
+    nodes_gdf = GdfUtils.check_filter_nodes_min_req(nodes_gdf)
 
     # GdfUtils.wrap_text_gdf(nodes_gdf, [(Style.TEXT1.name, Style.TEXT1_WRAP_LEN.name), (Style.TEXT2.name, Style.TEXT2_WRAP_LEN.name)])
     # todo algorithm for peaks - for leaving only the highest peak in the area
@@ -324,7 +324,7 @@ def main() -> None:
     # -----sort-----
     # sort by population and ele - main sort is by zindex in plotter
     GdfUtils.sort_gdf_by_columns(nodes_gdf, ['population', 'prominence', 'ele'], ascending=False, na_position='last')
-    print(nodes_gdf)
+
     # first by zindex (from smallest to biggest) and then by area
     GdfUtils.sort_gdf_by_columns(areas_gdf, ['area'], ascending=False, na_position='last')
     GdfUtils.sort_gdf_by_columns(bg_gdf, ['area'], ascending=False, na_position='last')

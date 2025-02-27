@@ -1,5 +1,5 @@
 from common.custom_types import ElementStyles, FeatureStyles
-from common.map_enums import Style, TextPositions, MinParts
+from common.map_enums import Style, TextPositions, MinPlot, MarkerAbove
 from config import font_awesome_prop, material_design_prop
 
 #! edge linestyle is suported only dashed or not dashed on not solid lines
@@ -64,10 +64,10 @@ place_styles: ElementStyles = [
         "10-10": {Style.TEXT_FONT_SIZE.name: 15}
     }),
     ({'place': 'town'}, {
-        Style.TEXT_FONT_SIZE.name: 15, Style.ZINDEX.name: 29
+        Style.TEXT_FONT_SIZE.name: 10, Style.ZINDEX.name: 29
     },
         {
-        "10-10": {Style.TEXT_FONT_SIZE.name: 6, Style.MARKER.name: "o", Style.COLOR.name: "#decda8", Style.MIN_REQ_POINT.name: MinParts.MARKER_TEXT1.name,
+        "10-10": {Style.TEXT_FONT_SIZE.name: 5, Style.MARKER.name: "o", Style.COLOR.name: "#decda8", Style.MIN_PLOT_REQ.name: MinPlot.MARKER_TEXT1.name,
         Style.TEXT1_POSITIONS.name: [TextPositions.TOP.name, TextPositions.BOTTOM.name, TextPositions.RIGHT.name], Style.EDGE_WIDTH_RATIO.name:0.1, Style.WIDTH.name: 2.8, 
         Style.EDGE_COLOR.name: "#a59b7a"}
     }),
@@ -77,9 +77,9 @@ place_styles: ElementStyles = [
     },
         {
         "10-10": {Style.TEXT_FONT_SIZE.name: 5},
-        "11-14": {Style.TEXT_FONT_SIZE.name: 8, Style.MARKER.name: "o", Style.COLOR.name: "#decda8", Style.MIN_REQ_POINT.name: MinParts.MARKER.name,
+        "11-14": {Style.TEXT_FONT_SIZE.name: 8, Style.MARKER.name: "o", Style.COLOR.name: "#decda8", Style.MIN_PLOT_REQ.name: MinPlot.MARKER_TEXT1.name,
         Style.TEXT1_POSITIONS.name: [TextPositions.TOP.name, TextPositions.BOTTOM.name, TextPositions.RIGHT.name], Style.EDGE_WIDTH_RATIO.name:0.2,
-        Style.WIDTH.name: 60.5, Style.EDGE_COLOR.name: "#a59b7a", Style.MARKER_ABOVE_OTHERS.name: True}
+        Style.WIDTH.name: 5, Style.EDGE_COLOR.name: "#a59b7a", Style.MARKER_ABOVE_OTHERS.name: MarkerAbove.NONE}
     }),
 ]
 
@@ -89,9 +89,9 @@ natural_styles_nodes: ElementStyles = [
     ({'natural': 'peak'}, {
         Style.MARKER.name: "^", 
         Style.MARKER_HORIZONTAL_ALIGN.name: "center", Style.MARKER_VERTICAL_ALIGN.name: None,
-        Style.COLOR.name: "#7f3016", Style.MIN_REQ_POINT.name: MinParts.MARKER.name, #Style.MIN_REQ_POINT.name: MinParts.MARKER_TEXT2.name,
-        Style.TEXT_FONT_SIZE.name: 3, Style.WIDTH.name: 120.6,  Style.TEXT1_POSITIONS.name: [TextPositions.TOP.name], 
-        Style.TEXT2_POSITIONS.name: [TextPositions.BOTTOM.name], Style.EDGE_WIDTH_RATIO.name: 0
+        Style.COLOR.name: "#7f3016", Style.MIN_PLOT_REQ.name: MinPlot.MARKER_TEXT2.name, #Style.MIN_PLOT_REQ.name: MinPlot.MARKER_TEXT2.name,
+        Style.TEXT_FONT_SIZE.name: 3, Style.WIDTH.name: 3.6,  Style.TEXT1_POSITIONS.name: [TextPositions.TOP.name], 
+        Style.TEXT2_POSITIONS.name: [TextPositions.BOTTOM.name], Style.EDGE_WIDTH_RATIO.name: 0, 
 
     })  # rozlišení - dict vs dict s 2 dict uvnitř
 ]
@@ -103,7 +103,7 @@ nodes_styles_default: ElementStyles = [
        
     }),
     ({'place': ['city', 'town', 'village']}, {
-        Style.TEXT_FONT_SIZE.name: 5, Style.TEXT_OUTLINE_WIDTH_RATIO.name: 0.2, Style.MIN_REQ_POINT.name: MinParts.TEXT1.name,
+        Style.TEXT_FONT_SIZE.name: 5, Style.TEXT_OUTLINE_WIDTH_RATIO.name: 0.2, Style.MIN_PLOT_REQ.name: MinPlot.TEXT1.name,
         Style.TEXT1_POSITIONS.name: [TextPositions.TOP.name, TextPositions.BOTTOM.name, TextPositions.RIGHT.name]
     }),
 ]

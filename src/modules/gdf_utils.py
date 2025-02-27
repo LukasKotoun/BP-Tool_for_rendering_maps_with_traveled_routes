@@ -11,10 +11,9 @@ from shapely.ops import split
 
 from modules.utils import Utils
 from modules.geom_utils import GeomUtils
-from common.map_enums import WorldSides, Style, MinParts
+from common.map_enums import WorldSides, Style, MinPlot, MinLoad
 from common.custom_types import BoundsDict, DimensionsTuple, WantedAreas, RowsConditions, RowsConditionsAND, WantedArea
 from common.common_helpers import time_measurement
-
 
 
 import numpy as np
@@ -32,7 +31,7 @@ class GdfUtils:
                     area)  # Get from place name
             except:
                 raise ValueError(
-                    "The requested location has not been found.") # todo should be validated on FE
+                    "The requested location has not been found.")  # todo should be validated on FE
             if (reqired_area_gdf.empty):
                 raise ValueError(
                     "The requested location has not been found.")
@@ -49,7 +48,7 @@ class GdfUtils:
             return reqired_area_gdf
         else:
             return reqired_area_gdf.to_crs(toCrs)
-        
+
     @staticmethod
     def map_gdf_column_names(gdf, mapping_dict):
         """Replace GeoDataFrame column names with enums if in mapping, otherwise keep them unchanged."""
@@ -117,14 +116,12 @@ class GdfUtils:
             WorldSides.NORTH.name: north
         }
 
- 
     @staticmethod
     def get_dimensions_gdf(gdf: GeoDataFrame) -> DimensionsTuple:
         bounds = GdfUtils.get_bounds_gdf(gdf)
         return Utils.get_dimensions(bounds)
 
     # ------------creating------------
-
 
     @staticmethod
     def create_gdf_from_geometry_and_attributes(geometry: list, tags: list[dict], fromCrs: str) -> GeoDataFrame:
@@ -192,7 +189,8 @@ class GdfUtils:
                 continue
             # check if geom is on right or left of splitter
             for geom in geometry_collection.geoms:
-                same_orientation = GeomUtils.check_same_orientation(geom, splitter)
+                same_orientation = GeomUtils.check_same_orientation(
+                    geom, splitter)
                 if (same_orientation is None):
                     continue
                 color = ""
@@ -216,9 +214,10 @@ class GdfUtils:
 
     # ------------editing gdf------------
     @staticmethod
-    def remove_columns(gdf: GeoDataFrame, columns: list[str | Style], neg = False) -> GeoDataFrame:
-        if(neg):
-            gdf.drop(columns=[col for col in gdf.columns if col not in columns], inplace=True, errors='ignore')
+    def remove_columns(gdf: GeoDataFrame, columns: list[str | Style], neg=False) -> GeoDataFrame:
+        if (neg):
+            gdf.drop(columns=[
+                     col for col in gdf.columns if col not in columns], inplace=True, errors='ignore')
         else:
             gdf.drop(columns=columns, inplace=True, errors='ignore')
 
@@ -263,20 +262,20 @@ class GdfUtils:
         for column in columns:
             if (column in gdf):
                 gdf[column] = gdf[column].astype("category")
-                
+
     @staticmethod
     def combine_rows_gdf(gdf: GeoDataFrame, toCrs: int) -> GeoDataFrame:
         if (len(gdf) == 1):
             return gdf.to_crs(toCrs)
         return GeoDataFrame(geometry=[gdf.to_crs(toCrs).geometry.unary_union], crs=toCrs)
 
-
     @staticmethod
-    def change_columns_to_numeric(gdf: GeoDataFrame, columns: list[str], downcast: str='integer') -> None:
+    def change_columns_to_numeric(gdf: GeoDataFrame, columns: list[str], downcast: str = 'integer') -> None:
         for column in columns:
             if (column in gdf):
-                gdf[column] = pd.to_numeric(gdf[column], errors='coerce', downcast=downcast)
-                
+                gdf[column] = pd.to_numeric(
+                    gdf[column], errors='coerce', downcast=downcast)
+
     @staticmethod
     def convert_numeric_columns_int(gdf: GeoDataFrame, columns: list[str]) -> None:
         for column in columns:
@@ -285,13 +284,12 @@ class GdfUtils:
                     gdf[column] = gdf[column].round(0).astype("Int64")
                 except:
                     warnings.warn(f"cannot convert column {column} to int")
-                
-    @staticmethod
-    def fill_nan_values(gdf: GeoDataFrame, columns: list[str], value = 0) -> None:
-        for column in columns:
-            if(column in gdf):
-                gdf[column] = gdf[column].fillna(value)
 
+    @staticmethod
+    def fill_nan_values(gdf: GeoDataFrame, columns: list[str], value=0) -> None:
+        for column in columns:
+            if (column in gdf):
+                gdf[column] = gdf[column].fillna(value)
 
     @time_measurement("mergeLines")
     @staticmethod
@@ -333,18 +331,20 @@ class GdfUtils:
         return GdfUtils.create_gdf_from_bounds(Utils.adjust_bounds_to_fill_paper(bounds, pdf_dim), area_gdf.crs, None)
 
     @staticmethod
-    def sort_gdf_by_columns(gdf: GeoDataFrame, column_name: list[Style|str], ascending: bool = True, na_position: str = 'first', stable = False) -> GeoDataFrame:
+    def sort_gdf_by_columns(gdf: GeoDataFrame, column_name: list[Style | str], ascending: bool = True, na_position: str = 'first', stable=False) -> GeoDataFrame:
         if (gdf.empty):
             return gdf
-        if(isinstance(column_name, str)):
+        if (isinstance(column_name, str)):
             column_name = [column_name]
         column_name_exist = [col for col in column_name if col in gdf.columns]
-        if(not column_name_exist):
+        if (not column_name_exist):
             return gdf
-        if(stable):
-            gdf.sort_values(by=column_name_exist, ascending=ascending, na_position=na_position, inplace=True, kind="stable", ignore_index=True)
-        else:   
-            gdf.sort_values(by=column_name_exist, ascending=ascending, na_position=na_position, inplace=True, ignore_index=True)
+        if (stable):
+            gdf.sort_values(by=column_name_exist, ascending=ascending,
+                            na_position=na_position, inplace=True, kind="stable", ignore_index=True)
+        else:
+            gdf.sort_values(by=column_name_exist, ascending=ascending,
+                            na_position=na_position, inplace=True, ignore_index=True)
 
     def change_crs(gdf: GeoDataFrame, toCrs: str) -> GeoDataFrame:
         if (gdf.empty):
@@ -379,7 +379,8 @@ class GdfUtils:
 
         # work by creating from 2 seperated areas row with combined area and one row with original area
         # # remove small gaps between areas - does not work always but better then above??
-        boundary_gdf[boundary_gdf.geometry.name] = boundary_gdf["geometry"].buffer(0)
+        boundary_gdf[boundary_gdf.geometry.name] = boundary_gdf["geometry"].buffer(
+            0)
         for i, row in boundary_gdf.iterrows():
             # find areas that share a boundary with row
             neighbors = boundary_gdf[boundary_gdf.geometry.touches(
@@ -396,9 +397,8 @@ class GdfUtils:
         return gdf[gdf.geometry.name].within(polygon).all()
         # todo check speed and try using sjoin
 
-
-
     # ------------Filtering------------
+
     @staticmethod
     def get_rows_filter_AND(gdf: GeoDataFrame, conditions: RowsConditionsAND) -> pd.Series:
         filter_mask = pd.Series(True, index=gdf.index)
@@ -489,36 +489,51 @@ class GdfUtils:
                 return gdf[~filter_mask].reset_index(drop=True)
             else:
                 return gdf[filter_mask].reset_index(drop=True)
-            
+
     # todo move somewhere else - to plotter
     @staticmethod
     def filter_invalid_texts(gdf):
         return GdfUtils.filter_rows(gdf, {Style.TEXT_FONT_SIZE.name: '', Style.TEXT_OUTLINE_WIDTH.name: '', Style.TEXT_COLOR.name: '',
                                           Style.TEXT_OUTLINE_COLOR.name: '', Style.TEXT_FONTFAMILY.name: '', Style.TEXT_WEIGHT.name: '',
                                           Style.TEXT_STYLE.name: '', Style.ALPHA.name: '', Style.EDGE_ALPHA.name: ''})
+
     @staticmethod
     def filter_invalid_markers(gdf):
         return GdfUtils.filter_rows(gdf, {Style.MARKER.name: '', Style.COLOR.name: '', Style.WIDTH.name: '',
                                           Style.EDGEWIDTH.name: '', Style.EDGE_COLOR.name: '', Style.ALPHA.name: ''})
+    # to some utils or main
 
     @staticmethod
-    def check_nodes_min_req(nodes_gdf: GeoDataFrame) -> GeoDataFrame:
-        nodes_gdf = GdfUtils.filter_rows(nodes_gdf, [{Style.MIN_REQ_POINT.name: MinParts.MARKER.name, Style.MARKER.name: '', Style.COLOR.name: ''},
-                                                     {Style.MIN_REQ_POINT.name: MinParts.MARKER_TEXT1.name,
-                                                         Style.MARKER.name: '', Style.TEXT1.name: ''},
-                                                     {Style.MIN_REQ_POINT.name: MinParts.MARKER_TEXT2.name,
-                                                         Style.MARKER.name: '', Style.TEXT2.name: ''},
-                                                     {Style.MIN_REQ_POINT.name: MinParts.MARKER_TEXT1_TEXT2.name,
-                                                         Style.MARKER.name: '', Style.TEXT1.name: '', Style.TEXT2.name: ''},
-                                                     {Style.MIN_REQ_POINT.name: MinParts.TEXT1.name,
-                                                         Style.TEXT1.name: ''},
-                                                     {Style.MIN_REQ_POINT.name: MinParts.TEXT2.name,
-                                                         Style.TEXT2.name: ''},
-                                                     {Style.MIN_REQ_POINT.name: MinParts.TEXT1_TEXT2.name, Style.TEXT1.name: '', Style.TEXT2.name: ''}])
+    @time_measurement("filter")
+    def check_filter_nodes_min_req(nodes_gdf: GeoDataFrame) -> GeoDataFrame:
         nodes_gdf = GdfUtils.filter_rows(nodes_gdf, [{Style.MARKER.name: ''},
                                                      {Style.TEXT1.name: ''},
                                                      {Style.TEXT2.name: ''}])
-
+        
+        nodes_gdf = GdfUtils.filter_rows(nodes_gdf, [{Style.MIN_LOAD_REQ.name: '~'}, {Style.MIN_LOAD_REQ.name: MinLoad.NONE.name},
+                                                     {Style.MIN_LOAD_REQ.name: MinLoad.TEXT1.name, Style.TEXT1.name: ''},
+                                                    {Style.MIN_LOAD_REQ.name: MinLoad.TEXT2.name, Style.TEXT2.name: ''},
+                                                    {Style.MIN_LOAD_REQ.name: MinLoad.TEXT1_TEXT2.name, Style.TEXT1.name: '', Style.TEXT2.name: ''},
+                                                    {Style.MIN_LOAD_REQ.name: MinLoad.TEXT1_OR_TEXT2.name, Style.TEXT1.name: ''},
+                                                    {Style.MIN_LOAD_REQ.name: MinLoad.TEXT1_OR_TEXT2.name, Style.TEXT2.name: ''}])
+        GdfUtils.remove_columns(nodes_gdf, [Style.MIN_LOAD_REQ.name])
+        
+        nodes_gdf = GdfUtils.filter_rows(nodes_gdf, [{Style.MIN_PLOT_REQ.name: MinPlot.MARKER.name, Style.MARKER.name: '', Style.COLOR.name: ''},
+                                                     {Style.MIN_PLOT_REQ.name: MinPlot.MARKER_TEXT1.name,
+                                                         Style.MARKER.name: '', Style.TEXT1.name: ''},
+                                                     {Style.MIN_PLOT_REQ.name: MinPlot.MARKER_TEXT2.name,
+                                                         Style.MARKER.name: '', Style.TEXT2.name: ''},
+                                                     {Style.MIN_PLOT_REQ.name: MinPlot.MARKER_TEXT1_TEXT2.name,
+                                                         Style.MARKER.name: '', Style.TEXT1.name: '', Style.TEXT2.name: ''},
+                                                     {Style.MIN_PLOT_REQ.name: MinPlot.TEXT1.name,
+                                                         Style.TEXT1.name: ''},
+                                                     {Style.MIN_PLOT_REQ.name: MinPlot.TEXT2.name,
+                                                         Style.TEXT2.name: ''},
+                                                     {Style.MIN_PLOT_REQ.name: MinPlot.TEXT1_TEXT2.name,
+                                                         Style.TEXT1.name: '', Style.TEXT2.name: ''},
+                                                     {Style.MIN_PLOT_REQ.name: MinPlot.MARKER_TEXT1_OR_TEXT2,
+                                                         Style.MARKER.name: '', Style.TEXT1: ''},
+                                                     {Style.MIN_PLOT_REQ.name: MinPlot.MARKER_TEXT1_OR_TEXT2, Style.MARKER.name: '', Style.TEXT2: ''}])
         return nodes_gdf
 
     @staticmethod
@@ -528,7 +543,7 @@ class GdfUtils:
     # -----------Others functions------------
 
     @staticmethod
-    def get_groups_by_columns(gdf: GeoDataFrame, group_cols: list, default_keys: list=[], dropna: bool=False):
+    def get_groups_by_columns(gdf: GeoDataFrame, group_cols: list, default_keys: list = [], dropna: bool = False):
         # get missing columns and replace with default key if missing
         if len(group_cols) != len(default_keys):
             default_keys = [None] * len(group_cols)
@@ -540,28 +555,29 @@ class GdfUtils:
             return gdf.groupby(group_cols[0], dropna=dropna, observed=False)
         return gdf.groupby(group_cols, dropna=dropna, observed=False)
 
-
     @staticmethod
     @time_measurement("prominence")
     def filter_peaks_by_prominence(nodes_gdf, radius, min_prominence):
         """
         Filters peaks based on a simplified prominence criterion.
-        
+
         For each peak in peaks, the function looks for any nearby peak within
         the given radius. If a higher peak exists and the elevation difference is less 
         than min_prominence, then the peak is considered less “prominent” and is filtered out.
-        
+
         Parameters:
         - peaks (GeoDataFrame): must have a 'geometry' column (Point) and an 'elevation' column.
         - radius (float): search radius (in units of peaks) to look for competing peaks.
         - min_prominence (float): minimum required elevation difference for a peak to be considered prominent.
-        
+
         Returns:
         - GeoDataFrame: a filtered GeoDataFrame containing only the peaks meeting the prominence threshold.
         """
-        peaks, rest = GdfUtils.filter_rows(nodes_gdf, {'natural': 'peak'}, compl=True)
+        peaks, rest = GdfUtils.filter_rows(
+            nodes_gdf, {'natural': 'peak'}, compl=True)
         peaks = GdfUtils.filter_rows(peaks, {'ele': ''})
-        
+        if (peaks.empty):
+            return rest
         # extract coordinates and elevations
         coords = np.array([[geom.x, geom.y] for geom in peaks.geometry])
         elevations = peaks['ele'].values
@@ -574,9 +590,10 @@ class GdfUtils:
         is_prominent = pd.Series(index=peaks.index, dtype=bool)
         # For each peak, query neighbors within the specified radius
         for point_i, (coord, elev) in enumerate(zip(coords, elevations)):
-            # Find indices of nearby peaks (including itself)
+            # Find indices of nearby peaks - make bigger until there are some peaks
             nearby_point_i = tree.query_ball_point(coord, r=radius)
             nearby_point_i.remove(point_i)
+
             # Check for any higher peak with a small elevation gap
             prominence.at[point_i] = elevations[point_i]
             for nearby_point in nearby_point_i:
@@ -586,7 +603,6 @@ class GdfUtils:
                     if (curr_peak_prominence) < min_prominence:
                         is_prominent.at[point_i] = False
                         break
-        
+        # todo check if prominenc is 4x bigger than min_prominence
         peaks['prominence'] = prominence
         return GdfUtils.combine_gdfs([peaks[is_prominent].reset_index(drop=True), rest])
-        

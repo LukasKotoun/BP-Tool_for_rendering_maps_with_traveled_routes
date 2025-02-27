@@ -1,4 +1,4 @@
-from common.map_enums import WorldSides, Style, TextPositions, MinParts, MarkerAbove
+from common.map_enums import WorldSides, Style, TextPositions, MinPlot, MarkerAbove
 from typing import NamedTuple, Optional
 from collections import namedtuple
 
@@ -67,7 +67,7 @@ class MarkerOneAnotationRow(NamedTuple):
     TEXT_OUTLINE_WIDTH: float
     TEXT_OUTLINE_COLOR: str
     EDGE_ALPHA: float
-    MIN_REQ_POINT: MinParts
+    MIN_PLOT_REQ: MinPlot
     
     # marker
     MARKER: any
@@ -104,7 +104,7 @@ class MarkerTwoAnotationRow(NamedTuple):
     TEXT_OUTLINE_COLOR: str
     
     EDGE_ALPHA: float
-    MIN_REQ_POINT: MinParts
+    MIN_PLOT_REQ: MinPlot
     TEXT1_POSITIONS: list[TextPositions]
     TEXT2_POSITIONS: list[TextPositions]
     TEXT1: str

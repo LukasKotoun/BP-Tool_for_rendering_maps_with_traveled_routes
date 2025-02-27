@@ -9,14 +9,22 @@ class ColorMode(Enum):
 
 
 
-class MinParts(Enum):  # minimum parts that node must have. If not whole node object is removed
+class MinPlot(Enum):  # minimum parts that node must have. If not whole node object is removed
     MARKER_TEXT1_TEXT2 = "MARKER_TEXT1_TEXT2"
+    MARKER_TEXT1_OR_TEXT2 = "MARKER_TEXT1_OR_TEXT2"
     MARKER_TEXT1 = "MARKER_TEXT1"
     MARKER_TEXT2 = "MARKER_TEXT2"
     MARKER = "MARKER"
     TEXT1 = "TEXT1"
     TEXT2 = "TEXT2"
     TEXT1_TEXT2 = "TEXT1_TEXT2"
+
+class MinLoad(Enum):  # minimum parts that node must have. If not whole node object is removed
+    TEXT1 = "TEXT1"
+    TEXT2 = "TEXT2"
+    TEXT1_TEXT2 = "TEXT1_TEXT2"
+    TEXT1_OR_TEXT2 = "TEXT1_OR_TEXT2"
+    NONE = "NONE"
 
 class TextPositions(Enum):  
     TOP = "TOP"
@@ -100,9 +108,10 @@ class Style(Enum):
     # nodes annotation requirements
     TEXT1_POSITIONS = "TEXT1_POSITIONS"
     TEXT2_POSITIONS = "TEXT2_POSITIONS"
-    # nodes annotation requirements
-    MIN_REQ_POINT = "MIN_REQ_POINT"
-
+    # nodes annotation requirements for ploting 
+    MIN_PLOT_REQ = "MIN_PLOT_REQ"
+    # nodes min annotation requirements in loading
+    MIN_LOAD_REQ = "MIN_LOAD_REQ"
     # calculated/derivated - cant be set by user
     # calculated like TEXT_FONT_SIZE * TEXT_OUTLINE_WIDTH_RATIO
     TEXT_OUTLINE_WIDTH = "TEXT_OUTLINE_WIDTH"

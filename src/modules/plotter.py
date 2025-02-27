@@ -11,7 +11,7 @@ from shapely import MultiPolygon
 from shapely.geometry import Point, LineString, MultiLineString, Polygon
 
 from common.custom_types import DimensionsTuple, MarkerRow, MarkerOneAnotationRow, MarkerTwoAnotationRow, TextRow
-from common.map_enums import Style, MinParts, TextPositions, WorldSides, MarkerAbove
+from common.map_enums import Style, MinPlot, TextPositions, WorldSides, MarkerAbove
 from modules.utils import Utils
 from modules.gdf_utils import GdfUtils
 from modules.geom_utils import GeomUtils
@@ -191,7 +191,7 @@ class Plotter:
         return text_plot
 
     def __marker_with_one_annotation(self, row: MarkerOneAnotationRow, text_row=Style.TEXT1.name, store_bbox: bool = True, text_zorder: int = 3, marker_zorder: int = 2) -> tuple[Line2D, Text]:
-        if (row.MIN_REQ_POINT in {MinParts.TEXT1_TEXT2.name, MinParts.MARKER_TEXT1_TEXT2.name}):
+        if (row.MIN_PLOT_REQ in {MinPlot.TEXT1_TEXT2.name, MinPlot.MARKER_TEXT1_TEXT2.name}):
             return (None, None)
 
         marker_above_others = Utils.get_value(
@@ -199,7 +199,8 @@ class Plotter:
         marker = self.__marker(
             row, store_bbox=False, above_others=marker_above_others, zorder=marker_zorder)
         # if node must have marker return None
-        if (marker is None and row.MIN_REQ_POINT in {MinParts.MARKER.name, MinParts.MARKER_TEXT1.name, MinParts.MARKER_TEXT2.name}):
+        if (marker is None and row.MIN_PLOT_REQ in {MinPlot.MARKER.name, MinPlot.MARKER_TEXT1.name, MinPlot.MARKER_TEXT2.name,
+                                                     MinPlot.MARKER_TEXT1_OR_TEXT2.name}):
             return (None, None)
         # can have text in text1 or text2
         text_wrap_len = Utils.get_value(
@@ -213,8 +214,9 @@ class Plotter:
         text_annotation = self.__marker_annotation(
             row, text, row.WIDTH, text_positions, text_wrap_len, True, zorder=text_zorder)
 
-        # node text does not return None
-        if (text_annotation is None and row.MIN_REQ_POINT in [MinParts.TEXT1.name, MinParts.TEXT2.name, MinParts.MARKER_TEXT1.name, MinParts.MARKER_TEXT2.name]):
+        # node text was not ploted - return None
+        if (text_annotation is None and row.MIN_PLOT_REQ in [MinPlot.TEXT1.name, MinPlot.TEXT2.name, MinPlot.MARKER_TEXT1.name,
+                                                              MinPlot.MARKER_TEXT2.name, MinPlot.MARKER_TEXT1_OR_TEXT2.name]):
             if (marker is not None):
                 marker.remove()
             return (None, None)
@@ -239,7 +241,9 @@ class Plotter:
         marker = self.__marker(row, store_bbox=False, above_others=marker_above_others,
                                zorder=marker_zorder)
         # if node must have marker return None
-        if (marker is None and row.MIN_REQ_POINT in [MinParts.MARKER.name, MinParts.MARKER_TEXT1.name, MinParts.MARKER_TEXT2.name, MinParts.MARKER_TEXT1_TEXT2.name]):
+        if (marker is None and row.MIN_PLOT_REQ in [MinPlot.MARKER.name, MinPlot.MARKER_TEXT1.name,
+                                                     MinPlot.MARKER_TEXT2.name, MinPlot.MARKER_TEXT1_TEXT2.name,
+                                                     MinPlot.MARKER_TEXT1_OR_TEXT2.name]):
             return (None, None, None)
         
         # must have text in text1 and text2
@@ -250,8 +254,8 @@ class Plotter:
             text = str(row.TEXT1) + '\n' + str(row.TEXT2)
             text1 = self.__marker_annotation(
                 row, text, row.WIDTH, row.TEXT1_POSITIONS, text_wrap_len, True, zorder=text_zorder)
-            if (text1 is None and row.MIN_REQ_POINT in [MinParts.TEXT1.name, MinParts.TEXT2.name, MinParts.TEXT1_TEXT2.name, MinParts.MARKER_TEXT1.name,
-                                                        MinParts.MARKER_TEXT2.name, MinParts.MARKER_TEXT1_TEXT2.name]):
+            if (text1 is None and row.MIN_PLOT_REQ in [MinPlot.TEXT1.name, MinPlot.TEXT2.name, MinPlot.TEXT1_TEXT2.name, MinPlot.MARKER_TEXT1.name,
+                                                        MinPlot.MARKER_TEXT2.name, MinPlot.MARKER_TEXT1_TEXT2.name]):
                 if (marker is not None):
                     marker.remove()
                 return (None, None, None)
@@ -259,20 +263,26 @@ class Plotter:
         else:
             text1 = self.__marker_annotation(
                 row, row.TEXT1, row.WIDTH, row.TEXT1_POSITIONS, text_wrap_len, True, zorder=text_zorder)
-            if (text1 is None and row.MIN_REQ_POINT in [MinParts.TEXT1.name, MinParts.TEXT1_TEXT2.name, MinParts.MARKER_TEXT1.name, MinParts.MARKER_TEXT1_TEXT2.name]):
+            if (text1 is None and row.MIN_PLOT_REQ in [MinPlot.TEXT1.name, MinPlot.TEXT1_TEXT2.name, MinPlot.MARKER_TEXT1.name, MinPlot.MARKER_TEXT1_TEXT2.name]):
                 if (marker is not None):
                     marker.remove()
                 return (None, None, None)
 
             text2 = self.__marker_annotation(
                 row, row.TEXT2, row.WIDTH, row.TEXT2_POSITIONS, text_wrap_len, True, zorder=text_zorder)
-            if (text2 is None and row.MIN_REQ_POINT in [MinParts.TEXT2.name, MinParts.TEXT1_TEXT2.name, MinParts.MARKER_TEXT2.name, MinParts.MARKER_TEXT1_TEXT2.name]):
+            if (text2 is None and row.MIN_PLOT_REQ in [MinPlot.TEXT2.name, MinPlot.TEXT1_TEXT2.name, MinPlot.MARKER_TEXT2.name, MinPlot.MARKER_TEXT1_TEXT2.name]):
                 if (marker is not None):
                     marker.remove()
                 if (text1 is not None):
                     text1.remove()
                 return (None, None, None)
-
+            
+            # must have at least one text
+            if(text1 is None and text2 is None and row.MIN_PLOT_REQ in [MinPlot.MARKER_TEXT1_OR_TEXT2.name]):
+                if (marker is not None):
+                    marker.remove()
+                return (None, None, None)
+            
         # node have ploted minimum parts
         if (store_bbox):
             if (marker is not None):
