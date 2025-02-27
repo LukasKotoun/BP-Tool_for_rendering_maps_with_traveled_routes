@@ -91,9 +91,9 @@ class Plotter:
             # marker is plotted outside of the figure
             marker.remove()
             return None
+        
         # always check for overlap in marker over text
         bboxs_list = []
-        print(above_others)
         if (above_others == MarkerAbove.NORMAL):
             bboxs_list = self.markers_above_bbox.copy()
         elif(above_others == MarkerAbove.NONE):
@@ -761,10 +761,10 @@ class Plotter:
             boundary_map_area_gdf, {Style.WIDTH.name: '', Style.COLOR.name: ''}, compl=True)
         if (not boundary_map_area_gdf_with.empty):
             boundary_map_area_gdf_with.boundary.plot(
-                ax=self.ax, color=boundary_map_area_gdf_with[Style.COLOR.name], linewidth=boundary_map_area_gdf[Style.WIDTH.name], zorder=5)
+                ax=self.ax, color=boundary_map_area_gdf_with[Style.COLOR.name], linewidth=boundary_map_area_gdf[Style.WIDTH.name], zorder=2)
         if (not boundary_map_area_gdf_without.empty):
             boundary_map_area_gdf_without.boundary.plot(
-                ax=self.ax, color=color, linewidth=linewidth, zorder=5)
+                ax=self.ax, color=color, linewidth=linewidth, zorder=2)
         # by this z order clip (5) or non clip overflowed text (4)
 
     def zoom(self):

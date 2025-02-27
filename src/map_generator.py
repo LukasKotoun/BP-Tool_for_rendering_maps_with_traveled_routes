@@ -40,14 +40,23 @@ def process_bridges_and_tunnels(gdf, want_bridges: bool, want_tunnels: bool):
     return
 
 
-def gdfs_prepare_columns(gpxs_gdf, nodes_gdf, ways_gdf, areas_gdf, map_object_scaling_factor):
+def gdfs_convert_loaded_columns(gpxs_gdf, nodes_gdf, ways_gdf, areas_gdf):
+    GdfUtils.change_columns_to_numeric(nodes_gdf, NODES_NUMERIC_COLUMNS)
+    GdfUtils.convert_numeric_columns_int(nodes_gdf, NODES_NUMERIC_COLUMNS)
+
+    GdfUtils.change_columns_to_numeric(ways_gdf, WAYS_NUMERIC_COLUMNS)
+    GdfUtils.convert_numeric_columns_int(ways_gdf, WAYS_ROUND_COLUMNS)
+
+    GdfUtils.change_columns_to_numeric(areas_gdf, AREA_NUMERIC_COLUMNS)
+    GdfUtils.convert_numeric_columns_int(areas_gdf, AREA_ROUND_COLUMNS)
+
+    
+def gdfs_prepare_styled_columns(gpxs_gdf, nodes_gdf, ways_gdf, areas_gdf, map_object_scaling_factor):
     # ----gpx----
     # gpx - is needed in this? will be setted in FE?
     # GdfUtils.multiply_column_gdf(gpxs_gdf, Style.WIDTH.name, [
     #                              Style.WIDTH_SCALE.name, Style.FE_WIDTH_SCALE.name], map_object_scaling_factor)
-    GdfUtils.change_columns_to_numeric(nodes_gdf, NODES_NUMERIC_COLUMNS)
-    GdfUtils.convert_numeric_columns_int(nodes_gdf, NODES_NUMERIC_COLUMNS)
-    GdfUtils.fill_nan_values(nodes_gdf, [Style.ZINDEX.name, 'layer'], 0)
+
 
 
     GdfUtils.create_derivated_columns(gpxs_gdf, Style.EDGEWIDTH.name, Style.WIDTH.name, [
@@ -59,6 +68,9 @@ def gdfs_prepare_columns(gpxs_gdf, nodes_gdf, ways_gdf, areas_gdf, map_object_sc
     
     # ----nodes----
     # set base width - scale by muplitpliers and object scaling factor
+
+    GdfUtils.fill_nan_values(nodes_gdf, [Style.ZINDEX.name], 0)
+    
     GdfUtils.multiply_column_gdf(nodes_gdf, Style.WIDTH.name, [
         Style.WIDTH_SCALE.name, Style.FE_WIDTH_SCALE.name], None)
     GdfUtils.multiply_column_gdf(nodes_gdf, Style.TEXT_FONT_SIZE.name, [
@@ -84,8 +96,7 @@ def gdfs_prepare_columns(gpxs_gdf, nodes_gdf, ways_gdf, areas_gdf, map_object_sc
                                         Style.EDGE_WIDTH_RATIO.name, Style.TEXT_OUTLINE_WIDTH_RATIO.name, *old_column_remove])
 
     # ----ways----
-    GdfUtils.change_columns_to_numeric(ways_gdf, WAYS_NUMERIC_COLUMNS)
-    GdfUtils.convert_numeric_columns_int(ways_gdf, WAYS_ROUND_COLUMNS)
+
     GdfUtils.fill_nan_values(ways_gdf, [Style.ZINDEX.name], -1)
 
     GdfUtils.multiply_column_gdf(ways_gdf, Style.WIDTH.name, [
@@ -107,8 +118,6 @@ def gdfs_prepare_columns(gpxs_gdf, nodes_gdf, ways_gdf, areas_gdf, map_object_sc
                                        Style.EDGE_WIDTH_RATIO.name, Style.BRIDGE_WIDTH_RATIO.name, Style.BRIDGE_EDGE_WIDTH_RATIO.name])
 
     # ----areas----
-    GdfUtils.change_columns_to_numeric(areas_gdf, AREA_NUMERIC_COLUMNS)
-    GdfUtils.convert_numeric_columns_int(areas_gdf, AREA_ROUND_COLUMNS)
     GdfUtils.multiply_column_gdf(areas_gdf, Style.WIDTH.name, [
         Style.WIDTH_SCALE.name, Style.FE_WIDTH_SCALE.name], map_object_scaling_factor)
 
@@ -266,14 +275,19 @@ def main() -> None:
     # from FE
     gpx_manager = GpxManager(GPX_FOLDER, CRS_DISPLAY)
     gpxs_gdf = gpx_manager.get_gpxs_gdf()
-
+     
     if (outer_map_area_gdf is not None):
         nodes_gdf = GdfUtils.get_rows_inside_area(
             nodes_gdf, outer_map_area_gdf)
     else:
         nodes_gdf = GdfUtils.get_rows_inside_area(
             nodes_gdf, map_area_gdf)
-        
+    gdfs_convert_loaded_columns(gpxs_gdf, nodes_gdf, ways_gdf, areas_gdf)
+
+    # todo - by zoom also without eval - in some zoom turn off and set min req to only point?
+    nodes_gdf = GdfUtils.filter_peaks_by_prominence(
+        nodes_gdf, map_scale*10*2, map_scale/10)
+    # todo filter out peak with very small elevation - to its prominence  - if ele is 4x smaller than prominence
     # get coastline and determine where is land and where water
     coast_gdf, ways_gdf = GdfUtils.filter_rows(
         ways_gdf, {'natural': 'coastline'}, compl=True)
@@ -295,8 +309,7 @@ def main() -> None:
         areas_gdf, StyleAssigner.convert_dynamic_to_normal(STYLES['areas'], zoom_level), AREAS_DONT_CATEGORIZE)
 
     # ------------scaling and column calc------------ - to function
-
-    gdfs_prepare_columns(gpxs_gdf, nodes_gdf, ways_gdf,
+    gdfs_prepare_styled_columns(gpxs_gdf, nodes_gdf, ways_gdf,
                          areas_gdf, map_object_scaling_factor)
     # ------------filter some elements out------------
     nodes_gdf = GdfUtils.check_nodes_min_req(nodes_gdf)
@@ -304,14 +317,14 @@ def main() -> None:
     # GdfUtils.wrap_text_gdf(nodes_gdf, [(Style.TEXT1.name, Style.TEXT1_WRAP_LEN.name), (Style.TEXT2.name, Style.TEXT2_WRAP_LEN.name)])
     # todo algorithm for peaks - for leaving only the highest peak in the area
 
-
     
-
+    # nodes_gdf = GdfUtils.combine_gdfs([rest, peaksProm])
     bg_gdf['area'] = bg_gdf.area
     areas_gdf['area'] = areas_gdf.geometry.area
     # -----sort-----
     # sort by population and ele - main sort is by zindex in plotter
-    GdfUtils.sort_gdf_by_columns(nodes_gdf, ['population', 'ele'], ascending=False, na_position='last')
+    GdfUtils.sort_gdf_by_columns(nodes_gdf, ['population', 'prominence', 'ele'], ascending=False, na_position='last')
+    print(nodes_gdf)
     # first by zindex (from smallest to biggest) and then by area
     GdfUtils.sort_gdf_by_columns(areas_gdf, ['area'], ascending=False, na_position='last')
     GdfUtils.sort_gdf_by_columns(bg_gdf, ['area'], ascending=False, na_position='last')
@@ -331,15 +344,15 @@ def main() -> None:
     # plotter.ways(ways_gdf, areas_gdf, [{'highway': 'motorway'}])
     # plotter.ways(ways_gdf, areas_gdf, [{'highway': 'primary'}])
     plotter.ways(ways_gdf, areas_gdf, None)
-    plotter.nodes(nodes_gdf, TEXT_WRAP_NAMES_LEN)
-    plotter.gpxs(gpxs_gdf)
+  
     # if want clip text
+    plotter.gpxs(gpxs_gdf)
     plotter.clip()
     if (not boundary_map_area_gdf.empty):
         # GdfUtils.remove_common_boundary_inaccuracy(boundary_map_area_gdf) # maybe turn off/on in settings
         plotter.area_boundary(boundary_map_area_gdf,
                               color="black")
-
+    plotter.nodes(nodes_gdf, TEXT_WRAP_NAMES_LEN)
     plotter.generate_pdf(OUTPUT_PDF_NAME)
     # plotter.show_plot()   
 
