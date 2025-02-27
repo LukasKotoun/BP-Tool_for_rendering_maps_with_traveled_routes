@@ -267,10 +267,26 @@ class GdfUtils:
 
 
     @staticmethod
-    def change_columns_to_numeric(gdf: GeoDataFrame, columns: list[str]) -> None:
+    def change_columns_to_numeric(gdf: GeoDataFrame, columns: list[str], downcast: str='integer') -> None:
         for column in columns:
             if (column in gdf):
-                gdf[column] = pd.to_numeric(gdf[column], errors='coerce')
+                gdf[column] = pd.to_numeric(gdf[column], errors='coerce', downcast=downcast)
+                
+    @staticmethod
+    def convert_numeric_columns_int(gdf: GeoDataFrame, columns: list[str]) -> None:
+        for column in columns:
+            if (column in gdf):
+                try:
+                    gdf[column] = gdf[column].round(0).astype("Int64")
+                except:
+                    warnings.warn(f"cannot convert column {column} to int")
+                
+    @staticmethod
+    def fill_nan_values(gdf: GeoDataFrame, columns: list[str], value = 0) -> None:
+        for column in columns:
+            if(column in gdf):
+                gdf[column] = gdf[column].fillna(value)
+
 
     @time_measurement("mergeLines")
     @staticmethod
@@ -312,13 +328,18 @@ class GdfUtils:
         return GdfUtils.create_gdf_from_bounds(Utils.adjust_bounds_to_fill_paper(bounds, pdf_dim), area_gdf.crs, None)
 
     @staticmethod
-    def sort_gdf_by_column(gdf: GeoDataFrame, column_name: Style, ascending: bool = True, na_position: str = 'first') -> GeoDataFrame:
+    def sort_gdf_by_columns(gdf: GeoDataFrame, column_name: list[Style|str], ascending: bool = True, na_position: str = 'first', stable = False) -> GeoDataFrame:
         if (gdf.empty):
             return gdf
-        if (column_name in gdf):
-            return gdf.sort_values(by=column_name, ascending=ascending, na_position=na_position, kind="mergesort").reset_index(drop=True)
-        warnings.warn("Cannot sort - unexisting column name")
-        return gdf
+        if(isinstance(column_name, str)):
+            column_name = [column_name]
+        column_name_exist = [col for col in column_name if col in gdf.columns]
+        if(not column_name_exist):
+            return gdf
+        if(stable):
+            gdf.sort_values(by=column_name_exist, ascending=ascending, na_position=na_position, inplace=True, kind="stable", ignore_index=True)
+        else:   
+            gdf.sort_values(by=column_name_exist, ascending=ascending, na_position=na_position, inplace=True, ignore_index=True)
 
     def change_crs(gdf: GeoDataFrame, toCrs: str) -> GeoDataFrame:
         if (gdf.empty):
@@ -476,7 +497,7 @@ class GdfUtils:
                                           Style.EDGEWIDTH.name: '', Style.EDGE_COLOR.name: '', Style.ALPHA.name: ''})
 
     @staticmethod
-    def filter_invalid_nodes_min_req(nodes_gdf: GeoDataFrame) -> GeoDataFrame:
+    def check_nodes_min_req(nodes_gdf: GeoDataFrame) -> GeoDataFrame:
         nodes_gdf = GdfUtils.filter_rows(nodes_gdf, [{Style.MIN_REQ_POINT.name: MinParts.MARKER.name, Style.MARKER.name: '', Style.COLOR.name: ''},
                                                      {Style.MIN_REQ_POINT.name: MinParts.MARKER_TEXT1.name,
                                                          Style.MARKER.name: '', Style.TEXT1.name: ''},
@@ -502,9 +523,8 @@ class GdfUtils:
     # -----------Others functions------------
 
     @staticmethod
-    def get_groups_by_columns(gdf, group_cols, default_keys=None, dropna=False):
+    def get_groups_by_columns(gdf: GeoDataFrame, group_cols: list, default_keys: list=[], dropna: bool=False):
         # get missing columns and replace with default key if missing
-        # todo make quicker - refactor
         if len(group_cols) != len(default_keys):
             default_keys = [None] * len(group_cols)
         for col, default in zip(group_cols, default_keys):

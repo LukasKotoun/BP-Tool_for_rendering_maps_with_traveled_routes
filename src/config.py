@@ -8,7 +8,7 @@ from common.map_enums import Style, ColorMode, PaperSize, MapOrientation
 # --------------------------------------------------------------map area--------------------------------------------------------------
 # OSM_INPUT_FILE_NAMES: str = ['../osm_files/vys.osm.pbf','../osm_files/jihmor.osm.pbf']
 # OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/vysJihE.osm.pbf'
-OSM_INPUT_FILE_NAMES: str | list[str] = ['../osm_files/trebic.osm.pbf']
+OSM_INPUT_FILE_NAMES: str | list[str] = ['../osm_files/trebic_vic.osm.pbf']
 # OSM_INPUT_FILE_NAMES: str | list[str] = '../trebic.osm.pbf'
 # extract - will be always true
 OSM_WANT_EXTRACT_AREA: bool = False
@@ -21,7 +21,8 @@ OUTPUT_PDF_NAME: str = '../pdfs/divocina'
 # AREA: WantedArea = [(6.94872,4.84293),(6.99314,4.84293),(6.99314,4.81603),(6.94872,4.81603)] #afrika
 # AREA: WantedArea = [(13.2198495,-8.8130580),(13.2614774,-8.8139062),(13.2616062,-8.8439302),(13.2181329,-8.8424460)] #angola - mesto 5km
 # AREA: WantedArea = [(13.2020960,-8.7766815),(13.2020370,-8.8766827),(13.3099288, -8.8775122), (13.3082471,-8.7782667)] # angol- 11.85 - z14 - square
-# AREA: WantedArea = [(13.0140862,-8.8831442),(13.1660763,-8.8819132),(13.1667146, -9.0826624), (13.0159664,-9.0781028)] # angol- ostrovy test
+# AREA: WantedArea = [{"area": [(13.0140862,-8.8831442),(13.1660763,-8.8819132),(13.1667146, -9.0826624), (13.0159664,-9.0781028)], 
+#                      "plot": False, "category": 0, "width": 1, "color": "black"}] # angol- ostrovy test
 # AREA: WantedArea = [(15.7937669,49.2511294),(15.7940459,49.1851468),(15.9009507, 49.1847962), (15.9003445,49.2499564)] # tr - 7.8 - z14 - square
 
 # zoom testing
@@ -49,7 +50,10 @@ OUTPUT_PDF_NAME: str = '../pdfs/divocina'
 #                      {"area": "Pardubický kraj, Česko", "plot": True, "category": 2, "width": 1, "color": "black"},
 #                       {"area": "Jihočeský kraj, Česko", "plot": True, "category": 1, "width": 1, "color": "black"}]
 # nastavení šířky asi jako číslo ale na fe small medium a big 
-AREA: WantedArea = [{"area": "Třebíč, Česko", "plot": True, "category": 0, "width": 1, "color": "black"}]
+AREA: WantedArea = [{"area": "Třebíč, Česko", "plot": False, "category": 1, "width": 1, "color": "black"},
+                    {"area": "Trnava, Vysočina, Česko", "plot": False, "category": 1, "width": 1, "color": "black"},
+                    {"area": "Horní Vilémovice, Česko", "plot": False, "category": 1, "width": 1, "color": "black"}]
+# AREA: WantedArea = [{"area": "Brno, Česko", "plot": True, "category": 0, "width": 1, "color": "black"}]
 # AREA: WantedArea = [{"area": "Jihomoravský kraj, Česko", "plot": True, "category": 2, "width": 1, "color": "black"},
 #                     {"area": "Kraj Vysočina, Česko", "plot": True, "category": 1, "width": 1, "color": "black"},
 #                     {"area": "Třebíč, Česko", "plot": True, "category": 0, "width": 1, "color": "black"}]
@@ -178,9 +182,15 @@ FOLDER_COLOR_DIS_PALLET = True
 
 # --------------filters for map elements--------------
 # columns that are used for ploting nodes name for city, ele for elevation points
-NODES_ADDITIONAL_COLUMNS = ['name', 'ele']
+NODES_ADDITIONAL_COLUMNS = ['name', 'ele', 'population']
+NODES_NUMERIC_COLUMNS = ['ele', 'population']
+NODES_ROUND_COLUMNS = ['ele']
 WAYS_ADDITIONAL_COLUMNS = ['bridge', 'layer', 'tunnel']
+WAYS_NUMERIC_COLUMNS = []
+WAYS_ROUND_COLUMNS = []
 AREA_ADDITIONAL_COLUMNS = []
+AREA_NUMERIC_COLUMNS = []
+AREA_ROUND_COLUMNS = []
 
 DERIVATE_COLUMNS_NODES = [
     ({'place': ''}, Style.TEXT1.name , 'name', None),
@@ -215,10 +225,10 @@ wanted_ways: WantedCategories = {
     # 'waterway': set({}),
     # 'highway': ['motorway', 'trunk','primary', 'secondary', 'tertiary'],
     # # 'highway': ['motorway', 'trunk', 'primary'],
-    'highway': {'motorway', 'trunk', 'primary', 'secondary', 'tertiary', 'unclassified', 'residential', 'path', 'footway'},
+    # 'highway': {'motorway', 'trunk', 'primary', 'secondary', 'tertiary', 'unclassified', 'residential', 'path', 'footway'},
     # # # 'highway': {'tertiary'},
     # # # 'highway':set({}),
-    'railway': {'rail', 'tram'},
+    # 'railway': {'rail', 'tram'},
 
     # # # # 'railway': {'rail'},
     'natural': {'coastline'}
@@ -238,16 +248,16 @@ unwanted_ways_tags: UnwantedTags = {
 }
 
 wanted_areas: WantedCategories = {
-#         'landuse': {'forest', 'residential', 'commercial', 'retail', 'industrial', 'farmland', 'meadow', 'grass'},
+        # 'landuse': {'forest', 'residential', 'commercial', 'retail', 'industrial', 'farmland', 'meadow', 'grass'},
    
-#         'leisure': {'park', 'pitch', 'garden', 'golf_course', 'nature_reserve', 'playground', 'stadium', 'swimming_pool', 'sports_centre'},
-#         # 'leisure': {'park', 'pitch', 'garden', 'golf_course', 'playground', 'stadium', 'swimming_pool', 'sports_centre'},
-#         'natural': {'wood', 'water', 'scrub', 'heath'},
-#         # # 'leisure': ['park', 'pitch', 'garden', 'golf_course', 'nature_reserve'],
-#         'water': set({}),
-#         'boundary': {'national_park'},
-#         'building': {'house','residential'},
-#         # 'water': ['river','lake','reservoir'],
+        # 'leisure': {'park', 'pitch', 'garden', 'golf_course', 'nature_reserve', 'playground', 'stadium', 'swimming_pool', 'sports_centre'},
+        # # 'leisure': {'park', 'pitch', 'garden', 'golf_course', 'playground', 'stadium', 'swimming_pool', 'sports_centre'},
+        # 'natural': {'wood', 'water', 'scrub', 'heath'},
+        # # # 'leisure': ['park', 'pitch', 'garden', 'golf_course', 'nature_reserve'],
+        # 'water': set({}),
+        # 'boundary': {'national_park'},
+        # 'building': {'house','residential'},
+        # 'water': ['river','lake','reservoir'],
 }
 
 unwanted_areas_tags: UnwantedTags = {

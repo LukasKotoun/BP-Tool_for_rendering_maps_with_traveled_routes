@@ -15,21 +15,23 @@ from common.common_helpers import time_measurement
 
 # todo some class or utils..
 def process_bridges_and_tunnels(gdf, want_bridges: bool, want_tunnels: bool):
+    GdfUtils.change_columns_to_numeric(gdf, ['layer'])
+    GdfUtils.fill_nan_values(gdf, ['layer'], 0)
     gdf['layer'] = gdf.get('layer', 0)
+
+    # set layer to 0 if there is no bridge or tunnel
     gdf.loc[GdfUtils.get_rows_filter(
         gdf, {'tunnel': '~', 'bridge': '~'}), 'layer'] = 0
     if (not want_bridges and not want_tunnels):
         gdf['layer'] = 0
         GdfUtils.remove_columns(gdf, ['bridge', 'tunnel'])
-
-    if (not want_bridges):
+    elif (not want_bridges):
         if ('layer' in gdf):
             # set layer to 0 in bridges - as normal ways
             gdf.loc[GdfUtils.get_rows_filter(
                 gdf, {'bridge': ''}), 'layer'] = 0
         GdfUtils.remove_columns(gdf, ['bridge'])
-
-    if (not want_tunnels):
+    elif (not want_tunnels):
         if ('layer' in gdf):
             # set layer to 0 in tunnels - as normal ways
             gdf.loc[GdfUtils.get_rows_filter(
@@ -43,9 +45,10 @@ def gdfs_prepare_columns(gpxs_gdf, nodes_gdf, ways_gdf, areas_gdf, map_object_sc
     # gpx - is needed in this? will be setted in FE?
     # GdfUtils.multiply_column_gdf(gpxs_gdf, Style.WIDTH.name, [
     #                              Style.WIDTH_SCALE.name, Style.FE_WIDTH_SCALE.name], map_object_scaling_factor)
-    GdfUtils.change_columns_to_numeric(nodes_gdf, ['ele'])
-    if ('ele' in nodes_gdf.columns):
-        nodes_gdf['ele'] = nodes_gdf['ele'].round(0).astype('Int64')
+    GdfUtils.change_columns_to_numeric(nodes_gdf, NODES_NUMERIC_COLUMNS)
+    GdfUtils.convert_numeric_columns_int(nodes_gdf, NODES_NUMERIC_COLUMNS)
+    GdfUtils.fill_nan_values(nodes_gdf, [Style.ZINDEX.name, 'layer'], 0)
+
 
     GdfUtils.create_derivated_columns(gpxs_gdf, Style.EDGEWIDTH.name, Style.WIDTH.name, [
                                       Style.EDGE_WIDTH_RATIO.name])
@@ -53,6 +56,7 @@ def gdfs_prepare_columns(gpxs_gdf, nodes_gdf, ways_gdf, areas_gdf, map_object_sc
                                       Style.START_MARKER_EDGE_RATIO.name])
     GdfUtils.create_derivated_columns(gpxs_gdf, Style.FINISH_MARKER_EDGEWIDTH.name, Style.FINISH_MARKER_WIDHT.name, [
                                       Style.FINISH_MARKER_EDGE_RATIO.name])
+    
     # ----nodes----
     # set base width - scale by muplitpliers and object scaling factor
     GdfUtils.multiply_column_gdf(nodes_gdf, Style.WIDTH.name, [
@@ -80,6 +84,10 @@ def gdfs_prepare_columns(gpxs_gdf, nodes_gdf, ways_gdf, areas_gdf, map_object_sc
                                         Style.EDGE_WIDTH_RATIO.name, Style.TEXT_OUTLINE_WIDTH_RATIO.name, *old_column_remove])
 
     # ----ways----
+    GdfUtils.change_columns_to_numeric(ways_gdf, WAYS_NUMERIC_COLUMNS)
+    GdfUtils.convert_numeric_columns_int(ways_gdf, WAYS_ROUND_COLUMNS)
+    GdfUtils.fill_nan_values(ways_gdf, [Style.ZINDEX.name], -1)
+
     GdfUtils.multiply_column_gdf(ways_gdf, Style.WIDTH.name, [
         # if i will be creationg function with continues width scaling than multiply only by FEwidthscale
         Style.WIDTH_SCALE.name, Style.FE_WIDTH_SCALE.name], map_object_scaling_factor)
@@ -99,6 +107,8 @@ def gdfs_prepare_columns(gpxs_gdf, nodes_gdf, ways_gdf, areas_gdf, map_object_sc
                                        Style.EDGE_WIDTH_RATIO.name, Style.BRIDGE_WIDTH_RATIO.name, Style.BRIDGE_EDGE_WIDTH_RATIO.name])
 
     # ----areas----
+    GdfUtils.change_columns_to_numeric(areas_gdf, AREA_NUMERIC_COLUMNS)
+    GdfUtils.convert_numeric_columns_int(areas_gdf, AREA_ROUND_COLUMNS)
     GdfUtils.multiply_column_gdf(areas_gdf, Style.WIDTH.name, [
         Style.WIDTH_SCALE.name, Style.FE_WIDTH_SCALE.name], map_object_scaling_factor)
 
@@ -108,7 +118,8 @@ def gdfs_prepare_columns(gpxs_gdf, nodes_gdf, ways_gdf, areas_gdf, map_object_sc
     for filter, new_column, old_column in DERIVATE_COLUMNS_AREAS:
         GdfUtils.create_derivated_columns(
             areas_gdf, new_column, old_column, filter=filter)
-
+        
+    GdfUtils.fill_nan_values(areas_gdf, [Style.ZINDEX.name], -1)
     GdfUtils.remove_columns(areas_gdf, [Style.WIDTH_SCALE.name, Style.FE_WIDTH_SCALE.name,
                                         Style.EDGE_WIDTH_RATIO.name])
 
@@ -288,21 +299,22 @@ def main() -> None:
     gdfs_prepare_columns(gpxs_gdf, nodes_gdf, ways_gdf,
                          areas_gdf, map_object_scaling_factor)
     # ------------filter some elements out------------
-    nodes_gdf = GdfUtils.filter_invalid_nodes_min_req(nodes_gdf)
+    nodes_gdf = GdfUtils.check_nodes_min_req(nodes_gdf)
 
     # GdfUtils.wrap_text_gdf(nodes_gdf, [(Style.TEXT1.name, Style.TEXT1_WRAP_LEN.name), (Style.TEXT2.name, Style.TEXT2_WRAP_LEN.name)])
-    # todo algorithm for peaks
+    # todo algorithm for peaks - for leaving only the highest peak in the area
 
-    # -----sort-----
-    nodes_gdf = GdfUtils.sort_gdf_by_column(nodes_gdf, 'ele', ascending=False)
-    ways_gdf = GdfUtils.sort_gdf_by_column(ways_gdf, Style.ZINDEX.name)
-    areas_gdf = GdfUtils.sort_gdf_by_column(areas_gdf, Style.ZINDEX.name)
 
-    # order by area to plot smaller at the end
+    
+
     bg_gdf['area'] = bg_gdf.area
-    bg_gdf = bg_gdf.sort_values(by='area', ascending=False)
     areas_gdf['area'] = areas_gdf.geometry.area
-    areas_gdf = areas_gdf.sort_values(by='area', ascending=False)
+    # -----sort-----
+    # sort by population and ele - main sort is by zindex in plotter
+    GdfUtils.sort_gdf_by_columns(nodes_gdf, ['population', 'ele'], ascending=False, na_position='last')
+    # first by zindex (from smallest to biggest) and then by area
+    GdfUtils.sort_gdf_by_columns(areas_gdf, ['area'], ascending=False, na_position='last')
+    GdfUtils.sort_gdf_by_columns(bg_gdf, ['area'], ascending=False, na_position='last')
 
     # ------------plot------------
     # todo add checks for errors in plotting cals if dict from fe is not correct
@@ -315,11 +327,11 @@ def main() -> None:
                       map_object_scaling_factor, TEXT_BOUNDS_OVERFLOW_THRESHOLD, TEXT_WRAP_NAMES_LEN, outer_map_area_gdf)
     plotter.init(
         GENERAL_DEFAULT_STYLES[Style.COLOR.name], bg_gdf)
-    plotter.nodes(nodes_gdf, TEXT_WRAP_NAMES_LEN)
     plotter.areas(areas_gdf)
     # plotter.ways(ways_gdf, areas_gdf, [{'highway': 'motorway'}])
     # plotter.ways(ways_gdf, areas_gdf, [{'highway': 'primary'}])
     plotter.ways(ways_gdf, areas_gdf, None)
+    plotter.nodes(nodes_gdf, TEXT_WRAP_NAMES_LEN)
     plotter.gpxs(gpxs_gdf)
     # if want clip text
     plotter.clip()

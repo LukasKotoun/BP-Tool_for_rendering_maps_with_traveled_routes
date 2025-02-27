@@ -79,8 +79,10 @@ class MarkerOneAnotationRow(NamedTuple):
     # marker optional
     MARKER_VERTICAL_ALIGN: Optional[str] = 'center'
     MARKER_HORIZONTAL_ALIGN: Optional[str] = 'center'
-    MARKER_CHECK_OVERLAP: Optional[bool] = True
+    MARKER_OVER_NORMAL_MARKER: Optional[bool] = False
+    MARKER_ABOVE_TEXT: Optional[bool] = False
     MARKER_FONT_PROPERTIES: Optional[any] = None
+    
     
     # text optional
     TEXT1_POSITIONS: Optional[list[TextPositions]] = []
@@ -119,5 +121,6 @@ class MarkerTwoAnotationRow(NamedTuple):
     # marker optional
     MARKER_VERTICAL_ALIGN: Optional[str] = 'center'
     MARKER_HORIZONTAL_ALIGN: Optional[str] = 'center'
-    MARKER_CHECK_OVERLAP: Optional[bool] = True
+    MARKER_OVER_NORMAL_MARKER: Optional[bool] = False
+    MARKER_ABOVE_TEXT: Optional[bool] = False
     MARKER_FONT_PROPERTIES: Optional[any] = None

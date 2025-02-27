@@ -259,14 +259,14 @@ class Utils:
         return zooms[-1][0]  # lowest level
 
     @staticmethod
-    def wrap_text(text, width):
+    def wrap_text(text, width, replace_whitespace=False):
         if (text is None):
             return None
         if (width == 0 or width is None):
             return text
         width = int(width)
         text = str(text)
-        return textwrap.fill(text, width)
+        return textwrap.fill(text, width, replace_whitespace=False)
 
     @staticmethod
     def expand_bbox(bbox: Bbox, percent_expand: int = 0) -> Bbox:

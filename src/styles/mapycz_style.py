@@ -2,8 +2,9 @@ from common.custom_types import ElementStyles, FeatureStyles
 from common.map_enums import Style, TextPositions, MinParts
 from config import font_awesome_prop, material_design_prop
 
-#! edge linestyle is suported only dashed or not dashed on not solid lines,
-#! ploting is turned of by setting color to None text color or MARKER color turn of by string "None" instead of None
+#! edge linestyle is suported only dashed or not dashed on not solid lines
+#! ploting is turned of by setting color to None
+#! text color or MARKER color turn of by string "None" instead of None - test
 # ------------styles--------------
 OCEAN_WATER = '#8fb6db'
 
@@ -76,7 +77,7 @@ place_styles: ElementStyles = [
     },
         {
         "10-10": {Style.TEXT_FONT_SIZE.name: 5},
-        "11-14": {Style.TEXT_FONT_SIZE.name: 10, Style.MARKER.name: "o", Style.COLOR.name: "#decda8", Style.MIN_REQ_POINT.name: MinParts.MARKER_TEXT1.name,
+        "11-14": {Style.TEXT_FONT_SIZE.name: 8, Style.MARKER.name: "o", Style.COLOR.name: "#decda8", Style.MIN_REQ_POINT.name: MinParts.MARKER_TEXT1.name,
         Style.TEXT1_POSITIONS.name: [TextPositions.TOP.name, TextPositions.BOTTOM.name, TextPositions.RIGHT.name], Style.EDGE_WIDTH_RATIO.name:0.2, Style.WIDTH.name: 4.5, 
         Style.EDGE_COLOR.name: "#a59b7a"}
     }),
@@ -90,7 +91,7 @@ natural_styles_nodes: ElementStyles = [
         Style.MARKER_HORIZONTAL_ALIGN.name: "center", Style.MARKER_VERTICAL_ALIGN.name: None,
         Style.COLOR.name: "#7f3016", Style.MIN_REQ_POINT.name: MinParts.MARKER_TEXT2.name, #Style.MIN_REQ_POINT.name: MinParts.MARKER_TEXT2.name,
         Style.TEXT_FONT_SIZE.name: 3, Style.WIDTH.name: 3.6,  Style.TEXT1_POSITIONS.name: [TextPositions.TOP.name], 
-        Style.TEXT2_POSITIONS.name: [TextPositions.BOTTOM.name], Style.EDGE_WIDTH_RATIO.name: 0, Style.MARKER_CHECK_OVERLAP.name: True
+        Style.TEXT2_POSITIONS.name: [TextPositions.BOTTOM.name], Style.EDGE_WIDTH_RATIO.name: 0
 
     })  # rozlišení - dict vs dict s 2 dict uvnitř
 ]
@@ -126,18 +127,7 @@ NODES_STYLES: ElementStyles = [
 
 # -------------------ways-------------------
 # styles that must be assigned to all way features
-ways_mandatory_styles: ElementStyles = [
-    ([], {
-        Style.COLOR.name: '#EDEDE0', Style.ALPHA.name: 1.0, Style.WIDTH.name: 1, Style.LINESTYLE.name: '-',
-        Style.EDGE_WIDTH_RATIO.name: 1 + 0.3, Style.EDGE_ALPHA.name: 1,
-        Style.EDGE_COLOR.name: None, Style.EDGE_LINESTYLE.name: '-', Style.WIDTH_SCALE.name: 1, Style.FE_WIDTH_SCALE.name: 1,
-    }),
-    ({'bridge': ''}, {
-        Style.BRIDGE_WIDTH_RATIO.name: 1, Style.BRIDGE_EDGE_WIDTH_RATIO.name: 1 + 0.3,
-        # on bridge (will be bridge edge)
-        Style.BRIDGE_COLOR.name: "#FFFFFF", Style.BRIDGE_EDGE_COLOR.name: "#7D7D7D", Style.PLOT_ON_BRIDGE.name: True
-    }),
-]
+
 
 # add highway bridge and tunnel styles
 # highway_styles_tunnels: FeaturesCategoryStyle = {
@@ -201,6 +191,19 @@ ways_styles_default: ElementStyles = [
     }),
 ]
 
+ways_mandatory_styles: ElementStyles = [
+    ([], {
+        Style.COLOR.name: '#EDEDE0', Style.ALPHA.name: 1.0, Style.WIDTH.name: 1, Style.LINESTYLE.name: '-',
+        Style.EDGE_WIDTH_RATIO.name: 1 + 0.3, Style.EDGE_ALPHA.name: 1,
+        Style.EDGE_COLOR.name: None, Style.EDGE_LINESTYLE.name: '-', Style.WIDTH_SCALE.name: 1, Style.FE_WIDTH_SCALE.name: 1,
+    }),
+    ({'bridge': ''}, {
+        Style.BRIDGE_EDGE_LINESTYLE.name: '-', Style.BRIDGE_LINESTYLE.name: '-',
+        Style.BRIDGE_WIDTH_RATIO.name: 1, Style.BRIDGE_EDGE_WIDTH_RATIO.name: 1 + 0.3,
+        # on bridge (will be bridge edge)
+        Style.BRIDGE_COLOR.name: "#FFFFFF", Style.BRIDGE_EDGE_COLOR.name: "#7D7D7D", Style.PLOT_ON_BRIDGE.name: True
+    }),
+]
 
 WAYS_STYLES: ElementStyles = [
     *highway_styles,
@@ -220,11 +223,11 @@ landuse_styles: ElementStyles = [
     ({'landuse': 'farmland'}, {Style.COLOR.name: '#EDEDE0'}),
     ({'landuse': 'forest'}, {Style.COLOR.name: '#9FC98D'}),
     ({'landuse': 'meadow'}, {Style.COLOR.name: '#B7DEA6'}),
-    ({'landuse': 'grass'}, {Style.COLOR.name: '#B7DEA6', Style.ZINDEX.name: 1}),
+    ({'landuse': 'grass'}, {Style.COLOR.name: '#B7DEA6'}),
     ({'landuse': 'residential'}, {Style.COLOR.name: '#E2D4AF'}),
     ({'landuse': 'industrial'}, {Style.COLOR.name: '#DFDBD1'}),
-    ({'landuse': 'basin'}, {Style.COLOR.name: '#8FB8DB', Style.ZINDEX.name: 1}),
-    ({'landuse': 'salt_pond'}, {Style.COLOR.name: '#8FB8DB', Style.ZINDEX.name: 1}),
+    ({'landuse': 'basin'}, {Style.COLOR.name: '#8FB8DB'}),
+    ({'landuse': 'salt_pond'}, {Style.COLOR.name: '#8FB8DB'}),
 ]
 
 leisure_styles: ElementStyles = [
@@ -234,7 +237,7 @@ leisure_styles: ElementStyles = [
     ({'leisure': 'pitch'}, {Style.COLOR.name: '#DCE9B9'}),
     ({'leisure': 'sports_centre'}, {Style.COLOR.name: '#9FC98D'}),
     ({'leisure': 'nature_reserve'}, {Style.COLOR.name: None, Style.EDGE_COLOR.name: '#97BB72',
-                                     Style.WIDTH.name: 80, Style.ZINDEX.name: 1,
+                                     Style.WIDTH.name: 80,
                                      Style.EDGE_ALPHA.name: 0.85, Style.EDGE_LINESTYLE.name: '-'})
 ]
 
@@ -259,7 +262,7 @@ area_styles_default: ElementStyles = [
     ({'boundary': ''}, {
         Style.COLOR.name: None, Style.EDGE_COLOR.name: '#97BB72',
         Style.WIDTH.name: 80, Style.EDGE_LINESTYLE.name: '-',
-        Style.ZINDEX.name: 1, Style.EDGE_ALPHA.name: 0.85
+        Style.EDGE_ALPHA.name: 0.85
     })
 ]
 
