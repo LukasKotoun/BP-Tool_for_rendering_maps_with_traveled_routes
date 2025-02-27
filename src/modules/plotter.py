@@ -11,7 +11,7 @@ from shapely import MultiPolygon
 from shapely.geometry import Point, LineString, MultiLineString, Polygon
 
 from common.custom_types import DimensionsTuple, MarkerRow, MarkerOneAnotationRow, MarkerTwoAnotationRow, TextRow
-from common.map_enums import Style, MinParts, TextPositions, WorldSides
+from common.map_enums import Style, MinParts, TextPositions, WorldSides, MarkerAbove
 from modules.utils import Utils
 from modules.gdf_utils import GdfUtils
 from modules.geom_utils import GeomUtils
@@ -25,7 +25,8 @@ class Plotter:
     DEFAULT_CUPSTYLE = "round"
     TEXT_EXPAND_PERCENT = 4
     MARKER_EXPAND_PERCENT = 1
-    MARKER_ABOVE_OTHERS_ZORDER = 4
+    MARKER_ABOVE_NORMAL_ZORDER = 4
+    MARKER_ABOVE_ALL_ZORDER = 5
 
     def __init__(self, requred_area_gdf: GeoDataFrame, paper_dimensions_mm: DimensionsTuple, map_object_scaling_factor: float,
                  point_bounds_overflow_threshold: float, text_wrap_len: int, outer_reqired_area_gdf: GeoDataFrame | None = None):
@@ -40,7 +41,7 @@ class Plotter:
         self.point_bounds_overflow_threshold = point_bounds_overflow_threshold
         self.texts_bboxs: list[Bbox] = []
         self.markers_bboxs: list[Bbox] = []
-        self.markers_above_others: list[Bbox] = []
+        self.markers_above_bbox: list[Bbox] = []
 
     def init(self, map_bg_color: str, bg_gdf: GeoDataFrame, area_zoom_preview: None | DimensionsTuple = None):
         self.fig, self.ax = plt.subplots(figsize=(self.paper_dimensions_mm[0]/self.MM_TO_INCH,
@@ -60,9 +61,12 @@ class Plotter:
         self.polygon_text_inside_display: Polygon | MultiPolygon = GeomUtils.transform_geometry_to_display(
             self.ax, polygon_text_inside)
 
-    def __marker(self, row: MarkerRow, store_bbox: bool = True, above_others: bool = True, zorder: int = 2) -> Line2D | None:
-        if (above_others):
-            zorder = self.MARKER_ABOVE_OTHERS_ZORDER
+    def __marker(self, row: MarkerRow, store_bbox: bool = True, above_others: MarkerAbove = MarkerAbove.NONE, zorder: int = 2) -> Line2D | None:
+        if (above_others == MarkerAbove.ALL):
+            zorder = self.MARKER_ABOVE_ALL_ZORDER
+        elif (above_others == MarkerAbove.NORMAL):
+            zorder = self.MARKER_ABOVE_NORMAL_ZORDER
+            
         font_properties = Utils.get_value(
             row, Style.MARKER_FONT_PROPERTIES.name, None)
         if (pd.notna(font_properties)):
@@ -89,9 +93,10 @@ class Plotter:
             return None
         # always check for overlap in marker over text
         bboxs_list = []
-        if (above_others):
-            bboxs_list = self.markers_above_others.copy()
-        else:
+        print(above_others)
+        if (above_others == MarkerAbove.NORMAL):
+            bboxs_list = self.markers_above_bbox.copy()
+        elif(above_others == MarkerAbove.NONE):
             bboxs_list = self.markers_bboxs.copy() + self.texts_bboxs.copy()
 
         bbox_expanded = Utils.expand_bbox(bbox, self.MARKER_EXPAND_PERCENT)
@@ -101,9 +106,9 @@ class Plotter:
             return None
 
         if (store_bbox):
-            if (above_others):
-                self.markers_above_others.append(bbox_expanded)
-            else:
+            if (above_others == MarkerAbove.NORMAL):
+                self.markers_above_bbox.append(bbox_expanded)
+            elif(above_others == MarkerAbove.NONE):
                 self.markers_bboxs.append(bbox_expanded)
         return marker
 
@@ -190,9 +195,9 @@ class Plotter:
             return (None, None)
 
         marker_above_others = Utils.get_value(
-            row, Style.MARKER_ABOVE_OTHERS.name, False)
+            row, Style.MARKER_ABOVE_OTHERS.name, MarkerAbove.NONE)
         marker = self.__marker(
-            row, store_bbox=False, marker_above_others=marker_above_others, zorder=marker_zorder)
+            row, store_bbox=False, above_others=marker_above_others, zorder=marker_zorder)
         # if node must have marker return None
         if (marker is None and row.MIN_REQ_POINT in {MinParts.MARKER.name, MinParts.MARKER_TEXT1.name, MinParts.MARKER_TEXT2.name}):
             return (None, None)
@@ -217,10 +222,10 @@ class Plotter:
         # node have ploted minimum parts
         if (store_bbox):
             if (marker is not None):
-                if (marker_above_others):
-                    self.markers_above_others.append(
+                if (marker_above_others == MarkerAbove.NORMAL):
+                    self.markers_above_bbox.append(
                         Utils.expand_bbox(marker.get_tightbbox(), self.MARKER_EXPAND_PERCENT))
-                else:
+                elif(marker_above_others == MarkerAbove.NONE):
                     self.markers_bboxs.append(
                         Utils.expand_bbox(marker.get_tightbbox(), self.MARKER_EXPAND_PERCENT))
             if (text_annotation is not None):
@@ -230,12 +235,13 @@ class Plotter:
 
     def __marker_with_two_annotations(self, row: MarkerTwoAnotationRow, store_bbox: bool = True, text_zorder: int = 3, marker_zorder: int = 2) -> tuple[Line2D, Text, Text]:
         marker_above_others = Utils.get_value(
-            row, Style.MARKER_ABOVE_OTHERS.name, False)
-        marker = self.__marker(row, store_bbox=False, marker_above_others=marker_above_others,
+            row, Style.MARKER_ABOVE_OTHERS.name, MarkerAbove.NONE)
+        marker = self.__marker(row, store_bbox=False, above_others=marker_above_others,
                                zorder=marker_zorder)
         # if node must have marker return None
         if (marker is None and row.MIN_REQ_POINT in [MinParts.MARKER.name, MinParts.MARKER_TEXT1.name, MinParts.MARKER_TEXT2.name, MinParts.MARKER_TEXT1_TEXT2.name]):
             return (None, None, None)
+        
         # must have text in text1 and text2
         text_wrap_len = Utils.get_value(
             row, Style.TEXT_WRAP_LEN.name, self.text_wrap_len)
@@ -270,10 +276,10 @@ class Plotter:
         # node have ploted minimum parts
         if (store_bbox):
             if (marker is not None):
-                if (marker_above_others):
-                    self.markers_above_others.append(
+                if (marker_above_others == MarkerAbove.NORMAL):
+                    self.markers_above_bbox.append(
                         Utils.expand_bbox(marker.get_tightbbox(), self.MARKER_EXPAND_PERCENT))
-                else:
+                elif(marker_above_others == MarkerAbove.NONE):
                     self.markers_bboxs.append(
                         Utils.expand_bbox(marker.get_tightbbox(), self.MARKER_EXPAND_PERCENT))
             if (text1 is not None):
@@ -306,7 +312,7 @@ class Plotter:
         for row in gdf.itertuples(index=False):
             self.__marker(row, store_bbox=store_bbox,
                           above_others=Utils.get_value(
-                              row, Style.MARKER_ABOVE_OTHERS.name, False), zorder=zorder)
+                              row, Style.MARKER_ABOVE_OTHERS.name, MarkerAbove.NONE), zorder=zorder)
 
     def __markers_gdf_with_one_annotation(self, gdf: GeoDataFrame, store_bbox: bool = True, text_zorder: int = 3, marker_zorder: int = 2):
         gdf = GdfUtils.filter_invalid_markers(gdf)
@@ -709,7 +715,7 @@ class Plotter:
                     row, Style.FINISH_MARKER_VERTICAL_ALIGN.name, "center"),
 
             )
-            self.__marker(mapped_row, above_others=True,
+            self.__marker(mapped_row, above_others=MarkerAbove.ALL,
                           zorder=5)
 
         for row in gpx_start_markers.itertuples():
@@ -728,7 +734,7 @@ class Plotter:
                 MARKER_VERTICAL_ALIGN=Utils.get_value(
                     row, Style.START_MARKER_VERTICAL_ALIGN.name, "center"),
             )
-            self.__marker(mapped_row, above_others=True,
+            self.__marker(mapped_row, above_others=MarkerAbove.ALL,
                            zorder=5)
 
     def clip(self, clipped_area_color: str = 'white'):

@@ -9,7 +9,7 @@ class ColorMode(Enum):
 
 
 
-class MinParts(Enum):  # minimum parts that must node have. If not whole node object is removed
+class MinParts(Enum):  # minimum parts that node must have. If not whole node object is removed
     MARKER_TEXT1_TEXT2 = "MARKER_TEXT1_TEXT2"
     MARKER_TEXT1 = "MARKER_TEXT1"
     MARKER_TEXT2 = "MARKER_TEXT2"
@@ -18,12 +18,16 @@ class MinParts(Enum):  # minimum parts that must node have. If not whole node ob
     TEXT2 = "TEXT2"
     TEXT1_TEXT2 = "TEXT1_TEXT2"
 
-class TextPositions(Enum):  # minimum parts that must node have. If not whole node object is removed
+class TextPositions(Enum):  
     TOP = "TOP"
     BOTTOM = "BOTTOM"
     LEFT = "LEFT"
     RIGHT = "RIGHT"
-
+    
+class MarkerAbove(Enum):
+    ALL = "ALL"
+    NORMAL = "NORMAL"
+    NONE = "NONE"
 
 class Style(Enum):
     # general
