@@ -1,5 +1,4 @@
 import warnings
-
 import matplotlib.pyplot as plt
 import matplotlib.patheffects as pe
 from matplotlib.lines import Line2D
@@ -24,7 +23,7 @@ class Plotter:
     MM_TO_INCH = 25.4
     DEFAULT_CUPSTYLE = "round"
     TEXT_EXPAND_PERCENT = 4
-    MARKER_EXPAND_PERCENT = 1
+    MARKER_EXPAND_PERCENT = 3
     MARKER_ABOVE_NORMAL_ZORDER = 4
     MARKER_ABOVE_ALL_ZORDER = 5
 
@@ -51,7 +50,6 @@ class Plotter:
             left=0, right=1, top=1, bottom=0)
         self.ax.axis('off')
         self.zoom()
-
         self.reqired_area_gdf.plot(ax=self.ax, color=map_bg_color)
         if (not bg_gdf.empty):
             bg_gdf.plot(ax=self.ax, color=bg_gdf[Style.COLOR.name])
@@ -66,7 +64,7 @@ class Plotter:
             zorder = self.MARKER_ABOVE_ALL_ZORDER
         elif (above_others == MarkerAbove.NORMAL):
             zorder = self.MARKER_ABOVE_NORMAL_ZORDER
-            
+
         font_properties = Utils.get_value(
             row, Style.MARKER_FONT_PROPERTIES.name, None)
         if (pd.notna(font_properties)):
@@ -91,12 +89,12 @@ class Plotter:
             # marker is plotted outside of the figure
             marker.remove()
             return None
-        
+
         # always check for overlap in marker over text
         bboxs_list = []
         if (above_others == MarkerAbove.NORMAL):
             bboxs_list = self.markers_above_bbox.copy()
-        elif(above_others == MarkerAbove.NONE):
+        elif (above_others == MarkerAbove.NONE):
             bboxs_list = self.markers_bboxs.copy() + self.texts_bboxs.copy()
 
         bbox_expanded = Utils.expand_bbox(bbox, self.MARKER_EXPAND_PERCENT)
@@ -108,7 +106,7 @@ class Plotter:
         if (store_bbox):
             if (above_others == MarkerAbove.NORMAL):
                 self.markers_above_bbox.append(bbox_expanded)
-            elif(above_others == MarkerAbove.NONE):
+            elif (above_others == MarkerAbove.NONE):
                 self.markers_bboxs.append(bbox_expanded)
         return marker
 
@@ -200,7 +198,7 @@ class Plotter:
             row, store_bbox=False, above_others=marker_above_others, zorder=marker_zorder)
         # if node must have marker return None
         if (marker is None and row.MIN_PLOT_REQ in {MinPlot.MARKER.name, MinPlot.MARKER_TEXT1.name, MinPlot.MARKER_TEXT2.name,
-                                                     MinPlot.MARKER_TEXT1_OR_TEXT2.name}):
+                                                    MinPlot.MARKER_TEXT1_OR_TEXT2.name}):
             return (None, None)
         # can have text in text1 or text2
         text_wrap_len = Utils.get_value(
@@ -216,7 +214,7 @@ class Plotter:
 
         # node text was not ploted - return None
         if (text_annotation is None and row.MIN_PLOT_REQ in [MinPlot.TEXT1.name, MinPlot.TEXT2.name, MinPlot.MARKER_TEXT1.name,
-                                                              MinPlot.MARKER_TEXT2.name, MinPlot.MARKER_TEXT1_OR_TEXT2.name]):
+                                                             MinPlot.MARKER_TEXT2.name, MinPlot.MARKER_TEXT1_OR_TEXT2.name]):
             if (marker is not None):
                 marker.remove()
             return (None, None)
@@ -227,7 +225,7 @@ class Plotter:
                 if (marker_above_others == MarkerAbove.NORMAL):
                     self.markers_above_bbox.append(
                         Utils.expand_bbox(marker.get_tightbbox(), self.MARKER_EXPAND_PERCENT))
-                elif(marker_above_others == MarkerAbove.NONE):
+                elif (marker_above_others == MarkerAbove.NONE):
                     self.markers_bboxs.append(
                         Utils.expand_bbox(marker.get_tightbbox(), self.MARKER_EXPAND_PERCENT))
             if (text_annotation is not None):
@@ -242,10 +240,10 @@ class Plotter:
                                zorder=marker_zorder)
         # if node must have marker return None
         if (marker is None and row.MIN_PLOT_REQ in [MinPlot.MARKER.name, MinPlot.MARKER_TEXT1.name,
-                                                     MinPlot.MARKER_TEXT2.name, MinPlot.MARKER_TEXT1_TEXT2.name,
-                                                     MinPlot.MARKER_TEXT1_OR_TEXT2.name]):
+                                                    MinPlot.MARKER_TEXT2.name, MinPlot.MARKER_TEXT1_TEXT2.name,
+                                                    MinPlot.MARKER_TEXT1_OR_TEXT2.name]):
             return (None, None, None)
-        
+
         # must have text in text1 and text2
         text_wrap_len = Utils.get_value(
             row, Style.TEXT_WRAP_LEN.name, self.text_wrap_len)
@@ -255,7 +253,7 @@ class Plotter:
             text1 = self.__marker_annotation(
                 row, text, row.WIDTH, row.TEXT1_POSITIONS, text_wrap_len, True, zorder=text_zorder)
             if (text1 is None and row.MIN_PLOT_REQ in [MinPlot.TEXT1.name, MinPlot.TEXT2.name, MinPlot.TEXT1_TEXT2.name, MinPlot.MARKER_TEXT1.name,
-                                                        MinPlot.MARKER_TEXT2.name, MinPlot.MARKER_TEXT1_TEXT2.name]):
+                                                       MinPlot.MARKER_TEXT2.name, MinPlot.MARKER_TEXT1_TEXT2.name]):
                 if (marker is not None):
                     marker.remove()
                 return (None, None, None)
@@ -276,20 +274,20 @@ class Plotter:
                 if (text1 is not None):
                     text1.remove()
                 return (None, None, None)
-            
+
             # must have at least one text
-            if(text1 is None and text2 is None and row.MIN_PLOT_REQ in [MinPlot.MARKER_TEXT1_OR_TEXT2.name]):
+            if (text1 is None and text2 is None and row.MIN_PLOT_REQ in [MinPlot.MARKER_TEXT1_OR_TEXT2.name]):
                 if (marker is not None):
                     marker.remove()
                 return (None, None, None)
-            
+
         # node have ploted minimum parts
         if (store_bbox):
             if (marker is not None):
                 if (marker_above_others == MarkerAbove.NORMAL):
                     self.markers_above_bbox.append(
                         Utils.expand_bbox(marker.get_tightbbox(), self.MARKER_EXPAND_PERCENT))
-                elif(marker_above_others == MarkerAbove.NONE):
+                elif (marker_above_others == MarkerAbove.NONE):
                     self.markers_bboxs.append(
                         Utils.expand_bbox(marker.get_tightbbox(), self.MARKER_EXPAND_PERCENT))
             if (text1 is not None):
@@ -663,16 +661,11 @@ class Plotter:
                                               {Style.EDGE_COLOR.name: '', Style.WIDTH.name: '', Style.EDGE_LINESTYLE.name: ''})
         if (edge_areas_gdf.empty):
             return
-        groups = GdfUtils.get_groups_by_columns(
-            edge_areas_gdf, [Style.EDGE_CUP.name], [self.DEFAULT_CUPSTYLE], False)
-        for capstyle, edge_areas_group_gdf in groups:
-            if (pd.isna(capstyle)):
-                capstyle = self.DEFAULT_CUPSTYLE
-            edge_areas_gdf.boundary.plot(ax=self.ax, color=edge_areas_group_gdf[Style.EDGE_COLOR.name],
-                                         linewidth=edge_areas_group_gdf[
-                                             Style.WIDTH.name], alpha=edge_areas_group_gdf[Style.EDGE_ALPHA.name],
-                                         linestyle=edge_areas_group_gdf[Style.EDGE_LINESTYLE.name],
-                                         path_effects=[pe.Stroke(capstyle=capstyle)])
+        edge_areas_gdf.boundary.plot(ax=self.ax, color=edge_areas_gdf[Style.EDGE_COLOR.name],
+                                    linewidth=edge_areas_gdf[
+                                        Style.WIDTH.name], alpha=edge_areas_gdf[Style.EDGE_ALPHA.name],
+                                    linestyle=edge_areas_gdf[Style.EDGE_LINESTYLE.name],
+                                    path_effects=[pe.Stroke(capstyle='round')])
 
     @time_measurement("gpxsPlot")
     def gpxs(self, gpxs_gdf: GeoDataFrame):
@@ -745,7 +738,7 @@ class Plotter:
                     row, Style.START_MARKER_VERTICAL_ALIGN.name, "center"),
             )
             self.__marker(mapped_row, above_others=MarkerAbove.ALL,
-                           zorder=5)
+                          zorder=5)
 
     def clip(self, clipped_area_color: str = 'white'):
         whole_area_bounds = Utils.adjust_bounds_to_fill_paper(
@@ -762,26 +755,31 @@ class Plotter:
         clipping_polygon = GeoDataFrame(
             geometry=[clipping_polygon], crs=self.reqired_area_gdf.crs)
         clipping_polygon.plot(
-            ax=self.ax, color=clipped_area_color, alpha=1, zorder=5)
-        # by this z order clip (5) or non clip overflowed text (3)
+            ax=self.ax, color=clipped_area_color, alpha=1, zorder=6)
 
     def area_boundary(self, boundary_map_area_gdf: GeoDataFrame, color: str = 'black', linewidth: float = 1):
 
-        boundary_map_area_gdf_with, boundary_map_area_gdf_without = GdfUtils.filter_rows(
-            boundary_map_area_gdf, {Style.WIDTH.name: '', Style.COLOR.name: ''}, compl=True)
-        if (not boundary_map_area_gdf_with.empty):
-            boundary_map_area_gdf_with.boundary.plot(
-                ax=self.ax, color=boundary_map_area_gdf_with[Style.COLOR.name], linewidth=boundary_map_area_gdf[Style.WIDTH.name], zorder=2)
-        if (not boundary_map_area_gdf_without.empty):
-            boundary_map_area_gdf_without.boundary.plot(
-                ax=self.ax, color=color, linewidth=linewidth, zorder=2)
-        # by this z order clip (5) or non clip overflowed text (4)
+        groups = GdfUtils.get_groups_by_columns(boundary_map_area_gdf, [
+                                                Style.WIDTH.name], [], False)
+        for width, group in groups:
+            if (pd.isna(width)):
+                width = linewidth
+            common = GdfUtils.get_common_borders(
+                self.reqired_area_gdf, group)
+            # plot border in edge of area
+            if (not common.empty):
+                common.plot(ax=self.ax, color=color, linewidth=width, zorder=10,
+                            path_effects=[pe.Stroke(capstyle="round")])
+            # plot border inside area
+            if (not group.empty):
+                group.boundary.plot(
+                    ax=self.ax, color=color, linewidth=width,
+                    path_effects=[pe.Stroke(capstyle="round")])
 
     def zoom(self):
         # set x and y limits by area that fit paper size for text overflow checking and area clipping
         zoom_bounds = Utils.adjust_bounds_to_fill_paper(
             GdfUtils.get_bounds_gdf(self.reqired_area_gdf), self.paper_dimensions_mm)
-        # zoom_bounds = GdfUtils.get_bounds_gdf(self.reqired_area_gdf)
         width, height = Utils.get_dimensions(zoom_bounds)
         self.ax.set_xlim([zoom_bounds[WorldSides.WEST.name],
                          # Expand x limits

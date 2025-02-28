@@ -264,10 +264,10 @@ class GdfUtils:
                 gdf[column] = gdf[column].astype("category")
 
     @staticmethod
-    def combine_rows_gdf(gdf: GeoDataFrame, toCrs: int) -> GeoDataFrame:
+    def combine_rows_gdf(gdf: GeoDataFrame) -> GeoDataFrame:
         if (len(gdf) == 1):
-            return gdf.to_crs(toCrs)
-        return GeoDataFrame(geometry=[gdf.to_crs(toCrs).geometry.unary_union], crs=toCrs)
+            return gdf
+        return GeoDataFrame(geometry=[gdf.geometry.unary_union], crs=gdf.crs)
 
     @staticmethod
     def change_columns_to_numeric(gdf: GeoDataFrame, columns: list[str], downcast: str = 'integer') -> None:
@@ -307,10 +307,16 @@ class GdfUtils:
         Returns:
             GeoDataFrame: _description_
         """
+        if(gdf.empty):
+            return gdf
         columns_ignore = [*columns_ignore, gdf.geometry.name]
         # if dont want remove columns and than...
         columns = [
             col for col in gdf.columns if col not in columns_ignore]
+        if(columns == []):
+            geometry = GeomUtils.merge_lines_safe(gdf.geometry)
+            return GeoDataFrame(geometry=[geometry], crs=gdf.crs)
+            
         # merge all lines with same values in 'columns'
         merged = gdf.groupby(columns, dropna=False, observed=True).agg({
             gdf.geometry.name: GeomUtils.merge_lines_safe
@@ -557,7 +563,7 @@ class GdfUtils:
 
     @staticmethod
     @time_measurement("prominence")
-    def filter_peaks_by_prominence(nodes_gdf, radius, min_prominence):
+    def filter_peaks_by_prominence(nodes_gdf: GeoDataFrame, radius: float, min_prominence: float, ele_prominence_max_diff_ratio: float | None = None):
         """
         Filters peaks based on a simplified prominence criterion.
 
@@ -573,6 +579,10 @@ class GdfUtils:
         Returns:
         - GeoDataFrame: a filtered GeoDataFrame containing only the peaks meeting the prominence threshold.
         """
+        if(nodes_gdf.empty):
+            return nodes_gdf
+        if(radius <= 0 or min_prominence <= 0):
+            return nodes_gdf
         peaks, rest = GdfUtils.filter_rows(
             nodes_gdf, {'natural': 'peak'}, compl=True)
         peaks = GdfUtils.filter_rows(peaks, {'ele': ''})
@@ -603,6 +613,22 @@ class GdfUtils:
                     if (curr_peak_prominence) < min_prominence:
                         is_prominent.at[point_i] = False
                         break
-        # todo check if prominenc is 4x bigger than min_prominence
+
         peaks['prominence'] = prominence
-        return GdfUtils.combine_gdfs([peaks[is_prominent].reset_index(drop=True), rest])
+        if(ele_prominence_max_diff_ratio is not None and ele_prominence_max_diff_ratio > 0):
+            peaks = peaks[is_prominent & ~(peaks['prominence'] > peaks['ele'] * ele_prominence_max_diff_ratio)]
+        else:
+            peaks = peaks[is_prominent]
+        return GdfUtils.combine_gdfs([peaks.reset_index(drop=True), rest])
+
+    @staticmethod
+    def get_common_borders(gdf1: GeoDataFrame, gdf2: GeoDataFrame):
+        union1 = gdf1.union_all()  
+        union2 = gdf2.union_all()
+        common_border = union1.boundary.intersection(union2.boundary)
+        if(not common_border):
+            return GdfUtils.create_empty_gdf(gdf1.crs)
+        intersection_gdf = gpd.GeoDataFrame({'geometry': [common_border]}, crs=gdf1.crs)
+        intersection_gdf = intersection_gdf[
+        intersection_gdf.geometry.type.isin(['LineString', 'MultiLineString'])]
+        return GdfUtils.merge_lines_gdf(intersection_gdf)

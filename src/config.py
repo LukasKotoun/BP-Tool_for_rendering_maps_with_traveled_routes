@@ -8,12 +8,12 @@ from common.map_enums import Style, ColorMode, PaperSize, MapOrientation
 # --------------------------------------------------------------map area--------------------------------------------------------------
 # OSM_INPUT_FILE_NAMES: str = ['../osm_files/vys.osm.pbf','../osm_files/jihmor.osm.pbf']
 # OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/vysJihE.osm.pbf'
-OSM_INPUT_FILE_NAMES: str | list[str] = ['../osm_files/trebic_vic.osm.pbf']
+OSM_INPUT_FILE_NAMES: str | list[str] = ['../osm_files/cz.osm.pbf']
 # OSM_INPUT_FILE_NAMES: str | list[str] = '../trebic.osm.pbf'
 # extract - will be always true
 OSM_WANT_EXTRACT_AREA: bool = False
 # set if want osm file cutting using osmium command line tool (need to be uinstalled), If not set to None
-OSM_OUTPUT_FILE_NAME: None | str = '../osm_files/T.osm.pbf'
+OSM_OUTPUT_FILE_NAME: None | str = '../osm_files/hv.osm.pbf'
 
 OUTPUT_PDF_NAME: str = '../pdfs/divocina'
 
@@ -23,7 +23,7 @@ OUTPUT_PDF_NAME: str = '../pdfs/divocina'
 # AREA: WantedArea = [(13.2020960,-8.7766815),(13.2020370,-8.8766827),(13.3099288, -8.8775122), (13.3082471,-8.7782667)] # angol- 11.85 - z14 - square
 # AREA: WantedArea = [{"area": [(13.0140862,-8.8831442),(13.1660763,-8.8819132),(13.1667146, -9.0826624), (13.0159664,-9.0781028)], 
 #                      "plot": False, "category": 0, "width": 1, "color": "black"}] # angol- ostrovy test
-# AREA: WantedArea = [(15.7937669,49.2511294),(15.7940459,49.1851468),(15.9009507, 49.1847962), (15.9003445,49.2499564)] # tr - 7.8 - z14 - square
+# AREA: WantedArea = [(15.7937669,49.251 1294),(15.7940459,49.1851468),(15.9009507, 49.1847962), (15.9003445,49.2499564)] # tr - 7.8 - z14 - square
 
 # zoom testing
 # AREA: WantedArea = [(15.8149639,48.6439769), (15.8183625,48.6439700), (15.8183439, 48.6423997), (15.8149561, 48.6424158)] # zoom 19  - 0.7832305054706878
@@ -45,18 +45,21 @@ OUTPUT_PDF_NAME: str = '../pdfs/divocina'
 # AREA: WantedArea = ["Česko","Vysočina, Česko", "Jihomoravský kraj, Česko"]
 # AREA: WantedArea = ["Brno, Česko"]
 # AREA: WantedArea = ["Jihomoravský kraj, Česko", "Kraj Vysočina, Česko"]
-# AREA: WantedArea = [{"area": "Jihomoravský kraj, Česko", "plot": True, "category": 2, "width": 1, "color": "black"},
-#                     {"area": "Kraj Vysočina, Česko", "plot": True, "category": 1, "width": 1, "color": "black"},
-#                      {"area": "Pardubický kraj, Česko", "plot": True, "category": 2, "width": 1, "color": "black"},
-#                       {"area": "Jihočeský kraj, Česko", "plot": True, "category": 1, "width": 1, "color": "black"}]
+AREA: WantedArea = [{"area": "Česko", "plot": True, "category": 1, "width": 1}]
+# AREA: WantedArea = [{"area": "Jihomoravský kraj, Česko", "plot": True, "category": 2, "width": 1},
+#                     {"area": "Kraj Vysočina, Česko", "plot": True, "category": 1, "width": 1},
+#                      {"area": "Pardubický kraj, Česko", "plot": True, "category": 2, "width": 1},
+#                       {"area": "Jihočeský kraj, Česko", "plot": True, "category": 1, "width": 1}]
 # nastavení šířky asi jako číslo ale na fe small medium a big 
-AREA: WantedArea = [{"area": "Třebíč, Česko", "plot": False, "category": 1, "width": 1, "color": "black"},
-                    {"area": "Trnava, Vysočina, Česko", "plot": False, "category": 1, "width": 1, "color": "black"},
-                    {"area": "Horní Vilémovice, Česko", "plot": False, "category": 1, "width": 1, "color": "black"}]
-# AREA: WantedArea = [{"area": "Brno, Česko", "plot": True, "category": 0, "width": 1, "color": "black"}]
+# AREA: WantedArea = [{"area": "Třebíč, Česko", "plot": False, "category": 1, "width": 1, "color": "black"},
+#                     {"area": "Trnava, Vysočina, Česko", "plot": False, "category": 1, "width": 1, "color": "black"},
+#                     {"area": "Horní Vilémovice, Česko", "plot": False, "category": 1, "width": 1, "color": "black"}]
+# AREA: WantedArea = [{"area": "Jaroměřice nad rokytnou, Česko", "plot": True, "category": 0, "width": 1, "color": "black"}]
 # AREA: WantedArea = [{"area": "Jihomoravský kraj, Česko", "plot": True, "category": 2, "width": 1, "color": "black"},
 #                     {"area": "Kraj Vysočina, Česko", "plot": True, "category": 1, "width": 1, "color": "black"},
-#                     {"area": "Třebíč, Česko", "plot": True, "category": 0, "width": 1, "color": "black"}]
+#                     {"area": "Třebíč, Česko", "plot": False, "category": 0, "width": 1, "color": "black"}]
+# AREA: WantedArea = [{"area": "Německo", "plot": True, "category": 1, "width": 1, "color": "black"},
+                    # {"area": "Lucembursko", "plot": True, "category": 2, "width": 1, "color": "black"}]
 
 # AREA: WantedArea = ["Kraj Vysočina, Česko"]
 # AREA: WantedArea = ["Jihomoravský kraj, Česko"]
@@ -66,8 +69,6 @@ AREA: WantedArea = [{"area": "Třebíč, Česko", "plot": False, "category": 1, 
 # AREA: WantedArea = ["Okres Třebíč, Česko", "Třebíč, Česko", "Okres Jihlava, Česko"]
 # AREA: WantedArea = ["Texas, USA"]
 
-AREA_DICT_KEYS = {"area": str | list, "plot": bool, "category": int, "width": int | float, "color": str}
-AREAS_MAPPING_DICT = {"width": Style.WIDTH.name, "color": Style.COLOR.name}
 PAPER_DIMENSIONS: PaperSize | tuple[float | None, float | None] = PaperSize.A4.dimensions
 # PAPER_DIMENSIONS: PaperSize | tuple[float | None, float | None] = PaperSize.A4.dimensions
 # set own dimensions. If one is left as 'None' it will be automaticaly calculated using area size
@@ -78,37 +79,40 @@ GIVEN_SMALLER_PAPER_DIMENSION: bool = True
 # set how will resulted paper be oriented, AUTOMATIC is Recommended
 WANTED_ORIENTATION: MapOrientation = MapOrientation.AUTOMATIC
 
-FIT_PAPER_SIZE = True
+FIT_PAPER_SIZE = False
 FIT_PAPER_SIZE_BOUNDS_PLOT = True
 
 
 # text general
 TEXT_WRAP_NAMES_LEN = 15  # len or 0/None if not wrap (15 default)
 # if allow is false set threashold (0-1) how much of text must be inside
-TEXT_BOUNDS_OVERFLOW_THRESHOLD = 0.97
+TEXT_BOUNDS_OVERFLOW_THRESHOLD = 0
 
 
 # plot as bridge (True)  or normal way (False)
 PLOT_BRIDGES = True
 # plot as tunnel (True) or normal way (False) - if false and in dont want tags -> will not be plotted at all
 PLOT_TUNNELS = True
-
+FILTER_PEAKS_BY_PROMINENCE = True
+PEAKS_FILTER_SENSITIVITY = 2.5
+ELE_PROMINENCE_MAX_DIFF_RATIO = 3
+FILTER_PLACE_BY_POPULATION = True
 # --------------------------------------------------------------preview--------------------------------------------------------------
 # NOTE: must have same settings as the resulting one when generating for large format printing
-WANT_PREVIEW: bool = True 
+WANT_PREVIEW: bool = False 
 # OUTER_AREA: WantedArea = [(15.7034756,48.6941575), (15.9206889,48.6941186), (15.9198775, 48.5926164), (15.7030222, 48.5936264)] # zoom 13 - 0.012257255675006467
 
 # area for that you are creating smaller preview (bigger than normal area)
 # OUTER_AREA: WantedArea =  "Vysočina, Česko"
 
-# OUTER_AREA: WantedArea =  [{"area": "Třebíč, Česko", "plot": True, "category": 2, "width": 1, "color": "black"}]
-OUTER_AREA: WantedArea =  [{"area": "Jihomoravský kraj, Česko", "plot": True, "category": 2, "width": 1, "color": "black"},
-                    {"area": "Kraj Vysočina, Česko", "plot": True, "category": 1, "width": 1, "color": "black"}]
+OUTER_AREA: WantedArea =  [{"area": "Česko", "plot": True, "category": 2, "width": 1}]
+# OUTER_AREA: WantedArea =  [{"area": "Jihomoravský kraj, Česko", "plot": True, "category": 2, "width": 1, "color": "black"},
+#                     {"area": "Kraj Vysočina, Česko", "plot": True, "category": 1, "width": 1, "color": "black"}]
 # OUTER_AREA: WantedArea = "Česko"
 # OUTER_AREA: WantedArea = [(15.7396182, 49.3111173), (16.0273871, 49.3028839),
 #                     (16.0266146, 49.1439064), (15.6712219, 49.1928600)]
 
-OUTER_PAPER_DIMENSIONS = PaperSize.A0.dimensions  # real paper size
+OUTER_PAPER_DIMENSIONS = PaperSize.A4.dimensions  # real paper size
 # or set own #if one is left none if will be automaticaly calculated by area size
 # OUTER_PAPER_DIMENSIONS = (1100, None)
 # what side of paper was set (smaller true bigger false)(only if only one side in custom dimension was set)
@@ -128,6 +132,8 @@ CRS_OSM = "EPSG:4326"
 CRS_CALC = "EPSG:3857"  # europe 25833 - calculating map scale and scaling factor
 CRS_DISPLAY = "EPSG:3857"
 
+AREA_DICT_KEYS = {"area": str | list, "plot": bool, "category": int, "width": int | float}
+AREAS_MAPPING_DICT = {"width": Style.WIDTH.name, "color": Style.COLOR.name}
 try:
     FONT_AWESOME_PATH = "./common/fonts/FontAwesome6Free-Solid-900.otf"
     font_awesome_prop = fm.FontProperties(fname=FONT_AWESOME_PATH)
@@ -182,6 +188,7 @@ FOLDER_COLOR_DIS_PALLET = True
 
 # --------------filters for map elements--------------
 # columns that are used for ploting nodes name for city, ele for elevation points
+# only for columns in osm file
 NODES_ADDITIONAL_COLUMNS = ['name', 'ele', 'population']
 NODES_NUMERIC_COLUMNS = ['ele', 'population']
 NODES_ROUND_COLUMNS = ['ele']
@@ -208,7 +215,7 @@ AREAS_DONT_CATEGORIZE = []
 wanted_nodes: WantedCategories = {
     # 'place': {'city'},
     # 'place': {'city', 'town'},
-    'place': {'city', 'town', 'village'},
+    # 'place': {'city', 'town', 'village'},
     # 'place': {'village'},
     'natural': {'peak'}
 }
@@ -224,14 +231,15 @@ unwanted_nodes_tags: UnwantedTags = {
 wanted_ways: WantedCategories = {
     # 'waterway': set({}),
     # 'highway': ['motorway', 'trunk','primary', 'secondary', 'tertiary'],
-    # # 'highway': ['motorway', 'trunk', 'primary'],
-    # 'highway': {'motorway', 'trunk', 'primary', 'secondary', 'tertiary', 'unclassified', 'residential', 'path', 'footway'},
-    # # # 'highway': {'tertiary'},
-    # # # 'highway':set({}),
-    # 'railway': {'rail', 'tram'},
+    # # # 'highway': ['motorway', 'trunk', 'primary'],
+    # # 'highway': {'motorway', 'trunk', 'primary', 'secondary', 'tertiary', 'unclassified', 'residential', 'path', 'footway'},
+    # # # # 'highway': {'tertiary'},
+    # # # # 'highway':set({}),
+    # # 'railway': {'rail', 'tram'},
+    # 'railway': {'rail'},
 
-    # # # # 'railway': {'rail'},
-    'natural': {'coastline'}
+    # # # # # # 'railway': {'rail'},
+    # 'natural': {'coastline'}
 }
 
 unwanted_ways_tags: UnwantedTags = {
