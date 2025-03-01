@@ -4,7 +4,8 @@ from config import font_awesome_prop, material_design_prop
 
 #! edge linestyle is suported only dashed or not dashed on not solid lines
 #! ploting is turned of by setting color to None
-#! text color or MARKER color turn of by string "None" instead of None - test
+#! text and marker turn of by setting marker/textcolor to None
+# if want to turn of only like only marker but text print like annotation set marker to "None"
 # ------------styles--------------
 OCEAN_WATER = '#8fb6db'
 
@@ -89,7 +90,8 @@ natural_styles_nodes: ElementStyles = [
         Style.MARKER.name: "^",
         Style.MARKER_HORIZONTAL_ALIGN.name: "center", Style.MARKER_VERTICAL_ALIGN.name: None,
         # Style.MIN_PLOT_REQ.name: MinPlot.MARKER_TEXT2.name,
-        Style.COLOR.name: "#7f3016", Style.MIN_PLOT_REQ.name: MinPlot.MARKER_TEXT2.name,
+        Style.COLOR.name: "#7f3016",
+        Style.MIN_PLOT_REQ.name: MinPlot.MARKER_TEXT2.name,
         Style.TEXT_FONT_SIZE.name: 3, Style.WIDTH.name: 3.6,  Style.TEXT1_POSITIONS.name: [TextPositions.TOP.name],
         Style.TEXT2_POSITIONS.name: [TextPositions.BOTTOM.name], Style.EDGE_WIDTH_RATIO.name: 0,
 
@@ -168,9 +170,9 @@ railway_styles: ElementStyles = [
         Style.COLOR.name: '#FFFFFF', Style.WIDTH.name: 10,
         Style.BRIDGE_EDGE_COLOR.name: '#5D5D5D', Style.BRIDGE_COLOR.name: "#FFFFFF",
         Style.EDGE_COLOR.name: '#5D5D5D', Style.BRIDGE_WIDTH_RATIO.name: 1 + 1.7,
-        Style.BRIDGE_EDGE_WIDTH_RATIO.name: 1 + 0.4,
+        Style.BRIDGE_EDGE_WIDTH_RATIO.name: 1 + 0.4, 
         Style.LINESTYLE.name: (0, (5, 5)), Style.EDGE_WIDTH_RATIO.name: 1 + 0.4,
-        Style.LINE_CUP.name: LineCupStyles.BUTT.value, Style.EDGE_CUP.name: LineCupStyles.BUTT.value
+        Style.LINE_CAPSTYLE.name: LineCupStyles.BUTT.value, Style.EDGE_CAPSTYLE.name: LineCupStyles.BUTT.value
     }),
 
 

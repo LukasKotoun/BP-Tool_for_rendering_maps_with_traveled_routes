@@ -13,8 +13,8 @@ from modules.received_structure_processor import ReceivedStructureProcessor
 
 from common.common_helpers import time_measurement
 
-# todo some class or utils..
 
+# some class like map generator or someting and parse to functions that will be called in endpoints
 
 def process_bridges_and_tunnels(gdf, want_bridges: bool, want_tunnels: bool):
     GdfUtils.change_columns_to_numeric(gdf, ['layer'])
@@ -41,10 +41,9 @@ def process_bridges_and_tunnels(gdf, want_bridges: bool, want_tunnels: bool):
         GdfUtils.remove_columns(gdf, ['tunnel'])
     return
 
-
 def gdfs_convert_loaded_columns(gpxs_gdf, nodes_gdf, ways_gdf, areas_gdf):
     GdfUtils.change_columns_to_numeric(nodes_gdf, NODES_NUMERIC_COLUMNS)
-    GdfUtils.convert_numeric_columns_int(nodes_gdf, NODES_NUMERIC_COLUMNS)
+    GdfUtils.convert_numeric_columns_int(nodes_gdf, NODES_ROUND_COLUMNS)
 
     GdfUtils.change_columns_to_numeric(ways_gdf, WAYS_NUMERIC_COLUMNS)
     GdfUtils.convert_numeric_columns_int(ways_gdf, WAYS_ROUND_COLUMNS)
@@ -52,18 +51,17 @@ def gdfs_convert_loaded_columns(gpxs_gdf, nodes_gdf, ways_gdf, areas_gdf):
     GdfUtils.change_columns_to_numeric(areas_gdf, AREA_NUMERIC_COLUMNS)
     GdfUtils.convert_numeric_columns_int(areas_gdf, AREA_ROUND_COLUMNS)
 
-
 def gdfs_prepare_styled_columns(gpxs_gdf, nodes_gdf, ways_gdf, areas_gdf, map_object_scaling_factor):
     # ----gpx----
     # gpx - is needed in this? will be setted in FE?
     # GdfUtils.multiply_column_gdf(gpxs_gdf, Style.WIDTH.name, [
     #                              Style.WIDTH_SCALE.name, Style.FE_WIDTH_SCALE.name], map_object_scaling_factor)
 
-    GdfUtils.create_derivated_columns(gpxs_gdf, Style.EDGEWIDTH.name, Style.WIDTH.name, [
+    GdfUtils.create_derivated_columns(gpxs_gdf, Style.EDGE_WIDTH.name, Style.WIDTH.name, [
                                       Style.EDGE_WIDTH_RATIO.name])
-    GdfUtils.create_derivated_columns(gpxs_gdf, Style.START_MARKER_EDGEWIDTH.name, Style.START_MARKER_WIDHT.name, [
+    GdfUtils.create_derivated_columns(gpxs_gdf, Style.START_MARKER_EDGE_WIDTH.name, Style.START_MARKER_WIDHT.name, [
                                       Style.START_MARKER_EDGE_RATIO.name])
-    GdfUtils.create_derivated_columns(gpxs_gdf, Style.FINISH_MARKER_EDGEWIDTH.name, Style.FINISH_MARKER_WIDHT.name, [
+    GdfUtils.create_derivated_columns(gpxs_gdf, Style.FINISH_MARKER_EDGE_WIDTH.name, Style.FINISH_MARKER_WIDHT.name, [
                                       Style.FINISH_MARKER_EDGE_RATIO.name])
 
     # ----nodes----
@@ -79,7 +77,7 @@ def gdfs_prepare_styled_columns(gpxs_gdf, nodes_gdf, ways_gdf, areas_gdf, map_ob
                                       Style.TEXT_OUTLINE_WIDTH_RATIO.name])
 
     # edge - MARKERs size and ways width
-    GdfUtils.create_derivated_columns(nodes_gdf, Style.EDGEWIDTH.name, Style.WIDTH.name, [
+    GdfUtils.create_derivated_columns(nodes_gdf, Style.EDGE_WIDTH.name, Style.WIDTH.name, [
                                       # ?? maybe remove ...
                                       Style.EDGE_WIDTH_RATIO.name])
     old_column_remove = []
@@ -99,7 +97,7 @@ def gdfs_prepare_styled_columns(gpxs_gdf, nodes_gdf, ways_gdf, areas_gdf, map_ob
         # if i will be creationg function with continues width scaling than multiply only by FEwidthscale
         Style.WIDTH_SCALE.name, Style.FE_WIDTH_SCALE.name], map_object_scaling_factor)
 
-    GdfUtils.create_derivated_columns(ways_gdf, Style.EDGEWIDTH.name, Style.WIDTH.name, [
+    GdfUtils.create_derivated_columns(ways_gdf, Style.EDGE_WIDTH.name, Style.WIDTH.name, [
         Style.EDGE_WIDTH_RATIO.name])
     GdfUtils.create_derivated_columns(ways_gdf, Style.BRIDGE_WIDTH.name, Style.WIDTH.name, [     # calc bridge size only for bridges
                                       Style.BRIDGE_WIDTH_RATIO.name], {'bridge': ''})
@@ -120,7 +118,7 @@ def gdfs_prepare_styled_columns(gpxs_gdf, nodes_gdf, ways_gdf, areas_gdf, map_ob
     GdfUtils.multiply_column_gdf(areas_gdf, Style.WIDTH.name, [
         Style.WIDTH_SCALE.name, Style.FE_WIDTH_SCALE.name], map_object_scaling_factor)
 
-    GdfUtils.create_derivated_columns(areas_gdf, Style.EDGEWIDTH.name, Style.WIDTH.name, [
+    GdfUtils.create_derivated_columns(areas_gdf, Style.EDGE_WIDTH.name, Style.WIDTH.name, [
                                       Style.EDGE_WIDTH_RATIO.name])
     old_column_remove = []
     for filter, new_column, old_column, fill in DERIVATE_COLUMNS_AREAS:
@@ -132,7 +130,12 @@ def gdfs_prepare_styled_columns(gpxs_gdf, nodes_gdf, ways_gdf, areas_gdf, map_ob
     GdfUtils.remove_columns(areas_gdf, [Style.WIDTH_SCALE.name, Style.FE_WIDTH_SCALE.name,
                                         Style.EDGE_WIDTH_RATIO.name, *old_column_remove])
 
+# def validate_and_parse_settings(): - return struct
+#     pass
+# def get_map_area_and_boundary(edited settings dict) - 2x gdf
+# def get_map_area_and_boundary(edited settings dict) - 2x gdf
 
+# will be in calc preview endpoint
 def calc_preview(map_area_gdf, paper_dimensions_mm):
     """
         NOTE: using constants from config file
@@ -144,7 +147,7 @@ def calc_preview(map_area_gdf, paper_dimensions_mm):
         _type_: _description_
     """
     wanted_outer_areas_to_display = ReceivedStructureProcessor.validate_and_convert_areas_strucutre(
-        OUTER_AREA, allowed_keys_and_types=AREA_DICT_KEYS, key_with_area="area")
+        OUTER_AREA, allowed_keys_and_types=REQ_AREA_DICT_KEYS, key_with_area="area")
     outer_map_area_gdf = GdfUtils.get_whole_area_gdf(
         wanted_outer_areas_to_display, 'area', CRS_OSM, CRS_DISPLAY)
     outer_map_area_gdf = GdfUtils.combine_rows_gdf(outer_map_area_gdf)
@@ -181,12 +184,14 @@ def calc_preview(map_area_gdf, paper_dimensions_mm):
 
 @time_measurement("main")
 def main() -> None:
+    # one function
     remove_extracted_output_file = (
         OUTPUT_PDF_NAME == None and OSM_WANT_EXTRACT_AREA)
     # convert and validate formats from FE - and handle exceptions
     wanted_areas_to_display = ReceivedStructureProcessor.validate_and_convert_areas_strucutre(
-        AREA, allowed_keys_and_types=AREA_DICT_KEYS, key_with_area="area")
-
+        AREA, allowed_keys_and_types=REQ_AREA_DICT_KEYS, key_with_area="area")
+    
+    # second function
     # if are for preview is not specified, use whole area
     if (WANT_PREVIEW and AREA == None):
         # will not happen in preview
@@ -200,15 +205,17 @@ def main() -> None:
     boundary_map_area_gdf = GdfUtils.get_areas_borders_gdf(
         GdfUtils.filter_rows(map_area_gdf, {'plot': True}), 'category')
     boundary_map_area_gdf = GdfUtils.map_gdf_column_names(
-        boundary_map_area_gdf, AREAS_MAPPING_DICT)
+        boundary_map_area_gdf, REQ_AREAS_MAPPING_DICT)
     GdfUtils.remove_columns(boundary_map_area_gdf, [
-                            boundary_map_area_gdf.geometry.name, *AREAS_MAPPING_DICT.values()], True)
+                            boundary_map_area_gdf.geometry.name, *REQ_AREAS_MAPPING_DICT.values()], True)
 
     # todo edit or remove ...
     # boundary_map_area_gdf = GdfUtils.remove_common_boundary_inaccuracy(
     #     boundary_map_area_gdf)
 
     map_area_gdf = GdfUtils.combine_rows_gdf(map_area_gdf)
+    
+    # third function - scalingfactor, maparea, ooutermaparea, scale, zoomlevel
     # ------------get paper dimension (size and orientation)------------
     map_area_dimensions = GdfUtils.get_dimensions_gdf(map_area_gdf)
     paper_dimensions_mm = Utils.adjust_paper_dimensions(map_area_dimensions, PAPER_DIMENSIONS,
@@ -229,18 +236,16 @@ def main() -> None:
                 boundary_map_area_gdf = GdfUtils.combine_gdfs(
                     [boundary_map_area_gdf, map_area_gdf.copy()])
         outer_map_area_gdf = None
-        # - map scale in real size
-        # - scaling factor and for zoom calc in webmercato
+
         map_object_scaling_factor = Utils.calc_map_object_scaling_factor(map_area_dimensions,
                                                                          paper_dimensions_mm)
-    map_area_bounds = GdfUtils.get_bounds_gdf(
-        GdfUtils.change_crs(map_area_gdf, CRS_OSM))
-    map_scale = Utils.get_scale(map_area_bounds, paper_dimensions_mm)
-    print(map_scale)
+        
+    map_scale = Utils.get_scale(GdfUtils.get_bounds_gdf(
+        GdfUtils.change_crs(map_area_gdf, CRS_OSM)), paper_dimensions_mm)
     zoom_level = Utils.get_zoom_level(
         map_object_scaling_factor, ZOOM_MAPPING, 0.1)
-    print(f"Zoom level: {zoom_level}")
-
+    
+    # fifth function - parse osm file and get gdfs and than remove osm file
     # ------------get elements from osm file------------
     try:
         if (OSM_WANT_EXTRACT_AREA):
@@ -270,6 +275,7 @@ def main() -> None:
     nodes_gdf, ways_gdf, areas_gdf = osm_file_parser.create_gdf(
         osm_file_name, CRS_OSM, CRS_DISPLAY)
 
+    # sixth function - convert columns to numeric, round, create derivated columns, remove columns
     # ------------gpxs------------
     # from FE
     gpx_manager = GpxManager(GPX_FOLDER, CRS_DISPLAY)
@@ -334,6 +340,9 @@ def main() -> None:
         areas_gdf, [Style.ZINDEX.name], ascending=True, na_position='first', stable=True)
     GdfUtils.sort_gdf_by_columns(
         bg_gdf, ['area'], ascending=False, na_position='last')
+
+
+    
     # ------------plot------------
     # todo add checks for errors in plotting cals if dict from fe is not correct
     plotter_settings = {"map_area_gdf": map_area_gdf, "paper_dimensions_mm": paper_dimensions_mm,

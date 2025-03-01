@@ -21,7 +21,7 @@ from common.common_helpers import time_measurement
 class Plotter:
 
     MM_TO_INCH = 25.4
-    DEFAULT_CUPSTYLE = "round"
+    DEFAULT_CAPSTYLE = "round"
     TEXT_EXPAND_PERCENT = 4
     MARKER_EXPAND_PERCENT = 3
     MARKER_ABOVE_NORMAL_ZORDER = 4
@@ -75,12 +75,12 @@ class Plotter:
                 row, Style.MARKER_HORIZONTAL_ALIGN.name, "center")
             marker: Text = self.ax.text(row.geometry.x, row.geometry.y, row.MARKER, color=row.COLOR, fontsize=row.WIDTH,
                                         font_properties=font_properties, alpha=row.ALPHA,
-                                        path_effects=[pe.withStroke(linewidth=row.EDGEWIDTH,
+                                        path_effects=[pe.withStroke(linewidth=row.EDGE_WIDTH,
                                                                     alpha=row.ALPHA, foreground=row.EDGE_COLOR)],
                                         zorder=zorder, va=va, ha=ha)
         else:
             marker: Line2D = self.ax.plot(row.geometry.x, row.geometry.y, marker=row.MARKER, mfc=row.COLOR, ms=row.WIDTH,
-                                          mec=row.EDGE_COLOR, mew=row.EDGEWIDTH, alpha=row.ALPHA,
+                                          mec=row.EDGE_COLOR, mew=row.EDGE_WIDTH, alpha=row.ALPHA,
                                           zorder=zorder)
         if (isinstance(marker, list)):
             marker = marker[0]
@@ -351,7 +351,7 @@ class Plotter:
             return
         # groups sorted from biggest to smallest zindex
         groups = GdfUtils.get_groups_by_columns(
-            nodes_gdf, [Style.ZINDEX.name], [], False)
+            nodes_gdf, [Style.ZINDEX.name], [])
         for zindex, nodes_group_gdf in sorted(groups, key=lambda x: x[0], reverse=True):
             markers_with_two_annotations, group_rest = GdfUtils.filter_rows(
                 nodes_group_gdf, {Style.MARKER.name: '', Style.TEXT1.name: '', Style.TEXT2.name: ''}, compl=True)
@@ -372,49 +372,49 @@ class Plotter:
                 markers_with_two_annotations)
             self.__markers_gdf(markers)
 
-    def __line_edges(self, lines_gdf, cupstyle: str = None, zorder: int = 2):
-        # todo make line edges by zindex
+    def __line_edges(self, lines_gdf, capstyle: str = None, zorder: int = 2):
         edge_lines_gdf = GdfUtils.filter_rows(lines_gdf, {
-            Style.EDGE_COLOR.name: '', Style.EDGE_LINESTYLE.name: '', Style.EDGEWIDTH.name: '', Style.EDGE_ALPHA.name: ''})
-
+            Style.EDGE_COLOR.name: '', Style.EDGE_LINESTYLE.name: '', Style.EDGE_WIDTH.name: '', Style.EDGE_ALPHA.name: ''})
         if (edge_lines_gdf.empty):
             return
-        if (cupstyle is not None):
-            edge_lines_gdf[Style.EDGE_CUP.name] = cupstyle
+
+        if (capstyle is not None):
+            edge_lines_gdf[Style.EDGE_CAPSTYLE.name] = capstyle
 
         groups = GdfUtils.get_groups_by_columns(
-            edge_lines_gdf, [Style.EDGE_CUP.name], [self.DEFAULT_CUPSTYLE], False)
+            edge_lines_gdf, [Style.EDGE_CAPSTYLE.name], [self.DEFAULT_CAPSTYLE], False)
         for capstyle, edge_lines_group_gdf in groups:
             if (pd.isna(capstyle)):
-                capstyle = self.DEFAULT_CUPSTYLE
+                capstyle = self.DEFAULT_CAPSTYLE
 
             edge_lines_group_gdf.plot(ax=self.ax, color=edge_lines_group_gdf[Style.EDGE_COLOR.name],
-                                      linewidth=edge_lines_group_gdf[Style.EDGEWIDTH.name],
+                                      linewidth=edge_lines_group_gdf[Style.EDGE_WIDTH.name],
                                       linestyle=edge_lines_group_gdf[Style.EDGE_LINESTYLE.name],
                                       alpha=edge_lines_group_gdf[Style.EDGE_ALPHA.name],
                                       path_effects=[pe.Stroke(capstyle=capstyle)], zorder=zorder)
 
-    def __line(self, lines_gdf, cupstyle: str = None, zorder: int = 2):
+    def __line(self, lines_gdf, capstyle: str = None, zorder: int = 2):
         """
         Lines in lines_gdf should have same zindex for correct order of plotting.
 
         Args:
             lines_gdf (_type_): _description_
-            cupstyle (str, optional): _description_. Defaults to None.
+            capstyle (str, optional): _description_. Defaults to None.
             zorder (int, optional): _description_. Defaults to 2.
         """
         lines_gdf = GdfUtils.filter_rows(lines_gdf, {
             Style.COLOR.name: '', Style.LINESTYLE.name: '', Style.WIDTH.name: '', Style.ALPHA.name: ''})
         if (lines_gdf.empty):
             return
-        if (cupstyle is not None):
-            lines_gdf[Style.LINE_CUP.name] = cupstyle
+
+        if (capstyle is not None):
+            lines_gdf[Style.LINE_CAPSTYLE.name] = capstyle
 
         groups = GdfUtils.get_groups_by_columns(
-            lines_gdf, [Style.LINE_CUP.name], [self.DEFAULT_CUPSTYLE], False)
-        for capstyle, lines_group_gdf in groups:
+            lines_gdf, [Style.LINE_CAPSTYLE.name], [self.DEFAULT_CAPSTYLE], False)
+        for capstyle, lines_group_gdf in groups:            
             if (pd.isna(capstyle)):
-                capstyle = self.DEFAULT_CUPSTYLE
+                capstyle = self.DEFAULT_CAPSTYLE
 
             lines_group_gdf.plot(ax=self.ax, color=lines_group_gdf[Style.COLOR.name],
                                  linewidth=lines_group_gdf[Style.WIDTH.name],
@@ -422,94 +422,92 @@ class Plotter:
                                  alpha=lines_group_gdf[Style.ALPHA.name],
                                  path_effects=[pe.Stroke(capstyle=capstyle)], zorder=zorder)
 
-    def __dashed_with_edge_dashed(self, lines_gdf: GeoDataFrame, line_cupstyle: str = None, edge_cupstyle: str = None, zorder: int = 2):
+    def __dashed_with_edge_dashed(self, lines_gdf: GeoDataFrame, line_capstyle: str = None, edge_capstyle: str = None, zorder: int = 2):
         """
         Lines in lines_gdf should have same zindex for correct order of plotting.
 
 
         Args:
             lines_gdf (GeoDataFrame): _description_
-            line_cupstyle (str, optional): _description_. Defaults to None.
-            edge_cupstyle (str, optional): _description_. Defaults to None.
+            line_capstyle (str, optional): _description_. Defaults to None.
+            capstyle (str, optional): _description_. Defaults to None.
             zorder (int, optional): _description_. Defaults to 2.
         """
-        if (lines_gdf.empty):
-            return
         lines_gdf = GdfUtils.filter_rows(lines_gdf, {Style.COLOR.name: '', Style.EDGE_COLOR.name: '',
-                                         Style.LINESTYLE.name: '', Style.WIDTH.name: '', Style.EDGEWIDTH.name: '',
+                                         Style.LINESTYLE.name: '', Style.WIDTH.name: '', Style.EDGE_WIDTH.name: '',
                                          Style.ALPHA.name: '', Style.EDGE_ALPHA.name: ''})
         if (lines_gdf.empty):
             return
-        if (line_cupstyle is not None):
-            lines_gdf[Style.LINE_CUP.name] = line_cupstyle
-        if (edge_cupstyle is not None):
-            lines_gdf[Style.EDGE_CUP.name] = edge_cupstyle
+        if (line_capstyle is not None):
+            lines_gdf[Style.LINE_CAPSTYLE.name] = line_capstyle
+        if (edge_capstyle is not None):
+            lines_gdf[Style.EDGE_CAPSTYLE.name] = edge_capstyle
 
         groups = GdfUtils.get_groups_by_columns(
-            lines_gdf, [Style.LINE_CUP.name, Style.EDGE_CUP.name, Style.EDGEWIDTH.name,
+            lines_gdf, [Style.LINE_CAPSTYLE.name, Style.EDGE_CAPSTYLE.name, Style.EDGE_WIDTH.name,
                         Style.EDGE_COLOR.name, Style.EDGE_ALPHA.name], [], False)
 
-        for (zindex, line_cup, edge_cup, edge_width, edge_color, edge_alpha), gdf_group in groups:
-            if (pd.isna(line_cup)):
-                line_cup = self.DEFAULT_CUPSTYLE
-            if (pd.isna(edge_cup)):
-                edge_cup = self.DEFAULT_CUPSTYLE
+        for (line_capstyle, edge_capstyle, edge_width, edge_color, edge_alpha), gdf_group in groups:
+            if (pd.isna(line_capstyle)):
+                line_capstyle = self.DEFAULT_CAPSTYLE
+            if (pd.isna(edge_capstyle)):
+                edge_capstyle = self.DEFAULT_CAPSTYLE
 
             gdf_group.plot(ax=self.ax, color=gdf_group[Style.COLOR.name], linestyle=gdf_group[Style.LINESTYLE.name],
                            linewidth=gdf_group[Style.WIDTH.name], alpha=gdf_group[Style.ALPHA.name], path_effects=[
                 pe.Stroke(
                     linewidth=edge_width, foreground=edge_color, alpha=edge_alpha,
-                    capstyle=edge_cup), pe.Normal(), pe.Stroke(capstyle=line_cup)], zorder=zorder)
+                    capstyle=edge_capstyle), pe.Normal(), pe.Stroke(capstyle=line_capstyle)], zorder=zorder)
 
-    def __dashed_with_edge_solid(self, lines_gdf: GeoDataFrame, line_cupstyle: str = None, edge_cupstyle: str = None, zorder: int = 2):
+    def __dashed_with_edge_solid(self, lines_gdf: GeoDataFrame, line_capstyle: str = None, edge_capstyle: str = None, zorder: int = 2):
         """
         Lines in lines_gdf should have same zindex for correct order of plotting.
 
         Args:
             lines_gdf (GeoDataFrame): _description_
-            line_cupstyle (str, optional): _description_. Defaults to None.
-            edge_cupstyle (str, optional): _description_. Defaults to None.
+            line_capstyle (str, optional): _description_. Defaults to None.
+            edge_capstyle (str, optional): _description_. Defaults to None.
             zorder (int, optional): _description_. Defaults to 2.
         """
         if (lines_gdf.empty):
             return
         lines_gdf = GdfUtils.filter_rows(lines_gdf, {Style.EDGE_COLOR.name: '', Style.COLOR.name: '',
-                                         Style.EDGEWIDTH.name: '', Style.WIDTH.name: '',
+                                         Style.EDGE_WIDTH.name: '', Style.WIDTH.name: '',
                                          Style.ALPHA.name: '', Style.EDGE_ALPHA.name: '',
                                          Style.LINESTYLE.name: '', })
         if (lines_gdf.empty):
             return
-        if (line_cupstyle is not None):
-            lines_gdf[Style.LINE_CUP.name] = line_cupstyle
-        if (edge_cupstyle is not None):
-            lines_gdf[Style.EDGE_CUP.name] = edge_cupstyle
+        if (line_capstyle is not None):
+            lines_gdf[Style.LINE_CAPSTYLE.name] = line_capstyle
+        if (edge_capstyle is not None):
+            lines_gdf[Style.EDGE_CAPSTYLE.name] = edge_capstyle
             
         # todo try to make this even qucicker
         for row in lines_gdf.itertuples(index=False):
             geom = row.geometry
-            line_cup = Utils.get_value(row, Style.LINE_CUP.name, self.DEFAULT_CUPSTYLE)
-            edge_cup = Utils.get_value(row, Style.EDGE_CUP.name, self.DEFAULT_CUPSTYLE)
+            line_capstyle = Utils.get_value(row, Style.LINE_CAPSTYLE.name, self.DEFAULT_CAPSTYLE)
+            edge_capstyle = Utils.get_value(row, Style.EDGE_CAPSTYLE.name, self.DEFAULT_CAPSTYLE)
             if isinstance(geom, MultiLineString):
                 for line in geom.geoms:  # Extract each LineString
                     GeoSeries(line).plot(ax=self.ax, color=row.EDGE_COLOR,
-                                            linewidth=row.EDGEWIDTH,
+                                            linewidth=row.EDGE_WIDTH,
                                             alpha=row.EDGE_ALPHA, path_effects=[
-                                                pe.Stroke(capstyle=edge_cup)], zorder=zorder)
+                                                pe.Stroke(capstyle=edge_capstyle)], zorder=zorder)
 
                     GeoSeries(line).plot(ax=self.ax, color=row.COLOR, linewidth=row.WIDTH,
                                             alpha=row.ALPHA, linestyle=row.LINESTYLE, path_effects=[
-                                                pe.Stroke(capstyle=line_cup)], zorder=zorder)
+                                                pe.Stroke(capstyle=line_capstyle)], zorder=zorder)
             else:
                 GeoSeries(geom).plot(ax=self.ax, color=row.EDGE_COLOR,
-                                            linewidth=row.EDGEWIDTH,
+                                            linewidth=row.EDGE_WIDTH,
                                             alpha=row.EDGE_ALPHA, path_effects=[
-                                                pe.Stroke(capstyle=edge_cup)], zorder=zorder)
+                                                pe.Stroke(capstyle=edge_capstyle)], zorder=zorder)
 
                 GeoSeries(geom).plot(ax=self.ax, color=row.COLOR, linewidth=row.WIDTH,
                                             alpha=row.ALPHA, linestyle=row.LINESTYLE, path_effects=[
-                                                pe.Stroke(capstyle=line_cup)], zorder=zorder)
+                                                pe.Stroke(capstyle=line_capstyle)], zorder=zorder)
                 
-    def __ways_normal(self, gdf: GeoDataFrame, plotEdges: bool = False, cross_roads_by_zindex=False, line_cupstyle: str = None, edge_cupstyle: str = None,
+    def __ways_normal(self, gdf: GeoDataFrame, plotEdges: bool = False, cross_roads_by_zindex=False, line_capstyle: str = None, edge_capstyle: str = None,
                       zorder: int = 2):
         """Plot ways based on z-index and capstyles. 
 
@@ -525,14 +523,14 @@ class Plotter:
             # plot edge where line is solid or only edge is ploted
             for zindex, ways_group_gdf in groups:
                 self.__line_edges(GdfUtils.filter_rows(
-                    ways_group_gdf, [{Style.LINESTYLE.name: ['-', 'solid']}, {Style.COLOR.name: '~'}]), edge_cupstyle, zorder)
+                    ways_group_gdf, [{Style.LINESTYLE.name: ['-', 'solid']}, {Style.COLOR.name: '~'}]), edge_capstyle, zorder)
 
         # groups sorted from smalles to biggest zindex
         for zindex, ways_group_gdf in groups:
             # crossroads only on ways with same zindex
             if (plotEdges and cross_roads_by_zindex):
                 self.__line_edges(GdfUtils.filter_rows(
-                    ways_group_gdf, [{Style.LINESTYLE.name: ['-', 'solid']}, {Style.COLOR.name: '~'}]), edge_cupstyle, zorder)
+                    ways_group_gdf, [{Style.LINESTYLE.name: ['-', 'solid']}, {Style.COLOR.name: '~'}]), edge_capstyle, zorder)
             # lines - line is solid or edge does not exists, dashed_with_edge_lines - line is dashed and edge exists
             rest_lines, dashed_with_edge_lines = GdfUtils.filter_rows(
                 ways_group_gdf, [{Style.LINESTYLE.name: ['-', 'solid']}, {Style.EDGE_COLOR.name: '~'}], compl=True)
@@ -541,10 +539,10 @@ class Plotter:
                 dashed_with_edge_lines, {Style.EDGE_LINESTYLE.name: ['-', 'solid']}, compl=True)
 
             self.__dashed_with_edge_dashed(
-                ways_dashed_edge_dashed, line_cupstyle, edge_cupstyle, zorder)
+                ways_dashed_edge_dashed, line_capstyle, edge_capstyle, zorder)
             self.__dashed_with_edge_solid(
-                ways_dashed_edge_solid, line_cupstyle, edge_cupstyle, zorder)
-            self.__line(rest_lines, line_cupstyle, zorder)
+                ways_dashed_edge_solid, line_capstyle, edge_capstyle, zorder)
+            self.__line(rest_lines, line_capstyle, zorder)
 
     def __bridges(self, bridges_gdf: GeoDataFrame, zorder: int = 2):
         if (bridges_gdf.empty):
@@ -582,7 +580,9 @@ class Plotter:
                 gdf, {Style.PLOT_ON_BRIDGE.name: ""})
             if (gdf.empty):
                 return
-            self.__ways_normal(gdf, True, False, zorder=zorder)
+
+            self.__ways_normal(gdf, True, False, edge_capstyle="butt", zorder=zorder)
+
 
         groups = GdfUtils.get_groups_by_columns(
             bridges_gdf, ['layer', Style.ZINDEX.name], [], False)
@@ -647,10 +647,10 @@ class Plotter:
         if (edge_areas_gdf.empty):
             return
         groups = GdfUtils.get_groups_by_columns(
-            edge_areas_gdf, [Style.EDGE_CUP.name], [self.DEFAULT_CUPSTYLE], False)
+            edge_areas_gdf, [Style.EDGE_CAPSTYLE.name], [self.DEFAULT_CAPSTYLE], False)
         for capstyle, edge_areas_group_gdf in groups:
             if (pd.isna(capstyle)):
-                capstyle = self.DEFAULT_CUPSTYLE
+                capstyle = self.DEFAULT_CAPSTYLE
             edge_areas_group_gdf.boundary.plot(ax=self.ax, color=edge_areas_group_gdf[Style.EDGE_COLOR.name],
                                         linewidth=edge_areas_group_gdf[
                                             Style.WIDTH.name], alpha=edge_areas_group_gdf[Style.EDGE_ALPHA.name],
@@ -662,15 +662,15 @@ class Plotter:
         if (gpxs_gdf.empty):
             return
         self.__ways_normal(gpxs_gdf, True, False, zorder=5)
-
+        # above text in settings...
         
 
         gpx_start_markers = GdfUtils.filter_rows(gpxs_gdf, {Style.START_MARKER.name: '', Style.START_MARKER_WIDHT.name: '',
                                                             Style.START_MARKER_COLOR.name: '', Style.START_MARKER_EDGE_COLOR.name: '',
-                                                            Style.START_MARKER_EDGEWIDTH.name: '', Style.START_MARKER_ALPHA.name: ''})
+                                                            Style.START_MARKER_EDGE_WIDTH.name: '', Style.START_MARKER_ALPHA.name: ''})
         gpx_finish_markers = GdfUtils.filter_rows(gpxs_gdf, {Style.FINISH_MARKER.name: '', Style.FINISH_MARKER_WIDHT.name: '',
                                                              Style.FINISH_MARKER_COLOR.name: '', Style.FINISH_MARKER_EDGE_COLOR.name: '',
-                                                             Style.FINISH_MARKER_EDGEWIDTH.name: '', Style.FINISH_MARKER_ALPHA.name: ''})
+                                                             Style.FINISH_MARKER_EDGE_WIDTH.name: '', Style.FINISH_MARKER_ALPHA.name: ''})
 
         for row in gpx_finish_markers.itertuples():
             mapped_row: MarkerRow = MarkerRow(
@@ -679,7 +679,7 @@ class Plotter:
                 COLOR=row.FINISH_MARKER_COLOR,
                 WIDTH=row.FINISH_MARKER_WIDHT,
                 ALPHA=row.FINISH_MARKER_ALPHA,
-                EDGEWIDTH=row.FINISH_MARKER_EDGEWIDTH,
+                EDGE_WIDTH=row.FINISH_MARKER_EDGE_WIDTH,
                 EDGE_COLOR=row.FINISH_MARKER_EDGE_COLOR,
                 MARKER_FONT_PROPERTIES=Utils.get_value(
                     row, Style.FINISH_MARKER_FONT_PROPERTIES.name, None),
@@ -687,8 +687,8 @@ class Plotter:
                     row, Style.FINISH_MARKER_HORIZONTAL_ALIGN.name, "center"),
                 MARKER_VERTICAL_ALIGN=Utils.get_value(
                     row, Style.FINISH_MARKER_VERTICAL_ALIGN.name, "center"),
-
             )
+            
             self.__marker(mapped_row, above_others=MarkerAbove.ALL,
                           zorder=5)
 
@@ -699,7 +699,7 @@ class Plotter:
                 COLOR=row.START_MARKER_COLOR,
                 WIDTH=row.START_MARKER_WIDHT,
                 ALPHA=row.START_MARKER_ALPHA,
-                EDGEWIDTH=row.START_MARKER_EDGEWIDTH,
+                EDGE_WIDTH=row.START_MARKER_EDGE_WIDTH,
                 EDGE_COLOR=row.START_MARKER_EDGE_COLOR,
                 MARKER_FONT_PROPERTIES=Utils.get_value(
                     row, Style.START_MARKER_FONT_PROPERTIES.name, None),

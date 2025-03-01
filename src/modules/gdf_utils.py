@@ -506,7 +506,7 @@ class GdfUtils:
     @staticmethod
     def filter_invalid_markers(gdf):
         return GdfUtils.filter_rows(gdf, {Style.MARKER.name: '', Style.COLOR.name: '', Style.WIDTH.name: '',
-                                          Style.EDGEWIDTH.name: '', Style.EDGE_COLOR.name: '', Style.ALPHA.name: ''})
+                                          Style.EDGE_WIDTH.name: '', Style.EDGE_COLOR.name: '', Style.ALPHA.name: ''})
     # to some utils or main
 
     @staticmethod
@@ -549,17 +549,17 @@ class GdfUtils:
     # -----------Others functions------------
 
     @staticmethod
-    def get_groups_by_columns(gdf: GeoDataFrame, group_cols: list, default_keys: list = [], dropna: bool = False):
+    def get_groups_by_columns(gdf: GeoDataFrame, group_cols: list, default_keys: list = [], dropna: bool = False, sort=True):
         # get missing columns and replace with default key if missing
         if len(group_cols) != len(default_keys):
             default_keys = [None] * len(group_cols)
         for col, default in zip(group_cols, default_keys):
             if col not in gdf.columns:
                 gdf[col] = default
-
+        # observe true - only categories that appear in the actual data 
         if (len(group_cols) == 1):
-            return gdf.groupby(group_cols[0], dropna=dropna, observed=False)
-        return gdf.groupby(group_cols, dropna=dropna, observed=False)
+            return gdf.groupby(group_cols[0], dropna=dropna, observed=True, sort=sort)
+        return gdf.groupby(group_cols, dropna=dropna, observed=True, sort=sort)
 
     @staticmethod
     @time_measurement("prominence")

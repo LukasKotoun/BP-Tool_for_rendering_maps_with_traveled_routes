@@ -47,7 +47,7 @@ class MarkerRow(NamedTuple):
     COLOR: float
     WIDTH: str
     ALPHA: str
-    EDGEWIDTH: str
+    EDGE_WIDTH: str
     EDGE_COLOR: str
     MARKER_VERTICAL_ALIGN: Optional[str] = 'center'
     MARKER_HORIZONTAL_ALIGN: Optional[str] = 'center'
@@ -73,7 +73,7 @@ class MarkerOneAnotationRow(NamedTuple):
     MARKER: any
     COLOR: float
     WIDTH: str
-    EDGEWIDTH: str
+    EDGE_WIDTH: str
     EDGE_COLOR: str
     
     # marker optional
@@ -114,7 +114,7 @@ class MarkerTwoAnotationRow(NamedTuple):
     MARKER: any
     COLOR: float
     WIDTH: str
-    EDGEWIDTH: str
+    EDGE_WIDTH: str
     EDGE_COLOR: str
     
     # marker optional
