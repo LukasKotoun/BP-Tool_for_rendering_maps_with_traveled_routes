@@ -1,5 +1,6 @@
 import math
 
+import rtree
 import textwrap
 import pandas as pd
 from shapely import geometry
@@ -303,11 +304,19 @@ class Utils:
         return value
     
     @staticmethod
-    def check_bbox_position(bbox_to_overlap: Bbox, bbox_to_overflow: Bbox, bbox_list: list[Bbox], ax,
-                            text_bounds_overflow_threshold, reqired_area_polygon) -> bool:
-        
-        if any(bbox2.overlaps(bbox_to_overlap) for bbox2 in bbox_list):
-            return False
+    def add_bbox_to_list_and_index(bbox: Bbox, bbox_list: list[Bbox], idx: rtree.index.Index):
+        bbox_list.append(bbox)
+        idx.insert(len(bbox_list)-1, bbox.extents)  # Use the list index as ID
+    
+    @staticmethod
+    def check_bbox_position(bbox_to_overlap: Bbox, bbox_to_overflow: Bbox, bbox_index: rtree.index.Index | None,
+                            ax, text_bounds_overflow_threshold, reqired_area_polygon) -> bool:
+        if(bbox_index is not None):
+            matches = list(bbox_index.intersection(bbox_to_overlap.extents))
+            for match in matches:
+                if(match is not None):
+                    return False
+
         # check overlap with other bbox
         if text_bounds_overflow_threshold == 0:
             return True

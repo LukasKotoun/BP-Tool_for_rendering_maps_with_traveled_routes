@@ -14,6 +14,7 @@ from common.map_enums import Style, MinPlot, TextPositions, WorldSides, MarkerAb
 from modules.utils import Utils
 from modules.gdf_utils import GdfUtils
 from modules.geom_utils import GeomUtils
+import rtree
 
 from common.common_helpers import time_measurement
 
@@ -22,8 +23,8 @@ class Plotter:
 
     MM_TO_INCH = 25.4
     DEFAULT_CAPSTYLE = "round"
-    TEXT_EXPAND_PERCENT = 4
-    MARKER_EXPAND_PERCENT = 3
+    TEXT_EXPAND_PERCENT = 40 # to settings as text parametter for removal
+    MARKER_EXPAND_PERCENT = 5
     MARKER_ABOVE_NORMAL_ZORDER = 4
     MARKER_ABOVE_ALL_ZORDER = 5
 
@@ -38,9 +39,10 @@ class Plotter:
         self.map_object_scaling_factor: float = map_object_scaling_factor
         self.text_wrap_len = text_wrap_len
         self.point_bounds_overflow_threshold = point_bounds_overflow_threshold
-        self.texts_bboxs: list[Bbox] = []
-        self.markers_bboxs: list[Bbox] = []
-        self.markers_above_bbox: list[Bbox] = []
+        self.markers_above_id = 0
+        self.markers_and_texts_id = 0
+        self.markers_above_bbox_idx = rtree.index.Index()
+        self.markers_and_texts_bbox_idx = rtree.index.Index()
 
     def init(self, map_bg_color: str, bg_gdf: GeoDataFrame, area_zoom_preview: None | DimensionsTuple = None):
         self.fig, self.ax = plt.subplots(figsize=(self.paper_dimensions_mm[0]/self.MM_TO_INCH,
@@ -90,24 +92,27 @@ class Plotter:
             marker.remove()
             return None
 
-        # always check for overlap in marker over text
-        bboxs_list = []
+        bboxs_index = None
         if (above_others == MarkerAbove.NORMAL):
-            bboxs_list = self.markers_above_bbox.copy()
+            bboxs_index = self.markers_above_bbox_idx
         elif (above_others == MarkerAbove.NONE):
-            bboxs_list = self.markers_bboxs.copy() + self.texts_bboxs.copy()
+            bboxs_index = self.markers_and_texts_bbox_idx
 
         bbox_expanded = Utils.expand_bbox(bbox, self.MARKER_EXPAND_PERCENT)
-        if (not Utils.check_bbox_position(bbox_expanded, bbox, bboxs_list, self.ax,
+        if (not Utils.check_bbox_position(bbox_expanded, bbox, bboxs_index, self.ax,
                                           self.point_bounds_overflow_threshold, self.polygon_text_inside_display)):
             marker.remove()
             return None
 
         if (store_bbox):
             if (above_others == MarkerAbove.NORMAL):
-                self.markers_above_bbox.append(bbox_expanded)
+                self.markers_above_bbox_idx.insert(
+                    self.markers_above_id, bbox_expanded.extents)
+                self.markers_above_id += 1
             elif (above_others == MarkerAbove.NONE):
-                self.markers_bboxs.append(bbox_expanded)
+                self.markers_and_texts_bbox_idx.insert(
+                    self.markers_and_texts_id, bbox_expanded.extents)
+                self.markers_and_texts_id += 1
         return marker
 
     def __marker_annotation(self, row: TextRow, text: str, marker_size: float, text_positions: list[TextPositions], text_wrap_len: int = 0, check_bbox_position: bool = True,
@@ -156,7 +161,7 @@ class Plotter:
             if (check_bbox_position):
                 bbox_expanded = Utils.expand_bbox(
                     bbox, self.TEXT_EXPAND_PERCENT)
-                if (not Utils.check_bbox_position(bbox_expanded, bbox, self.texts_bboxs + self.markers_bboxs, self.ax,
+                if (not Utils.check_bbox_position(bbox_expanded, bbox, self.markers_and_texts_bbox_idx, self.ax,
                                                   self.point_bounds_overflow_threshold, self.polygon_text_inside_display)):
                     text_anotation.remove()
                     text_anotation = None
@@ -180,12 +185,15 @@ class Plotter:
         if (check_bbox_position or store_bbox):
             bbox_expanded = Utils.expand_bbox(bbox, self.TEXT_EXPAND_PERCENT)
         if (check_bbox_position):
-            if (not Utils.check_bbox_position(bbox_expanded, bbox, self.texts_bboxs + self.markers_bboxs, self.ax,
+            if (not Utils.check_bbox_position(bbox_expanded, bbox, self.markers_and_texts_bbox_idx, self.ax,
                                               self.point_bounds_overflow_threshold, self.polygon_text_inside_display)):
                 text_plot.remove()
                 return None
         if (store_bbox):
-            self.texts_bboxs.append(bbox_expanded)
+            self.markers_and_texts_bbox_idx.insert(
+                self.markers_and_texts_id, bbox_expanded.extents)
+            self.markers_and_texts_id += 1
+
         return text_plot
 
     def __marker_with_one_annotation(self, row: MarkerOneAnotationRow, text_row=Style.TEXT1.name, store_bbox: bool = True, text_zorder: int = 3, marker_zorder: int = 2) -> tuple[Line2D, Text]:
@@ -223,14 +231,17 @@ class Plotter:
         if (store_bbox):
             if (marker is not None):
                 if (marker_above_others == MarkerAbove.NORMAL):
-                    self.markers_above_bbox.append(
-                        Utils.expand_bbox(marker.get_tightbbox(), self.MARKER_EXPAND_PERCENT))
+                    self.markers_above_bbox_idx.insert(self.markers_above_id,
+                                                       Utils.expand_bbox(marker.get_tightbbox(), self.MARKER_EXPAND_PERCENT).extents)
+                    self.markers_above_id += 1
                 elif (marker_above_others == MarkerAbove.NONE):
-                    self.markers_bboxs.append(
-                        Utils.expand_bbox(marker.get_tightbbox(), self.MARKER_EXPAND_PERCENT))
+                    self.markers_and_texts_bbox_idx.insert(self.markers_and_texts_id,
+                                                           Utils.expand_bbox(marker.get_tightbbox(), self.MARKER_EXPAND_PERCENT).extents)
+                    self.markers_and_texts_id += 1
             if (text_annotation is not None):
-                self.texts_bboxs.append(
-                    Utils.expand_bbox(text_annotation.get_tightbbox(), self.TEXT_EXPAND_PERCENT))
+                self.markers_and_texts_bbox_idx.insert(self.markers_and_texts_id,
+                                                       Utils.expand_bbox(text_annotation.get_tightbbox(), self.TEXT_EXPAND_PERCENT).extents)
+                self.markers_and_texts_id += 1
         return (marker, text_annotation)
 
     def __marker_with_two_annotations(self, row: MarkerTwoAnotationRow, store_bbox: bool = True, text_zorder: int = 3, marker_zorder: int = 2) -> tuple[Line2D, Text, Text]:
@@ -285,17 +296,21 @@ class Plotter:
         if (store_bbox):
             if (marker is not None):
                 if (marker_above_others == MarkerAbove.NORMAL):
-                    self.markers_above_bbox.append(
-                        Utils.expand_bbox(marker.get_tightbbox(), self.MARKER_EXPAND_PERCENT))
+                    self.markers_above_bbox_idx.insert(self.markers_above_id,
+                                                       Utils.expand_bbox(marker.get_tightbbox(), self.MARKER_EXPAND_PERCENT).extents)
+                    self.markers_above_id += 1
                 elif (marker_above_others == MarkerAbove.NONE):
-                    self.markers_bboxs.append(
-                        Utils.expand_bbox(marker.get_tightbbox(), self.MARKER_EXPAND_PERCENT))
+                    self.markers_and_texts_bbox_idx.insert(self.markers_and_texts_id,
+                                                           Utils.expand_bbox(marker.get_tightbbox(), self.MARKER_EXPAND_PERCENT).extents)
+                    self.markers_and_texts_id += 1
             if (text1 is not None):
-                self.texts_bboxs.append(
-                    Utils.expand_bbox(text1.get_tightbbox(), self.TEXT_EXPAND_PERCENT))
+                self.markers_and_texts_bbox_idx.insert(self.markers_and_texts_id,
+                                                       Utils.expand_bbox(text1.get_tightbbox(), self.TEXT_EXPAND_PERCENT).extents)
+                self.markers_and_texts_id += 1
             if (text2 is not None):
-                self.texts_bboxs.append(
-                    Utils.expand_bbox(text2.get_tightbbox(), self.TEXT_EXPAND_PERCENT))
+                self.markers_and_texts_bbox_idx.insert(self.markers_and_texts_id,
+                                                       Utils.expand_bbox(text2.get_tightbbox(), self.TEXT_EXPAND_PERCENT).extents)
+                self.markers_and_texts_id += 1
 
     def __text_gdf_on_points(self, gdf: GeoDataFrame, store_bbox: bool = True, zorder: int = 3):
         gdf = GdfUtils.filter_invalid_texts(gdf)
@@ -412,7 +427,7 @@ class Plotter:
 
         groups = GdfUtils.get_groups_by_columns(
             lines_gdf, [Style.LINE_CAPSTYLE.name], [self.DEFAULT_CAPSTYLE], False)
-        for capstyle, lines_group_gdf in groups:            
+        for capstyle, lines_group_gdf in groups:
             if (pd.isna(capstyle)):
                 capstyle = self.DEFAULT_CAPSTYLE
 
@@ -481,33 +496,35 @@ class Plotter:
             lines_gdf[Style.LINE_CAPSTYLE.name] = line_capstyle
         if (edge_capstyle is not None):
             lines_gdf[Style.EDGE_CAPSTYLE.name] = edge_capstyle
-            
+
         for row in lines_gdf.itertuples(index=False):
             geom = row.geometry
-            line_capstyle = Utils.get_value(row, Style.LINE_CAPSTYLE.name, self.DEFAULT_CAPSTYLE)
-            edge_capstyle = Utils.get_value(row, Style.EDGE_CAPSTYLE.name, self.DEFAULT_CAPSTYLE)
+            line_capstyle = Utils.get_value(
+                row, Style.LINE_CAPSTYLE.name, self.DEFAULT_CAPSTYLE)
+            edge_capstyle = Utils.get_value(
+                row, Style.EDGE_CAPSTYLE.name, self.DEFAULT_CAPSTYLE)
             if isinstance(geom, MultiLineString):
                 for line in geom.geoms:  # Extract each LineString
-                    x,y = line.xy
+                    x, y = line.xy
                     self.ax.plot(x, y, color=row.EDGE_COLOR,
-                                            linewidth=row.EDGE_WIDTH,
-                                            alpha=row.EDGE_ALPHA, path_effects=[
-                                                pe.Stroke(capstyle=edge_capstyle)], zorder=zorder)
+                                 linewidth=row.EDGE_WIDTH,
+                                 alpha=row.EDGE_ALPHA, path_effects=[
+                                     pe.Stroke(capstyle=edge_capstyle)], zorder=zorder)
 
                     self.ax.plot(x, y, color=row.COLOR, linewidth=row.WIDTH,
-                                            alpha=row.ALPHA, linestyle=row.LINESTYLE, path_effects=[
-                                                pe.Stroke(capstyle=line_capstyle)], zorder=zorder)
+                                 alpha=row.ALPHA, linestyle=row.LINESTYLE, path_effects=[
+                                     pe.Stroke(capstyle=line_capstyle)], zorder=zorder)
             else:
-                x,y = geom.xy
+                x, y = geom.xy
                 self.ax.plot(x, y, color=row.EDGE_COLOR,
-                                            linewidth=row.EDGE_WIDTH,
-                                            alpha=row.EDGE_ALPHA, path_effects=[
-                                                pe.Stroke(capstyle=edge_capstyle)], zorder=zorder)
+                             linewidth=row.EDGE_WIDTH,
+                             alpha=row.EDGE_ALPHA, path_effects=[
+                                 pe.Stroke(capstyle=edge_capstyle)], zorder=zorder)
 
                 self.ax.plot(x, y, color=row.COLOR, linewidth=row.WIDTH,
-                                            alpha=row.ALPHA, linestyle=row.LINESTYLE, path_effects=[
-                                                pe.Stroke(capstyle=line_capstyle)], zorder=zorder)
-                
+                             alpha=row.ALPHA, linestyle=row.LINESTYLE, path_effects=[
+                                 pe.Stroke(capstyle=line_capstyle)], zorder=zorder)
+
     def __ways_normal(self, gdf: GeoDataFrame, plotEdges: bool = False, cross_roads_by_zindex=False, line_capstyle: str = None, edge_capstyle: str = None,
                       zorder: int = 2):
         """Plot ways based on z-index and capstyles. 
@@ -582,8 +599,8 @@ class Plotter:
             if (gdf.empty):
                 return
 
-            self.__ways_normal(gdf, True, False, edge_capstyle="butt", zorder=zorder)
-
+            self.__ways_normal(
+                gdf, True, False, edge_capstyle="butt", zorder=zorder)
 
         groups = GdfUtils.get_groups_by_columns(
             bridges_gdf, ['layer', Style.ZINDEX.name], [], False)
@@ -653,10 +670,10 @@ class Plotter:
             if (pd.isna(capstyle)):
                 capstyle = self.DEFAULT_CAPSTYLE
             edge_areas_group_gdf.boundary.plot(ax=self.ax, color=edge_areas_group_gdf[Style.EDGE_COLOR.name],
-                                        linewidth=edge_areas_group_gdf[
-                                            Style.WIDTH.name], alpha=edge_areas_group_gdf[Style.EDGE_ALPHA.name],
-                                        linestyle=edge_areas_group_gdf[Style.EDGE_LINESTYLE.name],
-                                        path_effects=[pe.Stroke(capstyle=capstyle)])
+                                               linewidth=edge_areas_group_gdf[
+                Style.WIDTH.name], alpha=edge_areas_group_gdf[Style.EDGE_ALPHA.name],
+                linestyle=edge_areas_group_gdf[Style.EDGE_LINESTYLE.name],
+                path_effects=[pe.Stroke(capstyle=capstyle)])
 
     @time_measurement("gpxsPlot")
     def gpxs(self, gpxs_gdf: GeoDataFrame):
@@ -664,7 +681,6 @@ class Plotter:
             return
         self.__ways_normal(gpxs_gdf, True, False, zorder=5)
         # above text in settings...
-        
 
         gpx_start_markers = GdfUtils.filter_rows(gpxs_gdf, {Style.START_MARKER.name: '', Style.START_MARKER_WIDHT.name: '',
                                                             Style.START_MARKER_COLOR.name: '', Style.START_MARKER_EDGE_COLOR.name: '',
@@ -689,7 +705,7 @@ class Plotter:
                 MARKER_VERTICAL_ALIGN=Utils.get_value(
                     row, Style.FINISH_MARKER_VERTICAL_ALIGN.name, "center"),
             )
-            
+
             self.__marker(mapped_row, above_others=MarkerAbove.ALL,
                           zorder=5)
 
