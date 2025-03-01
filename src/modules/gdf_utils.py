@@ -56,7 +56,6 @@ class GdfUtils:
         return gdf
 
     @staticmethod
-    @time_measurement("spojeni")
     def get_whole_area_gdf(wanted_areas: WantedAreas, key_with_area, fromCrs: str, toCrs: str | None = None) -> GeoDataFrame:
         if (len(wanted_areas) == 1):
             wanted_area = wanted_areas[0]

@@ -8,7 +8,7 @@ from common.map_enums import Style, ColorMode, PaperSize, MapOrientation, Marker
 # --------------------------------------------------------------map area--------------------------------------------------------------
 # OSM_INPUT_FILE_NAMES: str = ['../osm_files/vys.osm.pbf','../osm_files/jihmor.osm.pbf']
 # OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/vysJihE.osm.pbf'
-OSM_INPUT_FILE_NAMES: str | list[str] = ['../osm_files/trebic.osm.pbf']
+OSM_INPUT_FILE_NAMES: str | list[str] = ['../osm_files/brno.osm.pbf']
 # OSM_INPUT_FILE_NAMES: str | list[str] = '../trebic.osm.pbf'
 # extract - will be always true
 OSM_WANT_EXTRACT_AREA: bool = False
@@ -45,7 +45,7 @@ OUTPUT_PDF_NAME: str = '../pdfs/divocina'
 # AREA: WantedArea = ["Česko","Vysočina, Česko", "Jihomoravský kraj, Česko"]
 # AREA: WantedArea = ["Brno, Česko"]
 # AREA: WantedArea = ["Jihomoravský kraj, Česko", "Kraj Vysočina, Česko"]
-AREA: WantedArea = [{"area": "Trebic, Česko", "plot": True, "category": 1, "width": 1}]
+AREA: WantedArea = [{"area": "Brno, Česko", "plot": True, "category": 1, "width": 1}]
 # AREA: WantedArea =[{"area": "Jihomoravský kraj, Česko", "plot": True, "category": 2, "width": 1},
 #                     {"area": "Praha, Česko", "plot": True, "category": 1, "width": 1},
 #                     {"area": "Trebic, Česko", "plot": True, "category": 1, "width": 1}]
@@ -53,12 +53,12 @@ AREA: WantedArea = [{"area": "Trebic, Česko", "plot": True, "category": 1, "wid
 #                     {"area": "Kraj Vysočina, Česko", "plot": True, "category": 1, "width": 1},
 #                      {"area": "Pardubický kraj, Česko", "plot": True, "category": 2, "width": 1},
 #                       {"area": "Jihočeský kraj, Česko", "plot": True, "category": 1, "width": 1}]
-# nastavení šířky asi jako číslo ale na fe small medium a big 
+
 # AREA: WantedArea = [{"area": "Třebíč, Česko", "plot": False, "category": 1, "width": 1},
 #                     {"area": "Trnava, Vysočina, Česko", "plot": False, "category": 1, "width": 1},
 #                     {"area": "Horní Vilémovice, Česko", "plot": False, "category": 1, "width": 1}]
 # AREA: WantedArea = [{"area": "Jaroměřice nad rokytnou, Česko", "plot": True, "category": 0, "width": 1}]
-# AREA: WantedArea = [{"area": "Jihomoravský kraj, Česko", "plot": True, "category": 2, "width": 1},
+# AREA: WantedArea = [{"area": "Jihomoravský kraj, Česko", "plot": True, "category": 1, "width": 1},
 #                     {"area": "Kraj Vysočina, Česko", "plot": True, "category": 1, "width": 1},
 #                     {"area": "Třebíč, Česko", "plot": False, "category": 0, "width": 1}]
 # AREA: WantedArea = [{"area": "Německo", "plot": True, "category": 1, "width": 1},
@@ -93,9 +93,9 @@ TEXT_BOUNDS_OVERFLOW_THRESHOLD = 0
 
 
 # plot as bridge (True)  or normal way (False)
-PLOT_BRIDGES = True
+PLOT_BRIDGES = False
 # plot as tunnel (True) or normal way (False) - if false and in dont want tags -> will not be plotted at all
-PLOT_TUNNELS = True
+PLOT_TUNNELS = False
 FILTER_PEAKS_BY_PROMINENCE = True
 PEAKS_FILTER_SENSITIVITY = 2.5
 ELE_PROMINENCE_MAX_DIFF_RATIO = 3
@@ -125,6 +125,69 @@ OUTER_WANTED_ORIENTATION = MapOrientation.AUTOMATIC
 
 # expand area
 OUTER_FIT_PAPER_SIZE = False
+
+# wanted_ways: WantedFeatures
+wanted_nodes: WantedCategories = {
+    # 'place': {'city'},
+    # 'place': {'city', 'town'},
+    'place': {'city', 'town', 'village'},
+    # 'place': {'village'},
+    'natural': {'peak'}
+}
+
+
+# todo automatic wanted objects setup using map and pdf ratio automatic_filters_creating_factor - own class ()
+
+
+unwanted_nodes_tags: UnwantedTags = {
+
+}
+
+wanted_ways: WantedCategories = {
+    #  'waterway': set({}),
+    # 'highway': ['primary'],
+#    'highway': ['motorway', 'trunk','primary', 'secondary', 'tertiary'],
+    # # 'highway': ['motorway', 'trunk', 'primary'],
+    # 'highway': {'motorway', 'trunk', 'primary', 'secondary', 'tertiary', 'unclassified', 'residential', 'path', 'footway'},
+    # # # 'highway': {'tertiary'},
+    # 'highway':set({}),
+    # 'railway': {'rail', 'tram'},
+    'railway': {'rail'},
+
+    # # # # # # 'railway': {'rail'},
+    'natural': {'coastline'}
+}
+
+unwanted_ways_tags: UnwantedTags = {
+    # 'highway':['coridor','via_ferrata','crossing','traffic_island','proposed','construction' ],
+    # 'railway': {
+    #     'service': ['yard', 'spur','crossover', 'siding'], # spur, siding
+    #     # 'tunnel': ['building_passage'],
+    #     # 'tunnel': [],
+    # },
+    # 'waterway': ['stream']
+
+    
+    # {'railway':""}:{'service':['yard'],'tunnel': ['building_passage']}
+}
+
+wanted_areas: WantedCategories = {
+        # 'landuse': {'forest', 'residential', 'commercial', 'retail', 'industrial', 'farmland', 'meadow', 'grass'},
+   
+        # 'leisure': {'park', 'pitch', 'garden', 'golf_course', 'nature_reserve', 'playground', 'stadium', 'swimming_pool', 'sports_centre'},
+        # # 'leisure': {'park', 'pitch', 'garden', 'golf_course', 'playground', 'stadium', 'swimming_pool', 'sports_centre'},
+        # 'natural': {'wood', 'water', 'scrub', 'heath'},
+        # # # 'leisure': ['park', 'pitch', 'garden', 'golf_course', 'nature_reserve'],
+        # 'water': set({}),
+        # 'boundary': {'national_park'},
+        # 'building': {'house','residential'},
+        # 'water': ['river','lake','reservoir'],
+}
+
+unwanted_areas_tags: UnwantedTags = {
+}
+
+
 
 # load
 # ------------constants--------------
@@ -200,9 +263,11 @@ FOLDER_COLOR_DIS_PALLET = True
 NODES_ADDITIONAL_COLUMNS = ['name', 'ele', 'population']
 NODES_NUMERIC_COLUMNS = ['ele', 'population']
 NODES_ROUND_COLUMNS = ['ele']
+
 WAYS_ADDITIONAL_COLUMNS = ['bridge', 'layer', 'tunnel']
 WAYS_NUMERIC_COLUMNS = []
 WAYS_ROUND_COLUMNS = []
+
 AREA_ADDITIONAL_COLUMNS = []
 AREA_NUMERIC_COLUMNS = []
 AREA_ROUND_COLUMNS = []
@@ -215,68 +280,8 @@ DERIVATE_COLUMNS_NODES = [
 
 DERIVATE_COLUMNS_WAYS = []
 DERIVATE_COLUMNS_AREAS = []
+
 NODES_DONT_CATEGORIZE = [Style.TEXT1_POSITIONS.name, Style.TEXT2_POSITIONS.name]
 WAYS_DONT_CATEGORIZE = []
 AREAS_DONT_CATEGORIZE = []
-
-# wanted_ways: WantedFeatures
-wanted_nodes: WantedCategories = {
-    # 'place': {'city'},
-    # 'place': {'city', 'town'},
-    'place': {'city', 'town', 'village'},
-    # 'place': {'village'},
-    'natural': {'peak'}
-}
-
-
-# todo automatic wanted objects setup using map and pdf ratio automatic_filters_creating_factor - own class ()
-
-
-unwanted_nodes_tags: UnwantedTags = {
-
-}
-
-wanted_ways: WantedCategories = {
-    # 'waterway': set({}),
-    'highway': ['primary'],
-    # 'highway': ['motorway', 'trunk','primary', 'secondary', 'tertiary'],
-    # # 'highway': ['motorway', 'trunk', 'primary'],
-    # 'highway': {'motorway', 'trunk', 'primary', 'secondary', 'tertiary', 'unclassified', 'residential', 'path', 'footway'},
-    # # # 'highway': {'tertiary'},
-    # # # 'highway':set({}),
-    # 'railway': {'rail', 'tram'},
-    'railway': {'rail'},
-
-    # # # # # # 'railway': {'rail'},
-    'natural': {'coastline'}
-}
-
-unwanted_ways_tags: UnwantedTags = {
-    # 'highway':['coridor','via_ferrata','crossing','traffic_island','proposed','construction' ],
-    # 'railway': {
-    #     'service': ['yard', 'spur','crossover', 'siding'], # spur, siding
-    #     # 'tunnel': ['building_passage'],
-    #     # 'tunnel': [],
-    # },
-    # 'waterway': ['stream']
-
-    
-    # {'railway':""}:{'service':['yard'],'tunnel': ['building_passage']}
-}
-
-wanted_areas: WantedCategories = {
-        'landuse': {'forest', 'residential', 'commercial', 'retail', 'industrial', 'farmland', 'meadow', 'grass'},
-   
-        'leisure': {'park', 'pitch', 'garden', 'golf_course', 'nature_reserve', 'playground', 'stadium', 'swimming_pool', 'sports_centre'},
-        # 'leisure': {'park', 'pitch', 'garden', 'golf_course', 'playground', 'stadium', 'swimming_pool', 'sports_centre'},
-        'natural': {'wood', 'water', 'scrub', 'heath'},
-        # # 'leisure': ['park', 'pitch', 'garden', 'golf_course', 'nature_reserve'],
-        'water': set({}),
-        'boundary': {'national_park'},
-        'building': {'house','residential'},
-        'water': ['river','lake','reservoir'],
-}
-
-unwanted_areas_tags: UnwantedTags = {
-}
 

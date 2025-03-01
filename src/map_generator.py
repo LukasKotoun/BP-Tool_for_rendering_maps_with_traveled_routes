@@ -305,8 +305,7 @@ def main() -> None:
     # prepare ways function
     process_bridges_and_tunnels(ways_gdf, PLOT_BRIDGES, PLOT_TUNNELS)
     ways_gdf = GdfUtils.merge_lines_gdf(ways_gdf, [])
-    # gpxs_gdf = GdfUtils.merge_lines_gdf(gpxs_gdf, [])
-
+    gpxs_gdf = GdfUtils.merge_lines_gdf(gpxs_gdf, [])
     # assing zoom specific styles
     StyleAssigner.assign_styles(gpxs_gdf, GPXS_STYLES)
     StyleAssigner.assign_styles(

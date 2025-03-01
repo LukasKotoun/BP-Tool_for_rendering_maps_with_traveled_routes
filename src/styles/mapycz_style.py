@@ -151,7 +151,7 @@ highway_styles: ElementStyles = [
      Style.ZINDEX.name: 4, Style.WIDTH.name: 20, Style.EDGE_COLOR.name: "#c1b42a"}),
     ({'highway': 'tertiary'}, {Style.COLOR.name: '#FFFFFF',
      Style.ZINDEX.name: 3, Style.WIDTH.name: 16}),
-    ({'highway': 'unclassified'}, {Style.COLOR.name: '#FFFFFF'}),
+    ({'highway': 'unclassified'}, {Style.COLOR.name: '#FFFFFF', Style.WIDTH.name: 10}),
     ({'highway': 'road'}, {Style.COLOR.name: '#FFFFFF'}),
     ({'highway': 'footway'}, {Style.COLOR.name: '#FFFFFF',
      Style.BRIDGE_COLOR.name: "#FFFFFF"}),
@@ -176,8 +176,6 @@ railway_styles: ElementStyles = [
     }),
 
 
-
-
     ({'railway': 'tram'}, {
         Style.COLOR.name: '#404040',  Style.WIDTH.name: 4
     })
@@ -187,10 +185,10 @@ railway_styles: ElementStyles = [
 ways_styles_default: ElementStyles = [
     ({'highway': ''}, {
         Style.COLOR.name: '#FFFFFF', Style.BRIDGE_EDGE_COLOR.name: "#7D7D7D",
-        Style.EDGE_COLOR.name: "#B0A78D"
+        Style.EDGE_COLOR.name: "#B0A78D", Style.WIDTH.name: 10
     }),
     ({'railway': ''}, {
-        Style.COLOR.name: '#FFFFFF', Style.ZINDEX.name: 100, Style.WIDTH.name: 8
+        Style.COLOR.name: '#FFFFFF', Style.ZINDEX.name: 100
     }),
     ({'waterway': ''}, {
         Style.COLOR.name: '#8FB8DB', Style.WIDTH.name: 8,
@@ -198,16 +196,16 @@ ways_styles_default: ElementStyles = [
     }),
 ]
 
+# default values for all ways
 ways_mandatory_styles: ElementStyles = [
     ([], {
-        Style.COLOR.name: '#EDEDE0', Style.ALPHA.name: 1.0, Style.WIDTH.name: 0, Style.LINESTYLE.name: '-',
-        Style.EDGE_WIDTH_RATIO.name: 1 + 0.3, Style.EDGE_ALPHA.name: 1,
-        Style.EDGE_COLOR.name: None, Style.EDGE_LINESTYLE.name: '-', Style.WIDTH_SCALE.name: 1, Style.FE_WIDTH_SCALE.name: 1,
+        Style.ALPHA.name: 1.0, Style.EDGE_ALPHA.name: 1,
+        Style.LINESTYLE.name: '-', Style.EDGE_WIDTH_RATIO.name: 1 + 0.3, 
+        Style.EDGE_LINESTYLE.name: '-'
     }),
     ({'bridge': ''}, {
         Style.BRIDGE_EDGE_LINESTYLE.name: '-', Style.BRIDGE_LINESTYLE.name: '-',
         Style.BRIDGE_WIDTH_RATIO.name: 1, Style.BRIDGE_EDGE_WIDTH_RATIO.name: 1 + 0.3,
-        # on bridge (will be bridge edge)
         Style.BRIDGE_COLOR.name: "#FFFFFF", Style.BRIDGE_EDGE_COLOR.name: "#7D7D7D", Style.PLOT_ON_BRIDGE.name: True
     }),
 ]

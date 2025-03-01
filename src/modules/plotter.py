@@ -482,28 +482,29 @@ class Plotter:
         if (edge_capstyle is not None):
             lines_gdf[Style.EDGE_CAPSTYLE.name] = edge_capstyle
             
-        # todo try to make this even qucicker
         for row in lines_gdf.itertuples(index=False):
             geom = row.geometry
             line_capstyle = Utils.get_value(row, Style.LINE_CAPSTYLE.name, self.DEFAULT_CAPSTYLE)
             edge_capstyle = Utils.get_value(row, Style.EDGE_CAPSTYLE.name, self.DEFAULT_CAPSTYLE)
             if isinstance(geom, MultiLineString):
                 for line in geom.geoms:  # Extract each LineString
-                    GeoSeries(line).plot(ax=self.ax, color=row.EDGE_COLOR,
+                    x,y = line.xy
+                    self.ax.plot(x, y, color=row.EDGE_COLOR,
                                             linewidth=row.EDGE_WIDTH,
                                             alpha=row.EDGE_ALPHA, path_effects=[
                                                 pe.Stroke(capstyle=edge_capstyle)], zorder=zorder)
 
-                    GeoSeries(line).plot(ax=self.ax, color=row.COLOR, linewidth=row.WIDTH,
+                    self.ax.plot(x, y, color=row.COLOR, linewidth=row.WIDTH,
                                             alpha=row.ALPHA, linestyle=row.LINESTYLE, path_effects=[
                                                 pe.Stroke(capstyle=line_capstyle)], zorder=zorder)
             else:
-                GeoSeries(geom).plot(ax=self.ax, color=row.EDGE_COLOR,
+                x,y = geom.xy
+                self.ax.plot(x, y, color=row.EDGE_COLOR,
                                             linewidth=row.EDGE_WIDTH,
                                             alpha=row.EDGE_ALPHA, path_effects=[
                                                 pe.Stroke(capstyle=edge_capstyle)], zorder=zorder)
 
-                GeoSeries(geom).plot(ax=self.ax, color=row.COLOR, linewidth=row.WIDTH,
+                self.ax.plot(x, y, color=row.COLOR, linewidth=row.WIDTH,
                                             alpha=row.ALPHA, linestyle=row.LINESTYLE, path_effects=[
                                                 pe.Stroke(capstyle=line_capstyle)], zorder=zorder)
                 
