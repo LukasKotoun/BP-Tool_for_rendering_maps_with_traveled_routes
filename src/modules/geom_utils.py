@@ -1,5 +1,7 @@
+import math
 
 import numpy as np
+import shapely.geometry as sg
 from shapely.geometry import Point, LineString, MultiLineString, Polygon, MultiPolygon, GeometryCollection
 from shapely.ops import unary_union, linemerge
 from pyproj import Geod
@@ -30,21 +32,21 @@ class GeomUtils:
         ])
         
     @staticmethod
-    def merge_lines_safe(geoms):
+    def merge_lines_safe(geoms: GeometryCollection):
         unioned = unary_union(geoms)
         if unioned.is_empty:
             return unioned
-        if unioned.geom_type == "LineString":
+        if isinstance(unioned, LineString):
             return unioned
-        if unioned.geom_type == "MultiLineString":
+        if isinstance(unioned, MultiLineString):
             try:
                 return linemerge(unioned)
             except Exception as e:
                 print(f"linemerge failed on MultiLineString: {e}")
                 return unioned
-        if unioned.geom_type == "GeometryCollection":
-            lines = [geom for geom in unioned if geom.geom_type in [
-                "LineString", "MultiLineString"]]
+        if isinstance(unioned, GeometryCollection):
+            lines = [geom for geom in unioned.geoms if
+                           isinstance(geom, (LineString, MultiLineString))]
             if not lines:
                 return unioned
             elif len(lines) == 1:
@@ -98,7 +100,7 @@ class GeomUtils:
     def is_geometry_inside_geometry_threshold(inner: GeometryCollection, outer: GeometryCollection, threshold: float = 0.95) -> bool:
         bbox_area: float = inner.area
         intersection_area: float = inner.intersection(outer).area
-        if(bbox_area == 0):
+        if(math.isclose(bbox_area, 0)):
             return False
         percentage_inside: float = intersection_area / bbox_area
         return percentage_inside >= threshold
@@ -119,11 +121,14 @@ class GeomUtils:
         or inter_by_geom_orientation.is_empty):
             return None
         
-        inter_by_geom_orientation = GeomUtils.merge_lines_safe(
-            inter_by_geom_orientation)
-
         # get intersetion by orientation of splitter
         inter_by_splitter_orientation = splitter.intersection(geom)
+        if(not isinstance(inter_by_splitter_orientation, LineString | MultiLineString) 
+        or inter_by_splitter_orientation.is_empty):
+            return None
+        
+        inter_by_geom_orientation = GeomUtils.merge_lines_safe(
+            inter_by_geom_orientation)
         inter_by_splitter_orientation = GeomUtils.merge_lines_safe(
             inter_by_splitter_orientation)
         
@@ -137,7 +142,7 @@ class GeomUtils:
         
         # if both are linestring can compare
         if (isinstance(inter_by_geom_orientation, LineString) and isinstance(inter_by_splitter_orientation, LineString)):
-            return list(inter_by_geom_orientation.coords) == list(inter_by_splitter_orientation.coords)
+            return np.allclose(inter_by_geom_orientation.coords, inter_by_splitter_orientation.coords)
 
         # check if there is mulitlinestring or create list from linestring for for loop
         if isinstance(inter_by_geom_orientation, MultiLineString):
@@ -154,12 +159,14 @@ class GeomUtils:
         for g_line in geom_lines:
             for s_line in split_lines:
                 if g_line.equals(s_line):  # Check if they are the same
+                    if(not isinstance(g_line, LineString | MultiLineString)):
+                        continue
                     # check if they are same by orientation
-                    return list(g_line.coords) == list(s_line.coords)
+                    return np.allclose(g_line.coords, s_line.coords)
 
         return None
 
-    def get_line_first_point(geometry):
+    def get_line_first_point(geometry: LineString | MultiLineString):
         if isinstance(geometry, LineString):
             first_point = Point(geometry.coords[0])
         elif isinstance(geometry, MultiLineString):
@@ -168,7 +175,7 @@ class GeomUtils:
             raise ValueError("Unsupported geometry type")
         return first_point
 
-    def get_line_last_point(geometry):
+    def get_line_last_point(geometry: LineString | MultiLineString):
         if isinstance(geometry, LineString):
             first_point = Point(geometry.coords[-1])
         elif isinstance(geometry, MultiLineString):

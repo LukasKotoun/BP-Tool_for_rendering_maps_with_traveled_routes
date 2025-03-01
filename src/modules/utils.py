@@ -260,7 +260,7 @@ class Utils:
         return zooms[-1][0]  # lowest level
 
     @staticmethod
-    def wrap_text(text, width, replace_whitespace=False):
+    def wrap_text(text: str, width: int, replace_whitespace: bool=False):
         if (text is None):
             return None
         if (width == 0 or width is None):
@@ -318,7 +318,7 @@ class Utils:
                     return False
 
         # check overlap with other bbox
-        if text_bounds_overflow_threshold == 0:
+        if math.isclose(text_bounds_overflow_threshold, 0):
             return True
         
         # check if bbox is inside required area

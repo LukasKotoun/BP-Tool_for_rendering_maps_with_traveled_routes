@@ -209,9 +209,7 @@ def main() -> None:
     GdfUtils.remove_columns(boundary_map_area_gdf, [
                             boundary_map_area_gdf.geometry.name, *REQ_AREAS_MAPPING_DICT.values()], True)
 
-    # todo edit or remove ...
-    # boundary_map_area_gdf = GdfUtils.remove_common_boundary_inaccuracy(
-    #     boundary_map_area_gdf)
+
 
     map_area_gdf = GdfUtils.combine_rows_gdf(map_area_gdf)
     
@@ -362,7 +360,6 @@ def main() -> None:
     plotter.gpxs(gpxs_gdf)
     plotter.clip()
     if (not boundary_map_area_gdf.empty):
-        # GdfUtils.remove_common_boundary_inaccuracy(boundary_map_area_gdf) # maybe turn off/on in settings
         plotter.area_boundary(boundary_map_area_gdf,
                               color="black")
     plotter.nodes(nodes_gdf, TEXT_WRAP_NAMES_LEN)

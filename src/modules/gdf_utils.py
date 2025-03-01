@@ -205,7 +205,7 @@ class GdfUtils:
                         color = land_color  # polygon is on left side of splitter
                 bg_data.append({"geometry": geom, Style.COLOR.name: color})
         # create gdf from data
-        if (bg_data == []):
+        if (not bg_data):
             return GdfUtils.create_empty_gdf(map_area_gdf.crs)
         bg_gdf = GeoDataFrame(
             bg_data, geometry="geometry", crs=map_area_gdf.crs)
@@ -312,7 +312,7 @@ class GdfUtils:
         # if dont want remove columns and than...
         columns = [
             col for col in gdf.columns if col not in columns_ignore]
-        if(columns == []):
+        if(not columns):
             geometry = GeomUtils.merge_lines_safe(gdf.geometry)
             return GeoDataFrame(geometry=[geometry], crs=gdf.crs)
             
@@ -356,45 +356,7 @@ class GdfUtils:
             return gdf.set_crs(toCrs)
         return gdf.to_crs(toCrs)
 
-    @staticmethod  # does not work if area is inside of another area - use or not use - by gap
-    @time_measurement("inacurrate")
-    def remove_common_boundary_inaccuracy(boundary_gdf: GeoDataFrame) -> None:
-        """Remove common boundary inaccuracy in given GeoDataFrame 
-        by shifting the common border of the one area to the neigbour area.
 
-        Args:
-            boundary_gdf (GeoDataFrame): Gdf with boundaries.
-        """
-        # # by shifting area...
-        # boundary_gdf['area'] = boundary_gdf.geometry.area
-        # boundary_gdf = boundary_gdf.sort_values(by='area', ascending=True)
-        # # from smallest to biggest area
-        # for i, area1 in boundary_gdf.iterrows():
-        #     for j, area2 in boundary_gdf.iterrows():
-        #         if i >= j:
-        #             continue
-        #         # find the shared border
-        #         common_border = area1.geometry.intersection(area2.geometry)
-        #         if not common_border.is_empty:
-        #             # shift area2's border to the area1's border
-        #             adjusted_area2 = area2.geometry.difference(common_border)
-        #             precise_area2 = adjusted_area2.union(common_border)
-
-        # boundary_gdf.loc[j, "geometry"] = adjusted_area2
-
-        # work by creating from 2 seperated areas row with combined area and one row with original area
-        # # remove small gaps between areas - does not work always but better then above??
-        boundary_gdf[boundary_gdf.geometry.name] = boundary_gdf["geometry"].buffer(
-            0)
-        for i, row in boundary_gdf.iterrows():
-            # find areas that share a boundary with row
-            neighbors = boundary_gdf[boundary_gdf.geometry.touches(
-                row.geometry)]
-            for _, neighbor in neighbors.iterrows():
-                # merge the border of the current area and neighbor
-                merged_border = row.geometry.union(neighbor.geometry)
-                boundary_gdf.at[i, boundary_gdf.geometry.name] = merged_border
-        return boundary_gdf
     # ------------Bool operations------------
 
     @staticmethod
