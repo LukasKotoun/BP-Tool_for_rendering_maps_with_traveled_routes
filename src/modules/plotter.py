@@ -411,8 +411,8 @@ class Plotter:
             lines_gdf[Style.LINE_CUP.name] = cupstyle
 
         groups = GdfUtils.get_groups_by_columns(
-            lines_gdf, [Style.ZINDEX.name, Style.LINE_CUP.name], [self.DEFAULT_CUPSTYLE], False)
-        for (zindex, capstyle), lines_group_gdf in groups:
+            lines_gdf, [Style.LINE_CUP.name], [self.DEFAULT_CUPSTYLE], False)
+        for capstyle, lines_group_gdf in groups:
             if (pd.isna(capstyle)):
                 capstyle = self.DEFAULT_CUPSTYLE
 
@@ -483,47 +483,32 @@ class Plotter:
             lines_gdf[Style.LINE_CUP.name] = line_cupstyle
         if (edge_cupstyle is not None):
             lines_gdf[Style.EDGE_CUP.name] = edge_cupstyle
+            
+        # todo try to make this even qucicker
+        for row in lines_gdf.itertuples(index=False):
+            geom = row.geometry
+            line_cup = Utils.get_value(row, Style.LINE_CUP.name, self.DEFAULT_CUPSTYLE)
+            edge_cup = Utils.get_value(row, Style.EDGE_CUP.name, self.DEFAULT_CUPSTYLE)
+            if isinstance(geom, MultiLineString):
+                for line in geom.geoms:  # Extract each LineString
+                    GeoSeries(line).plot(ax=self.ax, color=row.EDGE_COLOR,
+                                            linewidth=row.EDGEWIDTH,
+                                            alpha=row.EDGE_ALPHA, path_effects=[
+                                                pe.Stroke(capstyle=edge_cup)], zorder=zorder)
 
-        groups = GdfUtils.get_groups_by_columns(
-            lines_gdf, [Style.ZINDEX.name, Style.LINE_CUP.name, Style.EDGE_CUP.name], [], False)
+                    GeoSeries(line).plot(ax=self.ax, color=row.COLOR, linewidth=row.WIDTH,
+                                            alpha=row.ALPHA, linestyle=row.LINESTYLE, path_effects=[
+                                                pe.Stroke(capstyle=line_cup)], zorder=zorder)
+            else:
+                GeoSeries(geom).plot(ax=self.ax, color=row.EDGE_COLOR,
+                                            linewidth=row.EDGEWIDTH,
+                                            alpha=row.EDGE_ALPHA, path_effects=[
+                                                pe.Stroke(capstyle=edge_cup)], zorder=zorder)
 
-        # todo make quciker
-
-        for (zindex, line_cup, edge_cup), gdf_group in groups:
-            if (pd.isna(line_cup)):
-                line_cup = "projecting"
-            if (pd.isna(edge_cup)):
-                edge_cup = "projecting"
-            color = gdf_group[Style.COLOR.name]
-            edge_color = gdf_group[Style.EDGE_COLOR.name]
-            linewidth = gdf_group[Style.WIDTH.name]
-            edge_linewidth = gdf_group[Style.EDGEWIDTH.name]
-            alpha = gdf_group[Style.ALPHA.name]
-            edge_alpha = gdf_group[Style.EDGE_ALPHA.name]
-            linestyle = gdf_group[Style.LINESTYLE.name]
-            edge_linestyle = "-"
-
-            for geom in gdf_group.geometry:
-                if isinstance(geom, MultiLineString):
-                    for line in geom.geoms:  # Extract each LineString
-                        GeoSeries(line).plot(ax=self.ax, color=edge_color,
-                                             linewidth=edge_linewidth,
-                                             alpha=edge_alpha, path_effects=[
-                                                 pe.Stroke(capstyle=edge_cup)], zorder=zorder)
-
-                        GeoSeries(line).plot(ax=self.ax, color=color, linewidth=linewidth,
-                                             alpha=alpha, linestyle=linestyle, path_effects=[
-                                                 pe.Stroke(capstyle=line_cup)], zorder=zorder)
-                else:
-                    GeoSeries(geom).plot(ax=self.ax, color=edge_color,
-                                         linewidth=edge_linewidth,
-                                         alpha=edge_alpha, path_effects=[
-                                             pe.Stroke(capstyle=edge_cup)], zorder=zorder)
-
-                    GeoSeries(geom).plot(ax=self.ax, color=color, linewidth=linewidth,
-                                         alpha=alpha, linestyle=linestyle, path_effects=[
-                                             pe.Stroke(capstyle=line_cup)], zorder=zorder)
-
+                GeoSeries(geom).plot(ax=self.ax, color=row.COLOR, linewidth=row.WIDTH,
+                                            alpha=row.ALPHA, linestyle=row.LINESTYLE, path_effects=[
+                                                pe.Stroke(capstyle=line_cup)], zorder=zorder)
+                
     def __ways_normal(self, gdf: GeoDataFrame, plotEdges: bool = False, cross_roads_by_zindex=False, line_cupstyle: str = None, edge_cupstyle: str = None,
                       zorder: int = 2):
         """Plot ways based on z-index and capstyles. 
@@ -661,11 +646,16 @@ class Plotter:
                                               {Style.EDGE_COLOR.name: '', Style.WIDTH.name: '', Style.EDGE_LINESTYLE.name: ''})
         if (edge_areas_gdf.empty):
             return
-        edge_areas_gdf.boundary.plot(ax=self.ax, color=edge_areas_gdf[Style.EDGE_COLOR.name],
-                                    linewidth=edge_areas_gdf[
-                                        Style.WIDTH.name], alpha=edge_areas_gdf[Style.EDGE_ALPHA.name],
-                                    linestyle=edge_areas_gdf[Style.EDGE_LINESTYLE.name],
-                                    path_effects=[pe.Stroke(capstyle='round')])
+        groups = GdfUtils.get_groups_by_columns(
+            edge_areas_gdf, [Style.EDGE_CUP.name], [self.DEFAULT_CUPSTYLE], False)
+        for capstyle, edge_areas_group_gdf in groups:
+            if (pd.isna(capstyle)):
+                capstyle = self.DEFAULT_CUPSTYLE
+            edge_areas_group_gdf.boundary.plot(ax=self.ax, color=edge_areas_group_gdf[Style.EDGE_COLOR.name],
+                                        linewidth=edge_areas_group_gdf[
+                                            Style.WIDTH.name], alpha=edge_areas_group_gdf[Style.EDGE_ALPHA.name],
+                                        linestyle=edge_areas_group_gdf[Style.EDGE_LINESTYLE.name],
+                                        path_effects=[pe.Stroke(capstyle=capstyle)])
 
     @time_measurement("gpxsPlot")
     def gpxs(self, gpxs_gdf: GeoDataFrame):
@@ -673,26 +663,7 @@ class Plotter:
             return
         self.__ways_normal(gpxs_gdf, True, False, zorder=5)
 
-        # todo to geom class
-        def get_first_point(geometry):
-            if isinstance(geometry, LineString):
-                first_point = Point(geometry.coords[0])
-            elif isinstance(geometry, MultiLineString):
-                first_point = Point(geometry.geoms[0].coords[0])
-            else:
-                raise ValueError("Unsupported geometry type")
-
-            return first_point
-
-        def get_last_point(geometry):
-            if isinstance(geometry, LineString):
-                first_point = Point(geometry.coords[-1])
-            elif isinstance(geometry, MultiLineString):
-                first_point = Point(geometry.geoms[-1].coords[-1])
-            else:
-                raise ValueError("Unsupported geometry type")
-
-            return first_point
+        
 
         gpx_start_markers = GdfUtils.filter_rows(gpxs_gdf, {Style.START_MARKER.name: '', Style.START_MARKER_WIDHT.name: '',
                                                             Style.START_MARKER_COLOR.name: '', Style.START_MARKER_EDGE_COLOR.name: '',
@@ -703,7 +674,7 @@ class Plotter:
 
         for row in gpx_finish_markers.itertuples():
             mapped_row: MarkerRow = MarkerRow(
-                geometry=get_last_point(row.geometry),
+                geometry=GeomUtils.get_line_first_point(row.geometry),
                 MARKER=row.FINISH_MARKER,
                 COLOR=row.FINISH_MARKER_COLOR,
                 WIDTH=row.FINISH_MARKER_WIDHT,
@@ -723,7 +694,7 @@ class Plotter:
 
         for row in gpx_start_markers.itertuples():
             mapped_row: MarkerRow = MarkerRow(
-                geometry=get_first_point(row.geometry),
+                geometry=GeomUtils.get_line_first_point(row.geometry),
                 MARKER=row.START_MARKER,
                 COLOR=row.START_MARKER_COLOR,
                 WIDTH=row.START_MARKER_WIDHT,

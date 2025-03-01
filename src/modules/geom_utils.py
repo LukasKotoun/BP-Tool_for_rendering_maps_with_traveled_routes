@@ -158,3 +158,21 @@ class GeomUtils:
                     return list(g_line.coords) == list(s_line.coords)
 
         return None
+
+    def get_line_first_point(geometry):
+        if isinstance(geometry, LineString):
+            first_point = Point(geometry.coords[0])
+        elif isinstance(geometry, MultiLineString):
+            first_point = Point(geometry.geoms[0].coords[0])
+        else:
+            raise ValueError("Unsupported geometry type")
+        return first_point
+
+    def get_line_last_point(geometry):
+        if isinstance(geometry, LineString):
+            first_point = Point(geometry.coords[-1])
+        elif isinstance(geometry, MultiLineString):
+            first_point = Point(geometry.geoms[-1].coords[-1])
+        else:
+            raise ValueError("Unsupported geometry type")
+        return first_point

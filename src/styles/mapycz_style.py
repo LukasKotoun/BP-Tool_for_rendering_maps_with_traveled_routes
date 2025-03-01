@@ -1,5 +1,5 @@
 from common.custom_types import ElementStyles, FeatureStyles
-from common.map_enums import Style, TextPositions, MinPlot, MarkerAbove, MinLoad
+from common.map_enums import Style, TextPositions, MinPlot, MarkerAbove, MinLoad, LineCupStyles
 from config import font_awesome_prop, material_design_prop
 
 #! edge linestyle is suported only dashed or not dashed on not solid lines
@@ -168,10 +168,13 @@ railway_styles: ElementStyles = [
         Style.COLOR.name: '#FFFFFF', Style.WIDTH.name: 10,
         Style.BRIDGE_EDGE_COLOR.name: '#5D5D5D', Style.BRIDGE_COLOR.name: "#FFFFFF",
         Style.EDGE_COLOR.name: '#5D5D5D', Style.BRIDGE_WIDTH_RATIO.name: 1 + 1.7,
-        # todo control after function to calculating width
         Style.BRIDGE_EDGE_WIDTH_RATIO.name: 1 + 0.4,
-        Style.LINESTYLE.name: (0, (5, 5)), Style.EDGE_WIDTH_RATIO.name: 1 + 0.4
+        Style.LINESTYLE.name: (0, (5, 5)), Style.EDGE_WIDTH_RATIO.name: 1 + 0.4,
+        Style.LINE_CUP.name: LineCupStyles.BUTT.value, Style.EDGE_CUP.name: LineCupStyles.BUTT.value
     }),
+
+
+
 
     ({'railway': 'tram'}, {
         Style.COLOR.name: '#404040',  Style.WIDTH.name: 4
@@ -182,7 +185,7 @@ railway_styles: ElementStyles = [
 ways_styles_default: ElementStyles = [
     ({'highway': ''}, {
         Style.COLOR.name: '#FFFFFF', Style.BRIDGE_EDGE_COLOR.name: "#7D7D7D",
-        Style.ZINDEX.name: 1, Style.WIDTH.name: 8, Style.EDGE_COLOR.name: "#B0A78D"
+        Style.EDGE_COLOR.name: "#B0A78D"
     }),
     ({'railway': ''}, {
         Style.COLOR.name: '#FFFFFF', Style.ZINDEX.name: 100, Style.WIDTH.name: 8
@@ -195,7 +198,7 @@ ways_styles_default: ElementStyles = [
 
 ways_mandatory_styles: ElementStyles = [
     ([], {
-        Style.COLOR.name: '#EDEDE0', Style.ALPHA.name: 1.0, Style.WIDTH.name: 1, Style.LINESTYLE.name: '-',
+        Style.COLOR.name: '#EDEDE0', Style.ALPHA.name: 1.0, Style.WIDTH.name: 0, Style.LINESTYLE.name: '-',
         Style.EDGE_WIDTH_RATIO.name: 1 + 0.3, Style.EDGE_ALPHA.name: 1,
         Style.EDGE_COLOR.name: None, Style.EDGE_LINESTYLE.name: '-', Style.WIDTH_SCALE.name: 1, Style.FE_WIDTH_SCALE.name: 1,
     }),

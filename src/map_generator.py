@@ -86,10 +86,8 @@ def gdfs_prepare_styled_columns(gpxs_gdf, nodes_gdf, ways_gdf, areas_gdf, map_ob
     for filter, new_column, old_column, fill in DERIVATE_COLUMNS_NODES:
         GdfUtils.create_derivated_columns(
             nodes_gdf, new_column, old_column, filter=filter, fill=fill)
-        # old_column_remove.append(old_column)
-    # call wrap text - by styles or other struct?
+        old_column_remove.append(old_column)
 
-    # remove columns used for calculating
     GdfUtils.remove_columns(nodes_gdf, [Style.WIDTH_SCALE.name, Style.FE_WIDTH_SCALE.name,
                                         Style.TEXT_FONT_SIZE_SCALE.name, Style.FE_TEXT_FONT_SIZE_SCALE.name,
                                         Style.EDGE_WIDTH_RATIO.name, Style.TEXT_OUTLINE_WIDTH_RATIO.name, *old_column_remove])
@@ -108,29 +106,31 @@ def gdfs_prepare_styled_columns(gpxs_gdf, nodes_gdf, ways_gdf, areas_gdf, map_ob
     GdfUtils.create_derivated_columns(ways_gdf, Style.BRIDGE_EDGE_WIDTH.name, Style.BRIDGE_WIDTH.name, [
                                       Style.BRIDGE_EDGE_WIDTH_RATIO.name], {'bridge': ''})
 
-    for filter, new_column, old_column in DERIVATE_COLUMNS_WAYS:
+    old_column_remove = []
+    for filter, new_column, old_column, fill in DERIVATE_COLUMNS_WAYS:
         GdfUtils.create_derivated_columns(
-            ways_gdf, new_column, old_column, filter=filter)
-
-    GdfUtils.remove_columns(ways_gdf, [Style.WIDTH_SCALE.name, Style.FE_WIDTH_SCALE.name,
-                                       Style.EDGE_WIDTH_RATIO.name, Style.BRIDGE_WIDTH_RATIO.name, Style.BRIDGE_EDGE_WIDTH_RATIO.name])
+            ways_gdf, new_column, old_column, filter=filter, fill=fill)
+        old_column_remove.append(old_column)
+    GdfUtils.remove_columns(ways_gdf, [Style.WIDTH_SCALE.name, Style.FE_WIDTH_SCALE.name, Style.EDGE_WIDTH_RATIO.name,
+                                       Style.BRIDGE_WIDTH_RATIO.name, Style.BRIDGE_EDGE_WIDTH_RATIO.name, *old_column_remove])
 
     # ----areas----
     GdfUtils.fill_nan_values(areas_gdf, [Style.ZINDEX.name], 0)
-
+    
     GdfUtils.multiply_column_gdf(areas_gdf, Style.WIDTH.name, [
         Style.WIDTH_SCALE.name, Style.FE_WIDTH_SCALE.name], map_object_scaling_factor)
 
     GdfUtils.create_derivated_columns(areas_gdf, Style.EDGEWIDTH.name, Style.WIDTH.name, [
                                       Style.EDGE_WIDTH_RATIO.name])
-
-    for filter, new_column, old_column in DERIVATE_COLUMNS_AREAS:
+    old_column_remove = []
+    for filter, new_column, old_column, fill in DERIVATE_COLUMNS_AREAS:
         GdfUtils.create_derivated_columns(
-            areas_gdf, new_column, old_column, filter=filter)
+            areas_gdf, new_column, old_column, filter=filter, fill=fill)
+        old_column_remove.append(old_column)
 
-    GdfUtils.fill_nan_values(areas_gdf, [Style.ZINDEX.name], -1)
+
     GdfUtils.remove_columns(areas_gdf, [Style.WIDTH_SCALE.name, Style.FE_WIDTH_SCALE.name,
-                                        Style.EDGE_WIDTH_RATIO.name])
+                                        Style.EDGE_WIDTH_RATIO.name, *old_column_remove])
 
 
 def calc_preview(map_area_gdf, paper_dimensions_mm):

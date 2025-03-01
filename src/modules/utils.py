@@ -305,6 +305,7 @@ class Utils:
     @staticmethod
     def check_bbox_position(bbox_to_overlap: Bbox, bbox_to_overflow: Bbox, bbox_list: list[Bbox], ax,
                             text_bounds_overflow_threshold, reqired_area_polygon) -> bool:
+        
         if any(bbox2.overlaps(bbox_to_overlap) for bbox2 in bbox_list):
             return False
         # check overlap with other bbox

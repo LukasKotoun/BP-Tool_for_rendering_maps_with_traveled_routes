@@ -6,8 +6,13 @@ class ColorMode(Enum):
     SHADE = "SHADE"
     PALETTE = "PALETTE"
 
+class LineCupStyles(Enum):
+    ROUND = "round"
+    BUTT = "butt"
+    PROJECTING = "projecting"
 
-
+class MarkersCodes(Enum):
+    TEST = "\u2713"
 
 class MinPlot(Enum):  # minimum parts that node must have. If not whole node object is removed
     MARKER_TEXT1_TEXT2 = "MARKER_TEXT1_TEXT2"
