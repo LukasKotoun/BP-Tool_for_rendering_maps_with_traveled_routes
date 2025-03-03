@@ -8,12 +8,12 @@ from common.map_enums import Style, ColorMode, PaperSize, MapOrientation, Marker
 # --------------------------------------------------------------map area--------------------------------------------------------------
 # OSM_INPUT_FILE_NAMES: str = ['../osm_files/vys.osm.pbf','../osm_files/jihmor.osm.pbf']
 # OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/vysJihE.osm.pbf'
-OSM_INPUT_FILE_NAMES: str | list[str] = ['../osm_files/brno.osm.pbf']
+OSM_INPUT_FILE_NAMES: str | list[str] = ['../osm_files/trebic.osm.pbf']
 # OSM_INPUT_FILE_NAMES: str | list[str] = '../trebic.osm.pbf'
 # extract - will be always true
 OSM_WANT_EXTRACT_AREA: bool = False
 # set if want osm file cutting using osmium command line tool (need to be uinstalled), If not set to None
-OSM_OUTPUT_FILE_NAME: None | str = '../osm_files/hv.osm.pbf'
+OSM_OUTPUT_FILE_NAME: None | str = '../osm_files/skptunl.osm.pbf'
 
 OUTPUT_PDF_NAME: str = '../pdfs/divocina'
 
@@ -24,6 +24,20 @@ OUTPUT_PDF_NAME: str = '../pdfs/divocina'
 # AREA: WantedArea = [{"area": [(13.0140862,-8.8831442),(13.1660763,-8.8819132),(13.1667146, -9.0826624), (13.0159664,-9.0781028)], 
 #                      "plot": False, "category": 0, "width": 1}] # angol- ostrovy test
 # AREA: WantedArea = [(15.7937669,49.251 1294),(15.7940459,49.1851468),(15.9009507, 49.1847962), (15.9003445,49.2499564)] # tr - 7.8 - z14 - square
+
+# viden zoo - chodnik a ikony - rchod
+# AREA: WantedArea = [{'area':[(16.2985736,48.1866714), (16.3121350, 48.1865714), (16.3120706, 48.1803122), (16.2985736, 48.1803981)], "plot":False}] # zoom 10/17 
+
+# rakousko - cestičky -rcest
+# AREA: WantedArea = [{'area':[(16.0627306,48.0580592), (16.0897244, 48.0580592), (16.0897244, 48.0453939), (16.0626878, 48.0454514)], "plot":False}] # zoom 9/16 
+
+# rakousko - cestičky u koní -rkon
+# AREA: WantedArea = [{'area': [(15.9759536,48.0569747), (16.0298253, 48.0564572), (16.0299514, 48.0315206), (15.9758781, 48.0318936)], "plot":False}] # zoom 8/15
+
+# slovensko - cesty/tunel - pathtunel u koní -skptunl
+# AREA: WantedArea = [{'area': [(16.9703950,48.2047167), ( 17.0168581, 48.2045317), (17.0169011, 48.1791842), (16.9623128, 48.1794417)], "plot":False}] # zoom 8/15
+# slovensko - cyklotrasa asfalt/non asfalt- pathtunel u koní -skptunl
+
 
 # zoom testing
 # AREA: WantedArea = [(15.8149639,48.6439769), (15.8183625, 48.6439700), (15.8183439, 48.6423997), (15.8149561, 48.6424158)] # zoom none/19  - 0.7832305054706878
@@ -45,7 +59,7 @@ OUTPUT_PDF_NAME: str = '../pdfs/divocina'
 # AREA: WantedArea = ["Česko","Vysočina, Česko", "Jihomoravský kraj, Česko"]
 # AREA: WantedArea = ["Brno, Česko"]
 # AREA: WantedArea = ["Jihomoravský kraj, Česko", "Kraj Vysočina, Česko"]
-AREA: WantedArea = [{"area": "Brno, Česko", "plot": True, "category": 5, "width": None}]
+AREA: WantedArea = [{"area": "trebic, Česko", "plot": True, "category": 5, "width": None}]
 # AREA: WantedArea =[{"area": "Jihomoravský kraj, Česko", "plot": True, "category": 2, "width": 1},
 #                     {"area": "Praha, Česko", "plot": True, "category": 1, "width": 1},
 #                     {"area": "Trebic, Česko", "plot": True, "category": 1, "width": 1}]
@@ -72,7 +86,7 @@ AREA: WantedArea = [{"area": "Brno, Česko", "plot": True, "category": 5, "width
 # AREA: WantedArea = ["Okres Třebíč, Česko", "Třebíč, Česko", "Okres Jihlava, Česko"]
 # AREA: WantedArea = ["Texas, USA"]
 
-PAPER_DIMENSIONS: PaperSize | tuple[float | None, float | None] = PaperSize.A0.dimensions
+PAPER_DIMENSIONS: PaperSize | tuple[float | None, float | None] = PaperSize.A4.dimensions
 # PAPER_DIMENSIONS: PaperSize | tuple[float | None, float | None] = PaperSize.A4.dimensions
 # set own dimensions. If one is left as 'None' it will be automaticaly calculated using area size
 # PAPER_DIMENSIONS = (1100, None)
@@ -82,7 +96,7 @@ GIVEN_SMALLER_PAPER_DIMENSION: bool = True
 # set how will resulted paper be oriented, AUTOMATIC is Recommended
 WANTED_ORIENTATION: MapOrientation = MapOrientation.AUTOMATIC
 
-FIT_PAPER_SIZE = False
+FIT_PAPER_SIZE = True
 FIT_PAPER_SIZE_BOUNDS_PLOT = True
 
 
@@ -93,7 +107,7 @@ TEXT_BOUNDS_OVERFLOW_THRESHOLD = 0
 
 
 # plot as bridge (True)  or normal way (False)
-PLOT_BRIDGES = False
+PLOT_BRIDGES = True
 # plot as tunnel (True) or normal way (False) - if false and in dont want tags -> will not be plotted at all
 PLOT_TUNNELS = True
 FILTER_PEAKS_BY_PROMINENCE = False
@@ -144,13 +158,13 @@ unwanted_nodes_tags: UnwantedTags = {
 }
 
 wanted_ways: WantedCategories = {
-    #  'waterway': set({}),
+    'waterway': set({}),
     # 'highway': ['primary'],
 #    'highway': ['motorway', 'trunk','primary', 'secondary', 'tertiary'],
     # # 'highway': ['motorway', 'trunk', 'primary'],
-    'highway': {'motorway', 'trunk', 'primary', 'secondary', 'tertiary', 'unclassified', 'residential', 'path', 'footway'},
+    # 'highway': {'motorway', 'trunk', 'primary', 'secondary', 'tertiary', 'unclassified', 'residential', 'path', 'footway'},
     # # # 'highway': {'tertiary'},
-    # 'highway':set({}),
+    'highway':set({}),
     # 'railway': {'rail', 'tram'},
     'railway': {'rail'},
 

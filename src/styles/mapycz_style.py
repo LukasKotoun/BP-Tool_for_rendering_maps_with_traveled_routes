@@ -130,98 +130,156 @@ NODES_STYLES: ElementStyles = [
     *nodes_styles_default,
     *nodes_mandatory_styles
 ]
-
+# todo maybe is needed to change dashed linstyles by zoom level - cahnged with width :]
 # -------------------ways------------------
 # styles that must be assigned to all way features
 # scaled styles - relative to polygon (not paper)
-
+# dashed highways z index 1-20 and 21-50 normal ways, 100 - railways, 0-waterways
 highway_styles_bridges: ElementStyles = [
-     ({'highway': '', 'bridge': ''}, {Style.EDGE_COLOR.name: None})]
+    ({'highway': '', 'bridge': ''}, {Style.EDGE_COLOR.name: None,
+                                     })]
 
 # add highway bridge and tunnel styles
 highway_styles_tunnels: ElementStyles = [
-    ({'highway': '', 'tunnel': ''}, {Style.EDGE_LINESTYLE.name: (0, (3, 1)),
-                                     Style.EDGE_CAPSTYLE.name: LineCupStyles.BUTT.value}),
     ({'highway': 'motorway', 'tunnel': ''}, {Style.COLOR.name: "#a0e078"}),
     ({'highway': ['trunk', 'primary'], 'tunnel': ''},
      {Style.COLOR.name: "#fee0b0"}),
     ({'highway': 'secondary', 'tunnel': ''}, {Style.COLOR.name: "#e4e791"}),
-    ({'highway': '', 'tunnel': ''}, {Style.COLOR.name: "#ffffff"})]
+    # default color and all edge styles
+    ({'highway': '', 'tunnel': ''}, {Style.EDGE_LINESTYLE.name: (2, (3, 1)),
+                                     Style.EDGE_CAPSTYLE.name: LineCupStyles.BUTT.value,
+                                     Style.COLOR.name: "#f6f9f5", Style.EDGE_COLOR.name: "#B0A78D", Style.LINESTYLE.name: "-"})]
 
-# todo add sizes
-highway_styles_surface: ElementStyles = [
-    
-    # todo size bigger than normal track
-    ({'highway': ['track'],
-      'surface': ['asphalt']},
-     {Style.COLOR: "#e6e3dd", Style.EDGE_COLOR.name: "#857e5f",
-      Style.LINESTYLE: "-", Style.EDGE_LINESTYLE: "-"}),
 
-    ({'highway': ['track'],
-      'tracktype': ['grade1', 'grade2']},
-     {Style.COLOR: "#FFFFFF", Style.EDGE_COLOR.name: "#B0A78D",
-      Style.LINESTYLE: "-", Style.EDGE_LINESTYLE: "-"},
-     {"1-8":
-      {Style.COLOR: '#8f8364', Style.EDGE_COLOR.name: "#B0A78D"}}),
-    
-    # todo custom for footway..
-    ({'highway': ['footway', 'path', 'track'],
-      'surface': ['asphalt', 'concrete', 'paving_stones', 'sett', 'cobblestone',
-                  'compacted', 'fine_gravel']},
-     {Style.COLOR: "#FFFFFF", Style.EDGE_COLOR.name: "#B0A78D",
-      Style.LINESTYLE: "-", Style.EDGE_LINESTYLE: "-"},
-     {"1-8":
-      {Style.COLOR: '#8f8364', Style.EDGE_COLOR.name: "#B0A78D"}})
-]
 
 WAYS_STYLES_SCALE = [Style.WIDTH.name]
-highway_styles: ElementStyles = [
-   
-    ({'highway': 'motorway'}, {Style.COLOR.name: '#8cd25f', Style.ZINDEX.name: 7,
+highway_styles_main: ElementStyles = [
+        ({'highway': 'motorway'}, {Style.COLOR.name: '#8cd25f', Style.ZINDEX.name: 50,
      Style.WIDTH.name: 32, Style.EDGE_COLOR.name: "#5E9346"}),
-    ({'highway': 'trunk'}, {Style.COLOR.name: '#FDC364', Style.ZINDEX.name: 6,
+    ({'highway': 'motorway_link'}, {Style.COLOR.name: '#8cd25f', Style.ZINDEX.name: 49,
+     Style.WIDTH.name: 32, Style.EDGE_COLOR.name: "#5E9346"}),
+    
+    ({'highway': 'trunk'}, {Style.COLOR.name: '#FDC364', Style.ZINDEX.name: 48,
      Style.WIDTH.name: 26, Style.EDGE_COLOR.name: "#E19532"}),
-    ({'highway': 'primary'}, {Style.COLOR.name: '#FDC364', Style.ZINDEX.name: 5,
+    ({'highway': 'trunk_link'}, {Style.COLOR.name: '#FDC364', Style.ZINDEX.name: 47,
+     Style.WIDTH.name: 26, Style.EDGE_COLOR.name: "#E19532"}),
+    
+    ({'highway': 'primary'}, {Style.COLOR.name: '#FDC364', Style.ZINDEX.name: 46,
      Style.WIDTH.name: 22, Style.EDGE_COLOR.name: "#E19532"}),
-    ({'highway': 'secondary'}, {Style.COLOR.name: '#F7ED60', Style.ZINDEX.name: 4,
-   Style.WIDTH.name: 20, Style.EDGE_COLOR.name: "#c1b42a"}),
-    ({'highway': 'tertiary'}, {Style.ZINDEX.name: 3, Style.WIDTH.name: 16}), 
+      ({'highway': 'primary_link'}, {Style.COLOR.name: '#FDC364', Style.ZINDEX.name: 45,
+     Style.WIDTH.name: 22, Style.EDGE_COLOR.name: "#E19532"}),
+      
+    ({'highway': 'secondary'}, {Style.COLOR.name: '#F7ED60', Style.ZINDEX.name: 45,
+                                Style.WIDTH.name: 20, Style.EDGE_COLOR.name: "#c1b42a"}),
+    ({'highway': 'secondary_link'}, {Style.COLOR.name: '#F7ED60', Style.ZINDEX.name: 44,
+     Style.WIDTH.name: 20, Style.EDGE_COLOR.name: "#c1b42a"}),
+    
+    ({'highway': 'tertiary'}, {Style.ZINDEX.name: 43,Style.COLOR.name: '#FFFFFF', 
+        Style.EDGE_COLOR.name: "#B0A78D", Style.WIDTH.name: 16}),
+    ({'highway': 'tertiary_link'}, {Style.COLOR.name: '#FFFFFF', Style.ZINDEX.name: 42,
+     Style.WIDTH.name: 16, Style.EDGE_COLOR.name: "#B0A78D"}),
+    
+
 
     # o trochu menší než tertiary
-    ({'highway': 'unclassified'}, {}),
-    ({'highway': 'residential'}, {}),
-    # o trochu menší než residental
-    ({'highway': 'service'}, {}),
-    # todo maybe not dashed
-    ({'highway': 'footway'}, {
-     Style.BRIDGE_COLOR.name: "#FFFFFF"}),
+    ({'highway': 'residential'}, {Style.ZINDEX.name: 40, Style.COLOR.name: '#FFFFFF', 
+        Style.EDGE_COLOR.name: "#B0A78D",}),
+    ({'highway': 'unclassified'}, {Style.ZINDEX.name: 39, Style.COLOR.name: '#FFFFFF', 
+        Style.EDGE_COLOR.name: "#B0A78D"}),
+]
 
+highway_styles_surface_special_and_paths: ElementStyles = [
+   
+    # to non dashed
+    # todo size bigger than normal track
+    ({'highway': ['track', 'cycleway'],
+      'surface': ['asphalt'],
+      'tracktype': ('~grade3', '~grade4', '~grade5'),
+      },
+     {Style.ZINDEX.name: 35, Style.COLOR.name: "#e6e3dd", Style.EDGE_COLOR.name: "#857e5f",
+      Style.LINESTYLE.name: "-", Style.EDGE_LINESTYLE.name: "-"}),
+    
+    # size trochu větší než normal track 
+    ({'highway': ['track'],
+      'tracktype': ['grade1', 'grade2']},
+     {Style.ZINDEX.name: 34, Style.COLOR.name: "#FFFFFF", Style.EDGE_COLOR.name: "#B0A78D",
+      Style.LINESTYLE.name: "-", Style.EDGE_LINESTYLE.name: "-"},
+     {"1-8": # on smaller zoom, change to line without edge 
+        {Style.COLOR.name: '#8f8364', Style.EDGE_COLOR.name: None}}),
+
+    # size trochu větší než normal path 
+    ([{'highway': ['path', 'track'],
+      'surface': ['asphalt', 'concrete', 'paving_stones', 'sett', 'cobblestone',
+                  'compacted', 'fine_gravel'],
+      'tracktype': ('~grade3','~grade4', '~grade5')},
+      {'highway': ['path', 'track'],
+        'tracktype': ['grade1', 'grade2']}],
+     {Style.ZINDEX.name: 23, Style.COLOR.name:  '#FFFFFF', Style.EDGE_COLOR.name: "#B0A78D",
+      Style.LINESTYLE.name: "-", Style.EDGE_LINESTYLE.name: "-"},
+     {"1-8": # on smaller zoom, change to line without edge 
+        {Style.COLOR.name: '#8f8364', Style.EDGE_COLOR.name: None}}),
+
+    
+    # size stejná jako -- path a footway
+    ({'highway': ['footway', 'cycleway'],
+      'surface': ['unpaved', 'gravel', 'pebblestone', 'rock', 'dirt',
+                  'ground', 'grass', 'sand', 'mud', 'woodchips']},
+     {Style.COLOR.name: "#8f8364", Style.EDGE_COLOR.name: None,
+      Style.LINESTYLE.name: (3, (5, 4)), Style.ZINDEX.name: 15}
+     ),
+]
+
+highway_styles_special_and_paths: ElementStyles = [
+
+    # o trochu menší než residental
+    ({'highway': 'service'}, {Style.ZINDEX.name: 38, Style.COLOR.name: '#FFFFFF', 
+        Style.EDGE_COLOR.name: "#B0A78D"}),
+    
+    ({'highway': 'cycleway'}, {Style.ZINDEX.name: 37, Style.COLOR.name: '#FFFFFF', 
+        Style.EDGE_COLOR.name: "#B0A78D"}),
+
+    
     ({'highway': 'steps'}, {Style.COLOR.name: '#FFFFFF', Style.EDGE_COLOR.name: "#B0A78D",
-                            Style.LINESTYLE.name: (0, (3, 0.2)),
+                            Style.LINESTYLE.name: (2, (3, 0.2)),
                             Style.LINE_CAPSTYLE: LineCupStyles.BUTT.value,
                             Style.EDGE_CAPSTYLE.name: LineCupStyles.BUTT.value,
-                            Style.PLOT_ON_BRIDGE.name: None}),
-
-    ({'highway': 'path'}, {Style.COLOR.name: '#8f8364', Style.LINESTYLE.name: (0, (5, 3)),
+                            Style.PLOT_ON_BRIDGE.name: None, Style.ZINDEX.name: 31}),
+     
+    ({'highway': 'footway'}, {Style.ZINDEX.name: 30, Style.BRIDGE_COLOR.name: "#FFFFFF"},
+     {"1-8": {Style.COLOR.name: '#8f8364', Style.EDGE_COLOR.name: None, Style.LINESTYLE.name: "-",
+              Style.LINE_CAPSTYLE.name: LineCupStyles.ROUND.value}
+      }),
+    ({'highway': 'track'}, {Style.ZINDEX.name: 20, Style.COLOR.name: '#8f8364', Style.LINESTYLE.name: (7, (10, 4)),
      Style.EDGE_COLOR.name: None, Style.BRIDGE_COLOR.name: "#FFFFFF", Style.PLOT_ON_BRIDGE.name: None}),
-    ({'highway': 'track'}, {Style.COLOR.name: '#8f8364', Style.LINESTYLE.name: (0, (7, 3)),
+    ({'highway': 'path'}, {Style.ZINDEX.name: 10,Style.COLOR.name: '#8f8364', Style.LINESTYLE.name: (3, (5, 4)),
      Style.EDGE_COLOR.name: None, Style.BRIDGE_COLOR.name: "#FFFFFF", Style.PLOT_ON_BRIDGE.name: None}),
+   
 ]
 
 railway_styles_tunnels: ElementStyles = [
-    ({'railway': 'rail', 'tunnel': ''}, {Style.COLOR.name: None, Style.EDGE_LINESTYLE.name: (3, (7, 4)),
+    ({'railway': '', 'tunnel': ''}, {Style.COLOR.name: None, Style.EDGE_LINESTYLE.name: (3, (7, 4)),
                                          Style.EDGE_CAPSTYLE.name: LineCupStyles.BUTT.value})
+    
 ]
 railway_styles: ElementStyles = [
-    ({'railway': 'rail'}, {
-        Style.COLOR.name: '#FFFFFF', Style.WIDTH.name: 10,
+    ({'railway': ['rail', 'light_rail', "monorail", "subway"]}, {
+        Style.COLOR.name: '#FFFFFF', Style.WIDTH.name: 40,
         Style.BRIDGE_EDGE_COLOR.name: '#5D5D5D', Style.BRIDGE_COLOR.name: "#FFFFFF",
         Style.EDGE_COLOR.name: '#5D5D5D', Style.BRIDGE_WIDTH_RATIO.name: 1 + 1.7,
         Style.BRIDGE_EDGE_WIDTH_RATIO.name: 1 + 0.4,
         Style.LINESTYLE.name: (0, (5, 5)), Style.EDGE_WIDTH_RATIO.name: 1 + 0.4,
         Style.LINE_CAPSTYLE.name: LineCupStyles.BUTT.value, Style.EDGE_CAPSTYLE.name: LineCupStyles.BUTT.value
     }),
-
+    
+    ({'railway': 'funicular'}, {
+        Style.COLOR.name: '#FFFFFF', Style.WIDTH.name: 10,
+        Style.BRIDGE_EDGE_COLOR.name: '#5D5D5D', Style.BRIDGE_COLOR.name: "#FFFFFF",
+        Style.EDGE_COLOR.name: '#5D5D5D', Style.BRIDGE_WIDTH_RATIO.name: 1 + 1.7,
+        Style.BRIDGE_EDGE_WIDTH_RATIO.name: 1 + 0.4,
+        Style.EDGE_LINESTYLE.name: (0, (5, 5)),
+        Style.LINESTYLE.name: (0, (5, 5)), Style.EDGE_WIDTH_RATIO.name: 1 + 0.8,
+        Style.LINE_CAPSTYLE.name: LineCupStyles.ROUND.value, Style.EDGE_CAPSTYLE.name: LineCupStyles.ROUND.value
+    }),
 
     ({'railway': 'tram'}, {
         Style.COLOR.name: '#404040',  Style.WIDTH.name: 4
@@ -229,12 +287,11 @@ railway_styles: ElementStyles = [
 ]
 
 waterway_styles_tunnels: ElementStyles = [
-    ({'waterway': '', 'tunnel': ''}, {Style.LINESTYLE.name: "--", Style.EDGE_COLOR: None})]
+    ({'waterway': '', 'tunnel': ''}, {Style.LINESTYLE.name: "--", Style.EDGE_COLOR: None,})]
 
 ways_styles_default: ElementStyles = [
     ({'highway': ''}, {
-        Style.COLOR.name: '#FFFFFF', Style.BRIDGE_EDGE_COLOR.name: "#7D7D7D",
-        Style.EDGE_COLOR.name: "#B0A78D", Style.WIDTH.name: 10
+        Style.WIDTH.name: 20
     }),
     ({'railway': ''}, {
         Style.COLOR.name: '#FFFFFF', Style.ZINDEX.name: 100
@@ -255,17 +312,25 @@ ways_mandatory_styles: ElementStyles = [
     ({'bridge': ''}, {
         Style.BRIDGE_EDGE_LINESTYLE.name: '-', Style.BRIDGE_LINESTYLE.name: '-',
         Style.BRIDGE_WIDTH_RATIO.name: 1, Style.BRIDGE_EDGE_WIDTH_RATIO.name: 1 + 0.3,
-        Style.BRIDGE_COLOR.name: "#FFFFFF", Style.BRIDGE_EDGE_COLOR.name: "#7D7D7D", Style.PLOT_ON_BRIDGE.name: True
+        Style.BRIDGE_EDGE_COLOR.name: "#7D7D7D", Style.BRIDGE_COLOR.name: "#FFFFFF", 
+        Style.PLOT_ON_BRIDGE.name: True
     }),
 ]
 
 WAYS_STYLES: ElementStyles = [
     *highway_styles_bridges,
     *highway_styles_tunnels,
-    *highway_styles,
+    
+    *highway_styles_main,
+    
+    *highway_styles_surface_special_and_paths,
+    *highway_styles_special_and_paths,
+    
     *railway_styles_tunnels,
     *railway_styles,
+    
     *waterway_styles_tunnels,
+    
     *ways_styles_default,
     *ways_mandatory_styles
 ]

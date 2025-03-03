@@ -385,6 +385,13 @@ class GdfUtils:
                     else:
                         filter_mask &= False
                         break
+                elif isinstance(column_value, tuple):
+                    # If any value is a string starting without "~", we return false to the column.
+                    if all(isinstance(v, str) and v.startswith("~") for v in column_value):
+                        continue
+                    else:
+                        filter_mask &= False
+                        break
                 elif isinstance(column_value, str) and column_value.startswith("~"):
                     continue
                 else:
@@ -414,6 +421,29 @@ class GdfUtils:
                             else:
                                 # for non-string values, just check equality
                                 condition_mask |= (gdf[column_name] == value)
+                    filter_mask &= condition_mask
+                    
+                elif isinstance(column_value, tuple):
+                    condition_mask = pd.Series(True, index=gdf.index)
+                    if not column_value:
+                        # If the list is empty, the column should not be NA
+                        condition_mask &= gdf[column_name].notna()
+                    else:
+                        for value in column_value:
+                            if isinstance(value, str):
+                                if value == "":  # Not NA
+                                    condition_mask &= gdf[column_name].notna()
+                                elif value == "~":  # Column should be NA
+                                    condition_mask &= gdf[column_name].isna()
+                                elif value.startswith("~"):
+                                    condition_mask &= (
+                                        gdf[column_name] != value[1:])
+                                else:  # Column should equal the string value
+                                    condition_mask &= (
+                                        gdf[column_name] == value)
+                            else:
+                                # for non-string values, just check equality
+                                condition_mask &= (gdf[column_name] == value)
                     filter_mask &= condition_mask
                 else:
                     if isinstance(column_value, str):

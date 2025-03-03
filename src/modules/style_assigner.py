@@ -32,6 +32,9 @@ class StyleAssigner:
         for filter, styles_default, *zoom_styles in dynamic_styles:
             zoom_styles = zoom_styles[0] if zoom_styles else {} # convert list to dict
             styles_filter = {}
+            if(not isinstance(zoom_styles, dict)):
+                warnings.warn(f"zoom_styles ({zoom_styles})is not dict but {type(zoom_styles)}")
+                continue
             for zoom_range, zoom_style_values in zoom_styles.items():
                 if (check_range(zoom_range, zoom_level)):
                     styles_filter = {**zoom_style_values, **styles_filter}
