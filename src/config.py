@@ -26,26 +26,26 @@ OUTPUT_PDF_NAME: str = '../pdfs/divocina'
 # AREA: WantedArea = [(15.7937669,49.251 1294),(15.7940459,49.1851468),(15.9009507, 49.1847962), (15.9003445,49.2499564)] # tr - 7.8 - z14 - square
 
 # zoom testing
-# AREA: WantedArea = [(15.8149639,48.6439769), (15.8183625,48.6439700), (15.8183439, 48.6423997), (15.8149561, 48.6424158)] # zoom 19  - 0.7832305054706878
-# AREA: WantedArea = [(15.8131475,48.6445003), (15.8199369,48.6445106), (15.8199317, 48.6413736), (15.8131403, 48.6413914)] # zoom 18  - 0.39254868520064207
-# AREA: WantedArea = [(15.8096936,48.6459956), (15.8232333,48.6460311), (15.8232550, 48.6397219), (15.8097686, 48.6397503)] # zoom 17 - 0.19673458447026707
-# AREA: WantedArea = [(15.8036264,48.6490436), (15.8307706,48.6489869), (15.8307706, 48.6363825), (15.8035836, 48.6365244)] # zoom 16 - 0.0981350054744773
-# AREA: WantedArea = [(15.8408317, 48.6556897), (15.7863853, 48.6557486), (15.7865139, 48.6306536), (15.8407161, 48.6304267)] # zoom 15 - 0.049002255315964124
-# AREA: WantedArea = [(15.7568897,48.6700053), (15.8648558, 48.6704314), (15.8651992, 48.6197892), (15.7563658, 48.6202431)] # zoom 14 - 0.024514500087610937 
-# AREA: WantedArea = [(15.7034756,48.6941575), (15.9206889,48.6941186), (15.9198775, 48.5926164), (15.7030222, 48.5936264)] # zoom 13 - 0.012257255675006467
-# AREA: WantedArea = [(15.5986414,48.7535425), (16.0311167,48.7533311), (16.0307733, 48.5528361), (15.5975000, 48.5544269)] # zoom 12 - 0.0061528912374338475
-# AREA: WantedArea = [(15.3856592,48.8443469), (16.2499850,48.8453725), (16.2499850, 48.4415864), (15.3854983, 48.4465967)] # zoom 11 - 0.0030862202898378687
-# AREA: WantedArea = [(14.8355758,49.0061161), (16.5771717,49.0046311), (16.5799181, 48.2009656), (14.8385853, 48.2055419)] # zoom 10 - 0.001529514243755352
-# AREA: WantedArea = [(14.0269703,49.4851617), (17.5151294,49.4833772), (17.5096361,47.8731517), (14.0297167, 47.8786783)] # zoom 9 - 0.000764872334474359
-# AREA: WantedArea = [(12.4551956,50.4569714), (19.4047778,50.4934189), (19.3992847, 47.2727942), (12.4284594, 47.3100528)] # zoom 8 - 0.0003824361562733402
-# AREA: WantedArea = [(7.4931519,51.7666714), (21.3850633,51.7483686),(21.3740772, 45.3686397), (7.4983447, 45.3454797) ] # zoom 7 - 0.0001920539454228724
-# AREA: WantedArea = [(0.3733594, 54.1375764), (27.5538867, 54.1118236),(27.5538867, 40.9478483), (0.3294142, 41.1136006)]  # zoom 6 - 0.000095
+# AREA: WantedArea = [(15.8149639,48.6439769), (15.8183625, 48.6439700), (15.8183439, 48.6423997), (15.8149561, 48.6424158)] # zoom none/19  - 0.7832305054706878
+# AREA: WantedArea = [(15.8131475,48.6445003), (15.8199369, 48.6445106), (15.8199317, 48.6413736), (15.8131403, 48.6413914)] # zoom none/18  - 0.39254868520064207
+# AREA: WantedArea = [{'area':[(15.8096936,48.6459956), (15.8232333, 48.6460311), (15.8232550, 48.6397219), (15.8097686, 48.6397503)], "plot":False] # zoom 10/17 - 0.19673458447026707
+# AREA: WantedArea = [(15.8036264,48.6490436), (15.8307706, 48.6489869), (15.8307706, 48.6363825), (15.8035836, 48.6365244)] # zoom 9/16 - 0.0981350054744773
+# AREA: WantedArea = [(15.8408317, 48.6556897), (15.7863853, 48.6557486), (15.7865139, 48.6306536), (15.8407161, 48.6304267)] # zoom 8/15 - 0.049002255315964124
+# AREA: WantedArea = [(15.7568897,48.6700053), (15.8648558, 48.6704314), (15.8651992, 48.6197892), (15.7563658, 48.6202431)] # zoom 7/14 - 0.024514500087610937 
+# AREA: WantedArea = [(15.7034756,48.6941575), (15.9206889, 48.6941186), (15.9198775, 48.5926164), (15.7030222, 48.5936264)] # zoom 6/13 - 0.012257255675006467
+# AREA: WantedArea = [(15.5986414,48.7535425), (16.0311167, 48.7533311), (16.0307733, 48.5528361), (15.5975000, 48.5544269)] # zoom 5/12 - 0.0061528912374338475
+# AREA: WantedArea = [(15.3856592,48.8443469), (16.2499850, 48.8453725), (16.2499850, 48.4415864), (15.3854983, 48.4465967)] # zoom 4/11 - 0.0030862202898378687
+# AREA: WantedArea = [(14.8355758,49.0061161), (16.5771717,49.0046311), (16.5799181, 48.2009656), (14.8385853, 48.2055419)] # zoom 3/10 - 0.001529514243755352
+# AREA: WantedArea = [(14.0269703,49.4851617), (17.5151294,49.4833772), (17.5096361,47.8731517), (14.0297167, 47.8786783)] # zoom 2/9 - 0.000764872334474359
+# AREA: WantedArea = [(12.4551956,50.4569714), (19.4047778,50.4934189), (19.3992847, 47.2727942), (12.4284594, 47.3100528)] # zoom 1/8 - 0.0003824361562733402
+# AREA: WantedArea = [(7.4931519,51.7666714), (21.3850633,51.7483686),(21.3740772, 45.3686397), (7.4983447, 45.3454797) ] # zoom none/7 - 0.0001920539454228724
+# AREA: WantedArea = [(0.3733594, 54.1375764), (27.5538867, 54.1118236),(27.5538867, 40.9478483), (0.3294142, 41.1136006)]  # zoom none/6 - 0.000095
 
 
 # AREA: WantedArea = ["Česko","Vysočina, Česko", "Jihomoravský kraj, Česko"]
 # AREA: WantedArea = ["Brno, Česko"]
 # AREA: WantedArea = ["Jihomoravský kraj, Česko", "Kraj Vysočina, Česko"]
-AREA: WantedArea = [{"area": "Brno, Česko", "plot": True, "category": 1, "width": 1}]
+AREA: WantedArea = [{"area": "Brno, Česko", "plot": True, "category": 5, "width": None}]
 # AREA: WantedArea =[{"area": "Jihomoravský kraj, Česko", "plot": True, "category": 2, "width": 1},
 #                     {"area": "Praha, Česko", "plot": True, "category": 1, "width": 1},
 #                     {"area": "Trebic, Česko", "plot": True, "category": 1, "width": 1}]
@@ -72,7 +72,7 @@ AREA: WantedArea = [{"area": "Brno, Česko", "plot": True, "category": 1, "width
 # AREA: WantedArea = ["Okres Třebíč, Česko", "Třebíč, Česko", "Okres Jihlava, Česko"]
 # AREA: WantedArea = ["Texas, USA"]
 
-PAPER_DIMENSIONS: PaperSize | tuple[float | None, float | None] = PaperSize.A4.dimensions
+PAPER_DIMENSIONS: PaperSize | tuple[float | None, float | None] = PaperSize.A0.dimensions
 # PAPER_DIMENSIONS: PaperSize | tuple[float | None, float | None] = PaperSize.A4.dimensions
 # set own dimensions. If one is left as 'None' it will be automaticaly calculated using area size
 # PAPER_DIMENSIONS = (1100, None)
@@ -95,8 +95,8 @@ TEXT_BOUNDS_OVERFLOW_THRESHOLD = 0
 # plot as bridge (True)  or normal way (False)
 PLOT_BRIDGES = False
 # plot as tunnel (True) or normal way (False) - if false and in dont want tags -> will not be plotted at all
-PLOT_TUNNELS = False
-FILTER_PEAKS_BY_PROMINENCE = True
+PLOT_TUNNELS = True
+FILTER_PEAKS_BY_PROMINENCE = False
 PEAKS_FILTER_SENSITIVITY = 2.5
 ELE_PROMINENCE_MAX_DIFF_RATIO = 3
 FILTER_PLACE_BY_POPULATION = True
@@ -148,7 +148,7 @@ wanted_ways: WantedCategories = {
     # 'highway': ['primary'],
 #    'highway': ['motorway', 'trunk','primary', 'secondary', 'tertiary'],
     # # 'highway': ['motorway', 'trunk', 'primary'],
-    # 'highway': {'motorway', 'trunk', 'primary', 'secondary', 'tertiary', 'unclassified', 'residential', 'path', 'footway'},
+    'highway': {'motorway', 'trunk', 'primary', 'secondary', 'tertiary', 'unclassified', 'residential', 'path', 'footway'},
     # # # 'highway': {'tertiary'},
     # 'highway':set({}),
     # 'railway': {'rail', 'tram'},
@@ -198,8 +198,9 @@ CRS_OSM = "EPSG:4326"
 CRS_CALC = "EPSG:3857"  # europe 25833 - calculating map scale and scaling factor
 CRS_DISPLAY = "EPSG:3857"
 
-REQ_AREA_DICT_KEYS = {"area": str | list, "plot": bool, "category": int, "width": int | float}
-REQ_AREAS_MAPPING_DICT = {"width": Style.WIDTH.name, "color": Style.COLOR.name}
+# key, (types, required)
+REQ_AREA_DICT_KEYS = {"area": (str | list, True), "plot": (bool, True), "category": (int | type(None), False), "width": (int | float | type(None), False)}
+REQ_AREAS_MAPPING_DICT = {"width": Style.WIDTH.name}
 try:
     FONT_AWESOME_PATH = "./common/fonts/FontAwesome6Free-Solid-900.otf"
     font_awesome_prop = fm.FontProperties(fname=FONT_AWESOME_PATH)
@@ -264,7 +265,7 @@ NODES_ADDITIONAL_COLUMNS = ['name', 'ele', 'population']
 NODES_NUMERIC_COLUMNS = ['ele', 'population']
 NODES_ROUND_COLUMNS = ['ele']
 
-WAYS_ADDITIONAL_COLUMNS = ['bridge', 'layer', 'tunnel']
+WAYS_ADDITIONAL_COLUMNS = ['bridge', 'layer', 'tunnel', 'surface', 'tracktype']
 WAYS_NUMERIC_COLUMNS = []
 WAYS_ROUND_COLUMNS = []
 

@@ -118,7 +118,6 @@ class Style(Enum):
     MIN_LOAD_REQ = "MIN_LOAD_REQ"
 
     #scales
-    WIDTH_SCALE = "WIDTH_SCALE"
     FE_WIDTH_SCALE = "FE_WIDTH_SCALE" # lines and icons
     TEXT_FONT_SIZE_SCALE = "TEXT_FONT_SIZE_SCALE"
     FE_TEXT_FONT_SIZE_SCALE = "FE_TEXT_FONT_SIZE_SCALE" # text

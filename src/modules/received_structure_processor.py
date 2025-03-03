@@ -43,21 +43,36 @@ class ReceivedStructureProcessor:
         return result
 
     @staticmethod
-    def check_dict_values_and_types(dict: dict, allowed_keys_and_types):
-        if dict.keys() - allowed_keys_and_types.keys() or allowed_keys_and_types.keys() - dict.keys():
-                return False
-        for key, type_ in allowed_keys_and_types.items():
-                if not isinstance(dict[key], type_):
+    def check_dict_values_and_types(values_dict: dict, allowed_keys_and_types: dict[str, type], must_have_none: bool = False):
+        allowed_keys = set(allowed_keys_and_types.keys())
+        if must_have_none:
+            required_keys = set(allowed_keys_and_types.keys())
+        else:
+            required_keys = {k for k, (_, required) in allowed_keys_and_types.items() if required}
+            
+        # Extra keys not allowed.
+        if set(values_dict.keys()) - allowed_keys:
+            return False
+
+        # All required keys are present.
+        if not required_keys.issubset(values_dict.keys()):
+            return False
+
+        # Check types.
+        for key, (expected_type, _) in allowed_keys_and_types.items():
+            if key in values_dict and expected_type is not None:
+                if not isinstance(values_dict[key], expected_type):
                     return False
         return True
+
     
     @staticmethod
-    def validate_and_convert_areas_strucutre(areas_structures: list[dict], allowed_keys_and_types: dict[str, type], key_with_area = "area"):
+    def validate_and_convert_areas_strucutre(areas_structures: list[dict], allowed_keys_and_types: dict[str, type], key_with_area):
         if not isinstance(areas_structures, list):
             raise ValueError("Input must be a list.")
 
         edited_data = []
-        for  item in areas_structures:
+        for item in areas_structures:
             if not isinstance(item, dict):
                 raise ValueError(f"Items in area list must be dictionary")
             

@@ -56,6 +56,12 @@ class GdfUtils:
         return gdf
 
     @staticmethod
+    def columns_to_upper(gdf, to_upper):
+        """Change GeoDataFrame column names to upper case."""
+        gdf.columns = [col.upper() if col in to_upper else col for col in gdf.columns]
+        return gdf
+
+    @staticmethod
     def get_whole_area_gdf(wanted_areas: WantedAreas, key_with_area, fromCrs: str, toCrs: str | None = None) -> GeoDataFrame:
         if (len(wanted_areas) == 1):
             wanted_area = wanted_areas[0]
@@ -80,9 +86,9 @@ class GdfUtils:
 
     @staticmethod
     def get_areas_borders_gdf(gdf, combine_by):
-        # Separate rows with category == 0 and nonzero categories.
+        # Separate rows with category == (0 or None) and nonzero categories.
         gdf_zero, gdf_nonzero = GdfUtils.filter_rows(
-            gdf, {combine_by: 0}, compl=True)
+            gdf, {combine_by: [0, "~"]}, compl=True)
         if not gdf_nonzero.empty:
             gdf_dissolved = gdf_nonzero.dissolve(by='category', as_index=False)
         else:

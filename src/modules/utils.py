@@ -195,7 +195,7 @@ class Utils:
 
 
     @staticmethod
-    def calc_map_object_scaling_factor(map_dimensions_m, paper_dimensions_mm, multiply_factor=1):
+    def calc_map_scaling_factor(map_dimensions_m, paper_dimensions_mm):
         """_summary_
 
         Args:
@@ -209,10 +209,7 @@ class Utils:
         map_scaling_factor = (map_dimensions_m[0] + map_dimensions_m[1])
         paper_scaling_factor = (
             paper_dimensions_mm[0] + paper_dimensions_mm[1])
-        # map_scaling_factor2 = min(
-        #     paper_dimensions_mm[0]/map_dimensions_m[0], paper_dimensions_mm[1] / map_dimensions_m[1])
-        # print(map_scaling_factor2)
-        return paper_scaling_factor / map_scaling_factor
+        return (paper_scaling_factor / map_scaling_factor)
 
     @staticmethod
     def get_scale(map_bounds, paper_dimensions_mm):

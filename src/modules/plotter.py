@@ -28,7 +28,7 @@ class Plotter:
     MARKER_ABOVE_NORMAL_ZORDER = 4
     MARKER_ABOVE_ALL_ZORDER = 5
 
-    def __init__(self, requred_area_gdf: GeoDataFrame, paper_dimensions_mm: DimensionsTuple, map_object_scaling_factor: float,
+    def __init__(self, requred_area_gdf: GeoDataFrame, paper_dimensions_mm: DimensionsTuple, map_scaling_factor: float,
                  point_bounds_overflow_threshold: float, text_wrap_len: int, outer_reqired_area_gdf: GeoDataFrame | None = None):
         self.reqired_area_gdf: GeoDataFrame = requred_area_gdf
         self.reqired_area_polygon: Polygon = GdfUtils.create_polygon_from_gdf(
@@ -36,7 +36,7 @@ class Plotter:
 
         self.outer_reqired_area_gdf = outer_reqired_area_gdf
         self.paper_dimensions_mm = paper_dimensions_mm
-        self.map_object_scaling_factor: float = map_object_scaling_factor
+        self.map_scaling_factor: float = map_scaling_factor
         self.text_wrap_len = text_wrap_len
         self.point_bounds_overflow_threshold = point_bounds_overflow_threshold
         self.markers_above_id = 0
@@ -395,13 +395,12 @@ class Plotter:
 
         if (capstyle is not None):
             edge_lines_gdf[Style.EDGE_CAPSTYLE.name] = capstyle
-
+        
         groups = GdfUtils.get_groups_by_columns(
             edge_lines_gdf, [Style.EDGE_CAPSTYLE.name], [self.DEFAULT_CAPSTYLE], False)
         for capstyle, edge_lines_group_gdf in groups:
             if (pd.isna(capstyle)):
                 capstyle = self.DEFAULT_CAPSTYLE
-
             edge_lines_group_gdf.plot(ax=self.ax, color=edge_lines_group_gdf[Style.EDGE_COLOR.name],
                                       linewidth=edge_lines_group_gdf[Style.EDGE_WIDTH.name],
                                       linestyle=edge_lines_group_gdf[Style.EDGE_LINESTYLE.name],
