@@ -94,9 +94,12 @@ def gdfs_prepare_styled_columns(gpxs_gdf, nodes_gdf, ways_gdf, areas_gdf, map_sc
     GdfUtils.multiply_column_gdf(ways_gdf, Style.WIDTH.name, [
         # if i will be creationg function with continues width scaling than multiply only by FEwidthscale
          Style.FE_WIDTH_SCALE.name])
+    
 
     GdfUtils.create_derivated_columns(ways_gdf, Style.EDGE_WIDTH.name, Style.WIDTH.name, [
         Style.EDGE_WIDTH_RATIO.name])
+    GdfUtils.create_derivated_columns(ways_gdf, Style.EDGE_WIDTH_DASHED_CONNECT.name, Style.EDGE_WIDTH_DASHED_CONNECT_RATIO.name, [
+        Style.WIDTH.name])
     GdfUtils.create_derivated_columns(ways_gdf, Style.BRIDGE_WIDTH.name, Style.WIDTH.name, [     # calc bridge size only for bridges
                                       Style.BRIDGE_WIDTH_RATIO.name], {'bridge': ''})
     GdfUtils.create_derivated_columns(ways_gdf, Style.BRIDGE_EDGE_WIDTH.name, Style.BRIDGE_WIDTH.name, [
@@ -107,7 +110,7 @@ def gdfs_prepare_styled_columns(gpxs_gdf, nodes_gdf, ways_gdf, areas_gdf, map_sc
         GdfUtils.create_derivated_columns(
             ways_gdf, new_column, old_column, filter=filter, fill=fill)
         old_column_remove.append(old_column)
-    GdfUtils.remove_columns(ways_gdf, [ Style.FE_WIDTH_SCALE.name, Style.EDGE_WIDTH_RATIO.name,
+    GdfUtils.remove_columns(ways_gdf, [ Style.FE_WIDTH_SCALE.name, Style.EDGE_WIDTH_RATIO.name, Style.EDGE_WIDTH_DASHED_CONNECT_RATIO.name,
                                        Style.BRIDGE_WIDTH_RATIO.name, Style.BRIDGE_EDGE_WIDTH_RATIO.name, *old_column_remove])
 
     # ----areas----
@@ -241,6 +244,7 @@ def main() -> None:
     # zoom level to endpoint specific - always from that biger area
     zoom_level = Utils.get_zoom_level(
         map_scaling_factor, ZOOM_MAPPING, 0.1)
+    # zoom_level = 6
     print(map_scaling_factor, zoom_level)
     # fifth function - parse osm file and get gdfs and than remove osm file
     # ------------get elements from osm file------------
@@ -369,14 +373,15 @@ def main() -> None:
     plotter.areas(areas_gdf)
     # plotter.ways(ways_gdf, areas_gdf, [{'highway': 'motorway'}])
     # plotter.ways(ways_gdf, areas_gdf, [{'highway': 'primary'}])
+    if (not boundary_map_area_gdf.empty):
+        plotter.area_boundary(boundary_map_area_gdf,
+                              color="black")
     plotter.ways(ways_gdf, areas_gdf, None)
 
     # if want clip text
     plotter.gpxs(gpxs_gdf)
     plotter.clip()
-    if (not boundary_map_area_gdf.empty):
-        plotter.area_boundary(boundary_map_area_gdf,
-                              color="black")
+
     plotter.nodes(nodes_gdf, TEXT_WRAP_NAMES_LEN)
     plotter.generate_pdf(OUTPUT_PDF_NAME)
     # plotter.show_plot()

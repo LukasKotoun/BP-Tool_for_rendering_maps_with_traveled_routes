@@ -23,7 +23,7 @@ class Plotter:
 
     MM_TO_INCH = 25.4
     DEFAULT_CAPSTYLE = "round"
-    TEXT_EXPAND_PERCENT = 40 # to settings as text parametter for removal
+    TEXT_EXPAND_PERCENT = 40  # to settings as text parametter for removal
     MARKER_EXPAND_PERCENT = 5
     MARKER_ABOVE_NORMAL_ZORDER = 4
     MARKER_ABOVE_ALL_ZORDER = 5
@@ -395,7 +395,7 @@ class Plotter:
 
         if (capstyle is not None):
             edge_lines_gdf[Style.EDGE_CAPSTYLE.name] = capstyle
-        
+
         groups = GdfUtils.get_groups_by_columns(
             edge_lines_gdf, [Style.EDGE_CAPSTYLE.name], [self.DEFAULT_CAPSTYLE], False)
         for capstyle, edge_lines_group_gdf in groups:
@@ -447,31 +447,46 @@ class Plotter:
             capstyle (str, optional): _description_. Defaults to None.
             zorder (int, optional): _description_. Defaults to 2.
         """
+        def plot(lines_gdf: GeoDataFrame, connect_edge: bool, line_capstyle: str = None, edge_capstyle: str = None, zorder: int = 2):
+
+            if (line_capstyle is not None):
+                lines_gdf[Style.LINE_CAPSTYLE.name] = line_capstyle
+            if (edge_capstyle is not None):
+                lines_gdf[Style.EDGE_CAPSTYLE.name] = edge_capstyle
+
+            groups = GdfUtils.get_groups_by_columns(
+                lines_gdf, [Style.LINE_CAPSTYLE.name, Style.EDGE_CAPSTYLE.name, Style.EDGE_WIDTH.name,
+                            Style.EDGE_COLOR.name, Style.EDGE_ALPHA.name], [], False)
+
+            for (line_capstyle, edge_capstyle, edge_width, edge_color, edge_alpha), gdf_group in groups:
+                if (pd.isna(line_capstyle)):
+                    line_capstyle = self.DEFAULT_CAPSTYLE
+                if (pd.isna(edge_capstyle)):
+                    edge_capstyle = self.DEFAULT_CAPSTYLE
+
+                if (connect_edge):
+                    gdf_group.plot(ax=self.ax, color=gdf_group[Style.EDGE_COLOR.name], linestyle='-',
+                                   linewidth=gdf_group[Style.EDGE_WIDTH_DASHED_CONNECT.name], alpha=gdf_group[Style.EDGE_ALPHA.name], path_effects=[
+                        pe.Stroke(capstyle=edge_capstyle)], zorder=zorder)
+
+                gdf_group.plot(ax=self.ax, color=gdf_group[Style.COLOR.name], linestyle=gdf_group[Style.LINESTYLE.name],
+                               linewidth=gdf_group[Style.WIDTH.name], alpha=gdf_group[Style.ALPHA.name], path_effects=[
+                    pe.Stroke(
+                        linewidth=edge_width, foreground=edge_color, alpha=edge_alpha,
+                        capstyle=edge_capstyle), pe.Normal(), pe.Stroke(capstyle=line_capstyle)], zorder=zorder)
+
+
         lines_gdf = GdfUtils.filter_rows(lines_gdf, {Style.COLOR.name: '', Style.EDGE_COLOR.name: '',
                                          Style.LINESTYLE.name: '', Style.WIDTH.name: '', Style.EDGE_WIDTH.name: '',
                                          Style.ALPHA.name: '', Style.EDGE_ALPHA.name: ''})
-        if (lines_gdf.empty):
-            return
-        if (line_capstyle is not None):
-            lines_gdf[Style.LINE_CAPSTYLE.name] = line_capstyle
-        if (edge_capstyle is not None):
-            lines_gdf[Style.EDGE_CAPSTYLE.name] = edge_capstyle
 
-        groups = GdfUtils.get_groups_by_columns(
-            lines_gdf, [Style.LINE_CAPSTYLE.name, Style.EDGE_CAPSTYLE.name, Style.EDGE_WIDTH.name,
-                        Style.EDGE_COLOR.name, Style.EDGE_ALPHA.name], [], False)
+        connect_edge, not_connect_edge = GdfUtils.filter_rows(
+            lines_gdf, [{Style.EDGE_WIDTH_DASHED_CONNECT.name: ''}], compl=True)
 
-        for (line_capstyle, edge_capstyle, edge_width, edge_color, edge_alpha), gdf_group in groups:
-            if (pd.isna(line_capstyle)):
-                line_capstyle = self.DEFAULT_CAPSTYLE
-            if (pd.isna(edge_capstyle)):
-                edge_capstyle = self.DEFAULT_CAPSTYLE
-
-            gdf_group.plot(ax=self.ax, color=gdf_group[Style.COLOR.name], linestyle=gdf_group[Style.LINESTYLE.name],
-                           linewidth=gdf_group[Style.WIDTH.name], alpha=gdf_group[Style.ALPHA.name], path_effects=[
-                pe.Stroke(
-                    linewidth=edge_width, foreground=edge_color, alpha=edge_alpha,
-                    capstyle=edge_capstyle), pe.Normal(), pe.Stroke(capstyle=line_capstyle)], zorder=zorder)
+        if (not connect_edge.empty):
+            plot(connect_edge, True, line_capstyle, edge_capstyle, zorder)
+        if (not not_connect_edge.empty):
+            plot(not_connect_edge, False, line_capstyle, edge_capstyle, zorder)
 
     def __dashed_with_edge_solid(self, lines_gdf: GeoDataFrame, line_capstyle: str = None, edge_capstyle: str = None, zorder: int = 2):
         """

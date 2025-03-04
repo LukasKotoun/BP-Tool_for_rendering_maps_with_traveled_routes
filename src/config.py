@@ -8,7 +8,7 @@ from common.map_enums import Style, ColorMode, PaperSize, MapOrientation, Marker
 # --------------------------------------------------------------map area--------------------------------------------------------------
 # OSM_INPUT_FILE_NAMES: str = ['../osm_files/vys.osm.pbf','../osm_files/jihmor.osm.pbf']
 # OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/vysJihE.osm.pbf'
-OSM_INPUT_FILE_NAMES: str | list[str] = ['../osm_files/trebic.osm.pbf']
+OSM_INPUT_FILE_NAMES: str | list[str] = ['../osm_files/skptunl.osm.pbf']
 # OSM_INPUT_FILE_NAMES: str | list[str] = '../trebic.osm.pbf'
 # extract - will be always true
 OSM_WANT_EXTRACT_AREA: bool = False
@@ -35,8 +35,18 @@ OUTPUT_PDF_NAME: str = '../pdfs/divocina'
 # AREA: WantedArea = [{'area': [(15.9759536,48.0569747), (16.0298253, 48.0564572), (16.0299514, 48.0315206), (15.9758781, 48.0318936)], "plot":False}] # zoom 8/15
 
 # slovensko - cesty/tunel - pathtunel u koní -skptunl
-# AREA: WantedArea = [{'area': [(16.9703950,48.2047167), ( 17.0168581, 48.2045317), (17.0169011, 48.1791842), (16.9623128, 48.1794417)], "plot":False}] # zoom 8/15
+AREA: WantedArea = [{'area': [(16.9703950,48.2047167), ( 17.0168581, 48.2045317), (17.0169011, 48.1791842), (16.9623128, 48.1794417)], "plot":False}] # zoom 8/15
+
 # slovensko - cyklotrasa asfalt/non asfalt- pathtunel u koní -skptunl
+
+# slovensko - lanovky - sklan
+# AREA: WantedArea = [{'area': [(18.9836906,49.2351414), (19.1019653, 49.2350294), (19.1017936, 49.1852375), (18.9838622, 49.1870325)], "plot":False}] # zoom 8/15
+
+# slovensko - letiste - sklet
+# AREA: WantedArea = [{'area': [(17.1374492,48.1955133), (17.2557239, 48.1951700), (17.2557239, 48.1444531), (17.1377925, 48.1452547)], "plot":False}] # zoom 8/15
+
+# nemecko - funicular tunnel a railway tunnel - gefun
+# AREA: WantedArea = [{'area': [(8.6807722,49.4195719), (8.7399353, 49.4195644), (8.7400211, 49.3951311), (8.6807550, 49.3952708)], "plot":False}] # zoom 8/15
 
 
 # zoom testing
@@ -59,7 +69,7 @@ OUTPUT_PDF_NAME: str = '../pdfs/divocina'
 # AREA: WantedArea = ["Česko","Vysočina, Česko", "Jihomoravský kraj, Česko"]
 # AREA: WantedArea = ["Brno, Česko"]
 # AREA: WantedArea = ["Jihomoravský kraj, Česko", "Kraj Vysočina, Česko"]
-AREA: WantedArea = [{"area": "trebic, Česko", "plot": True, "category": 5, "width": None}]
+# AREA: WantedArea = [{"area": "trebic, Česko", "plot": True, "category": 5, "width": None}]
 # AREA: WantedArea =[{"area": "Jihomoravský kraj, Česko", "plot": True, "category": 2, "width": 1},
 #                     {"area": "Praha, Česko", "plot": True, "category": 1, "width": 1},
 #                     {"area": "Trebic, Česko", "plot": True, "category": 1, "width": 1}]
@@ -158,18 +168,26 @@ unwanted_nodes_tags: UnwantedTags = {
 }
 
 wanted_ways: WantedCategories = {
-    'waterway': set({}),
+    #all
+    # 'highway': {'motorway', 'trunk', 'primary', 'secondary', 'tertiary', 'motorway_link', 'trunk_link', 'primary_link', 'secondary_link', 'tertiary_link', 
+    # 'residential', 'unclassified', 'service', 'cycleway', 'raceway', 'steps', 'footway', 'track', 'path'},
+    # 'railway': {'rail', 'light_rail', "monorail", 'miniature', 'subway', 'funicular', 'tram'},
+    # 'aeroway': {'runway', 'taxiway'},
+    # 'aerialway': {'cable_car', 'gondola', 'chair_lift', 'mixed_lift', 'drag_lift', 't-bar', 'j-bar', 'platter', 'rope_tow', 'magic_carpet', 'zip_line', 'goods'},
+    # 'barrier': {'city_wall', 'fence', 'cable_barrier', 'hedge'},
+    # 'waterway': {'river', 'canal', 'stream', 'drain', 'ditch'},
+    # 'natural': {'coastline'},
+
+
+
+    
     # 'highway': ['primary'],
 #    'highway': ['motorway', 'trunk','primary', 'secondary', 'tertiary'],
     # # 'highway': ['motorway', 'trunk', 'primary'],
     # 'highway': {'motorway', 'trunk', 'primary', 'secondary', 'tertiary', 'unclassified', 'residential', 'path', 'footway'},
     # # # 'highway': {'tertiary'},
-    'highway':set({}),
     # 'railway': {'rail', 'tram'},
-    'railway': {'rail'},
-
-    # # # # # # 'railway': {'rail'},
-    'natural': {'coastline'}
+    # 'natural': {'coastline'},
 }
 
 unwanted_ways_tags: UnwantedTags = {
@@ -186,16 +204,17 @@ unwanted_ways_tags: UnwantedTags = {
 }
 
 wanted_areas: WantedCategories = {
-        # 'landuse': {'forest', 'residential', 'commercial', 'retail', 'industrial', 'farmland', 'meadow', 'grass'},
+        'landuse': {'forest', 'residential', 'commercial', 'retail', 'industrial', 'farmland', 'meadow', 'grass', 'landfill'},
    
-        # 'leisure': {'park', 'pitch', 'garden', 'golf_course', 'nature_reserve', 'playground', 'stadium', 'swimming_pool', 'sports_centre'},
+        'leisure': {'park', 'pitch', 'garden', 'golf_course', 'nature_reserve', 'playground', 'stadium', 'swimming_pool', 'sports_centre'},
         # # 'leisure': {'park', 'pitch', 'garden', 'golf_course', 'playground', 'stadium', 'swimming_pool', 'sports_centre'},
-        # 'natural': {'wood', 'water', 'scrub', 'heath'},
+        'natural': {'wood', 'water', 'scrub', 'heath'},
         # # # 'leisure': ['park', 'pitch', 'garden', 'golf_course', 'nature_reserve'],
         # 'water': set({}),
         # 'boundary': {'national_park'},
-        # 'building': {'house','residential'},
-        # 'water': ['river','lake','reservoir'],
+        'building': {'house','residential'},
+        'water': {'river','lake','reservoir'},
+        'aeroway': {'aerodrome'}
 }
 
 unwanted_areas_tags: UnwantedTags = {
@@ -279,7 +298,7 @@ NODES_ADDITIONAL_COLUMNS = ['name', 'ele', 'population']
 NODES_NUMERIC_COLUMNS = ['ele', 'population']
 NODES_ROUND_COLUMNS = ['ele']
 
-WAYS_ADDITIONAL_COLUMNS = ['bridge', 'layer', 'tunnel', 'surface', 'tracktype']
+WAYS_ADDITIONAL_COLUMNS = ['bridge', 'layer', 'tunnel', 'surface', 'tracktype', 'service']
 WAYS_NUMERIC_COLUMNS = []
 WAYS_ROUND_COLUMNS = []
 
