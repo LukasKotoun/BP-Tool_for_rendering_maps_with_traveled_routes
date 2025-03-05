@@ -467,9 +467,10 @@ class GdfUtils:
         # if is not list
         if isinstance(conditions, dict):
             conditions = [conditions]
+        elif conditions is None:
+            return filter_mask # none - none rows
         elif not conditions:
             conditions = [{}]  # empty condition - all rows
-
         for and_conditions in conditions:
             filter_mask |= GdfUtils.get_rows_filter_AND(gdf, and_conditions)
         return filter_mask

@@ -609,7 +609,7 @@ class Plotter:
 
         def ways_on_bridges(gdf: GeoDataFrame):
             gdf = GdfUtils.filter_rows(
-                gdf, {Style.PLOT_ON_BRIDGE.name: ""})
+                gdf, {Style.PLOT_ON_BRIDGE.name: True})
             if (gdf.empty):
                 return
 
@@ -632,7 +632,8 @@ class Plotter:
             self.__ways_normal(tunnel_layer_gdf, True, False, zorder=zorder)
 
     @time_measurement("wayplot")
-    def ways(self, ways_gdf: GeoDataFrame, areas_ways_gdf: GeoDataFrame, over_filter=None):
+    def ways(self, ways_gdf: GeoDataFrame, areas_over_tunnel_ways_gdf: GeoDataFrame,
+             areas_over_normal_ways_gdf: GeoDataFrame, over_filter=None):
         if (ways_gdf.empty):
             return
         # water ways and tunnels
@@ -643,17 +644,20 @@ class Plotter:
 
         self.__tunnels(waterways_tunnel_gdf)
         self.__ways_normal(waterways_gdf, True, False)
-
+    
         # normal tunnels
         ways_tunnel_gdf, ways_gdf = GdfUtils.filter_rows(
             ways_gdf, {'tunnel': ''}, compl=True)
 
         self.__tunnels(ways_tunnel_gdf)
-
+        self.areas(areas_over_tunnel_ways_gdf, 2)
+        
         # normal ways
         ways_bridge_gdf, ways_gdf = GdfUtils.filter_rows(
             ways_gdf, {'bridge': ''}, compl=True)
         self.__ways_normal(ways_gdf, True, False)
+        
+        self.areas(areas_over_normal_ways_gdf, 2)
 
         # bridges
         self.__bridges(ways_bridge_gdf)
@@ -664,18 +668,19 @@ class Plotter:
                 ways_gdf, over_filter), True, True, 'butt', 'butt')
 
     @time_measurement("areaPlot")
-    def areas(self, areas_gdf: GeoDataFrame):
+    def areas(self, areas_gdf: GeoDataFrame, zorder_fill = 1, zorder_edge = 2):
         if (areas_gdf.empty):
             return
         # plot face
         face_areas_gdf = GdfUtils.filter_rows(
-            areas_gdf, {Style.COLOR.name: ''})
+            areas_gdf, {Style.COLOR.name: '', Style.ALPHA.name: ''})
         if (not face_areas_gdf.empty):
             face_areas_gdf.plot(
-                ax=self.ax, color=face_areas_gdf[Style.COLOR.name], alpha=face_areas_gdf[Style.ALPHA.name])
+                ax=self.ax, color=face_areas_gdf[Style.COLOR.name], alpha=face_areas_gdf[Style.ALPHA.name],
+                zorder=zorder_fill)
         # plot bounds
         edge_areas_gdf = GdfUtils.filter_rows(areas_gdf,
-                                              {Style.EDGE_COLOR.name: '', Style.WIDTH.name: '', Style.EDGE_LINESTYLE.name: ''})
+                                              {Style.EDGE_COLOR.name: '', Style.WIDTH.name: '', Style.EDGE_LINESTYLE.name: '', Style.EDGE_ALPHA.name: ''})
         if (edge_areas_gdf.empty):
             return
         groups = GdfUtils.get_groups_by_columns(
@@ -687,7 +692,7 @@ class Plotter:
                                                linewidth=edge_areas_group_gdf[
                 Style.WIDTH.name], alpha=edge_areas_group_gdf[Style.EDGE_ALPHA.name],
                 linestyle=edge_areas_group_gdf[Style.EDGE_LINESTYLE.name],
-                path_effects=[pe.Stroke(capstyle=capstyle)])
+                path_effects=[pe.Stroke(capstyle=capstyle)], zorder=zorder_edge)
 
     @time_measurement("gpxsPlot")
     def gpxs(self, gpxs_gdf: GeoDataFrame):

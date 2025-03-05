@@ -22,6 +22,10 @@ class StyleAssigner:
     @staticmethod
     def convert_from_dynamic(dynamic_styles, zoom_level) -> ElementStyles:
         def check_range(range_str, zoom_level):
+            # check if - is in string if not take it as single value
+            if "-" not in range_str:
+                return int(range_str) == zoom_level
+            
             lower_str, upper_str = range_str.split("-")
             lower, upper = int(lower_str), int(upper_str)
             if (lower > upper):

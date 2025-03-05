@@ -8,12 +8,12 @@ from common.map_enums import Style, ColorMode, PaperSize, MapOrientation, Marker
 # --------------------------------------------------------------map area--------------------------------------------------------------
 # OSM_INPUT_FILE_NAMES: str = ['../osm_files/vys.osm.pbf','../osm_files/jihmor.osm.pbf']
 # OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/vysJihE.osm.pbf'
-OSM_INPUT_FILE_NAMES: str | list[str] = ['../osm_files/skptunl.osm.pbf']
+OSM_INPUT_FILE_NAMES: str | list[str] = ['../osm_files/skareaway.osm.pbf']
 # OSM_INPUT_FILE_NAMES: str | list[str] = '../trebic.osm.pbf'
 # extract - will be always true
 OSM_WANT_EXTRACT_AREA: bool = False
 # set if want osm file cutting using osmium command line tool (need to be uinstalled), If not set to None
-OSM_OUTPUT_FILE_NAME: None | str = '../osm_files/skptunl.osm.pbf'
+OSM_OUTPUT_FILE_NAME: None | str = '../osm_files/skareaway.osm.pbf'
 
 OUTPUT_PDF_NAME: str = '../pdfs/divocina'
 
@@ -34,19 +34,30 @@ OUTPUT_PDF_NAME: str = '../pdfs/divocina'
 # rakousko - cestičky u koní -rkon
 # AREA: WantedArea = [{'area': [(15.9759536,48.0569747), (16.0298253, 48.0564572), (16.0299514, 48.0315206), (15.9758781, 48.0318936)], "plot":False}] # zoom 8/15
 
-# slovensko - cesty/tunel - pathtunel u koní -skptunl
-AREA: WantedArea = [{'area': [(16.9703950,48.2047167), ( 17.0168581, 48.2045317), (17.0169011, 48.1791842), (16.9623128, 48.1794417)], "plot":False}] # zoom 8/15
+# slovensko - cesty/tunel - pathtunel -skptunl
+# AREA: WantedArea = [{'area': [(16.9703950,48.2047167), ( 17.0168581, 48.2045317), (17.0169011, 48.1791842), (16.9623128, 48.1794417)], "plot":False}] # zoom 8/15
 
 # slovensko - cyklotrasa asfalt/non asfalt- pathtunel u koní -skptunl
 
 # slovensko - lanovky - sklan
-# AREA: WantedArea = [{'area': [(18.9836906,49.2351414), (19.1019653, 49.2350294), (19.1017936, 49.1852375), (18.9838622, 49.1870325)], "plot":False}] # zoom 8/15
+# AREA: WantedArea = [{'area': [(18.9836906,49.2351414), (19.1019653, 49.2350294), (19.1017936, 49.1852375), (18.9838622, 49.1870325)], "plot":False}] # zoom 
 
 # slovensko - letiste - sklet
-# AREA: WantedArea = [{'area': [(17.1374492,48.1955133), (17.2557239, 48.1951700), (17.2557239, 48.1444531), (17.1377925, 48.1452547)], "plot":False}] # zoom 8/15
+# AREA: WantedArea = [{'area': [(17.1374492,48.1955133), (17.2557239, 48.1951700), (17.2557239, 48.1444531), (17.1377925, 48.1452547)], "plot":False}] # zoom 
+# slovensko - bratislava centrum  - skbr
+# AREA: WantedArea = [{'area': [(17.0797297,48.1649183), (17.1410558, 48.1642600), (17.1413133, 48.1383769), (17.0762106, 48.1384056)], "plot":False}] # zoom 
+
+# slovensko - voj prostor  - skvoj
+# AREA: WantedArea = [{'area': [(17.0325058,48.6691606), (17.6252633, 48.6856314), (17.6225169, 48.1661969), (17.0031625, 48.1808503)], "plot":False}] # zoom 
+
+# slovensko - bratislava nakup a landuse others  - sknak
+# AREA: WantedArea = [{'area': [(16.9756656,48.1968728), (16.9761267, 48.2213817), (17.0408431, 48.2214961), (17.0408431, 48.1953561)], "plot":False}] # zoom 
+
+# slovensko - bratislava area way  - skareaway
+AREA: WantedArea = [{'area': [(17.1848258,48.1529047), (17.2031475, 48.1531017), (17.2038558, 48.1396642), (17.1842006, 48.1394925)], "plot":False}] # zoom 
 
 # nemecko - funicular tunnel a railway tunnel - gefun
-# AREA: WantedArea = [{'area': [(8.6807722,49.4195719), (8.7399353, 49.4195644), (8.7400211, 49.3951311), (8.6807550, 49.3952708)], "plot":False}] # zoom 8/15
+# AREA: WantedArea = [{'area': [(8.6807722,49.4195719), (8.7399353, 49.4195644), (8.7400211, 49.3951311), (8.6807550, 49.3952708)], "plot":False}] # zoom 
 
 
 # zoom testing
@@ -96,7 +107,7 @@ AREA: WantedArea = [{'area': [(16.9703950,48.2047167), ( 17.0168581, 48.2045317)
 # AREA: WantedArea = ["Okres Třebíč, Česko", "Třebíč, Česko", "Okres Jihlava, Česko"]
 # AREA: WantedArea = ["Texas, USA"]
 
-PAPER_DIMENSIONS: PaperSize | tuple[float | None, float | None] = PaperSize.A4.dimensions
+PAPER_DIMENSIONS: PaperSize | tuple[float | None, float | None] = PaperSize.A6.dimensions
 # PAPER_DIMENSIONS: PaperSize | tuple[float | None, float | None] = PaperSize.A4.dimensions
 # set own dimensions. If one is left as 'None' it will be automaticaly calculated using area size
 # PAPER_DIMENSIONS = (1100, None)
@@ -123,6 +134,8 @@ PLOT_TUNNELS = True
 FILTER_PEAKS_BY_PROMINENCE = False
 PEAKS_FILTER_SENSITIVITY = 2.5
 ELE_PROMINENCE_MAX_DIFF_RATIO = 3
+
+# from fe by zoom or from be map styles by zoom
 FILTER_PLACE_BY_POPULATION = True
 # --------------------------------------------------------------preview--------------------------------------------------------------
 # NOTE: must have same settings as the resulting one when generating for large format printing
@@ -169,13 +182,16 @@ unwanted_nodes_tags: UnwantedTags = {
 
 wanted_ways: WantedCategories = {
     #all
-    # 'highway': {'motorway', 'trunk', 'primary', 'secondary', 'tertiary', 'motorway_link', 'trunk_link', 'primary_link', 'secondary_link', 'tertiary_link', 
-    # 'residential', 'unclassified', 'service', 'cycleway', 'raceway', 'steps', 'footway', 'track', 'path'},
-    # 'railway': {'rail', 'light_rail', "monorail", 'miniature', 'subway', 'funicular', 'tram'},
-    # 'aeroway': {'runway', 'taxiway'},
-    # 'aerialway': {'cable_car', 'gondola', 'chair_lift', 'mixed_lift', 'drag_lift', 't-bar', 'j-bar', 'platter', 'rope_tow', 'magic_carpet', 'zip_line', 'goods'},
-    # 'barrier': {'city_wall', 'fence', 'cable_barrier', 'hedge'},
-    # 'waterway': {'river', 'canal', 'stream', 'drain', 'ditch'},
+    # ways connected with links
+    'highway': {'motorway', 'trunk', 'primary', 'secondary', 'tertiary', 'motorway_link', 'trunk_link', 'primary_link', 'secondary_link', 'tertiary_link', 
+    'residential', 'unclassified', 'service', 'pedestrian', 'cycleway', 'raceway', 'steps', 'footway', 'track', 'path'},
+    'railway': {'rail', 'light_rail', "monorail", 'miniature', 'subway', 'funicular', 'tram'},
+    'aeroway': {'runway', 'taxiway'},
+    'aerialway': {'cable_car', 'gondola', 'chair_lift'}, # as others in fe and send empty {}, 'mixed_lift', 'drag_lift', 't-bar', 'j-bar', 'platter', 'rope_tow', 'magic_carpet', 'zip_line', 'goods'},
+    'barrier': {'city_wall', 'wall', 'cable_barrier'},
+    'waterway': {'river', 'canal', 'stream', 'drain', 'ditch'},
+
+    
     # 'natural': {'coastline'},
 
 
@@ -204,17 +220,20 @@ unwanted_ways_tags: UnwantedTags = {
 }
 
 wanted_areas: WantedCategories = {
-        'landuse': {'forest', 'residential', 'commercial', 'retail', 'industrial', 'farmland', 'meadow', 'grass', 'landfill'},
-   
-        'leisure': {'park', 'pitch', 'garden', 'golf_course', 'nature_reserve', 'playground', 'stadium', 'swimming_pool', 'sports_centre'},
-        # # 'leisure': {'park', 'pitch', 'garden', 'golf_course', 'playground', 'stadium', 'swimming_pool', 'sports_centre'},
-        'natural': {'wood', 'water', 'scrub', 'heath'},
-        # # # 'leisure': ['park', 'pitch', 'garden', 'golf_course', 'nature_reserve'],
-        # 'water': set({}),
-        # 'boundary': {'national_park'},
-        'building': {'house','residential'},
-        'water': {'river','lake','reservoir'},
-        'aeroway': {'aerodrome'}
+    # all areas - osm can have more tags? how to do it
+        'landuse': {'forest', 'residential', 'commercial', 'retail', 'industrial', 'allotments', 'retail',
+                    'meadow', 'grass', 'landfill', 'cemetery', 'vineyard', 'orchard', 'garages', 'military',
+                    'quarry', 'recreation_ground'},
+        'leisure': {'park', 'pitch', 'garden', 'golf_course', 
+                    'nature_reserve', 'playground', 'stadium', 'swimming_pool', 'sports_centre'},
+        'natural': {'wood', 'water', 'scrub', 'heath', 'grassland', 'bay', 'beach', 'sand'}, # all water is in natural
+
+        'amenity': set({}), # občanské vybavení - oblasti škol, nemocnic, nákupních center, parkovišť, atd. 
+        'building': set({}), # budovy
+        
+        'historic': {'building', 'church', 'house', 'manor', 'temple', 'tomb'},
+        'highway': {'pedestrian', 'footway'},
+        'aeroway': {'aerodrome'},
 }
 
 unwanted_areas_tags: UnwantedTags = {
@@ -298,11 +317,11 @@ NODES_ADDITIONAL_COLUMNS = ['name', 'ele', 'population']
 NODES_NUMERIC_COLUMNS = ['ele', 'population']
 NODES_ROUND_COLUMNS = ['ele']
 
-WAYS_ADDITIONAL_COLUMNS = ['bridge', 'layer', 'tunnel', 'surface', 'tracktype', 'service']
+WAYS_ADDITIONAL_COLUMNS = ['bridge', 'layer', 'tunnel', 'surface', 'tracktype', 'service', 'intermittent']
 WAYS_NUMERIC_COLUMNS = []
 WAYS_ROUND_COLUMNS = []
 
-AREA_ADDITIONAL_COLUMNS = []
+AREA_ADDITIONAL_COLUMNS = ['area']
 AREA_NUMERIC_COLUMNS = []
 AREA_ROUND_COLUMNS = []
 

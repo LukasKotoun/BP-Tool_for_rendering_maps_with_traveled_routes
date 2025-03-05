@@ -10,6 +10,11 @@ from config import font_awesome_prop, material_design_prop
 # all from styles to dict and that export
 # non scaled styles - relative to paper size (not polygons)
 GPXS_STYLES_SCALE = []
+# todo some to config, add this to big settings dict
+AREAS_WAYS_OVER_NORMAL_WAYS_FILTER = [{'highway': ['pedestrian', 'footway']}]
+AREAS_WAYS_OVER_TUNNEL_WAYS_FILTER = None
+WAYS_WITHOUT_CROSSING = None
+
 OCEAN_WATER_COLOR = '#8FB6DB'
 LAND_COLOR = '#EDEDE0'
 GENERAL_DEFAULT_STYLES: FeatureStyles = {Style.COLOR.name: '#EDEDE0',  Style.ZINDEX.name: 0,
@@ -93,9 +98,9 @@ natural_styles_nodes: ElementStyles = [
         Style.MARKER.name: "^",
         Style.MARKER_HORIZONTAL_ALIGN.name: "center", Style.MARKER_VERTICAL_ALIGN.name: None,
         # Style.MIN_PLOT_REQ.name: MinPlot.MARKER_TEXT2.name,
-        Style.COLOR.name: "#7f3016",
+        Style.COLOR.name: "#42281a",
         Style.MIN_PLOT_REQ.name: MinPlot.MARKER_TEXT2.name,
-        Style.TEXT_FONT_SIZE.name: 3, Style.WIDTH.name: 3.6,  Style.TEXT1_POSITIONS.name: [TextPositions.TOP.name],
+        Style.TEXT_FONT_SIZE.name: 6, Style.WIDTH.name: 3,  Style.TEXT1_POSITIONS.name: [TextPositions.TOP.name],
         Style.TEXT2_POSITIONS.name: [TextPositions.BOTTOM.name], Style.EDGE_WIDTH_RATIO.name: 0,
 
     })  # rozlišení - dict vs dict s 2 dict uvnitř
@@ -135,7 +140,7 @@ NODES_STYLES: ElementStyles = [
 # styles that must be assigned to all way features
 # scaled styles - relative to polygon (not paper)
 WAYS_STYLES_SCALE = [Style.WIDTH.name]
-# dashed highways z index 0-waterways, 1-14 - dashedways, 15-20 - barrier, 21-50 normal ways, 60-70 aeroway, 70-80 - aerialway, 90 - 100 (subway - 20) - railways,
+# dashed highways z index 0-waterways, 1-14 - dashedways, 15-20 - barrier, 21-50 normal ways, 60-70 aeroway, 70-80 - aerialway, 90 - 100 (subway - 20) - railways
 
 # bridges overwrite because bridge have separated styles with bridge..
 highway_styles_bridges_overwrite: ElementStyles = [
@@ -211,7 +216,8 @@ highway_styles_surface_special_and_paths: ElementStyles = [
      {Style.ZINDEX.name: 33, Style.COLOR.name:  '#FFFFFF', Style.EDGE_COLOR.name: "#B0A78D",
       Style.LINESTYLE.name: "-", Style.EDGE_LINESTYLE.name: "-"},
      {"1-8":  # on smaller zoom, change to line without edge
-        {Style.COLOR.name: '#8f8364', Style.EDGE_COLOR.name: None}}),
+        {Style.COLOR.name: '#8f8364', Style.EDGE_COLOR.name: None,
+         Style.PLOT_ON_BRIDGE.name: False}}),
 
 
     # size stejná jako -- path a footway - smaller than solid footway
@@ -219,35 +225,45 @@ highway_styles_surface_special_and_paths: ElementStyles = [
       'surface': ['unpaved', 'gravel', 'pebblestone', 'rock', 'dirt',
                   'ground', 'grass', 'sand', 'mud', 'woodchips']},
      {Style.COLOR.name: "#8f8364", Style.EDGE_COLOR.name: None,
-      Style.LINESTYLE.name: (3, (5, 4)), Style.ZINDEX.name: 10}
+      Style.LINESTYLE.name: (3, (5, 4)), Style.ZINDEX.name: 10,
+      Style.PLOT_ON_BRIDGE.name: False}
      ),
 ]
 
 highway_styles_special_and_paths: ElementStyles = [
 
     # o trochu menší než residental
+    # todo size
     ({'highway': 'service'}, {Style.ZINDEX.name: 38, Style.COLOR.name: '#FFFFFF',
                               Style.EDGE_COLOR.name: "#B0A78D"}),
-
-    ({'highway': 'cycleway'}, {Style.ZINDEX.name: 37, Style.COLOR.name: '#FFFFFF',
+    # todo size
+    ({'highway': 'pedestrian'}, {Style.ZINDEX.name: 37, Style.COLOR.name: '#FFFFFF',
+                                 Style.EDGE_COLOR.name: "#B0A78D"}),
+    # todo size
+    ({'highway': 'cycleway'}, {Style.ZINDEX.name: 36, Style.COLOR.name: '#FFFFFF',
                                Style.EDGE_COLOR.name: "#B0A78D"}),
 
-    ({'highway': 'raceway'}, {Style.ZINDEX.name: 36},
+    # todo size
+    ({'highway': 'raceway'}, {Style.ZINDEX.name: 35},
      {"7-10": {Style.COLOR.name: '#e6e3dd',
                Style.EDGE_COLOR.name: "#857e5f"}
       }),
 
 
+    # todo size
     ({'highway': 'steps'}, {Style.COLOR.name: '#FFFFFF', Style.EDGE_COLOR.name: "#B0A78D",
                             Style.LINESTYLE.name: (2, (3, 0.2)),
                             Style.LINE_CAPSTYLE: LineCupStyles.BUTT.value,
                             Style.EDGE_CAPSTYLE.name: LineCupStyles.BUTT.value,
                             Style.PLOT_ON_BRIDGE.name: None, Style.ZINDEX.name: 31}),
 
+    # todo size
     ({'highway': 'footway'}, {Style.ZINDEX.name: 30, Style.BRIDGE_COLOR.name: "#FFFFFF"},
      {"1-8": {Style.COLOR.name: '#8f8364', Style.EDGE_COLOR.name: None, Style.LINESTYLE.name: "-",
-              Style.LINE_CAPSTYLE.name: LineCupStyles.ROUND.value}
+              Style.LINE_CAPSTYLE.name: LineCupStyles.ROUND.value, Style.PLOT_ON_BRIDGE.name: False}
       }),
+
+    # todo size track and path same
     ({'highway': 'track'}, {Style.ZINDEX.name: 14, Style.COLOR.name: '#8f8364', Style.LINESTYLE.name: (7, (10, 4)),
      Style.EDGE_COLOR.name: None, Style.BRIDGE_COLOR.name: "#FFFFFF", Style.PLOT_ON_BRIDGE.name: None}),
     ({'highway': 'path'}, {Style.ZINDEX.name: 13, Style.COLOR.name: '#8f8364', Style.LINESTYLE.name: (3, (5, 4)),
@@ -293,7 +309,7 @@ railway_styles_service: ElementStyles = [
     # todo add width - smaller than normal rail
     ({'railway': ['rail', 'light_rail', "monorail", "subway"],
       'service': ['crossover', 'siding', 'spur', 'yard']}, {
-        Style.WIDTH.name: 40,  # smaller width, in osm alpha and width
+        Style.WIDTH.name: 15,  # smaller width, in osm alpha and width
     })]
 
 railway_styles: ElementStyles = [
@@ -313,7 +329,7 @@ railway_styles: ElementStyles = [
     }),
     # todo add width
     ({'railway': ['rail', 'light_rail', "monorail", "subway", 'miniature']}, {
-        Style.WIDTH.name: 10,
+        Style.WIDTH.name: 15,
     }),
 
 
@@ -336,14 +352,18 @@ railway_styles: ElementStyles = [
 ]
 
 waterway_styles_tunnels: ElementStyles = [
+    ({'waterway': '', 'tunnel': '', 'intermittent': "yes"}, {
+     Style.LINESTYLE.name: (0, (1, 1)), Style.EDGE_COLOR: None})
     ({'waterway': '', 'tunnel': ''}, {Style.LINESTYLE.name: "--", Style.EDGE_COLOR: None})]
 
 waterway_styles: ElementStyles = [
-    #todo width
+    ({'waterway': '', 'intermittent': "yes"}, {Style.LINESTYLE.name: (0, (1, 1)),
+                                               Style.EDGE_COLOR: None}),
+    # todo width
     ({'waterway': ['river']}, {Style.WIDTH.name: 15}),
-    #todo width - smaller than river bigger than default
-    ({'waterway': ['canal']}, {Style.WIDTH.name: 15}),    
-    ]
+    # todo width - smaller than river bigger than default
+    ({'waterway': ['canal']}, {Style.WIDTH.name: 15}),
+]
 
 aerialway_styles: ElementStyles = [
     # todo add width
@@ -371,12 +391,12 @@ aeroway_styles: ElementStyles = [
     }),
 ]
 
-barrier_styles: ElementStyles = [
-    ({'barrier': 'hedge'}, {
-        Style.COLOR.name: '#B7DEA6',
-        Style.ZINDEX.name: 14
-    })
-]
+# barrier_styles: ElementStyles = [
+#     ({'barrier': 'hedge'}, {
+#         Style.COLOR.name: '#B7DEA6',
+#         Style.ZINDEX.name: 14
+#     })
+# ]
 
 
 ways_styles_default: ElementStyles = [
@@ -457,8 +477,8 @@ WAYS_STYLES: ElementStyles = [
     *highway_styles_surface_special_and_paths,
     *highway_styles_special_and_paths,
 
-    *barrier_styles,
-    
+    # *barrier_styles,
+
     *waterway_styles,
     *waterway_styles_tunnels,
 
@@ -477,47 +497,76 @@ area_mandatory_styles_area: ElementStyles = [
 ]
 
 landuse_styles_area: ElementStyles = [
-    ({'landuse': 'farmland'}, {Style.COLOR.name: '#EDEDE0'}),
     ({'landuse': 'landfill'}, {Style.COLOR.name: '#dedcd1'}),
-    ({'landuse': 'forest'}, {Style.COLOR.name: '#9FC98D', }),
-    ({'landuse': 'meadow'}, {Style.COLOR.name: '#B7DEA6'}),
-    ({'landuse': 'grass'}, {Style.COLOR.name: '#B7DEA6'}),
-    ({'landuse': 'residential'}, {Style.COLOR.name: '#E2D4AF'}),
-    ({'landuse': 'industrial'}, {Style.COLOR.name: '#DFDBD1'}),
-    ({'landuse': 'basin'}, {Style.COLOR.name: '#8FB8DB'}),
-    ({'landuse': 'salt_pond'}, {Style.COLOR.name: '#8FB8DB'}),
+    ({'landuse': ['forest', 'recreation_ground']},
+     {Style.COLOR.name: '#9FC98D'}),
+    ({'landuse': 'vineyard'}, {Style.COLOR.name: '#d2e2a9'}),
+    ({'landuse': 'orchard'}, {Style.COLOR.name: '#ddeab4'}),
+    # ({'landuse': 'quarry'}, {Style.COLOR.name: '#DFDBD1'}),
+
+    ({'landuse': ['basin', 'salt_pond']}, {Style.COLOR.name: '#8FB8DB'}),
+    ({'landuse': ['meadow', 'grass', 'cemetery']},
+     {Style.COLOR.name: '#B7DEA6'}),
+
+    ({'landuse': 'military'}, {
+        Style.ZINDEX.name: 1, Style.EDGE_ALPHA.name: 0.7,
+        Style.EDGE_COLOR.name: "#a4a4a4", Style.WIDTH.name: 70,
+        Style.EDGE_LINESTYLE.name: "-"},
+     {"3-6": {Style.COLOR.name: '#a4a4a4', Style.ALPHA.name: 0.2}}),
+
+    ({'landuse': ['allotments', 'retail', 'residential', 'garages']}, {},
+     {"8-10": {Style.COLOR.name: '#ece1cb'}}),
+
+    ({'landuse': ['industrial', 'farmyard', 'brownfield', 'quarry']},
+     {Style.COLOR.name: '#DFDBD1'},
+     #  {"5-10": {Style.COLOR.name: '#DFDBD1'}
+     ),
+
 ]
 
 leisure_styles_area: ElementStyles = [
-    ({'leisure': 'swimming_pool'}, {Style.COLOR.name: '#8FB8DB'}),
+    ({'leisure': ['garden', 'park']}, {Style.COLOR.name: '#B7DEA6'}),
     ({'leisure': 'golf_course'}, {Style.COLOR.name: '#DCE9B9'}),
     ({'leisure': 'playground'}, {Style.COLOR.name: '#DCE9B9'}),
     ({'leisure': 'pitch'}, {Style.COLOR.name: '#DCE9B9'}),
     ({'leisure': 'sports_centre'}, {Style.COLOR.name: '#9FC98D'}),
+    ({'leisure': 'swimming_pool'}, {Style.COLOR.name: '#8FB8DB'}),
     ({'leisure': 'nature_reserve'}, {Style.COLOR.name: None, Style.EDGE_COLOR.name: '#97BB72',
                                      Style.WIDTH.name: 80,
                                      Style.EDGE_ALPHA.name: 0.85, Style.EDGE_LINESTYLE.name: '-'})
 ]
 
 building_styles_area: ElementStyles = [
-    ({'building': 'house'}, {Style.COLOR.name: 'grey'}),
-    ({'building': 'residential'}, {Style.COLOR.name: 'grey'}),
+    ({'building': ['church', 'synagogue', 'cathedral', 'temple']}, {}, {
+        "9-10": {Style.COLOR.name: '#908b84'}}),
 ]
 
+amenity_styles_area: ElementStyles = [
+    ({'amenity': ['parking', 'bicycle_parking', 'motorcycle_parking']}, {Style.COLOR.name: '#FFFFFF'}),
+    ({'amenity': 'grave_yard'}, {Style.COLOR.name: '#B7DEA6'}),
+]
 natural_styles_area: ElementStyles = [
     ({'natural': 'wood'}, {Style.COLOR.name: '#9FC98D'}),
-    ({'natural': 'water'}, {Style.COLOR.name: '#8FB8DB'}),
-    ({'natural': 'scrub'}, {Style.COLOR.name: '#B7DEA6'}),
-    ({'natural': 'heath'}, {Style.COLOR.name: '#B7DEA6'}),
+    ({'natural': 'beach'}, {Style.COLOR.name: '#9FC98D'}),
+    ({'natural': ['water', 'bay']}, {Style.COLOR.name: '#8FB8DB'}),
+    ({'natural': ['heath', 'scrub', 'grassland']},
+     {Style.COLOR.name: '#B7DEA6'}),
 ]
 
-aeroway_styles_area: ElementStyles = [
-]
 
 area_styles_default: ElementStyles = [
-    ({'building': ''}, {Style.COLOR.name: '#B7DEA6'}),
+    # under buildings
+    # todo ask - print
+    ([{'building': ''}, {'amenity': ''}, {'historic': ''}, {'landuse': ''}], {},
+     {"7": {Style.COLOR.name: '#e2d3b0'},
+      "1-6": {Style.COLOR.name: '#dbcca8'}}),
+
+    ({'amenity': ''}, {Style.COLOR.name: '#ece1cb'}),
+    ({'historic': ''}, {Style.COLOR.name: '#bab09a'}),
+    ({'building': ''}, {Style.COLOR.name: '#dacbae'}),
+
+    ({'highway': ['pedestrian', 'footway']}, {Style.COLOR.name: '#FFFFFF'}),
     ({'landuse': ''},  {Style.COLOR.name: '#EDEDE0'}),
-    ({'water': ''}, {Style.COLOR.name: '#8FB8DB'}),
     ({'leisure': ''}, {Style.COLOR.name: '#EDEDE0'}),
     ({'natural': ''}, {Style.COLOR.name: '#B7DEA6'}),
     ({'aeroway': ''}, {Style.COLOR.name: '#cccac3'}),
@@ -529,6 +578,7 @@ area_styles_default: ElementStyles = [
 ]
 
 AREAS_STYLES: ElementStyles = [
+    *amenity_styles_area,
     *natural_styles_area,
     *building_styles_area,
     *landuse_styles_area,
