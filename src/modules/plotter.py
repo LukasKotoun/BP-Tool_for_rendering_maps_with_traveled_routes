@@ -632,8 +632,7 @@ class Plotter:
             self.__ways_normal(tunnel_layer_gdf, True, False, zorder=zorder)
 
     @time_measurement("wayplot")
-    def ways(self, ways_gdf: GeoDataFrame, areas_over_tunnel_ways_gdf: GeoDataFrame,
-             areas_over_normal_ways_gdf: GeoDataFrame, over_filter=None):
+    def ways(self, ways_gdf: GeoDataFrame, areas_over_normal_ways_gdf: GeoDataFrame, over_filter=None):
         if (ways_gdf.empty):
             return
         # water ways and tunnels
@@ -650,7 +649,6 @@ class Plotter:
             ways_gdf, {'tunnel': ''}, compl=True)
 
         self.__tunnels(ways_tunnel_gdf)
-        self.areas(areas_over_tunnel_ways_gdf, 2)
         
         # normal ways
         ways_bridge_gdf, ways_gdf = GdfUtils.filter_rows(

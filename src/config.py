@@ -8,7 +8,7 @@ from common.map_enums import Style, ColorMode, PaperSize, MapOrientation, Marker
 # --------------------------------------------------------------map area--------------------------------------------------------------
 # OSM_INPUT_FILE_NAMES: str = ['../osm_files/vys.osm.pbf','../osm_files/jihmor.osm.pbf']
 # OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/vysJihE.osm.pbf'
-OSM_INPUT_FILE_NAMES: str | list[str] = ['../osm_files/skareaway.osm.pbf']
+OSM_INPUT_FILE_NAMES: str | list[str] = ['../osm_files/skbr.osm.pbf']
 # OSM_INPUT_FILE_NAMES: str | list[str] = '../trebic.osm.pbf'
 # extract - will be always true
 OSM_WANT_EXTRACT_AREA: bool = False
@@ -21,15 +21,15 @@ OUTPUT_PDF_NAME: str = '../pdfs/divocina'
 # AREA: WantedArea = [(6.94872,4.84293),(6.99314,4.84293),(6.99314,4.81603),(6.94872,4.81603)] #afrika
 # AREA: WantedArea = [(13.2198495,-8.8130580),(13.2614774,-8.8139062),(13.2616062,-8.8439302),(13.2181329,-8.8424460)] #angola - mesto 5km
 # AREA: WantedArea = [(13.2020960,-8.7766815),(13.2020370,-8.8766827),(13.3099288, -8.8775122), (13.3082471,-8.7782667)] # angol- 11.85 - z14 - square
-# AREA: WantedArea = [{"area": [(13.0140862,-8.8831442),(13.1660763,-8.8819132),(13.1667146, -9.0826624), (13.0159664,-9.0781028)], 
+# AREA: WantedArea = [{"area": [(13.0140862,-8.8831442),(13.1660763,-8.8819132),(13.1667146, -9.0826624), (13.0159664,-9.0781028)],
 #                      "plot": False, "category": 0, "width": 1}] # angol- ostrovy test
 # AREA: WantedArea = [(15.7937669,49.251 1294),(15.7940459,49.1851468),(15.9009507, 49.1847962), (15.9003445,49.2499564)] # tr - 7.8 - z14 - square
 
 # viden zoo - chodnik a ikony - rchod
-# AREA: WantedArea = [{'area':[(16.2985736,48.1866714), (16.3121350, 48.1865714), (16.3120706, 48.1803122), (16.2985736, 48.1803981)], "plot":False}] # zoom 10/17 
+# AREA: WantedArea = [{'area':[(16.2985736,48.1866714), (16.3121350, 48.1865714), (16.3120706, 48.1803122), (16.2985736, 48.1803981)], "plot":False}] # zoom 10/17
 
 # rakousko - cestičky -rcest
-# AREA: WantedArea = [{'area':[(16.0627306,48.0580592), (16.0897244, 48.0580592), (16.0897244, 48.0453939), (16.0626878, 48.0454514)], "plot":False}] # zoom 9/16 
+# AREA: WantedArea = [{'area':[(16.0627306,48.0580592), (16.0897244, 48.0580592), (16.0897244, 48.0453939), (16.0626878, 48.0454514)], "plot":False}] # zoom 9/16
 
 # rakousko - cestičky u koní -rkon
 # AREA: WantedArea = [{'area': [(15.9759536,48.0569747), (16.0298253, 48.0564572), (16.0299514, 48.0315206), (15.9758781, 48.0318936)], "plot":False}] # zoom 8/15
@@ -40,24 +40,25 @@ OUTPUT_PDF_NAME: str = '../pdfs/divocina'
 # slovensko - cyklotrasa asfalt/non asfalt- pathtunel u koní -skptunl
 
 # slovensko - lanovky - sklan
-# AREA: WantedArea = [{'area': [(18.9836906,49.2351414), (19.1019653, 49.2350294), (19.1017936, 49.1852375), (18.9838622, 49.1870325)], "plot":False}] # zoom 
+# AREA: WantedArea = [{'area': [(18.9836906,49.2351414), (19.1019653, 49.2350294), (19.1017936, 49.1852375), (18.9838622, 49.1870325)], "plot":False}] # zoom
 
 # slovensko - letiste - sklet
-# AREA: WantedArea = [{'area': [(17.1374492,48.1955133), (17.2557239, 48.1951700), (17.2557239, 48.1444531), (17.1377925, 48.1452547)], "plot":False}] # zoom 
+# AREA: WantedArea = [{'area': [(17.1374492,48.1955133), (17.2557239, 48.1951700), (17.2557239, 48.1444531), (17.1377925, 48.1452547)], "plot":False}] # zoom
 # slovensko - bratislava centrum  - skbr
-# AREA: WantedArea = [{'area': [(17.0797297,48.1649183), (17.1410558, 48.1642600), (17.1413133, 48.1383769), (17.0762106, 48.1384056)], "plot":False}] # zoom 
+AREA: WantedArea = [{'area': [(17.0797297, 48.1649183), (17.1410558, 48.1642600), (
+    17.1413133, 48.1383769), (17.0762106, 48.1384056)], "plot": False}]  # zoom
 
 # slovensko - voj prostor  - skvoj
-# AREA: WantedArea = [{'area': [(17.0325058,48.6691606), (17.6252633, 48.6856314), (17.6225169, 48.1661969), (17.0031625, 48.1808503)], "plot":False}] # zoom 
+# AREA: WantedArea = [{'area': [(17.0325058,48.6691606), (17.6252633, 48.6856314), (17.6225169, 48.1661969), (17.0031625, 48.1808503)], "plot":False}] # zoom
 
 # slovensko - bratislava nakup a landuse others  - sknak
-# AREA: WantedArea = [{'area': [(16.9756656,48.1968728), (16.9761267, 48.2213817), (17.0408431, 48.2214961), (17.0408431, 48.1953561)], "plot":False}] # zoom 
+# AREA: WantedArea = [{'area': [(16.9756656,48.1968728), (16.9761267, 48.2213817), (17.0408431, 48.2214961), (17.0408431, 48.1953561)], "plot":False}] # zoom
 
 # slovensko - bratislava area way  - skareaway
-AREA: WantedArea = [{'area': [(17.1848258,48.1529047), (17.2031475, 48.1531017), (17.2038558, 48.1396642), (17.1842006, 48.1394925)], "plot":False}] # zoom 
+# AREA: WantedArea = [{'area': [(17.1848258,48.1529047), (17.2031475, 48.1531017), (17.2038558, 48.1396642), (17.1842006, 48.1394925)], "plot":False}] # zoom
 
 # nemecko - funicular tunnel a railway tunnel - gefun
-# AREA: WantedArea = [{'area': [(8.6807722,49.4195719), (8.7399353, 49.4195644), (8.7400211, 49.3951311), (8.6807550, 49.3952708)], "plot":False}] # zoom 
+# AREA: WantedArea = [{'area': [(8.6807722,49.4195719), (8.7399353, 49.4195644), (8.7400211, 49.3951311), (8.6807550, 49.3952708)], "plot":False}] # zoom
 
 
 # zoom testing
@@ -66,7 +67,7 @@ AREA: WantedArea = [{'area': [(17.1848258,48.1529047), (17.2031475, 48.1531017),
 # AREA: WantedArea = [{'area':[(15.8096936,48.6459956), (15.8232333, 48.6460311), (15.8232550, 48.6397219), (15.8097686, 48.6397503)], "plot":False] # zoom 10/17 - 0.19673458447026707
 # AREA: WantedArea = [(15.8036264,48.6490436), (15.8307706, 48.6489869), (15.8307706, 48.6363825), (15.8035836, 48.6365244)] # zoom 9/16 - 0.0981350054744773
 # AREA: WantedArea = [(15.8408317, 48.6556897), (15.7863853, 48.6557486), (15.7865139, 48.6306536), (15.8407161, 48.6304267)] # zoom 8/15 - 0.049002255315964124
-# AREA: WantedArea = [(15.7568897,48.6700053), (15.8648558, 48.6704314), (15.8651992, 48.6197892), (15.7563658, 48.6202431)] # zoom 7/14 - 0.024514500087610937 
+# AREA: WantedArea = [(15.7568897,48.6700053), (15.8648558, 48.6704314), (15.8651992, 48.6197892), (15.7563658, 48.6202431)] # zoom 7/14 - 0.024514500087610937
 # AREA: WantedArea = [(15.7034756,48.6941575), (15.9206889, 48.6941186), (15.9198775, 48.5926164), (15.7030222, 48.5936264)] # zoom 6/13 - 0.012257255675006467
 # AREA: WantedArea = [(15.5986414,48.7535425), (16.0311167, 48.7533311), (16.0307733, 48.5528361), (15.5975000, 48.5544269)] # zoom 5/12 - 0.0061528912374338475
 # AREA: WantedArea = [(15.3856592,48.8443469), (16.2499850, 48.8453725), (16.2499850, 48.4415864), (15.3854983, 48.4465967)] # zoom 4/11 - 0.0030862202898378687
@@ -97,7 +98,7 @@ AREA: WantedArea = [{'area': [(17.1848258,48.1529047), (17.2031475, 48.1531017),
 #                     {"area": "Kraj Vysočina, Česko", "plot": True, "category": 1, "width": 1},
 #                     {"area": "Třebíč, Česko", "plot": False, "category": 0, "width": 1}]
 # AREA: WantedArea = [{"area": "Německo", "plot": True, "category": 1, "width": 1},
-                    # {"area": "Lucembursko", "plot": True, "category": 2, "width": 1}]
+# {"area": "Lucembursko", "plot": True, "category": 2, "width": 1}]
 
 # AREA: WantedArea = ["Kraj Vysočina, Česko"]
 # AREA: WantedArea = ["Jihomoravský kraj, Česko"]
@@ -107,7 +108,8 @@ AREA: WantedArea = [{'area': [(17.1848258,48.1529047), (17.2031475, 48.1531017),
 # AREA: WantedArea = ["Okres Třebíč, Česko", "Třebíč, Česko", "Okres Jihlava, Česko"]
 # AREA: WantedArea = ["Texas, USA"]
 
-PAPER_DIMENSIONS: PaperSize | tuple[float | None, float | None] = PaperSize.A6.dimensions
+PAPER_DIMENSIONS: PaperSize | tuple[float |
+                                    None, float | None] = PaperSize.A4.dimensions
 # PAPER_DIMENSIONS: PaperSize | tuple[float | None, float | None] = PaperSize.A4.dimensions
 # set own dimensions. If one is left as 'None' it will be automaticaly calculated using area size
 # PAPER_DIMENSIONS = (1100, None)
@@ -139,15 +141,15 @@ ELE_PROMINENCE_MAX_DIFF_RATIO = 3
 FILTER_PLACE_BY_POPULATION = True
 # --------------------------------------------------------------preview--------------------------------------------------------------
 # NOTE: must have same settings as the resulting one when generating for large format printing
-WANT_PREVIEW: bool = False 
+WANT_PREVIEW: bool = False
 # OUTER_AREA: WantedArea = [(15.7034756,48.6941575), (15.9206889,48.6941186), (15.9198775, 48.5926164), (15.7030222, 48.5936264)] # zoom 13 - 0.012257255675006467
 
 # area for that you are creating smaller preview (bigger than normal area)
 # OUTER_AREA: WantedArea =  "Vysočina, Česko"
 
 # OUTER_AREA: WantedArea =  [{"area": "Trebic, Česko", "plot": True, "category": 2, "width": 1}]
-OUTER_AREA: WantedArea =  [{"area": "Jihomoravský kraj, Česko", "plot": True, "category": 2, "width": 1},
-                    {"area": "Praha, Česko", "plot": True, "category": 1, "width": 1}]
+OUTER_AREA: WantedArea = [{"area": "Jihomoravský kraj, Česko", "plot": True, "category": 2, "width": 1},
+                          {"area": "Praha, Česko", "plot": True, "category": 1, "width": 1}]
 # OUTER_AREA: WantedArea = "Česko"
 # OUTER_AREA: WantedArea = [(15.7396182, 49.3111173), (16.0273871, 49.3028839),
 #                     (16.0266146, 49.1439064), (15.6712219, 49.1928600)]
@@ -181,24 +183,25 @@ unwanted_nodes_tags: UnwantedTags = {
 }
 
 wanted_ways: WantedCategories = {
-    #all
+    # all
     # ways connected with links
-    'highway': {'motorway', 'trunk', 'primary', 'secondary', 'tertiary', 'motorway_link', 'trunk_link', 'primary_link', 'secondary_link', 'tertiary_link', 
-    'residential', 'unclassified', 'service', 'pedestrian', 'cycleway', 'raceway', 'steps', 'footway', 'track', 'path'},
+    'highway': {'motorway', 'trunk', 'primary', 'secondary', 'tertiary', 'motorway_link', 'trunk_link', 'primary_link', 'secondary_link', 'tertiary_link',
+                'residential', 'unclassified', 'service', 'pedestrian', 'cycleway', 'raceway', 'steps', 'footway', 'track', 'path'},
     'railway': {'rail', 'light_rail', "monorail", 'miniature', 'subway', 'funicular', 'tram'},
     'aeroway': {'runway', 'taxiway'},
-    'aerialway': {'cable_car', 'gondola', 'chair_lift'}, # as others in fe and send empty {}, 'mixed_lift', 'drag_lift', 't-bar', 'j-bar', 'platter', 'rope_tow', 'magic_carpet', 'zip_line', 'goods'},
+    # as others in fe and send empty {}, 'mixed_lift', 'drag_lift', 't-bar', 'j-bar', 'platter', 'rope_tow', 'magic_carpet', 'zip_line', 'goods'},
+    'aerialway': {'cable_car', 'gondola', 'chair_lift'},
     'barrier': {'city_wall', 'wall', 'cable_barrier'},
     'waterway': {'river', 'canal', 'stream', 'drain', 'ditch'},
 
-    
+
     # 'natural': {'coastline'},
 
 
 
-    
+
     # 'highway': ['primary'],
-#    'highway': ['motorway', 'trunk','primary', 'secondary', 'tertiary'],
+    #    'highway': ['motorway', 'trunk','primary', 'secondary', 'tertiary'],
     # # 'highway': ['motorway', 'trunk', 'primary'],
     # 'highway': {'motorway', 'trunk', 'primary', 'secondary', 'tertiary', 'unclassified', 'residential', 'path', 'footway'},
     # # # 'highway': {'tertiary'},
@@ -215,30 +218,30 @@ unwanted_ways_tags: UnwantedTags = {
     # },
     # 'waterway': ['stream']
 
-    
+
     # {'railway':""}:{'service':['yard'],'tunnel': ['building_passage']}
 }
 
 wanted_areas: WantedCategories = {
     # all areas - osm can have more tags? how to do it
-        'landuse': {'forest', 'residential', 'commercial', 'retail', 'industrial', 'allotments', 'retail',
-                    'meadow', 'grass', 'landfill', 'cemetery', 'vineyard', 'orchard', 'garages', 'military',
-                    'quarry', 'recreation_ground'},
-        'leisure': {'park', 'pitch', 'garden', 'golf_course', 
-                    'nature_reserve', 'playground', 'stadium', 'swimming_pool', 'sports_centre'},
-        'natural': {'wood', 'water', 'scrub', 'heath', 'grassland', 'bay', 'beach', 'sand'}, # all water is in natural
+    'landuse': {'farmland', 'forest', 'residential', 'commercial', 'retail', 'industrial', 'allotments', 'retail',
+                'meadow', 'grass', 'landfill', 'cemetery', 'vineyard', 'orchard', 'garages', 'military',
+                'quarry', 'recreation_ground'},
+    'leisure': {'park', 'pitch', 'garden', 'golf_course',
+                'nature_reserve', 'playground', 'stadium', 'swimming_pool', 'sports_centre'},
+    # all water (except pools) is in natural
+    'natural': {'wood', 'water', 'scrub', 'heath', 'grassland', 'bay', 'beach', 'sand'},
+    # občanské vybavení
+    'amenity': {'motorcycle_parking', 'parking', 'grave_yard', 'school', 'university', 'college', 'kindergarten'
+                'bus_station', 'hospital', 'clinic', 'place_of_worship'},
+    'building': set({}),  # budovy
+    'aeroway': {'aerodrome'},
 
-        'amenity': set({}), # občanské vybavení - oblasti škol, nemocnic, nákupních center, parkovišť, atd. 
-        'building': set({}), # budovy
-        
-        'historic': {'building', 'church', 'house', 'manor', 'temple', 'tomb'},
-        'highway': {'pedestrian', 'footway'},
-        'aeroway': {'aerodrome'},
+    'highway': {'pedestrian', 'footway'},
 }
 
 unwanted_areas_tags: UnwantedTags = {
 }
-
 
 
 # load
@@ -251,7 +254,8 @@ CRS_CALC = "EPSG:3857"  # europe 25833 - calculating map scale and scaling facto
 CRS_DISPLAY = "EPSG:3857"
 
 # key, (types, required)
-REQ_AREA_DICT_KEYS = {"area": (str | list, True), "plot": (bool, True), "category": (int | type(None), False), "width": (int | float | type(None), False)}
+REQ_AREA_DICT_KEYS = {"area": (str | list, True), "plot": (bool, True), "category": (
+    int | type(None), False), "width": (int | float | type(None), False)}
 REQ_AREAS_MAPPING_DICT = {"width": Style.WIDTH.name}
 try:
     FONT_AWESOME_PATH = "./common/fonts/FontAwesome6Free-Solid-900.otf"
@@ -266,22 +270,22 @@ except:
     material_design_prop = None
     warnings.warn("Font awesome not found")
 
-    
+
 # --------------------------------------------------------------gpx settings--------------------------------------------------------------
 
-# zooms: scaling values for center of each zoom level 
+# zooms: scaling values for center of each zoom level
 # zoom level: scaling value
 ZOOM_MAPPING: dict[int, float] = {
-    10: 0.1967345, # 17
-    9: 0.0981350, # 16
-    8: 0.0490022, # 15
-    7: 0.0245145, # 14
-    6: 0.0122572, # 13
-    5: 0.0061528, # 12
-    4: 0.0030862, # 11
-    3: 0.0015295, # 10
-    2:  0.0007648, # 9
-    1:  0.0003824, # 8
+    10: 0.1967345,  # 17
+    9: 0.0981350,  # 16
+    8: 0.0490022,  # 15
+    7: 0.0245145,  # 14
+    6: 0.0122572,  # 13
+    5: 0.0061528,  # 12
+    4: 0.0030862,  # 11
+    3: 0.0015295,  # 10
+    2:  0.0007648,  # 9
+    1:  0.0003824,  # 8
 }
 
 
@@ -317,7 +321,8 @@ NODES_ADDITIONAL_COLUMNS = ['name', 'ele', 'population']
 NODES_NUMERIC_COLUMNS = ['ele', 'population']
 NODES_ROUND_COLUMNS = ['ele']
 
-WAYS_ADDITIONAL_COLUMNS = ['bridge', 'layer', 'tunnel', 'surface', 'tracktype', 'service', 'intermittent']
+WAYS_ADDITIONAL_COLUMNS = ['bridge', 'layer', 'tunnel', 'historic'
+                           'surface', 'tracktype', 'service', 'intermittent']
 WAYS_NUMERIC_COLUMNS = []
 WAYS_ROUND_COLUMNS = []
 
@@ -326,15 +331,16 @@ AREA_NUMERIC_COLUMNS = []
 AREA_ROUND_COLUMNS = []
 
 DERIVATE_COLUMNS_NODES = [
-    ({'place': ''}, Style.TEXT1.name , 'name', None),
-    ({'natural': 'peak'}, Style.TEXT1.name, 'name', None), # try to set with filter in derivated columns
+    ({'place': ''}, Style.TEXT1.name, 'name', None),
+    # try to set with filter in derivated columns
+    ({'natural': 'peak'}, Style.TEXT1.name, 'name', None),
     ({'natural': 'peak'}, Style.TEXT2.name, 'ele', None),
 ]
 
 DERIVATE_COLUMNS_WAYS = []
 DERIVATE_COLUMNS_AREAS = []
 
-NODES_DONT_CATEGORIZE = [Style.TEXT1_POSITIONS.name, Style.TEXT2_POSITIONS.name]
+NODES_DONT_CATEGORIZE = [
+    Style.TEXT1_POSITIONS.name, Style.TEXT2_POSITIONS.name]
 WAYS_DONT_CATEGORIZE = []
 AREAS_DONT_CATEGORIZE = []
-

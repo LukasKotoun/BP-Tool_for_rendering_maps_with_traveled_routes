@@ -245,7 +245,7 @@ def main() -> None:
     # zoom level to endpoint specific - always from that biger area
     zoom_level = Utils.get_zoom_level(
         map_scaling_factor, ZOOM_MAPPING, 0.1)
-    # zoom_level = 
+    # zoom_level = 9
     print(map_scaling_factor, zoom_level)
     # fifth function - parse osm file and get gdfs and than remove osm file
     # ------------get elements from osm file------------
@@ -363,12 +363,10 @@ def main() -> None:
     # ------------plot------------
     # todo add checks for errors in plotting cals if dict from fe is not correct
     areas_over_normal_ways, areas_gdf = GdfUtils.filter_rows(
-        areas_gdf, AREAS_WAYS_OVER_NORMAL_WAYS_FILTER, compl=True)
-    areas_over_tunnel_ways, areas_gdf = GdfUtils.filter_rows(
-        areas_gdf, AREAS_WAYS_OVER_TUNNEL_WAYS_FILTER, compl=True)
+        areas_gdf, AREAS_WAYS_OVER_NORMAL_WAYS_FILTER[0], compl=True)
+    areas_over_normal_ways =  GdfUtils.filter_rows(areas_over_normal_ways, AREAS_WAYS_OVER_NORMAL_WAYS_FILTER[1])
+
     # this to to plotter settings
-    areas_over_normal_ways =  GdfUtils.filter_rows(areas_over_normal_ways, {'area': "yes"})
-    areas_over_tunnel_ways = GdfUtils.filter_rows(areas_over_tunnel_ways, {'area': "yes"})
     plotter_settings = {"map_area_gdf": map_area_gdf, "paper_dimensions_mm": paper_dimensions_mm,
                         "map_scaling_factor": map_scaling_factor, "text_bounds_overflow_threshold": TEXT_BOUNDS_OVERFLOW_THRESHOLD,
                         "text_wrap_names_len": TEXT_WRAP_NAMES_LEN, "outer_map_area_gdf": outer_map_area_gdf, "map_bg_color": GENERAL_DEFAULT_STYLES[Style.COLOR.name],
@@ -386,7 +384,7 @@ def main() -> None:
     if (not boundary_map_area_gdf.empty):
         plotter.area_boundary(boundary_map_area_gdf,
                               color="black")
-    plotter.ways(ways_gdf, areas_over_tunnel_ways, areas_over_normal_ways, WAYS_WITHOUT_CROSSING)
+    plotter.ways(ways_gdf, areas_over_normal_ways, WAYS_WITHOUT_CROSSING)
 
     # if want clip text
     plotter.gpxs(gpxs_gdf)
