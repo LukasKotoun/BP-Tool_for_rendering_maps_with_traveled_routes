@@ -10,8 +10,9 @@ from osmium import FileProcessor
 from shapely.ops import split
 
 from modules.utils import Utils
+from config import CRS_DISPLAY
 from modules.geom_utils import GeomUtils
-from common.map_enums import WorldSides, Style, MinPlot, MinLoad
+from common.map_enums import WorldSides, Style, MinPlot
 from common.custom_types import BoundsDict, DimensionsTuple, WantedAreas, RowsConditions, RowsConditionsAND, WantedArea
 from common.common_helpers import time_measurement
 
@@ -216,6 +217,18 @@ class GdfUtils:
         bg_gdf = GeoDataFrame(
             bg_data, geometry="geometry", crs=map_area_gdf.crs)
         return bg_gdf
+
+    # centroid needs to be calc in display cordinates 
+    @staticmethod
+    def create_points_from_polygons_gdf(gdf: GeoDataFrame):
+        if(gdf.empty):
+            return
+        original_crs = gdf.crs
+        gdf = GdfUtils.change_crs(gdf, CRS_DISPLAY)
+        gdf = gdf[gdf.geometry.type.isin(["Polygon", "MultiPolygon"])].reset_index(drop=True)
+        gdf["geometry"] = gdf.geometry.centroid
+        gdf = GdfUtils.change_crs(gdf, original_crs)
+        return gdf 
 
     # ------------editing gdf------------
     @staticmethod
@@ -514,14 +527,6 @@ class GdfUtils:
                                                      {Style.TEXT1.name: ''},
                                                      {Style.TEXT2.name: ''}])
         
-        nodes_gdf = GdfUtils.filter_rows(nodes_gdf, [{Style.MIN_LOAD_REQ.name: '~'}, {Style.MIN_LOAD_REQ.name: MinLoad.NONE.name},
-                                                     {Style.MIN_LOAD_REQ.name: MinLoad.TEXT1.name, Style.TEXT1.name: ''},
-                                                    {Style.MIN_LOAD_REQ.name: MinLoad.TEXT2.name, Style.TEXT2.name: ''},
-                                                    {Style.MIN_LOAD_REQ.name: MinLoad.TEXT1_TEXT2.name, Style.TEXT1.name: '', Style.TEXT2.name: ''},
-                                                    {Style.MIN_LOAD_REQ.name: MinLoad.TEXT1_OR_TEXT2.name, Style.TEXT1.name: ''},
-                                                    {Style.MIN_LOAD_REQ.name: MinLoad.TEXT1_OR_TEXT2.name, Style.TEXT2.name: ''}])
-        GdfUtils.remove_columns(nodes_gdf, [Style.MIN_LOAD_REQ.name])
-        
         nodes_gdf = GdfUtils.filter_rows(nodes_gdf, [{Style.MIN_PLOT_REQ.name: MinPlot.MARKER.name, Style.MARKER.name: '', Style.COLOR.name: ''},
                                                      {Style.MIN_PLOT_REQ.name: MinPlot.MARKER_TEXT1.name,
                                                          Style.MARKER.name: '', Style.TEXT1.name: ''},
@@ -642,3 +647,4 @@ class GdfUtils:
         intersection_gdf = intersection_gdf[
         intersection_gdf.geometry.type.isin(['LineString', 'MultiLineString'])]
         return GdfUtils.merge_lines_gdf(intersection_gdf)
+

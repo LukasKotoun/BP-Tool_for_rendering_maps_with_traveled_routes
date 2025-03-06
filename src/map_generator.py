@@ -68,8 +68,7 @@ def gdfs_prepare_styled_columns(gpxs_gdf, nodes_gdf, ways_gdf, areas_gdf, map_sc
 
     GdfUtils.multiply_column_gdf(nodes_gdf, Style.WIDTH.name, [
        Style.FE_WIDTH_SCALE.name], None)
-    GdfUtils.multiply_column_gdf(nodes_gdf, Style.TEXT_FONT_SIZE.name, [
-        Style.TEXT_FONT_SIZE_SCALE.name, Style.FE_TEXT_FONT_SIZE_SCALE.name], None)
+    GdfUtils.multiply_column_gdf(nodes_gdf, Style.TEXT_FONT_SIZE.name, [Style.FE_TEXT_FONT_SIZE_SCALE.name], None)
     # text outline
     GdfUtils.create_derivated_columns(nodes_gdf, Style.TEXT_OUTLINE_WIDTH.name, Style.TEXT_FONT_SIZE.name, [
                                       Style.TEXT_OUTLINE_WIDTH_RATIO.name])
@@ -84,8 +83,7 @@ def gdfs_prepare_styled_columns(gpxs_gdf, nodes_gdf, ways_gdf, areas_gdf, map_sc
             nodes_gdf, new_column, old_column, filter=filter, fill=fill)
         old_column_remove.append(old_column)
 
-    GdfUtils.remove_columns(nodes_gdf, [Style.FE_WIDTH_SCALE.name,
-                                        Style.TEXT_FONT_SIZE_SCALE.name, Style.FE_TEXT_FONT_SIZE_SCALE.name,
+    GdfUtils.remove_columns(nodes_gdf, [Style.FE_WIDTH_SCALE.name, Style.FE_TEXT_FONT_SIZE_SCALE.name,
                                         Style.EDGE_WIDTH_RATIO.name, Style.TEXT_OUTLINE_WIDTH_RATIO.name, *old_column_remove])
 
     # ----ways----
@@ -171,6 +169,7 @@ def calc_preview(map_area_gdf, paper_dimensions_mm):
     # calc map factor for creating automatic array with wanted elements - for preview area (without area_zoom_preview)
     # ?? to doc - need because it will clip by required area - and that will be some big area in not clipping (cant use only first approach)
     # ?? req area je potom velká jako pdf stránka (přes celou stránku) a ne jako puvodně chtěná oblast a tedy by k žádnému zaříznutí nedošlo
+    # map_area_gdf = needs to be in display cords
     # calc bounds so area_zoom_preview will be 1 and will fill whole paper
     paper_fill_bounds = Utils.calc_bounds_to_fill_paper_with_ratio(map_area_gdf.union_all().centroid,
                                                                    paper_dimensions_mm, outer_map_area_dimensions,
@@ -251,7 +250,7 @@ def main() -> None:
     # zoom level to endpoint specific - always from that biger area
     zoom_level = Utils.get_zoom_level(
         map_scaling_factor, ZOOM_MAPPING, 0.1)
-    zoom_level = 9
+    # zoom_level = 9
     print(map_scaling_factor, zoom_level)
     # fifth function - parse osm file and get gdfs and than remove osm file
     # ------------get elements from osm file------------
@@ -277,7 +276,7 @@ def main() -> None:
 
     # ------------osm file loading------------
     osm_file_parser = OsmDataParser(
-        wanted_nodes, wanted_ways, wanted_areas,
+        wanted_nodes, wanted_nodes_from_area, wanted_ways, wanted_areas,
         unwanted_nodes_tags, unwanted_ways_tags, unwanted_areas_tags, area_additional_columns=AREA_ADDITIONAL_COLUMNS,
         node_additional_columns=NODES_ADDITIONAL_COLUMNS, way_additional_columns=WAYS_ADDITIONAL_COLUMNS)
     nodes_gdf, ways_gdf, areas_gdf = osm_file_parser.create_gdf(
@@ -304,7 +303,11 @@ def main() -> None:
             ELE_PROMINENCE_MAX_DIFF_RATIO)
     if(MIN_POPULATION is not None):
         nodes_gdf = GdfUtils.filter_place_by_population(nodes_gdf, PLACES_TO_FILTER_BY_POPULATION, MIN_POPULATION)
-        
+
+    # prepare style dict
+    for var_name, var_value in MAP_THEME['variables'].items():
+        MAP_THEME['variables'][var_name] = StyleAssigner.convert_variables_from_dynamic(var_value, zoom_level)
+    
     # seven function - get bg gdf
     # get coastline and determine where is land and where water
     coast_gdf, ways_gdf = GdfUtils.filter_rows(
@@ -319,8 +322,6 @@ def main() -> None:
     gpxs_gdf = GdfUtils.merge_lines_gdf(gpxs_gdf, [])
     # assing zoom specific styles
     # eight function - style 
-    for var_name, var_value in MAP_THEME['variables'].items():
-        MAP_THEME['variables'][var_name] = StyleAssigner.convert_variables_from_dynamic(var_value, zoom_level)
     gpxs_styles = StyleAssigner.convert_from_dynamic(MAP_THEME['styles']['gpxs'], zoom_level)
     nodes_styles = StyleAssigner.convert_from_dynamic(MAP_THEME['styles']['nodes'], zoom_level)
     ways_styles = StyleAssigner.convert_from_dynamic(MAP_THEME['styles']['ways'], zoom_level)
@@ -398,9 +399,9 @@ def main() -> None:
     if (not boundary_map_area_gdf.empty):
         plotter.area_boundary(boundary_map_area_gdf,
                               color="black")
+        
     plotter.ways(ways_gdf, areas_over_normal_ways, MAP_THEME['variables'][MapThemeVariable.WAYS_WITHOUT_CROSSING_FILTER])
 
-    # if want clip text
     plotter.gpxs(gpxs_gdf)
     plotter.clip()
 

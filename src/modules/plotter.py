@@ -69,21 +69,26 @@ class Plotter:
 
         font_properties = Utils.get_value(
             row, Style.MARKER_FONT_PROPERTIES.name, None)
-        if (pd.notna(font_properties)):
-            # icon using font properties
-            va = Utils.get_value(
-                row, Style.MARKER_VERTICAL_ALIGN.name, "center")
-            ha = Utils.get_value(
-                row, Style.MARKER_HORIZONTAL_ALIGN.name, "center")
-            marker: Text = self.ax.text(row.geometry.x, row.geometry.y, row.MARKER, color=row.COLOR, fontsize=row.WIDTH,
-                                        font_properties=font_properties, alpha=row.ALPHA,
-                                        path_effects=[pe.withStroke(linewidth=row.EDGE_WIDTH,
-                                                                    alpha=row.ALPHA, foreground=row.EDGE_COLOR)],
-                                        zorder=zorder, va=va, ha=ha)
-        else:
-            marker: Line2D = self.ax.plot(row.geometry.x, row.geometry.y, marker=row.MARKER, mfc=row.COLOR, ms=row.WIDTH,
-                                          mec=row.EDGE_COLOR, mew=row.EDGE_WIDTH, alpha=row.ALPHA,
-                                          zorder=zorder)
+        try:
+            if (pd.notna(font_properties)):
+                # icon using font properties
+                va = Utils.get_value(
+                    row, Style.MARKER_VERTICAL_ALIGN.name, "center")
+                ha = Utils.get_value(
+                    row, Style.MARKER_HORIZONTAL_ALIGN.name, "center")
+                marker: Text = self.ax.text(row.geometry.x, row.geometry.y, row.MARKER, color=row.COLOR, fontsize=row.WIDTH,
+                                            font_properties=font_properties, alpha=row.ALPHA,
+                                            path_effects=[pe.withStroke(linewidth=row.EDGE_WIDTH,
+                                                                        alpha=row.ALPHA, foreground=row.EDGE_COLOR)],
+                                            zorder=zorder, va=va, ha=ha)
+            else:
+                marker: Line2D = self.ax.plot(row.geometry.x, row.geometry.y, marker=row.MARKER, mfc=row.COLOR, ms=row.WIDTH,
+                                            mec=row.EDGE_COLOR, mew=row.EDGE_WIDTH, alpha=row.ALPHA,
+                                            zorder=zorder)
+        except ValueError as e:
+            warnings.warn(f"Marker {row.MARKER} is not valid")
+            return None
+        
         if (isinstance(marker, list)):
             marker = marker[0]
         bbox = marker.get_tightbbox()
@@ -125,19 +130,19 @@ class Plotter:
         for position in text_positions:
             x_shift = 0
             y_shift = 0
-            if (position == TextPositions.TOP.name):
+            if (position == TextPositions.TOP):
                 y_shift += marker_size * 0.8
                 ha = 'center'
                 va = 'bottom'
-            elif (position == TextPositions.BOTTOM.name):
+            elif (position == TextPositions.BOTTOM):
                 y_shift -= marker_size
                 ha = 'center'
                 va = 'top'
-            elif (position == TextPositions.LEFT.name):
+            elif (position == TextPositions.LEFT):
                 x_shift -= marker_size
                 ha = 'right'
                 va = 'center'
-            elif (position == TextPositions.RIGHT.name):
+            elif (position == TextPositions.RIGHT):
                 x_shift += marker_size
                 ha = 'left'
                 va = 'center'
@@ -314,10 +319,8 @@ class Plotter:
 
     def __text_gdf_on_points(self, gdf: GeoDataFrame, store_bbox: bool = True, zorder: int = 3):
         gdf = GdfUtils.filter_invalid_texts(gdf)
-        texts = GdfUtils.filter_rows(
-            gdf, [{Style.TEXT1.name: ''}, {Style.TEXT2.name: ''}])
 
-        for row in texts.itertuples(index=False):
+        for row in gdf.itertuples(index=False):
             text1 = Utils.get_value(row, Style.TEXT1.name, None)
             text2 = Utils.get_value(row, Style.TEXT2.name, None)
             if (text1 is not None and text2 is not None):
@@ -340,8 +343,7 @@ class Plotter:
     def __markers_gdf_with_one_annotation(self, gdf: GeoDataFrame, store_bbox: bool = True, text_zorder: int = 3, marker_zorder: int = 2):
         gdf = GdfUtils.filter_invalid_markers(gdf)
         gdf = GdfUtils.filter_invalid_texts(gdf)
-        texts = GdfUtils.filter_rows(
-            gdf, [{Style.TEXT1.name: '', Style.TEXT1_POSITIONS.name: ''}, {Style.TEXT2.name: '', Style.TEXT2_POSITIONS.name: ''}])
+
         for row in gdf.itertuples(index=False):
             text1 = Utils.get_value(row, Style.TEXT1.name, None)
             if (text1 is not None):
@@ -354,8 +356,7 @@ class Plotter:
     def __markers_gdf_with_two_annotations(self, gdf: GeoDataFrame, store_bbox: bool = True, text_zorder: int = 3, marker_zorder: int = 2):
         gdf = GdfUtils.filter_invalid_markers(gdf)
         gdf = GdfUtils.filter_invalid_texts(gdf)
-        texts1 = GdfUtils.filter_rows(
-            gdf, [{Style.TEXT1.name: '', Style.TEXT1_POSITIONS.name: '', Style.TEXT2.name: '', Style.TEXT2_POSITIONS.name: ''}])
+       
         for row in gdf.itertuples(index=False):
             self.__marker_with_two_annotations(
                 row, store_bbox, text_zorder=text_zorder, marker_zorder=marker_zorder)
@@ -369,10 +370,11 @@ class Plotter:
             nodes_gdf, [Style.ZINDEX.name], [])
         for zindex, nodes_group_gdf in sorted(groups, key=lambda x: x[0], reverse=True):
             markers_with_two_annotations, group_rest = GdfUtils.filter_rows(
-                nodes_group_gdf, {Style.MARKER.name: '', Style.TEXT1.name: '', Style.TEXT2.name: ''}, compl=True)
+                nodes_group_gdf, {Style.MARKER.name: '', Style.TEXT1.name: '', Style.TEXT2.name: '',
+                                  Style.TEXT1_POSITIONS.name: '', Style.TEXT2_POSITIONS.name: ''}, compl=True)
 
             markers_with_one_annotation, group_rest = GdfUtils.filter_rows(
-                group_rest, [{Style.MARKER.name: '', Style.TEXT1.name: ''}, {Style.MARKER.name: '', Style.TEXT2.name: ''}], compl=True)
+                group_rest, [{Style.MARKER.name: '', Style.TEXT1.name: '', Style.TEXT1_POSITIONS.name: ''}, {Style.MARKER.name: '', Style.TEXT2.name: '', Style.TEXT2_POSITIONS.name: ''}], compl=True)
 
             markers, group_rest = GdfUtils.filter_rows(
                 group_rest, {Style.MARKER.name: ''}, compl=True)

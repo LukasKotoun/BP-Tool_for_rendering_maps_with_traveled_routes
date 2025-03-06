@@ -12,6 +12,8 @@ class LineCupStyles(Enum):
     PROJECTING = "projecting"
 
 class MarkersCodes(Enum):
+    FA_TOWER_OBSERVATION = "\ue586"
+    MU_CASTLE = "\ueaad"
     TEST = "\u2713"
 
 class MinPlot(Enum):  # minimum parts that node must have. If not whole node object is removed
@@ -33,12 +35,6 @@ class MapThemeVariable(Enum):
     NODES_STYLES_SCALE = "NODES_STYLES_SCALE"
     WAYS_STYLES_SCALE = "WAYS_STYLES_SCALE"
     AREAS_STYLES_SCALE = "AREAS_STYLES_SCALE"
-class MinLoad(Enum):  # minimum parts that node must have. If not whole node object is removed
-    TEXT1 = "TEXT1"
-    TEXT2 = "TEXT2"
-    TEXT1_TEXT2 = "TEXT1_TEXT2"
-    TEXT1_OR_TEXT2 = "TEXT1_OR_TEXT2"
-    NONE = "NONE"
 
 class TextPositions(Enum):  
     TOP = "TOP"
@@ -124,11 +120,9 @@ class Style(Enum):
     # nodes annotation requirements for ploting 
     MIN_PLOT_REQ = "MIN_PLOT_REQ"
     # nodes min annotation requirements in loading
-    MIN_LOAD_REQ = "MIN_LOAD_REQ"
 
     #scales
     FE_WIDTH_SCALE = "FE_WIDTH_SCALE" # lines and icons
-    TEXT_FONT_SIZE_SCALE = "TEXT_FONT_SIZE_SCALE"
     FE_TEXT_FONT_SIZE_SCALE = "FE_TEXT_FONT_SIZE_SCALE" # text
     
     # calculated/derivated - cant be set by user

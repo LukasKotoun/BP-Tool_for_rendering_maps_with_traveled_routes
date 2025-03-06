@@ -8,12 +8,12 @@ from common.map_enums import Style, ColorMode, PaperSize, MapOrientation, Marker
 # --------------------------------------------------------------map area--------------------------------------------------------------
 # OSM_INPUT_FILE_NAMES: str = ['../osm_files/vys.osm.pbf','../osm_files/jihmor.osm.pbf']
 # OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/vysJihE.osm.pbf'
-OSM_INPUT_FILE_NAMES: str | list[str] = ['../osm_files/skbr.osm.pbf']
+OSM_INPUT_FILE_NAMES: str | list[str] = ['../osm_files/brtnice.osm.pbf']
 # OSM_INPUT_FILE_NAMES: str | list[str] = '../trebic.osm.pbf'
 # extract - will be always true
 OSM_WANT_EXTRACT_AREA: bool = False
 # set if want osm file cutting using osmium command line tool (need to be uinstalled), If not set to None
-OSM_OUTPUT_FILE_NAME: None | str = '../osm_files/skareaway.osm.pbf'
+OSM_OUTPUT_FILE_NAME: None | str = '../osm_files/brtnice.osm.pbf'
 
 OUTPUT_PDF_NAME: str = '../pdfs/divocina'
 
@@ -45,8 +45,8 @@ OUTPUT_PDF_NAME: str = '../pdfs/divocina'
 # slovensko - letiste - sklet
 # AREA: WantedArea = [{'area': [(17.1374492,48.1955133), (17.2557239, 48.1951700), (17.2557239, 48.1444531), (17.1377925, 48.1452547)], "plot":False}] # zoom
 # slovensko - bratislava centrum  - skbr
-AREA: WantedArea = [{'area': [(17.0797297, 48.1649183), (17.1410558, 48.1642600), (
-    17.1413133, 48.1383769), (17.0762106, 48.1384056)], "plot": False}]  # zoom
+# AREA: WantedArea = [{'area': [(17.0797297, 48.1649183), (17.1410558, 48.1642600), (
+#     17.1413133, 48.1383769), (17.0762106, 48.1384056)], "plot": False}]  # zoom
 
 # slovensko - voj prostor  - skvoj
 # AREA: WantedArea = [{'area': [(17.0325058,48.6691606), (17.6252633, 48.6856314), (17.6225169, 48.1661969), (17.0031625, 48.1808503)], "plot":False}] # zoom
@@ -59,6 +59,11 @@ AREA: WantedArea = [{'area': [(17.0797297, 48.1649183), (17.1410558, 48.1642600)
 
 # nemecko - funicular tunnel a railway tunnel - gefun
 # AREA: WantedArea = [{'area': [(8.6807722,49.4195719), (8.7399353, 49.4195644), (8.7400211, 49.3951311), (8.6807550, 49.3952708)], "plot":False}] # zoom
+
+# rozhledna - baliny
+#AREA: WantedArea = [{"area": "Baliny, Česko", "plot": True, "category": 0, "width": None}]
+# zricenina - rokstejn - Brtnice
+AREA: WantedArea = [{"area": "Brtnice, Česko", "plot": True, "category": 0, "width": None}]
 
 
 # zoom testing
@@ -81,7 +86,8 @@ AREA: WantedArea = [{'area': [(17.0797297, 48.1649183), (17.1410558, 48.1642600)
 # AREA: WantedArea = ["Česko","Vysočina, Česko", "Jihomoravský kraj, Česko"]
 # AREA: WantedArea = ["Brno, Česko"]
 # AREA: WantedArea = ["Jihomoravský kraj, Česko", "Kraj Vysočina, Česko"]
-# AREA: WantedArea = [{"area": "trebic, Česko", "plot": True, "category": 5, "width": None}]
+# AREA: WantedArea = [{"area": "Brno, Česko", "plot": True, "category": 5, "width": None}]
+# AREA: WantedArea = [{"area": "Baliny, Česko", "plot": True, "category": 0, "width": None}]
 # AREA: WantedArea =[{"area": "Jihomoravský kraj, Česko", "plot": True, "category": 2, "width": 1},
 #                     {"area": "Praha, Česko", "plot": True, "category": 1, "width": 1},
 #                     {"area": "Trebic, Česko", "plot": True, "category": 1, "width": 1}]
@@ -133,7 +139,7 @@ map_theme = 'mapycz'
 PLOT_BRIDGES = True
 # plot as tunnel (True) or normal way (False) - if false and in dont want tags -> will not be plotted at all
 PLOT_TUNNELS = True
-PEAKS_FILTER_SENSITIVITY: float | None = None#2.5
+PEAKS_FILTER_SENSITIVITY: float | None = None #2.5
 ELE_PROMINENCE_MAX_DIFF_RATIO = 3
 
 # from fe by zoom or from be map styles by zoom
@@ -167,12 +173,16 @@ OUTER_FIT_PAPER_SIZE = False
 
 # wanted_ways: WantedFeatures
 wanted_nodes: WantedCategories = {
-    # 'place': {'city'},
-    # 'place': {'city', 'town'},
     'place': {'city', 'town', 'village'},
-    # 'place': {'village'},
-    'natural': {'peak'}
+    'natural': {'peak'},
+    'man_made': {'tower'},
+    'historic': {'castle'},
 }
+
+wanted_nodes_from_area: WantedCategories = {
+    'historic': {'castle'},
+}
+
 
 
 # todo automatic wanted objects setup using map and pdf ratio automatic_filters_creating_factor - own class ()
@@ -264,11 +274,18 @@ except:
     font_awesome_prop = None
     warnings.warn("Font awesome not found")
 try:
-    MATERIAL_DESIGN_PATH = "./common/fonts/MaterialSymbolsRounded-VariableFont_FILL,GRAD,opsz,wght.ttf"
-    material_design_prop = fm.FontProperties(fname=MATERIAL_DESIGN_PATH)
+    MATERIAL_DESIGN_OUTLINE_PATH = "./common/fonts/MaterialSymbolsRounded-VariableFont_FILL,GRAD,opsz,wght.ttf"
+    material_design_prop = fm.FontProperties(fname=MATERIAL_DESIGN_OUTLINE_PATH)
 except:
     material_design_prop = None
-    warnings.warn("Font awesome not found")
+    warnings.warn("Material desing outline not found")
+    
+# try:
+#     MATERIAL_DESIGN_FILL_PATH = "./common/fonts/MaterialSymbolsRounded-VariableFont_FILL,GRAD,opsz,wght.ttf"
+#     material_design_fill_prop = fm.FontProperties(fname=MATERIAL_DESIGN_FILL_PATH)
+# except:
+#     material_design_fill_prop = material_design_outline_prop
+#     warnings.warn("Material desing fill not found")
 
 
 # --------------------------------------------------------------gpx settings--------------------------------------------------------------
@@ -317,13 +334,13 @@ FOLDER_COLOR_DIS_PALLET = True
 # --------------filters for map elements--------------
 # columns that are used for ploting nodes name for city, ele for elevation points
 # only for columns in osm file
-NODES_ADDITIONAL_COLUMNS = ['name', 'ele', 'population']
+NODES_ADDITIONAL_COLUMNS = ['name', 'ele', 'population', 'tower:type']
 NODES_NUMERIC_COLUMNS = ['ele', 'population']
 NODES_ROUND_COLUMNS = ['ele']
 
 
 
-WAYS_ADDITIONAL_COLUMNS = ['bridge', 'layer', 'tunnel', 'historic'
+WAYS_ADDITIONAL_COLUMNS = ['bridge', 'layer', 'tunnel', 'historic',
                            'surface', 'tracktype', 'service', 'intermittent']
 WAYS_NUMERIC_COLUMNS = []
 WAYS_ROUND_COLUMNS = []
@@ -333,10 +350,13 @@ AREA_NUMERIC_COLUMNS = []
 AREA_ROUND_COLUMNS = []
 
 DERIVATE_COLUMNS_NODES = [
-    ({'place': ''}, Style.TEXT1.name, 'name', None),
+    ({'place': ['city', 'town', 'village']}, Style.TEXT1.name, 'name', None),
     # try to set with filter in derivated columns
+    ({'man_made': 'tower'}, Style.TEXT1.name, 'name', None),
     ({'natural': 'peak'}, Style.TEXT1.name, 'name', None),
+    ({'historic': 'castle'}, Style.TEXT1.name, 'name', None),
     ({'natural': 'peak'}, Style.TEXT2.name, 'ele', None),
+    
 ]
 
 DERIVATE_COLUMNS_WAYS = []

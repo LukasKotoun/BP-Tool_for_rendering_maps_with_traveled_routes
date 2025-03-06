@@ -1,10 +1,10 @@
 from common.custom_types import ElementStyles, FeatureStyles
-from common.map_enums import Style, TextPositions, MinPlot, MarkerAbove, MinLoad, LineCupStyles, MapThemeVariable
+from common.map_enums import Style, TextPositions, MinPlot, MarkerAbove, MarkersCodes, LineCupStyles, MapThemeVariable
 from config import font_awesome_prop, material_design_prop
 
 #! edge linestyle is suported only dashed or not dashed on not solid lines
 #! ploting is turned of by setting color to None
-#! text and marker turn of by setting marker/textcolor to None
+#! text or marker turn of by setting marker/textcolor to 'None', marker edge or text edge by setting edge to 'None' and same for center
 # if want to turn of only like only marker but text print like annotation set marker to "None"
 # ------------styles--------------
 # all from styles to dict and that export
@@ -59,31 +59,35 @@ GPXS_STYLES: ElementStyles = [
 
 
 # -------------------nodes-------------------
+# marker minimum: 
+# text minimum:
 # styles that must be assigned to all node features
+# zorder: castle: 28, towers: 29 peaks: 30, place names 40-50, 
+
 NODES_STYLES_SCALE = []
 place_styles: ElementStyles = [
     ({'place': 'city'}, {
-        Style.TEXT_FONT_SIZE.name: 25, Style.ZINDEX.name: 30
+        Style.TEXT_FONT_SIZE.name: 25, Style.ZINDEX.name: 50
     },
         {
         "10-10": {Style.TEXT_FONT_SIZE.name: 15}
     }),
     ({'place': 'town'}, {
-        Style.TEXT_FONT_SIZE.name: 10, Style.ZINDEX.name: 29
+        Style.TEXT_FONT_SIZE.name: 10, Style.ZINDEX.name: 49
     },
         {
         "10-10": {Style.TEXT_FONT_SIZE.name: 5, Style.MARKER.name: "o", Style.COLOR.name: "#decda8", Style.MIN_PLOT_REQ.name: MinPlot.MARKER_TEXT1.name,
-                  Style.TEXT1_POSITIONS.name: [TextPositions.TOP.name, TextPositions.BOTTOM.name, TextPositions.RIGHT.name], Style.EDGE_WIDTH_RATIO.name: 0.1, Style.WIDTH.name: 2.8,
+                  Style.TEXT1_POSITIONS.name: [TextPositions.TOP, TextPositions.BOTTOM, TextPositions.RIGHT], Style.EDGE_WIDTH_RATIO.name: 0.1, Style.WIDTH.name: 2.8,
                   Style.EDGE_COLOR.name: "#a59b7a"}
     }),
 
     ({'place': 'village'}, {
-        Style.TEXT_FONT_SIZE.name: 10, Style.ZINDEX.name: 28
+        Style.TEXT_FONT_SIZE.name: 10, Style.ZINDEX.name: 48
     },
         {
         "10-10": {Style.TEXT_FONT_SIZE.name: 5},
         "11-14": {Style.TEXT_FONT_SIZE.name: 8, Style.MARKER.name: "o", Style.COLOR.name: "#decda8", Style.MIN_PLOT_REQ.name: MinPlot.MARKER_TEXT1.name,
-                  Style.TEXT1_POSITIONS.name: [TextPositions.TOP.name, TextPositions.BOTTOM.name, TextPositions.RIGHT.name], Style.EDGE_WIDTH_RATIO.name: 0.2,
+                  Style.TEXT1_POSITIONS.name: [TextPositions.TOP, TextPositions.BOTTOM, TextPositions.RIGHT], Style.EDGE_WIDTH_RATIO.name: 0.2,
                   Style.WIDTH.name: 5, Style.EDGE_COLOR.name: "#a59b7a", Style.MARKER_ABOVE_OTHERS.name: MarkerAbove.NONE}
     }),
 ]
@@ -92,41 +96,70 @@ place_styles: ElementStyles = [
 # text color or MARKER color turn of by string "None" instead of None
 natural_styles_nodes: ElementStyles = [
     ({'natural': 'peak'}, {
-        Style.MARKER.name: "^",
-        Style.MARKER_HORIZONTAL_ALIGN.name: "center", Style.MARKER_VERTICAL_ALIGN.name: None,
-        # Style.MIN_PLOT_REQ.name: MinPlot.MARKER_TEXT2.name,
-        Style.COLOR.name: "#42281a",
-        Style.MIN_PLOT_REQ.name: MinPlot.MARKER_TEXT2.name,
-        Style.TEXT_FONT_SIZE.name: 6, Style.WIDTH.name: 3,  Style.TEXT1_POSITIONS.name: [TextPositions.TOP.name],
-        Style.TEXT2_POSITIONS.name: [TextPositions.BOTTOM.name], Style.EDGE_WIDTH_RATIO.name: 0,
+        Style.ZINDEX.name: 30, Style.MIN_PLOT_REQ.name: MinPlot.MARKER_TEXT2.name,
+        # marker
+        Style.MARKER.name: "^", Style.MARKER_HORIZONTAL_ALIGN.name: "center", 
+        Style.COLOR.name: "#42281a", Style.EDGE_COLOR.name: "None",
+        # text
+        Style.TEXT_FONT_SIZE.name: 6, Style.WIDTH.name: 3,  Style.TEXT1_POSITIONS.name: [TextPositions.TOP],
+        Style.TEXT2_POSITIONS.name: [TextPositions.BOTTOM], Style.TEXT_OUTLINE_WIDTH_RATIO.name: 0.2,
 
-    })  # rozlišení - dict vs dict s 2 dict uvnitř
+    }) 
+]
+icons_above_styles_nodes: ElementStyles = [
+    # todo size
+    ({'man_made': 'tower', 'tower:type': ['observation', 'watchtower']}, {
+        Style.MIN_PLOT_REQ.name: MinPlot.MARKER.name, 
+        # marker
+        Style.MARKER.name: MarkersCodes.FA_TOWER_OBSERVATION.value, Style.MARKER_FONT_PROPERTIES.name: font_awesome_prop,
+        Style.COLOR.name: "#863417", Style.EDGE_COLOR.name: "#FFFFFF", Style.WIDTH.name: 7, 
+        Style.EDGE_WIDTH_RATIO.name: 0.1,
+        Style.MARKER_HORIZONTAL_ALIGN.name: "center", Style.MARKER_ABOVE_OTHERS.name: MarkerAbove.NORMAL,
+        # text
+        Style.TEXT_COLOR.name: "#000000", Style.TEXT_OUTLINE_COLOR.name: '#FFFFFF',
+        Style.TEXT1_POSITIONS.name: [TextPositions.BOTTOM],
+        Style.TEXT_FONT_SIZE.name: 6, Style.TEXT_OUTLINE_WIDTH_RATIO.name: 0.2,
+    }),
+
+    ({'historic': ['castle']}, {
+        Style.MIN_PLOT_REQ.name: MinPlot.MARKER.name, 
+        # marker
+        Style.MARKER.name: MarkersCodes.MU_CASTLE.value, Style.MARKER_FONT_PROPERTIES.name: material_design_prop,
+        Style.COLOR.name: "#714f41", Style.EDGE_COLOR.name: "#FFFFFF", Style.WIDTH.name: 7, 
+        Style.EDGE_WIDTH_RATIO.name: 0.1,
+        Style.MARKER_HORIZONTAL_ALIGN.name: "center", Style.MARKER_ABOVE_OTHERS.name: MarkerAbove.NORMAL,
+        # text
+        Style.TEXT_COLOR.name: "#000000", Style.TEXT_OUTLINE_COLOR.name: '#FFFFFF',
+        Style.TEXT1_POSITIONS.name: [TextPositions.BOTTOM],
+        Style.TEXT_FONT_SIZE.name: 6, Style.TEXT_OUTLINE_WIDTH_RATIO.name: 0.2,
+    })
 ]
 
-
 nodes_styles_default: ElementStyles = [
-    # natural must be before place - some peaks are also places
     ({'natural': ''}, {
-
+        Style.TEXT_COLOR.name: "#000000", Style.TEXT_OUTLINE_COLOR.name: '#FFFFFF'
     }),
+    
+    # natural must be before place - some peaks are also places
     ({'place': ['city', 'town', 'village']}, {
         Style.TEXT_OUTLINE_WIDTH_RATIO.name: 0.2, Style.MIN_PLOT_REQ.name: MinPlot.TEXT1.name,
+        Style.TEXT_COLOR.name: "#000000", Style.TEXT_OUTLINE_COLOR.name: '#FFFFFF',
         Style.TEXT1_POSITIONS.name: [
-            TextPositions.TOP.name, TextPositions.BOTTOM.name, TextPositions.RIGHT.name]
+            TextPositions.TOP, TextPositions.BOTTOM, TextPositions.RIGHT]
     }),
 ]
 
 nodes_mandatory_styles: ElementStyles = [
     ([], {
-        Style.MIN_LOAD_REQ.name: MinLoad.NONE.name,
-        Style.COLOR.name: '#000000', Style.ZINDEX.name: 1, Style.ALPHA.name: 1, Style.EDGE_ALPHA.name: 1,
-        Style.TEXT_COLOR.name: '#000000', Style.TEXT_FONT_SIZE.name: 5, Style.TEXT_FONTFAMILY.name: 'DejaVu Sans',
-        Style.TEXT_STYLE.name: 'normal', Style.EDGE_COLOR.name: '#FFFFFF', Style.TEXT_OUTLINE_WIDTH_RATIO.name: 0.2,
-        Style.TEXT_WEIGHT.name: 'normal', Style.TEXT_OUTLINE_COLOR.name: '#FFFFFF', Style.TEXT_WRAP_LEN.name: 15
+        Style.ALPHA.name: 1, Style.EDGE_ALPHA.name: 1,
+        Style.TEXT_FONTFAMILY.name: 'DejaVu Sans',
+        Style.TEXT_STYLE.name: 'normal',
+        Style.TEXT_WEIGHT.name: 'normal', Style.TEXT_WRAP_LEN.name: 15
     })
 ]
 
 NODES_STYLES: ElementStyles = [
+    *icons_above_styles_nodes,
     *natural_styles_nodes,
     *place_styles,
     *nodes_styles_default,
@@ -577,7 +610,6 @@ landuse_styles_area: ElementStyles = [
       "7": {Style.COLOR.name: '#d4d2ca'},
       "5-6": {Style.COLOR.name: '#cccac3'},
       "1-4": {Style.COLOR.name: '#dbcca8'}}),
-
 ]
 
 leisure_styles_area: ElementStyles = [
