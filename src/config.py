@@ -8,7 +8,7 @@ from common.map_enums import Style, ColorMode, PaperSize, MapOrientation, Marker
 # --------------------------------------------------------------map area--------------------------------------------------------------
 # OSM_INPUT_FILE_NAMES: str = ['../osm_files/vys.osm.pbf','../osm_files/jihmor.osm.pbf']
 # OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/vysJihE.osm.pbf'
-OSM_INPUT_FILE_NAMES: str | list[str] = ['../osm_files/brtnice.osm.pbf']
+OSM_INPUT_FILE_NAMES: str | list[str] = ['../osm_files/sklet.osm.pbf']
 # OSM_INPUT_FILE_NAMES: str | list[str] = '../trebic.osm.pbf'
 # extract - will be always true
 OSM_WANT_EXTRACT_AREA: bool = False
@@ -43,7 +43,8 @@ OUTPUT_PDF_NAME: str = '../pdfs/divocina'
 # AREA: WantedArea = [{'area': [(18.9836906,49.2351414), (19.1019653, 49.2350294), (19.1017936, 49.1852375), (18.9838622, 49.1870325)], "plot":False}] # zoom
 
 # slovensko - letiste - sklet
-# AREA: WantedArea = [{'area': [(17.1374492,48.1955133), (17.2557239, 48.1951700), (17.2557239, 48.1444531), (17.1377925, 48.1452547)], "plot":False}] # zoom
+AREA: WantedArea = [{'area': [(17.1374492,48.1955133), (17.2557239, 48.1951700), (17.2557239, 48.1444531), (17.1377925, 48.1452547)], "plot":False}] # zoom
+
 # slovensko - bratislava centrum  - skbr
 # AREA: WantedArea = [{'area': [(17.0797297, 48.1649183), (17.1410558, 48.1642600), (
 #     17.1413133, 48.1383769), (17.0762106, 48.1384056)], "plot": False}]  # zoom
@@ -63,7 +64,7 @@ OUTPUT_PDF_NAME: str = '../pdfs/divocina'
 # rozhledna - baliny
 #AREA: WantedArea = [{"area": "Baliny, Česko", "plot": True, "category": 0, "width": None}]
 # zricenina - rokstejn - Brtnice
-AREA: WantedArea = [{"area": "Brtnice, Česko", "plot": True, "category": 0, "width": None}]
+# AREA: WantedArea = [{"area": "Brtnice, Česko", "plot": True, "category": 0, "width": None}]
 
 
 # zoom testing
@@ -115,7 +116,7 @@ AREA: WantedArea = [{"area": "Brtnice, Česko", "plot": True, "category": 0, "wi
 # AREA: WantedArea = ["Texas, USA"]
 
 PAPER_DIMENSIONS: PaperSize | tuple[float |
-                                    None, float | None] = PaperSize.A4.dimensions
+                                    None, float | None] = PaperSize.A6.dimensions
 # PAPER_DIMENSIONS: PaperSize | tuple[float | None, float | None] = PaperSize.A4.dimensions
 # set own dimensions. If one is left as 'None' it will be automaticaly calculated using area size
 # PAPER_DIMENSIONS = (1100, None)
@@ -171,16 +172,18 @@ OUTER_WANTED_ORIENTATION = MapOrientation.AUTOMATIC
 # expand area
 OUTER_FIT_PAPER_SIZE = False
 
-# wanted_ways: WantedFeatures
+# wanted_ways: WantedFeatures # where they vanish - already not on map - for mapycz styles
 wanted_nodes: WantedCategories = {
-    'place': {'city', 'town', 'village'},
-    'natural': {'peak'},
-    'man_made': {'tower'},
-    'historic': {'castle'},
+    'place': {'city', 
+              'town', # zoom 1
+              'village'}, # zoom 3
+    'natural': {'peak'}, # zoom 1
+    'man_made': {'tower'}, # zoom 7
+    'historic': {'castle'}, # zoom 7
 }
 
 wanted_nodes_from_area: WantedCategories = {
-    'historic': {'castle'},
+    'historic': {'castle'}, # zoom 7
 }
 
 
@@ -195,14 +198,57 @@ unwanted_nodes_tags: UnwantedTags = {
 wanted_ways: WantedCategories = {
     # all
     # ways connected with links
-    'highway': {'motorway', 'trunk', 'primary', 'secondary', 'tertiary', 'motorway_link', 'trunk_link', 'primary_link', 'secondary_link', 'tertiary_link',
-                'residential', 'unclassified', 'service', 'pedestrian', 'cycleway', 'raceway', 'steps', 'footway', 'track', 'path'},
-    'railway': {'rail', 'light_rail', "monorail", 'miniature', 'subway', 'funicular', 'tram'},
-    'aeroway': {'runway', 'taxiway'},
-    # as others in fe and send empty {}, 'mixed_lift', 'drag_lift', 't-bar', 'j-bar', 'platter', 'rope_tow', 'magic_carpet', 'zip_line', 'goods'},
-    'aerialway': {'cable_car', 'gondola', 'chair_lift'},
-    'barrier': {'city_wall', 'wall', 'cable_barrier'},
-    'waterway': {'river', 'canal', 'stream', 'drain', 'ditch'},
+    'highway': {'motorway', # zoom none
+                'trunk', # zoom none
+                'primary', # zoom none
+                'secondary', # zoom 2
+                'tertiary', # zoom 3
+                'motorway_link',# zoom none - smaller only
+                'trunk_link',# zoom none - smaller only
+                'primary_link',# zoom none - smaller only
+                'secondary_link',# zoom 2
+                'tertiary_link',# zoom 3
+                'residential',# zoom 5 - same size as unclassified
+                'unclassified',# zoom 6 - same size as residential
+                'service',# zoom - 6
+                'pedestrian',# zoom 5 - same as residental 
+                'cycleway',# zoom 6
+                'raceway',# zoom 3
+                'steps', # zoom 6
+                'footway',# zoom 6
+                'track', # zoom 6
+                'path'},# zoom 6
+    
+    'railway': {'rail', # service - service smaller 6, 3 normal
+                'light_rail', #- service smaller 6, 3 normal
+                "monorail", #- service smaller 6, 3 normal
+                'miniature',  #- service smaller 6, 3 normal
+                'subway', # zoom 6
+                'funicular', # zoom 4
+                'tram'},# zoom 8
+    'aeroway': {'runway',# zoom 3
+                'taxiway'},# zoom 3
+    
+    'aerialway': {'cable_car',# zoom 4
+                  'gondola',# zoom 4
+                  'chair_lift',# zoom 4
+                  't-bar', # zoom 5 a ostatní
+                  'j-bar', 
+                  'platter',
+                  'rope_tow',
+                  'magic_carpet',
+                  'zip_line',
+                  'goods'},
+    
+    'barrier': {'city_wall', # zoom 8
+                'wall',  # zoom 8
+                'cable_barrier'}, # zoom 8
+    
+    'waterway': {'river', # zoom never
+                 'canal',  # zoom 4
+                 'stream', # zoom 4
+                 'drain', # zoom 4
+                 'ditch'}, # zoom 4
 
 
     # 'natural': {'coastline'},
@@ -236,18 +282,18 @@ wanted_areas: WantedCategories = {
     # all areas - osm can have more tags? how to do it
     'landuse': {'farmland', 'forest', 'residential', 'commercial', 'retail', 'industrial', 'allotments', 'retail',
                 'meadow', 'grass', 'landfill', 'cemetery', 'vineyard', 'orchard', 'garages', 'military',
-                'quarry', 'recreation_ground'},
+                'quarry', 'recreation_ground'},  # zoom never
     'leisure': {'park', 'pitch', 'garden', 'golf_course',
-                'nature_reserve', 'playground', 'stadium', 'swimming_pool', 'sports_centre'},
+                'nature_reserve', 'playground', 'stadium', 'swimming_pool', 'sports_centre'}, # zoom 2
     # all water (except pools) is in natural
-    'natural': {'wood', 'water', 'scrub', 'heath', 'grassland', 'bay', 'beach', 'sand'},
+    'natural': {'wood', 'water', 'scrub', 'heath', 'grassland', 'bay', 'beach', 'sand'}, # zoom never
     # občanské vybavení
     'amenity': {'motorcycle_parking', 'parking', 'grave_yard', 'school', 'university', 'college', 'kindergarten'
-                'bus_station', 'hospital', 'clinic', 'place_of_worship'},
-    'building': set({}),  # budovy
-    'aeroway': {'aerodrome'},
+                'bus_station', 'hospital', 'clinic', 'place_of_worship'}, # zoom 2
+    'building': set({}),  # zoom 2
+    'aeroway': {'aerodrome'}, # zoom 5
 
-    'highway': {'pedestrian', 'footway'},
+    'highway': {'pedestrian', 'footway'}, # zoom 2
 }
 
 unwanted_areas_tags: UnwantedTags = {
@@ -279,13 +325,6 @@ try:
 except:
     material_design_prop = None
     warnings.warn("Material desing outline not found")
-    
-# try:
-#     MATERIAL_DESIGN_FILL_PATH = "./common/fonts/MaterialSymbolsRounded-VariableFont_FILL,GRAD,opsz,wght.ttf"
-#     material_design_fill_prop = fm.FontProperties(fname=MATERIAL_DESIGN_FILL_PATH)
-# except:
-#     material_design_fill_prop = material_design_outline_prop
-#     warnings.warn("Material desing fill not found")
 
 
 # --------------------------------------------------------------gpx settings--------------------------------------------------------------
@@ -350,6 +389,8 @@ AREA_NUMERIC_COLUMNS = []
 AREA_ROUND_COLUMNS = []
 
 DERIVATE_COLUMNS_NODES = [
+    # ({'place': ['city', 'town', 'village']}, Style.TEXT1.name, 'name', None),
+    
     ({'place': ['city', 'town', 'village']}, Style.TEXT1.name, 'name', None),
     # try to set with filter in derivated columns
     ({'man_made': 'tower'}, Style.TEXT1.name, 'name', None),

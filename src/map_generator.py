@@ -250,7 +250,7 @@ def main() -> None:
     # zoom level to endpoint specific - always from that biger area
     zoom_level = Utils.get_zoom_level(
         map_scaling_factor, ZOOM_MAPPING, 0.1)
-    # zoom_level = 9
+    # zoom_level = 6
     print(map_scaling_factor, zoom_level)
     # fifth function - parse osm file and get gdfs and than remove osm file
     # ------------get elements from osm file------------

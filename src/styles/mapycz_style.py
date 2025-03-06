@@ -199,11 +199,11 @@ highway_styles_main: ElementStyles = [
      Style.WIDTH.name: 32, Style.EDGE_COLOR.name: "#5E9346"}),
 
     # todo size
-    ({'highway': 'trunk'}, {Style.COLOR.name: '#FDC364', Style.ZINDEX.name: 48,
-     Style.WIDTH.name: 26, Style.EDGE_COLOR.name: "#E19532"}),
+    ({'highway': 'trunk'}, {Style.COLOR.name: '#8cd25f', Style.ZINDEX.name: 48,
+     Style.WIDTH.name: 26, Style.EDGE_COLOR.name: "#5E9346"}),
     # todo size
-    ({'highway': 'trunk_link'}, {Style.COLOR.name: '#FDC364', Style.ZINDEX.name: 47,
-     Style.WIDTH.name: 26, Style.EDGE_COLOR.name: "#E19532"}),
+    ({'highway': 'trunk_link'}, {Style.COLOR.name: '#8cd25f', Style.ZINDEX.name: 47,
+     Style.WIDTH.name: 26, Style.EDGE_COLOR.name: "#5E9346"}),
 
     # todo size
     ({'highway': 'primary'}, {Style.COLOR.name: '#FDC364', Style.ZINDEX.name: 46,
@@ -226,26 +226,22 @@ highway_styles_main: ElementStyles = [
     ({'highway': 'tertiary_link'}, {Style.COLOR.name: '#FFFFFF', Style.ZINDEX.name: 42,
      Style.WIDTH.name: 16, Style.EDGE_COLOR.name: "#B0A78D"}),
 
-
-
     # o trochu menší než tertiary
     # todo size
-    ({'highway': 'residential'}, {Style.ZINDEX.name: 40, Style.COLOR.name: '#FFFFFF',
-                                  Style.EDGE_COLOR.name: "#B0A78D", }),
-    # todo size
-    ({'highway': 'unclassified'}, {Style.ZINDEX.name: 39, Style.COLOR.name: '#FFFFFF',
+    ({'highway': ['residential', 'unclassified', 'pedestrian']}, {Style.ZINDEX.name: 40, Style.COLOR.name: '#FFFFFF',
                                    Style.EDGE_COLOR.name: "#B0A78D"}),
+
 ]
 
 highway_styles_surface_special_and_paths: ElementStyles = [
 
     # to non dashed
-    # todo size bigger than normal track - solid bigger than dashed - big
+    # todo size bigger than normal track - same as service - need to copy
     ({'highway': ['track', 'cycleway'],
       'surface': ['asphalt'],
       'tracktype': ('~grade3', '~grade4', '~grade5'),
       },
-     {Style.ZINDEX.name: 35, Style.COLOR.name: "#e6e3dd", Style.EDGE_COLOR.name: "#857e5f",
+     {Style.ZINDEX.name: 35, Style.COLOR.name: "#dad6d2", Style.EDGE_COLOR.name: "#848160",
       Style.LINESTYLE.name: "-", Style.EDGE_LINESTYLE.name: "-"}),
     
  # todo size - white slightly bigger than normal track, 
@@ -275,25 +271,26 @@ highway_styles_surface_special_and_paths: ElementStyles = [
 ]
 
 highway_styles_special_and_paths: ElementStyles = [
-
     # o trochu menší než residental
-    # todo size
-    ({'highway': 'service'}, {Style.ZINDEX.name: 38, Style.COLOR.name: '#FFFFFF',
+    # todo maybe add to service, residentail, 'unclassified', 'pedestrian' on small zoom style - without edge and small size, test and make disappear later
+    # jen na zoom kde zmizely např..
+    ({'highway': 'service'}, {Style.ZINDEX.name: 37, Style.COLOR.name: '#FFFFFF',
                               Style.EDGE_COLOR.name: "#B0A78D"}),
-    # todo size
-    ({'highway': 'pedestrian'}, {Style.ZINDEX.name: 37, Style.COLOR.name: '#FFFFFF',
-                                 Style.EDGE_COLOR.name: "#B0A78D"}),
-    # todo size
-    ({'highway': 'cycleway'}, {Style.ZINDEX.name: 36, Style.COLOR.name: '#FFFFFF',
-                               Style.EDGE_COLOR.name: "#B0A78D"}),
-
-    # todo size
+    
     ({'highway': 'raceway'}, {Style.COLOR.name: '#FFFFFF', Style.EDGE_COLOR.name: "#B0A78D",
                               Style.ZINDEX.name: 35},
      {"7-10": {Style.COLOR.name: '#e6e3dd',
                Style.EDGE_COLOR.name: "#857e5f"}
       }),
-
+    
+    # todo size
+    ({'highway': ['raceway', 'service']}, {},
+     {"1-8": {}
+      }),
+    
+    
+    ({'highway': 'cycleway'}, {Style.ZINDEX.name: 36, Style.COLOR.name: '#FFFFFF',
+                               Style.EDGE_COLOR.name: "#B0A78D"}),
 
     # todo size - same as footway - test
     ({'highway': 'steps'}, {Style.COLOR.name: '#FFFFFF', Style.EDGE_COLOR.name: "#B0A78D",
@@ -309,7 +306,7 @@ highway_styles_special_and_paths: ElementStyles = [
               Style.LINE_CAPSTYLE.name: LineCupStyles.ROUND.value, Style.PLOT_ON_BRIDGE.name: True}
       }),
     # steps and footway - same size
-    ({'highway': ['footway', 'steps']}, {},
+    ({'highway': ['footway', 'steps', 'cycleway']}, {},
      {"1-8": {}
       }),
 
@@ -438,18 +435,27 @@ aerialway_styles: ElementStyles = [
         Style.ZINDEX.name: 79
     }),
 ]
-
+# 3
 aeroway_styles: ElementStyles = [
     # todo size
     ({'aeroway': 'runway'}, {
-        Style.WIDTH.name: 50,
+        Style.WIDTH.name: 60,
         Style.ZINDEX.name: 70,
         Style.LINE_CAPSTYLE.name: LineCupStyles.BUTT.value, Style.EDGE_CAPSTYLE.name: LineCupStyles.BUTT.value,
+    },{
+        "9": {Style.WIDTH.name: 60*2},
+        "8": {Style.WIDTH.name: 60*2*1.3},
+        "6-7": {Style.WIDTH.name: 60*2*1.3*1.7},
+        "6": {Style.EDGE_WIDTH_RATIO.name: 1 + 0.3},
     }),
     # todo size
     ({'aeroway': 'taxiway'}, {
-        Style.WIDTH.name: 20, 
+        Style.WIDTH.name: 30, 
         Style.ZINDEX.name: 69,
+    },{
+        "8-9": {Style.WIDTH.name: 30*1.5},
+        "7": {Style.WIDTH.name: 30*1.5*1.3},
+        "6": {Style.WIDTH.name: 30*1.5*1.3*1.6, Style.EDGE_WIDTH_RATIO.name: 1 + 0.5},
     }),
 ]
 
@@ -486,7 +492,7 @@ ways_styles_default: ElementStyles = [
 
     ({'aeroway': ''}, {
         Style.COLOR.name: "#FFFFFF", Style.EDGE_COLOR.name: "#B0A78D",
-        Style.EDGE_WIDTH_RATIO.name: 1 + 0.3,
+        Style.EDGE_WIDTH_RATIO.name: 1 + 0.2,
     }),
 
      # todo size
