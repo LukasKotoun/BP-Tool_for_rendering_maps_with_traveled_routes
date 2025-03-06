@@ -1,8 +1,7 @@
 import warnings
 
 from config import *
-from styles.mapycz_style import GENERAL_DEFAULT_STYLES, STYLES, GPXS_STYLES, OCEAN_WATER_COLOR, NODES_STYLES_SCALE, WAYS_WITHOUT_CROSSING
-from styles.mapycz_style import WAYS_STYLES_SCALE, AREAS_STYLES_SCALE, GPXS_STYLES_SCALE, AREAS_WAYS_OVER_NORMAL_WAYS_FILTER, AREAS_WAYS_OVER_TUNNEL_WAYS_FILTER
+from styles.mapycz_style import MAPYCZSTYLE
 from modules.gdf_utils import GdfUtils
 from modules.utils import Utils
 from modules.osm_data_preprocessor import OsmDataPreprocessor
@@ -191,7 +190,14 @@ def main() -> None:
     # convert and validate formats from FE - and handle exceptions
     wanted_areas_to_display = ReceivedStructureProcessor.validate_and_convert_areas_strucutre(
         AREA, allowed_keys_and_types=REQ_AREA_DICT_KEYS, key_with_area="area")
-    wanted_areas_to_display = AREA
+
+    if(map_theme == 'mapycz'):
+        MAP_THEME = MAPYCZSTYLE
+    else:
+        MAP_THEME = MAPYCZSTYLE
+    
+    # check if styles and recived dict have all reqired variables - from constants 
+    
     # second function
     # if are for preview is not specified, use whole area
     if (WANT_PREVIEW and AREA == None):
@@ -245,7 +251,7 @@ def main() -> None:
     # zoom level to endpoint specific - always from that biger area
     zoom_level = Utils.get_zoom_level(
         map_scaling_factor, ZOOM_MAPPING, 0.1)
-    # zoom_level = 9
+    zoom_level = 9
     print(map_scaling_factor, zoom_level)
     # fifth function - parse osm file and get gdfs and than remove osm file
     # ------------get elements from osm file------------
@@ -290,42 +296,48 @@ def main() -> None:
         nodes_gdf = GdfUtils.get_rows_inside_area(
             nodes_gdf, map_area_gdf)
     gdfs_convert_loaded_columns(gpxs_gdf, nodes_gdf, ways_gdf, areas_gdf)
-
+    
     # ------------prefiltering nodes by importance------------
-    if (FILTER_PEAKS_BY_PROMINENCE):
+    if (PEAKS_FILTER_SENSITIVITY is not None):
         nodes_gdf = GdfUtils.filter_peaks_by_prominence(
             nodes_gdf, map_scale*10*PEAKS_FILTER_SENSITIVITY, map_scale/10*(PEAKS_FILTER_SENSITIVITY/2),
             ELE_PROMINENCE_MAX_DIFF_RATIO)
+    if(MIN_POPULATION is not None):
+        nodes_gdf = GdfUtils.filter_place_by_population(nodes_gdf, PLACES_TO_FILTER_BY_POPULATION, MIN_POPULATION)
         
     # seven function - get bg gdf
     # get coastline and determine where is land and where water
     coast_gdf, ways_gdf = GdfUtils.filter_rows(
         ways_gdf, {'natural': 'coastline'}, compl=True)
     bg_gdf = GdfUtils.create_background_gdf(
-        map_area_gdf, coast_gdf, OCEAN_WATER_COLOR, GENERAL_DEFAULT_STYLES[Style.COLOR.name])
+        map_area_gdf, coast_gdf, MAP_THEME['variables'][MapThemeVariable.WATER_COLOR],
+        MAP_THEME['variables'][MapThemeVariable.LAND_COLOR])
 
-    # prepare for styling
+    # prepare styles
     process_bridges_and_tunnels(ways_gdf, PLOT_BRIDGES, PLOT_TUNNELS)
     ways_gdf = GdfUtils.merge_lines_gdf(ways_gdf, [])
     gpxs_gdf = GdfUtils.merge_lines_gdf(gpxs_gdf, [])
     # assing zoom specific styles
-    # eight function - style
-    nodes_styles = StyleAssigner.convert_from_dynamic(STYLES['nodes'], zoom_level)
-    ways_styles = StyleAssigner.convert_from_dynamic(STYLES['ways'], zoom_level)
-    areas_styles = StyleAssigner.convert_from_dynamic(STYLES['areas'], zoom_level)
-    if(GPXS_STYLES_SCALE):
+    # eight function - style 
+    for var_name, var_value in MAP_THEME['variables'].items():
+        MAP_THEME['variables'][var_name] = StyleAssigner.convert_variables_from_dynamic(var_value, zoom_level)
+    gpxs_styles = StyleAssigner.convert_from_dynamic(MAP_THEME['styles']['gpxs'], zoom_level)
+    nodes_styles = StyleAssigner.convert_from_dynamic(MAP_THEME['styles']['nodes'], zoom_level)
+    ways_styles = StyleAssigner.convert_from_dynamic(MAP_THEME['styles']['ways'], zoom_level)
+    areas_styles = StyleAssigner.convert_from_dynamic(MAP_THEME['styles']['areas'], zoom_level)
+    if(MAP_THEME['variables'][MapThemeVariable.GPXS_STYLES_SCALE]):
         StyleAssigner.scale_styles(
-            GPXS_STYLES, GPXS_STYLES_SCALE, map_scaling_factor)
-    if (NODES_STYLES_SCALE):
+            gpxs_styles, MAP_THEME['variables'][MapThemeVariable.GPXS_STYLES_SCALE], map_scaling_factor)
+    if (MAP_THEME['variables'][MapThemeVariable.NODES_STYLES_SCALE]):
         StyleAssigner.scale_styles(
-            nodes_styles, NODES_STYLES_SCALE, map_scaling_factor)
-    if (WAYS_STYLES_SCALE):
+            nodes_styles, MAP_THEME['variables'][MapThemeVariable.NODES_STYLES_SCALE], map_scaling_factor)
+    if (MAP_THEME['variables'][MapThemeVariable.WAYS_STYLES_SCALE]):
         StyleAssigner.scale_styles(
-            ways_styles, WAYS_STYLES_SCALE, map_scaling_factor)
-    if (AREAS_STYLES_SCALE):
+            ways_styles, MAP_THEME['variables'][MapThemeVariable.WAYS_STYLES_SCALE], map_scaling_factor)
+    if (MAP_THEME['variables'][MapThemeVariable.AREAS_STYLES_SCALE]):
         StyleAssigner.scale_styles(
-            areas_styles, AREAS_STYLES_SCALE, map_scaling_factor)
-    StyleAssigner.assign_styles(gpxs_gdf, GPXS_STYLES)
+            areas_styles, MAP_THEME['variables'][MapThemeVariable.AREAS_STYLES_SCALE], map_scaling_factor)
+    StyleAssigner.assign_styles(gpxs_gdf, gpxs_styles)
     StyleAssigner.assign_styles(
         nodes_gdf, nodes_styles, NODES_DONT_CATEGORIZE)
     StyleAssigner.assign_styles(
@@ -362,29 +374,31 @@ def main() -> None:
     # 11 function - plot
     # ------------plot------------
     # todo add checks for errors in plotting cals if dict from fe is not correct
+    area_over_ways_filter = MAP_THEME['variables'][MapThemeVariable.AREAS_OVER_WAYS_FILTER]
     areas_over_normal_ways, areas_gdf = GdfUtils.filter_rows(
-        areas_gdf, AREAS_WAYS_OVER_NORMAL_WAYS_FILTER[0], compl=True)
-    areas_over_normal_ways =  GdfUtils.filter_rows(areas_over_normal_ways, AREAS_WAYS_OVER_NORMAL_WAYS_FILTER[1])
+        areas_gdf,  area_over_ways_filter[0], compl=True)
+    areas_over_normal_ways =  GdfUtils.filter_rows(areas_over_normal_ways, area_over_ways_filter[1])
 
-    # this to to plotter settings
+    # this to to plotter settings - todo add to enum as plotter_settings
     plotter_settings = {"map_area_gdf": map_area_gdf, "paper_dimensions_mm": paper_dimensions_mm,
                         "map_scaling_factor": map_scaling_factor, "text_bounds_overflow_threshold": TEXT_BOUNDS_OVERFLOW_THRESHOLD,
-                        "text_wrap_names_len": TEXT_WRAP_NAMES_LEN, "outer_map_area_gdf": outer_map_area_gdf, "map_bg_color": GENERAL_DEFAULT_STYLES[Style.COLOR.name],
-                        'ways_over_filter': None}
+                        "text_wrap_names_len": TEXT_WRAP_NAMES_LEN, "outer_map_area_gdf": outer_map_area_gdf,
+                        "map_bg_color": MAP_THEME['variables'][MapThemeVariable.LAND_COLOR],
+                        'ways_over_filter': MAP_THEME['variables'][MapThemeVariable.WAYS_WITHOUT_CROSSING_FILTER]}
         
     
     
     plotter = Plotter(map_area_gdf, paper_dimensions_mm,
                       map_scaling_factor, TEXT_BOUNDS_OVERFLOW_THRESHOLD, TEXT_WRAP_NAMES_LEN, outer_map_area_gdf)
     plotter.init(
-        GENERAL_DEFAULT_STYLES[Style.COLOR.name], bg_gdf)
+        MAP_THEME['variables'][MapThemeVariable.LAND_COLOR], bg_gdf)
 
     plotter.areas(areas_gdf)
     
     if (not boundary_map_area_gdf.empty):
         plotter.area_boundary(boundary_map_area_gdf,
                               color="black")
-    plotter.ways(ways_gdf, areas_over_normal_ways, WAYS_WITHOUT_CROSSING)
+    plotter.ways(ways_gdf, areas_over_normal_ways, MAP_THEME['variables'][MapThemeVariable.WAYS_WITHOUT_CROSSING_FILTER])
 
     # if want clip text
     plotter.gpxs(gpxs_gdf)

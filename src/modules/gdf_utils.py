@@ -542,7 +542,7 @@ class GdfUtils:
 
     @staticmethod
     def get_rows_inside_area(gdf_rows: GeoDataFrame, gdf_area: GeoDataFrame) -> GeoDataFrame:
-        return gdf_rows.loc[gpd.sjoin(gdf_rows, gdf_area, predicate="within").index]
+        return gdf_rows.loc[gpd.sjoin(gdf_rows, gdf_area, predicate="within").index].reset_index(drop=True)
 
     # -----------Others functions------------
 
@@ -617,7 +617,19 @@ class GdfUtils:
             peaks = peaks[is_prominent & ~(peaks['prominence'] > peaks['ele'] * ele_prominence_max_diff_ratio)]
         else:
             peaks = peaks[is_prominent]
-        return GdfUtils.combine_gdfs([peaks.reset_index(drop=True), rest])
+        return GdfUtils.combine_gdfs([peaks, rest])
+    
+    @staticmethod
+    def filter_place_by_population(nodes_gdf: GeoDataFrame, place_to_filter: list, min_population: int):
+        if(nodes_gdf.empty):
+            return nodes_gdf
+        if(min_population is None or min_population <= 0):
+            return nodes_gdf
+        places, rest = GdfUtils.filter_rows(
+            nodes_gdf, {'place': place_to_filter}, compl=True)
+        places = GdfUtils.filter_rows(places, {'population': ''})
+        places = places[places['population'] >= min_population]
+        return GdfUtils.combine_gdfs([places, rest])
 
     @staticmethod
     def get_common_borders(gdf1: GeoDataFrame, gdf2: GeoDataFrame):

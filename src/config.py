@@ -2,7 +2,7 @@ import warnings
 import matplotlib.font_manager as fm
 
 from common.custom_types import UnwantedTags, WantedArea, WantedCategories
-from common.map_enums import Style, ColorMode, PaperSize, MapOrientation, MarkersCodes
+from common.map_enums import Style, ColorMode, PaperSize, MapOrientation, MarkersCodes, MapThemeVariable
 
 
 # --------------------------------------------------------------map area--------------------------------------------------------------
@@ -128,17 +128,17 @@ TEXT_WRAP_NAMES_LEN = 15  # len or 0/None if not wrap (15 default)
 # if allow is false set threashold (0-1) how much of text must be inside
 TEXT_BOUNDS_OVERFLOW_THRESHOLD = 0
 
-
+map_theme = 'mapycz'
 # plot as bridge (True)  or normal way (False)
 PLOT_BRIDGES = True
 # plot as tunnel (True) or normal way (False) - if false and in dont want tags -> will not be plotted at all
 PLOT_TUNNELS = True
-FILTER_PEAKS_BY_PROMINENCE = False
-PEAKS_FILTER_SENSITIVITY = 2.5
+PEAKS_FILTER_SENSITIVITY: float | None = None#2.5
 ELE_PROMINENCE_MAX_DIFF_RATIO = 3
 
 # from fe by zoom or from be map styles by zoom
-FILTER_PLACE_BY_POPULATION = True
+MIN_POPULATION: int | None = None
+PLACES_TO_FILTER_BY_POPULATION = ['city', 'town', 'village']
 # --------------------------------------------------------------preview--------------------------------------------------------------
 # NOTE: must have same settings as the resulting one when generating for large format printing
 WANT_PREVIEW: bool = False
@@ -320,6 +320,8 @@ FOLDER_COLOR_DIS_PALLET = True
 NODES_ADDITIONAL_COLUMNS = ['name', 'ele', 'population']
 NODES_NUMERIC_COLUMNS = ['ele', 'population']
 NODES_ROUND_COLUMNS = ['ele']
+
+
 
 WAYS_ADDITIONAL_COLUMNS = ['bridge', 'layer', 'tunnel', 'historic'
                            'surface', 'tracktype', 'service', 'intermittent']

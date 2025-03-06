@@ -24,6 +24,15 @@ class MinPlot(Enum):  # minimum parts that node must have. If not whole node obj
     TEXT2 = "TEXT2"
     TEXT1_TEXT2 = "TEXT1_TEXT2"
 
+class MapThemeVariable(Enum):
+    WATER_COLOR = "WATER_COLOR"
+    LAND_COLOR = "LAND_COLOR"
+    AREAS_OVER_WAYS_FILTER = "AREAS_OVER_WAYS_FILTER"
+    WAYS_WITHOUT_CROSSING_FILTER = "WAYS_WITHOUT_CROSSING_FILTER"
+    GPXS_STYLES_SCALE = "GPXS_STYLES_SCALE"
+    NODES_STYLES_SCALE = "NODES_STYLES_SCALE"
+    WAYS_STYLES_SCALE = "WAYS_STYLES_SCALE"
+    AREAS_STYLES_SCALE = "AREAS_STYLES_SCALE"
 class MinLoad(Enum):  # minimum parts that node must have. If not whole node object is removed
     TEXT1 = "TEXT1"
     TEXT2 = "TEXT2"
