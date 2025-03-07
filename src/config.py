@@ -8,7 +8,7 @@ from common.map_enums import Style, ColorMode, PaperSize, MapOrientation, Marker
 # --------------------------------------------------------------map area--------------------------------------------------------------
 # OSM_INPUT_FILE_NAMES: str = ['../osm_files/vys.osm.pbf','../osm_files/jihmor.osm.pbf']
 # OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/vysJihE.osm.pbf'
-OSM_INPUT_FILE_NAMES: str | list[str] = ['../osm_files/skbr.osm.pbf']
+OSM_INPUT_FILE_NAMES: str | list[str] = ['../osm_files/skways.osm.pbf']
 # OSM_INPUT_FILE_NAMES: str | list[str] = '../trebic.osm.pbf'
 # extract - will be always true
 OSM_WANT_EXTRACT_AREA: bool = False
@@ -46,7 +46,7 @@ OUTPUT_PDF_NAME: str = '../pdfs/divocina'
 # AREA: WantedArea = [{'area': [(17.1374492,48.1955133), (17.2557239, 48.1951700), (17.2557239, 48.1444531), (17.1377925, 48.1452547)], "plot":False}] # zoom
 
 # slovensko - bratislava centrum  - skbr
-AREA: WantedArea = [{'area': [(17.0797297, 48.1649183), (17.1410558, 48.1642600), (17.1413133, 48.1383769), (17.0762106, 48.1384056)], "plot": False}]  # zoom
+# AREA: WantedArea = [{'area': [(17.0797297, 48.1649183), (17.1410558, 48.1642600), (17.1413133, 48.1383769), (17.0762106, 48.1384056)], "plot": False}]  # zoom
 
 # slovensko - voj prostor  - skvoj
 # AREA: WantedArea = [{'area': [(17.0325058,48.6691606), (17.6252633, 48.6856314), (17.6225169, 48.1661969), (17.0031625, 48.1808503)], "plot":False}] # zoom
@@ -60,7 +60,7 @@ AREA: WantedArea = [{'area': [(17.0797297, 48.1649183), (17.1410558, 48.1642600)
 # slovensko - potok, reka, kanal, silnice 1,2,3 a dalnice, zelecnice, residental,
 # service, footway
 # industrial zona - skways
-# AREA: WantedArea = [{'area': [(16.8529242,48.4770300), (17.2031475, 48.4733883), (17.1986503, 48.3386914), (16.8525808, 48.3382350)], "plot":False}] # zoom
+AREA: WantedArea = [{'area': [(16.8529242,48.4770300), (17.2031475, 48.4733883), (17.1986503, 48.3386914), (16.8525808, 48.3382350)], "plot":False}] # zoom
 
 
 # nemecko - funicular tunnel a railway tunnel - gefun
@@ -95,6 +95,7 @@ AREA: WantedArea = [{'area': [(17.0797297, 48.1649183), (17.1410558, 48.1642600)
 # AREA: WantedArea = ["Česko","Vysočina, Česko", "Jihomoravský kraj, Česko"]
 # AREA: WantedArea = ["Brno, Česko"]
 # AREA: WantedArea = ["Jihomoravský kraj, Česko", "Kraj Vysočina, Česko"]
+# AREA: WantedArea = [{"area": "Brno, Česko", "plot": True, "category": 5, "width": None}]
 # AREA: WantedArea = [{"area": "Brno, Česko", "plot": True, "category": 5, "width": None}]
 # AREA: WantedArea = [{"area": "Baliny, Česko", "plot": True, "category": 0, "width": None}]
 # AREA: WantedArea =[{"area": "Jihomoravský kraj, Česko", "plot": True, "category": 2, "width": 1},
@@ -145,7 +146,7 @@ TEXT_BOUNDS_OVERFLOW_THRESHOLD = 0
 
 map_theme = 'mapycz'
 # plot as bridge (True)  or normal way (False)
-PLOT_BRIDGES = True
+PLOT_BRIDGES = False
 # plot as tunnel (True) or normal way (False) - if false and in dont want tags -> will not be plotted at all
 PLOT_TUNNELS = True
 PEAKS_FILTER_SENSITIVITY: float | None = None #2.5
@@ -187,14 +188,14 @@ wanted_nodes: WantedCategories = {
     #           'village'}, # zoom 3
     # subrub zoom 5
     # locality # zoom 7
-    # 'natural': {'peak'}, # zoom 1
-    # 'man_made': {'tower'}, # zoom 7
-    # 'historic': {'castle'}, # zoom 7
+    'natural': {'peak'}, # zoom 1
+    'man_made': {'tower'}, # zoom 7
+    'historic': {'castle'}, # zoom 7
 }
 
 wanted_nodes_from_area: WantedCategories = {
-    # 'man_made': {'tower'}, # zoom 7
-    # 'historic': {'castle'}, # zoom 7
+    'man_made': {'tower'}, # zoom 7
+    'historic': {'castle'}, # zoom 7
 }
 
 
@@ -210,26 +211,26 @@ wanted_ways: WantedCategories = {
     # all
     # ways connected with links
     'highway': {
-        'motorway', # zoom none
-                'trunk', # zoom none
+        # 'motorway', # zoom none
+        #         'trunk', # zoom none
                 'primary', # zoom none
-                'secondary', # zoom 2
-                'tertiary', # zoom 3
-                'motorway_link',# zoom none - smaller only
-                'trunk_link',# zoom none - smaller only
-                'primary_link',# zoom none - smaller only
-                'secondary_link',# zoom 2
-                'tertiary_link',# zoom 3
-                'residential',# zoom 5 - same size as unclassified
-                'unclassified',# zoom 6 - same size as residential
-                'service',# zoom - 6
-                'pedestrian',# zoom 5 - same as residental 
-                'cycleway',# zoom 6
-                'raceway',# zoom 3
-                'steps', # zoom 6
-                'footway',# zoom 6
-                'track', # zoom 6
-                'path'
+        #         'secondary', # zoom 2
+        #         'tertiary', # zoom 3
+        #         'motorway_link',# zoom none - smaller only
+        #         'trunk_link',# zoom none - smaller only
+        #         'primary_link',# zoom none - smaller only
+        #         'secondary_link',# zoom 2
+        #         'tertiary_link',# zoom 3
+                 'residential',# zoom 5 - same size as unclassified
+                 'unclassified',# zoom 6 - same size as residential
+                #  'service',# zoom - 6
+                 'pedestrian',# zoom 5 - same as residental 
+                #  'cycleway',# zoom 6
+                #  'raceway',# zoom 3
+                #  'steps', # zoom 6
+                  'footway',# zoom 6
+                 'track', # zoom 6
+                 'path'
                 },# zoom 6
     
     'railway': {'rail', # service - service smaller 6, 3 normal
@@ -265,6 +266,7 @@ wanted_ways: WantedCategories = {
                  'drain', # zoom 6
                  'ditch'
                  }, # zoom 6
+    'route': {'ferry'} # none
 
 
     # 'natural': {'coastline'},

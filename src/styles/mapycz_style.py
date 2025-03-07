@@ -13,7 +13,8 @@ GPXS_STYLES_SCALE = []
 # (filer for split from areas, filter for ploting)
 AREAS_OVER_WAYS_FILTER = ([{'highway': ['pedestrian', 'footway']}, {'amenity': ['parking', 'motorcycle_parking']}],
                           [{'highway': ['pedestrian', 'footway'], 'area': 'yes'},
-                           {'highway': ['pedestrian', 'footway'], 'place': ['square']},
+                           {'highway': ['pedestrian', 'footway'],
+                               'place': ['square']},
                            {'amenity': ['parking', 'motorcycle_parking']}])
 
 WAYS_WITHOUT_CROSSING = {"1-4": {'highway': 'motorway'}, "5-10": None}
@@ -36,7 +37,18 @@ RESIDENTAL_AREA_COLOR_ZOOM_1_6 = '#e2d5b7'
 
 WATER_COLOR = {"1-7": WATER_COLOR_ZOOM_1_7, "8-10": WATER_COLOR_ZOOM_8_10}
 LAND_COLOR = '#f1f0e5'
+# todo dashed way size
+DASHED_LAND_WAYS_CUMULATIVE_SIZE = Utils.cumulative_zoom_size_multiplier(
+    {"10": 7, '9': 1.1, '8': 1.5, "7-1": 2},
+    Style.WIDTH.name)
 
+SMALL_NONDASHED_CUMULATIVE_SIZE = Utils.cumulative_zoom_size_multiplier(
+    {"10": 12, "9-8": 1.1, "7-1": 1.5},
+    Style.WIDTH.name)
+
+SPECIAL_WAYS_CUMULATIVE_SIZE = Utils.cumulative_zoom_size_multiplier({
+    "10-9": 19, "8": 1.4, "7-1": 1.8},
+    Style.WIDTH.name)
 # Example data
 
 # todo some ways and areas color to constants
@@ -253,27 +265,35 @@ highway_styles_main: ElementStyles = [
     ({'highway': 'tertiary_link'}, {Style.COLOR.name: NORMAL_WAY_COLOR, Style.ZINDEX.name: 42,
      Style.WIDTH.name: 16, Style.EDGE_COLOR.name: NORMAL_WAY_EDGE_COLOR}),
 
-    # o trochu menší než tertiary
-    # todo size
-    ({'highway': ['residential', 'unclassified', 'pedestrian']}, {Style.ZINDEX.name: 40, Style.COLOR.name: NORMAL_WAY_COLOR,
-                                                                  Style.EDGE_COLOR.name: NORMAL_WAY_EDGE_COLOR}),
+    ({'highway': ['residential', 'unclassified', 'pedestrian']},
+     {Style.ZINDEX.name: 40, Style.COLOR.name: NORMAL_WAY_COLOR,
+      Style.EDGE_COLOR.name: NORMAL_WAY_EDGE_COLOR},
+     {
+        **Utils.cumulative_zoom_size_multiplier(
+            {"9-10": 27, "8": 1.3, "7": 1.8, "1-6": 1.6}, Style.WIDTH.name),
+        "1-8": {Style.EDGE_WIDTH_RATIO.name: 1 + 0.5,
+                Style.BRIDGE_EDGE_WIDTH_RATIO.name: 1 + 0.5},
+        
+    }),
 ]
 
 highway_styles_surface_special_and_paths: ElementStyles = [
 
     # to non dashed
-    # todo size bigger than normal track - same as service - need to copy
     ({'highway': ['track', 'cycleway'],
       'surface': ['asphalt'],
       'tracktype': ('~grade3', '~grade4', '~grade5'),
       },
      {Style.ZINDEX.name: 35, Style.COLOR.name: "#d4d2cf", Style.EDGE_COLOR.name: "#a49d84",
       Style.LINESTYLE.name: "-", Style.EDGE_LINESTYLE.name: "-"},
-     {"8-10": {Style.COLOR.name: "#ebe8e4", Style.EDGE_COLOR.name: "#9a9275"},
-      "7": {Style.COLOR.name: "#e1dedb", Style.EDGE_COLOR.name: "#a2967c"}}),
+     {
+        **SPECIAL_WAYS_CUMULATIVE_SIZE,
+        "1-8": {Style.EDGE_WIDTH_RATIO.name: 1 + 0.7,
+                Style.BRIDGE_EDGE_WIDTH_RATIO.name: 1 + 0.7},
 
-    # todo size - white slightly bigger than normal track,
-    # other(non white) same size as normal track - so set size only for zoom where is white
+        "8-10": {Style.COLOR.name: "#ebe8e4", Style.EDGE_COLOR.name: "#9a9275"},
+        "7": {Style.COLOR.name: "#e1dedb", Style.EDGE_COLOR.name: "#a2967c"}}),
+
     ([{'highway': ['path', 'track'],
       'surface': ['asphalt', 'concrete', 'paving_stones', 'sett', 'cobblestone',
                   'compacted', 'fine_gravel'],
@@ -282,26 +302,28 @@ highway_styles_surface_special_and_paths: ElementStyles = [
         'tracktype': ['grade1', 'grade2']}],
      {Style.ZINDEX.name: 33, Style.COLOR.name: NORMAL_WAY_COLOR, Style.EDGE_COLOR.name: NORMAL_WAY_EDGE_COLOR,
       Style.LINESTYLE.name: "-", Style.EDGE_LINESTYLE.name: "-"},
-     {"1-8":  # on smaller zoom, change to line without edge
-        {Style.COLOR.name: UNPAVED_WAY_COLOR, Style.EDGE_COLOR.name: None,
-         Style.PLOT_ON_BRIDGE.name: True}}),
+     {
+        **SMALL_NONDASHED_CUMULATIVE_SIZE,
+        "9": {Style.EDGE_WIDTH_RATIO.name: 1 + 0.5,
+              Style.BRIDGE_EDGE_WIDTH_RATIO.name: 1 + 0.5},
+        # on smaller zoom, change to line without edge
+        "1-8": {Style.COLOR.name: UNPAVED_WAY_COLOR, Style.EDGE_COLOR.name: None,
+                Style.PLOT_ON_BRIDGE.name: True}
+    }),
 
-
-    # todo size dashed footway size - same as dashed path or track
     ({'highway': ['footway'],
       'surface': ['unpaved', 'gravel', 'pebblestone', 'rock', 'dirt',
                   'ground', 'grass', 'sand', 'mud', 'woodchips']},
      {Style.COLOR.name: UNPAVED_WAY_COLOR, Style.EDGE_COLOR.name: None,
       Style.LINESTYLE.name: (3, (5, 4)), Style.ZINDEX.name: 10,
       Style.PLOT_ON_BRIDGE.name: False},
-     {"1-7": {Style.PLOT_ON_BRIDGE.name: True}}
+     {**DASHED_LAND_WAYS_CUMULATIVE_SIZE,
+      "1-6": {Style.PLOT_ON_BRIDGE.name: True}}
      ),
 ]
 
 highway_styles_special_and_paths: ElementStyles = [
-    # o trochu menší než residental
-    # todo maybe add to service, residentail, 'unclassified', 'pedestrian' on small zoom style - without edge and small size, test and make disappear later
-    # jen na zoom kde zmizely např..
+
     ({'highway': 'service'}, {Style.ZINDEX.name: 37, Style.COLOR.name: NORMAL_WAY_COLOR,
                               Style.EDGE_COLOR.name: NORMAL_WAY_EDGE_COLOR}),
 
@@ -311,14 +333,19 @@ highway_styles_special_and_paths: ElementStyles = [
                Style.EDGE_COLOR.name: "#a8a483"}
       }),
 
-    # todo size
     ({'highway': ['raceway', 'service']}, {},
-     {"1-8": {}
-      }),
+     {
+        **SPECIAL_WAYS_CUMULATIVE_SIZE,
+        "1-9": {Style.EDGE_WIDTH_RATIO.name: 1 + 0.7,
+                Style.BRIDGE_EDGE_WIDTH_RATIO.name: 1 + 0.7},
+    }),
 
 
     ({'highway': 'cycleway'}, {Style.ZINDEX.name: 36, Style.COLOR.name: NORMAL_WAY_COLOR,
-                               Style.EDGE_COLOR.name: NORMAL_WAY_EDGE_COLOR}),
+                               Style.EDGE_COLOR.name: NORMAL_WAY_EDGE_COLOR}, {
+        "1-8": {Style.COLOR.name: UNPAVED_WAY_COLOR, Style.EDGE_COLOR.name: None, Style.LINESTYLE.name: "-",
+                Style.LINE_CAPSTYLE.name: LineCupStyles.ROUND.value, Style.PLOT_ON_BRIDGE.name: True}
+    }),
 
     ({'highway': 'steps'}, {Style.COLOR.name: NORMAL_WAY_COLOR, Style.EDGE_COLOR.name: NORMAL_WAY_EDGE_COLOR,
                             Style.LINESTYLE.name: (2, (3, 0.2)),
@@ -333,10 +360,11 @@ highway_styles_special_and_paths: ElementStyles = [
      {"1-8": {Style.COLOR.name: UNPAVED_WAY_COLOR, Style.EDGE_COLOR.name: None, Style.LINESTYLE.name: "-",
               Style.LINE_CAPSTYLE.name: LineCupStyles.ROUND.value, Style.PLOT_ON_BRIDGE.name: True}
       }),
-    # steps and footway - same size
-    # todo size - same as footway - test
+
     ({'highway': ['footway', 'steps', 'cycleway']}, {},
-     {"1-8": {}
+     {**SMALL_NONDASHED_CUMULATIVE_SIZE,
+      "9": {Style.EDGE_WIDTH_RATIO.name: 1 + 0.5,
+            Style.BRIDGE_EDGE_WIDTH_RATIO.name: 1 + 0.5},
       }),
 
 
@@ -346,11 +374,10 @@ highway_styles_special_and_paths: ElementStyles = [
     ({'highway': 'path'}, {Style.ZINDEX.name: 13, Style.COLOR.name: UNPAVED_WAY_COLOR, Style.LINESTYLE.name: (3, (5, 4)),
      Style.EDGE_COLOR.name: None, Style.PLOT_ON_BRIDGE.name: None},
      {"1-7": {Style.PLOT_ON_BRIDGE.name: True}}),
-    # dashed path and track size
-    # todo size track and path same
-    ({'highway': ['path', 'track']}, {Style.WIDTH.name: 20},
-     ),
-
+    ({'highway': ['path', 'track']}, {}, {
+        **DASHED_LAND_WAYS_CUMULATIVE_SIZE
+    }
+    ),
 ]
 
 # railways
@@ -417,7 +444,7 @@ railway_styles: ElementStyles = [
     ({'railway': ['rail', 'disused', 'light_rail', "monorail", 'miniature', "subway"]}, {},
      {
         **Utils.cumulative_zoom_size_multiplier(
-            {"10": 11, "9": 1.2, "8": 1.6, "7": 2.1, "6": 2.6, "1-5": 2},
+            {"10": 11, "9": 1.2, "8": 1.6, "7": 2.1, "6": 2.3, "1-5": 2},
             Style.WIDTH.name)
     }),
 
@@ -537,7 +564,7 @@ ways_styles_default: ElementStyles = [
     ({'railway': '', 'bridge': ''}, {
         Style.BRIDGE_EDGE_LINESTYLE.name: '-', Style.BRIDGE_LINESTYLE.name: '-',
         Style.BRIDGE_EDGE_COLOR.name: '#707070', Style.BRIDGE_COLOR.name: "#FFFFFF",
-        Style.BRIDGE_WIDTH_RATIO.name: 1 + 2, Style.BRIDGE_EDGE_WIDTH_RATIO.name: 1 + 0.3,
+        Style.BRIDGE_WIDTH_RATIO.name: 1 + 1.6, Style.BRIDGE_EDGE_WIDTH_RATIO.name: 1 + 0.3,
         Style.PLOT_ON_BRIDGE.name: True,
     }),
 
@@ -567,6 +594,16 @@ ways_styles_default: ElementStyles = [
             Style.WIDTH.name),
     }),
 
+    ({'route': 'ferry'}, {
+        Style.COLOR.name: '#7394b4', Style.LINESTYLE.name: (0, (5, 4)),
+        Style.ZINDEX.name: 1, Style.EDGE_COLOR.name: None
+    }, {
+        **Utils.cumulative_zoom_size_multiplier(
+            {"10": 8, "9": 1.5, "8": 1.8, "7": 1.7, "6": 2, "5": 2,
+             "4": 2.1, "3": 2, '2': 2, '1': 1.3},
+            Style.WIDTH.name),
+    }),
+
     ({'waterway': ''}, {
         Style.COLOR.name: WATER_COLOR_ZOOM_1_7,
         Style.ZINDEX.name: 0, Style.EDGE_COLOR.name: None
@@ -575,6 +612,7 @@ ways_styles_default: ElementStyles = [
             {"9-10": 10, "8": 1.7, "7": 1.8, "6": 2, "1-5": 2},
             Style.WIDTH.name),
         "8-10": {Style.COLOR.name: WATER_COLOR_ZOOM_8_10}}),
+
 
     ([], {
         Style.ALPHA.name: 1.0, Style.EDGE_ALPHA.name: 1.0,
