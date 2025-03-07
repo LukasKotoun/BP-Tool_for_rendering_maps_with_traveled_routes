@@ -322,3 +322,18 @@ class Utils:
         bbox_polygon = geometry.box(
             bbox_to_overflow.x0, bbox_to_overflow.y0, bbox_to_overflow.x1, bbox_to_overflow.y1)
         return GeomUtils.is_geometry_inside_geometry_threshold(bbox_polygon, reqired_area_polygon, text_bounds_overflow_threshold)
+
+    @staticmethod
+    def cumulative_zoom_size_multiplier(data, key):
+        """Returns a dictionary where each key maps to {key: cumulative value}."""
+        cumulative = None
+        result = {}
+
+        for dict_key, multiplier in data.items():
+            if cumulative is None:
+                cumulative = multiplier
+            else:
+                cumulative *= multiplier
+            result[dict_key] = {key: cumulative}  # Use the provided key dynamically
+
+        return result

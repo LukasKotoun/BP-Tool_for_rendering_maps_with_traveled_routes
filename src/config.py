@@ -183,19 +183,19 @@ OUTER_FIT_PAPER_SIZE = False
 
 # wanted_ways: WantedFeatures # where they vanish - already not on map - for mapycz styles
 wanted_nodes: WantedCategories = {
-    'place': {'city', 
-              'town', # zoom 1
-              'village'}, # zoom 3
+    # 'place': {'city', 
+    #           'town', # zoom 1
+    #           'village'}, # zoom 3
     # subrub zoom 5
     # locality # zoom 7
-    'natural': {'peak'}, # zoom 1
-    'man_made': {'tower'}, # zoom 7
-    'historic': {'castle'}, # zoom 7
+    # 'natural': {'peak'}, # zoom 1
+    # 'man_made': {'tower'}, # zoom 7
+    # 'historic': {'castle'}, # zoom 7
 }
 
 wanted_nodes_from_area: WantedCategories = {
-    'man_made': {'tower'}, # zoom 7
-    'historic': {'castle'}, # zoom 7
+    # 'man_made': {'tower'}, # zoom 7
+    # 'historic': {'castle'}, # zoom 7
 }
 
 
@@ -210,27 +210,28 @@ unwanted_nodes_tags: UnwantedTags = {
 wanted_ways: WantedCategories = {
     # all
     # ways connected with links
-    'highway': {'motorway', # zoom none
-                'trunk', # zoom none
-                'primary', # zoom none
-                'secondary', # zoom 2
-                'tertiary', # zoom 3
-                # 'motorway_link',# zoom none - smaller only
-                # 'trunk_link',# zoom none - smaller only
-                # 'primary_link',# zoom none - smaller only
-                # 'secondary_link',# zoom 2
-                # 'tertiary_link',# zoom 3
-                # 'residential',# zoom 5 - same size as unclassified
-                # 'unclassified',# zoom 6 - same size as residential
-                # 'service',# zoom - 6
-                # 'pedestrian',# zoom 5 - same as residental 
-                # 'cycleway',# zoom 6
-                # 'raceway',# zoom 3
-                # 'steps', # zoom 6
-                # 'footway',# zoom 6
-                # 'track', # zoom 6
-                # 'path'
-                },# zoom 6
+    # 'highway': {
+    #     'motorway', # zoom none
+    #             'trunk', # zoom none
+    #             'primary', # zoom none
+    #             'secondary', # zoom 2
+    #             'tertiary', # zoom 3
+    #             # 'motorway_link',# zoom none - smaller only
+    #             # 'trunk_link',# zoom none - smaller only
+    #             # 'primary_link',# zoom none - smaller only
+    #             # 'secondary_link',# zoom 2
+    #             # 'tertiary_link',# zoom 3
+    #             # 'residential',# zoom 5 - same size as unclassified
+    #             # 'unclassified',# zoom 6 - same size as residential
+    #             # 'service',# zoom - 6
+    #             # 'pedestrian',# zoom 5 - same as residental 
+    #             # 'cycleway',# zoom 6
+    #             # 'raceway',# zoom 3
+    #             # 'steps', # zoom 6
+    #             # 'footway',# zoom 6
+    #             # 'track', # zoom 6
+    #             # 'path'
+    #             },# zoom 6
     
     'railway': {'rail', # service - service smaller 6, 3 normal
                 'light_rail', #- service smaller 6, 3 normal
@@ -260,10 +261,10 @@ wanted_ways: WantedCategories = {
                 'cable_barrier'}, # zoom 8
     
     'waterway': {'river', # zoom never
-                #  'canal',  # zoom 4
-                #  'stream', # zoom 4
-                #  'drain', # zoom 6
-                #  'ditch'
+                 'canal',  # zoom 4
+                 'stream', # zoom 4
+                 'drain', # zoom 6
+                 'ditch'
                  }, # zoom 6
 
 
@@ -283,11 +284,11 @@ wanted_ways: WantedCategories = {
 
 unwanted_ways_tags: UnwantedTags = {
     # 'highway':['coridor','via_ferrata','crossing','traffic_island','proposed','construction' ],
-    # 'railway': {
-    #     'service': ['yard', 'spur','crossover', 'siding'], # spur, siding
-    #     # 'tunnel': ['building_passage'],
-    #     # 'tunnel': [],
-    # },
+    'railway': {
+        'service': ['yard', 'spur','crossover', 'siding'], # spur, siding
+        # 'tunnel': ['building_passage'],
+        # 'tunnel': [],
+    },
     # 'waterway': ['stream']
 
 
@@ -396,7 +397,7 @@ NODES_ROUND_COLUMNS = ['ele']
 
 
 WAYS_ADDITIONAL_COLUMNS = ['bridge', 'layer', 'tunnel', 'historic',
-                           'surface', 'tracktype', 'service', 'intermittent']
+                           'surface', 'tracktype', 'service', 'intermittent', 'covered']
 WAYS_NUMERIC_COLUMNS = []
 WAYS_ROUND_COLUMNS = []
 

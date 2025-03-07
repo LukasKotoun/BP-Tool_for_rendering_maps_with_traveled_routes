@@ -1,7 +1,7 @@
 from common.custom_types import ElementStyles, FeatureStyles
 from common.map_enums import Style, TextPositions, MinPlot, MarkerAbove, MarkersCodes, LineCupStyles, MapThemeVariable
 from config import font_awesome_prop, material_design_prop
-
+from modules.utils import Utils
 #! edge linestyle is suported only dashed or not dashed on not solid lines
 #! ploting is turned of by setting color to None
 #! text or marker turn of by setting marker/textcolor to 'None', marker edge or text edge by setting edge to 'None' and same for center
@@ -34,6 +34,7 @@ RESIDENTAL_AREA_COLOR_ZOOM_1_6 = '#e2d5b7'
 WATER_COLOR = {"1-7": WATER_COLOR_ZOOM_1_7, "8-10": WATER_COLOR_ZOOM_8_10}
 LAND_COLOR = '#f1f0e5'
 
+# Example data
 
 # todo some ways and areas color to constants
 
@@ -62,7 +63,7 @@ gpxs_styles_default: ElementStyles = [
           Style.FINISH_MARKER_WIDHT.name: 5, Style.FINISH_MARKER_EDGE_RATIO.name: 0.1,
           Style.FINISH_MARKER_COLOR.name: "#000000", Style.FINISH_MARKER_EDGE_COLOR.name: "#FFFFFF", Style.FINISH_MARKER_ALPHA.name: 1.0,
           Style.FINISH_MARKER_FONT_PROPERTIES.name: font_awesome_prop
-        })
+          })
 ]
 
 GPXS_STYLES: ElementStyles = [
@@ -80,12 +81,14 @@ GPXS_STYLES: ElementStyles = [
 
 NODES_STYLES_SCALE = []
 place_styles: ElementStyles = [
+    # todo size
     ({'place': 'city'}, {
         Style.TEXT_FONT_SIZE.name: 25, Style.ZINDEX.name: 50
     },
         {
         "10-10": {Style.TEXT_FONT_SIZE.name: 15}
     }),
+    # todo size
     ({'place': 'town'}, {
         Style.TEXT_FONT_SIZE.name: 10, Style.ZINDEX.name: 49
     },
@@ -94,7 +97,7 @@ place_styles: ElementStyles = [
                   Style.TEXT1_POSITIONS.name: [TextPositions.TOP, TextPositions.BOTTOM, TextPositions.RIGHT], Style.EDGE_WIDTH_RATIO.name: 0.1, Style.WIDTH.name: 2.8,
                   Style.EDGE_COLOR.name: "#b6ac8c"}
     }),
-
+    # todo size
     ({'place': 'village'}, {
         Style.TEXT_FONT_SIZE.name: 10, Style.ZINDEX.name: 48
     },
@@ -104,11 +107,13 @@ place_styles: ElementStyles = [
                   Style.TEXT1_POSITIONS.name: [TextPositions.TOP, TextPositions.BOTTOM, TextPositions.RIGHT], Style.EDGE_WIDTH_RATIO.name: 0.2,
                   Style.WIDTH.name: 5, Style.EDGE_COLOR.name: "#b6ac8c", Style.MARKER_ABOVE_OTHERS.name: MarkerAbove.NONE}
     }),
+    # todo add local, subrub
 ]
 
 
 # text color or MARKER color turn of by string "None" instead of None
 natural_styles_nodes: ElementStyles = [
+    # todo size 
     ({'natural': 'peak'}, {
         Style.ZINDEX.name: 30, Style.MIN_PLOT_REQ.name: MinPlot.MARKER_TEXT2.name,
         # marker
@@ -134,7 +139,7 @@ icons_above_styles_nodes: ElementStyles = [
         Style.TEXT1_POSITIONS.name: [TextPositions.BOTTOM],
         Style.TEXT_FONT_SIZE.name: 6, Style.TEXT_OUTLINE_WIDTH_RATIO.name: 0.2,
     }),
-
+    # todo size
     ({'historic': ['castle']}, {
         Style.MIN_PLOT_REQ.name: MinPlot.MARKER.name,
         # marker
@@ -175,7 +180,6 @@ NODES_STYLES: ElementStyles = [
     *place_styles,
     *nodes_styles_default,
 ]
-# todo maybe is needed to change dashed linstyles by zoom level - cahnged with width :]
 # -------------------ways------------------
 # styles that must be assigned to all way features
 # scaled styles - relative to polygon (not paper)
@@ -189,16 +193,25 @@ highway_styles_bridges_overwrite: ElementStyles = [
 
 # add highway bridge and tunnel styles
 highway_styles_tunnels: ElementStyles = [
-    ({'highway': ['motorway', 'motorway_link'],
-     'tunnel': ''}, {Style.COLOR.name: "#a0e078"}),
-    ({'highway': ['trunk', 'primary', 'trunk_link', 'primary_link'], 'tunnel': ''},
-     {Style.COLOR.name: "#fee0b0"}),
-    ({'highway': ['secondary', 'secondary_link'],
-     'tunnel': ''}, {Style.COLOR.name: "#e4e791"}),
+    ([{'highway': ['motorway', 'motorway_link'],
+     'tunnel': ''},
+      {'highway': ['motorway', 'motorway_link'],
+      'covered': ''}
+      ],
+     {Style.COLOR.name: "#a9de86"}),
+
+    ([{'highway': ['trunk', 'primary', 'trunk_link', 'primary_link'], 'tunnel': ''},
+      {'highway': ['trunk', 'primary', 'trunk_link', 'primary_link'], 'covered': ''}],
+     {Style.COLOR.name: "#fde5bb"}),
+    ([{'highway': ['secondary', 'secondary_link'],
+     'tunnel': ''},
+      {'highway': ['secondary', 'secondary_link'],
+       'covered': ''}
+      ], {Style.COLOR.name: "#e4e791"}),
     # default color and all edge styles
-    ({'highway': '', 'tunnel': ''}, {Style.EDGE_LINESTYLE.name: (2, (3, 1)),
-                                     Style.EDGE_CAPSTYLE.name: LineCupStyles.BUTT.value,
-                                     Style.COLOR.name: "#f6f9f5", Style.EDGE_COLOR.name: "#B0A78D", Style.LINESTYLE.name: "-"})]
+    ([{'highway': '', 'tunnel': ''}, {'highway': '', 'covered': ''}], {Style.EDGE_LINESTYLE.name: (2, (3, 1)),
+                                                                       Style.EDGE_CAPSTYLE.name: LineCupStyles.BUTT.value,
+                                                                       Style.COLOR.name: "#f6f9f5", Style.EDGE_COLOR.name: "#B0A78D", Style.LINESTYLE.name: "-"})]
 
 highway_styles_main: ElementStyles = [
     # todo size
@@ -304,10 +317,9 @@ highway_styles_special_and_paths: ElementStyles = [
     ({'highway': 'cycleway'}, {Style.ZINDEX.name: 36, Style.COLOR.name: NORMAL_WAY_COLOR,
                                Style.EDGE_COLOR.name: NORMAL_WAY_EDGE_COLOR}),
 
-    # todo size - same as footway - test
     ({'highway': 'steps'}, {Style.COLOR.name: NORMAL_WAY_COLOR, Style.EDGE_COLOR.name: NORMAL_WAY_EDGE_COLOR,
                             Style.LINESTYLE.name: (2, (3, 0.2)),
-                            Style.LINE_CAPSTYLE: LineCupStyles.BUTT.value,
+                            Style.LINE_CAPSTYLE.name: LineCupStyles.BUTT.value,
                             Style.EDGE_CAPSTYLE.name: LineCupStyles.BUTT.value,
                             Style.PLOT_ON_BRIDGE.name: False, Style.ZINDEX.name: 31},
      {"1-8": {Style.COLOR.name: UNPAVED_WAY_COLOR, Style.EDGE_COLOR.name: None, Style.LINESTYLE.name: "-",
@@ -318,12 +330,12 @@ highway_styles_special_and_paths: ElementStyles = [
               Style.LINE_CAPSTYLE.name: LineCupStyles.ROUND.value, Style.PLOT_ON_BRIDGE.name: True}
       }),
     # steps and footway - same size
+    # todo size - same as footway - test
     ({'highway': ['footway', 'steps', 'cycleway']}, {},
      {"1-8": {}
       }),
 
 
-    # todo size track and path same
     ({'highway': 'track'}, {Style.ZINDEX.name: 14, Style.COLOR.name: UNPAVED_WAY_COLOR, Style.LINESTYLE.name: (7, (10, 4)),
      Style.EDGE_COLOR.name: None, Style.PLOT_ON_BRIDGE.name: None},
      {"1-7": {Style.PLOT_ON_BRIDGE.name: True}}),
@@ -331,6 +343,7 @@ highway_styles_special_and_paths: ElementStyles = [
      Style.EDGE_COLOR.name: None, Style.PLOT_ON_BRIDGE.name: None},
      {"1-7": {Style.PLOT_ON_BRIDGE.name: True}}),
     # dashed path and track size
+    # todo size track and path same
     ({'highway': ['path', 'track']}, {Style.WIDTH.name: 20},
      ),
 
@@ -346,24 +359,27 @@ railway_styles_bridges_overwrite: ElementStyles = [
     ({'railway': ['subway'], 'bridge': ''}, {
         Style.COLOR.name: '#FFFFFF',
         Style.EDGE_COLOR.name: '#939393',
-        Style.LINESTYLE.name: (0, (5, 5)), Style.EDGE_WIDTH_RATIO.name: 1 + 0.4,
+        Style.LINESTYLE.name: (0, (5, 5)), Style.EDGE_WIDTH_RATIO.name: 1 + 0.5,
         Style.LINE_CAPSTYLE.name: LineCupStyles.BUTT.value, Style.EDGE_CAPSTYLE.name: LineCupStyles.BUTT.value,
     })
 ]
 
 railway_styles_tunnels: ElementStyles = [
-    ({'railway': ['rail', 'light_rail', "monorail", 'miniature'], 'tunnel': ''}, {
+    ([{'railway': ['rail', 'light_rail', "monorail", 'miniature'], 'tunnel': ''},
+     {'railway': ['rail', 'light_rail', "monorail", 'miniature'], 'covered': ''}], {
         Style.COLOR.name: None, Style.EDGE_LINESTYLE.name: (3, (7, 4)),
         Style.EDGE_CAPSTYLE.name: LineCupStyles.BUTT.value
     }),
 
-    ({'railway': 'tram', 'tunnel': ''}, {
+    ([{'railway': 'tram', 'tunnel': ''},
+     {'railway': 'tram', 'covered': ''}], {
         Style.EDGE_LINESTYLE.name: (3, (7, 4)),
         Style.EDGE_CAPSTYLE.name: LineCupStyles.BUTT.value
     }),
 
     # todo size - same as normal tram
-    ({'railway': 'funicular', 'tunnel': ''}, {
+    ([{'railway': 'funicular', 'tunnel': ''},
+     {'railway': 'funicular', 'covered': ''}], {
         Style.COLOR.name: None,
         Style.EDGE_WIDTH_RATIO.name: 0.4,
         Style.EDGE_LINESTYLE.name: (2, (3, 2)),
@@ -372,94 +388,97 @@ railway_styles_tunnels: ElementStyles = [
 ]
 
 railway_styles_service: ElementStyles = [
-    # # todo size - smaller than normal rail
-    ({'railway': ['rail', 'light_rail', "monorail", "subway"],
+    ({'railway': ['rail', 'disused', 'light_rail', "monorail", "subway"],
       'service': ['crossover', 'siding', 'spur', 'yard']}, {
-        Style.WIDTH.name: 15,  # smaller width, in osm alpha and width
+    }, {
+        **Utils.cumulative_zoom_size_multiplier(
+            {"10": 8, "9": 1.2, "8": 1.8, "1-7": 1.7}, Style.WIDTH.name)
     })]
 
 railway_styles: ElementStyles = [
     # for osm light_rail, monorail is just line, subway is line but with different color
-    ({'railway': ['rail', 'light_rail', "monorail", 'miniature']}, {
+
+    ({'railway': ['rail', 'disused', 'light_rail', "monorail", 'miniature']}, {
         Style.COLOR.name: '#FFFFFF', Style.EDGE_COLOR.name: '#707070',
-        Style.LINESTYLE.name: (0, (5, 5)), Style.EDGE_WIDTH_RATIO.name: 1 + 0.4,
+        Style.LINESTYLE.name: (0, (5, 5)), Style.EDGE_WIDTH_RATIO.name: 1 + 0.5,
         Style.LINE_CAPSTYLE.name: LineCupStyles.BUTT.value, Style.EDGE_CAPSTYLE.name: LineCupStyles.BUTT.value,
         Style.ZINDEX.name: 100
     }),
-
+    # 3
     ({'railway': 'subway'}, {
         Style.COLOR.name: '#939392', Style.LINESTYLE.name: (3, (7, 4)),
         Style.EDGE_CAPSTYLE.name: LineCupStyles.BUTT.value,
-        Style.EDGE_COLOR.name: None, Style.WIDTH.name: 10,
+        Style.EDGE_COLOR.name: None,
         Style.ZINDEX.name: 20
     }),
-    # # todo size - test subway size
-    ({'railway': ['rail', 'light_rail', "monorail", 'miniature', "subway"]}, {
-        Style.WIDTH.name: 15,
+
+    ({'railway': ['rail', 'disused', 'light_rail', "monorail", 'miniature', "subway"]}, {},
+     {
+        **Utils.cumulative_zoom_size_multiplier(
+            {"10": 11, "9": 1.2, "8": 1.6, "7": 2.1, "6": 2.6, "1-5": 2},
+            Style.WIDTH.name)
     }),
 
-
-    # # todo size
     ({'railway': 'funicular'}, {
         Style.ZINDEX.name: 99,
-        Style.COLOR.name: '#FFFFFF', Style.WIDTH.name: 10,
+        Style.COLOR.name: '#FFFFFF',
         Style.EDGE_COLOR.name: '#474747',
         Style.EDGE_LINESTYLE.name: (0, (5, 5)),
         Style.LINESTYLE.name: (0, (5, 5)), Style.EDGE_WIDTH_RATIO.name: 1 + 0.8,
         Style.EDGE_WIDTH_DASHED_CONNECT_RATIO.name: 0.4,
         Style.LINE_CAPSTYLE.name: LineCupStyles.ROUND.value, Style.EDGE_CAPSTYLE.name: LineCupStyles.ROUND.value
+    }, {
+        **Utils.cumulative_zoom_size_multiplier(
+            {"10": 20, "8-9": 2, "7": 2, "1-6": 1.8},
+            Style.WIDTH.name),
+        "1-6": {Style.LINESTYLE.name: (0, (4, 8))}
     }),
 
-    # # todo size
+    # # todo size - 8
     ({'railway': 'tram'}, {
         Style.COLOR.name: '#404040', Style.WIDTH.name: 4
-    }),
+    },
+     { **Utils.cumulative_zoom_size_multiplier(
+            {"10": 4, "9": 2, "1-8": 2},
+            Style.WIDTH.name),}
+     ),
 
 ]
 
-waterway_styles_tunnels: ElementStyles = [
-    ({'waterway': '', 'tunnel': '', 'intermittent': "yes"}, {
-     Style.LINESTYLE.name: (0, (1, 1)), Style.EDGE_COLOR: None}),
-    ({'waterway': '', 'tunnel': ''}, {Style.LINESTYLE.name: "--", Style.EDGE_COLOR: None})]
 
 aerialway_styles: ElementStyles = [
     ({'aerialway': ['cable_car', 'gondola', 'mixed_lift']}, {
-        Style.COLOR.name: '#FFFFFF', Style.WIDTH.name: 20,
+        Style.COLOR.name: '#FFFFFF',
         Style.EDGE_LINESTYLE.name: "--",
         Style.LINESTYLE.name: (0, (4, 5)), Style.EDGE_WIDTH_RATIO.name: 1 + 0.6,
         Style.EDGE_WIDTH_DASHED_CONNECT_RATIO.name: 0.3, Style.ZINDEX.name: 80
     }, {
-        "8-9": {Style.WIDTH.name: 20*2},
-        "7": {Style.WIDTH.name: 20*2*2},
-        "1-6": {Style.WIDTH.name: 20*2*2*1.8,
-                Style.LINESTYLE.name: (0, (4, 8))},
+        **Utils.cumulative_zoom_size_multiplier(
+            {"10": 20, "8-9": 2, "7": 2, "1-6": 1.8},
+            Style.WIDTH.name),
+        "1-6": {Style.LINESTYLE.name: (0, (4, 8))},
     }),
 
     ({'aerialway': ['chair_lift']}, {
-        Style.WIDTH.name: 20,
         Style.LINESTYLE.name: (0, (3, 5)),
         Style.EDGE_LINESTYLE.name: '-', Style.EDGE_WIDTH_RATIO.name: 0.3,
         Style.ZINDEX.name: 79
     }, {
-        "9": {Style.WIDTH.name: 20*1.5},
-        "8": {Style.WIDTH.name: 20*1.5*1.3},
-        "7": {Style.WIDTH.name: 20*1.5*1.3*1.6},
-        "1-6": {Style.WIDTH.name: 20*1.5*1.3*1.6*2.4,
-                Style.LINESTYLE.name: (0, (3, 8))},
-
+        **Utils.cumulative_zoom_size_multiplier(
+            {"10": 20, "9": 1.5, "8": 1.3, "7": 1.6, "1-6": 2.4},
+            Style.WIDTH.name),
+        "1-6": {Style.LINESTYLE.name: (0, (3, 8))},
     }),
 ]
 
 aeroway_styles: ElementStyles = [
     ({'aeroway': 'runway'}, {
-        Style.WIDTH.name: 60,
         Style.ZINDEX.name: 70,
         Style.LINE_CAPSTYLE.name: LineCupStyles.BUTT.value, Style.EDGE_CAPSTYLE.name: LineCupStyles.BUTT.value,
     }, {
-        "9": {Style.WIDTH.name: 60*2},
-        "8": {Style.WIDTH.name: 60*2*1.3},
-        "5-7": {Style.WIDTH.name: 60*2*1.3*1.7},
-        "1-4": {Style.WIDTH.name: 60*2*1.3*1.7*1.5},
+        **Utils.cumulative_zoom_size_multiplier(
+            {"10": 60, "9": 2, "8": 1.3, "5-7": 1.7, "1-4": 1.5},
+            Style.WIDTH.name),
         "6": {Style.EDGE_WIDTH_RATIO.name: 1 + 0.3},
         "1-5": {Style.EDGE_WIDTH_RATIO.name: 1 + 0.6},
     }),
@@ -467,48 +486,36 @@ aeroway_styles: ElementStyles = [
         Style.WIDTH.name: 30,
         Style.ZINDEX.name: 69,
     }, {
-        "8-9": {Style.WIDTH.name: 30*1.5},
-        "7": {Style.WIDTH.name: 30*1.5*1.3},
-        "5-6": {Style.WIDTH.name: 30*1.5*1.3*1.6},
-        "1-4": {Style.WIDTH.name: 30*1.5*1.3*1.6*2},
+        **Utils.cumulative_zoom_size_multiplier(
+            {"10": 30, "8-9": 1.5, "7": 1.3, "5-6": 1.6, "1-4": 2},
+            Style.WIDTH.name),
         "1-6": {Style.EDGE_WIDTH_RATIO.name: 1 + 0.5},
     }),
 ]
 
+waterway_styles_tunnels: ElementStyles = [
+    ([{'waterway': '', 'tunnel': '', 'intermittent': "yes"},
+     {'waterway': '', 'covered': '', 'intermittent': "yes"}], {
+     Style.LINESTYLE.name: (0, (1, 1)), Style.EDGE_COLOR.name: None}),
+    ([{'waterway': '', 'tunnel': ''},
+      {'waterway': '', 'covered': ''}], {Style.LINESTYLE.name: "--", Style.EDGE_COLOR.name: None})]
+
 waterway_styles: ElementStyles = [
     ({'waterway': '', 'intermittent': "yes"}, {Style.LINESTYLE.name: (0, (1, 1)),
                                                Style.EDGE_COLOR: None}),
-    # todo size - all
-    ({'waterway': ['river']}, {Style.WIDTH.name: 65}, {
-        "7": {Style.WIDTH.name: 65*2},
-        "6": {Style.WIDTH.name: 65*2*2},
-        "5": {Style.WIDTH.name: 65*2*2*1.8},
-        "4": {Style.WIDTH.name: 65*2*2*1.8*1.1},
-        "3": {Style.WIDTH.name: 65*2*2*1.8*1.1*1.2},
-        
-        "2": {Style.WIDTH.name: 65*2*2*1.8*1.1*1.2*1.4}}),
+    ({'waterway': ['river']}, {}, {
+        **Utils.cumulative_zoom_size_multiplier(
+            {"8-10": 65, "7": 2, "6": 2, "5": 1.8,
+                "4": 1.1, "3": 1.2, "2": 1.7, "1": 1.7},
+            Style.WIDTH.name)
+    }),
 
-
-    # zoom 4
-    # todo size - smaller than river bigger than default
-    ({'waterway': ['canal']}, {Style.WIDTH.name: 30}, {
-        "7": {Style.WIDTH.name: 30*1.8},
-        "6": {Style.WIDTH.name: 30*1.8*1.7},
-        "1-5": {Style.WIDTH.name: 30*1.8*1.7*1.7}}),
-
-
-    ({'waterway': ''}, {Style.WIDTH.name: 10}, {
-        "8": {Style.WIDTH.name: 10*1.7},
-        "7": {Style.WIDTH.name: 10*1.7*1.8},
-        "6": {Style.WIDTH.name: 10*1.7*1.8*2},
-        "1-5": {Style.WIDTH.name: 10*1.7*1.8*2*2}}),
+    ({'waterway': ['canal']}, {}, {
+        **Utils.cumulative_zoom_size_multiplier(
+            {"8-10": 30, "7": 1.8, "6": 1.7, "1-5": 1.7},
+            Style.WIDTH.name)
+    }),
 ]
-# barrier_styles: ElementStyles = [
-#     ({'barrier': 'hedge'}, {
-#         Style.COLOR.name: '#B7DEA6',
-#         Style.ZINDEX.name: 14
-#     })
-# ]
 
 
 ways_styles_default: ElementStyles = [
@@ -529,9 +536,10 @@ ways_styles_default: ElementStyles = [
         Style.ZINDEX.name: 90
     }),
     ({'railway': '', 'bridge': ''}, {
+        Style.BRIDGE_EDGE_LINESTYLE.name: '-', Style.BRIDGE_LINESTYLE.name: '-',
         Style.BRIDGE_EDGE_COLOR.name: '#707070', Style.BRIDGE_COLOR.name: "#FFFFFF",
-        Style.BRIDGE_WIDTH_RATIO.name: 1 + 1.7, Style.BRIDGE_EDGE_WIDTH_RATIO.name: 1 + 0.4,
-        Style.PLOT_ON_BRIDGE.name: True
+        Style.BRIDGE_WIDTH_RATIO.name: 1 + 2, Style.BRIDGE_EDGE_WIDTH_RATIO.name: 1 + 0.3,
+        Style.PLOT_ON_BRIDGE.name: True,
     }),
 
     ({'aeroway': ''}, {
@@ -540,37 +548,41 @@ ways_styles_default: ElementStyles = [
     }),
 
     ({'aerialway': ''}, {
-        Style.COLOR.name: '#606060', Style.WIDTH.name: 20,
+        Style.COLOR.name: '#606060',
         Style.EDGE_COLOR.name: '#606060', Style.EDGE_LINESTYLE.name: '-',
         Style.LINESTYLE.name: (0, (0.1, 3)), Style.EDGE_WIDTH_RATIO.name: 0.3,
         Style.ZINDEX.name: 70
     }, {
-        "9": {Style.WIDTH.name: 20*1.5},
-        "8": {Style.WIDTH.name: 20*1.5*1.2},
-        "7": {Style.WIDTH.name: 20*1.5*1.2*1.5},
-        "1-6": {Style.WIDTH.name: 20*1.5*1.2*1.5*2.2,
-                Style.LINESTYLE.name: (0, (0.1, 8))},
-    }),
-    ({'barrier': ''}, {
-        Style.ZINDEX.name: 15, Style.WIDTH.name: 8,
-        Style.COLOR.name: "#909090"
-    }, {
-        "1-8": {Style.WIDTH.name: 8*1.5},
+        **Utils.cumulative_zoom_size_multiplier(
+            {"10": 20, "9": 1.5, "8": 1.2, "7": 1.5, "1-6": 2.2},
+            Style.WIDTH.name),
+        "1-6": {Style.LINESTYLE.name: (0, (0.1, 8))},
     }),
 
-    # todo size - #
+    ({'barrier': ''}, {
+        Style.ZINDEX.name: 15,
+        Style.COLOR.name: "#909090"
+    }, {
+        **Utils.cumulative_zoom_size_multiplier(
+            {"9-10": 8, "1-8": 1.5},
+            Style.WIDTH.name),
+    }),
+
     ({'waterway': ''}, {
-        Style.COLOR.name: WATER_COLOR_ZOOM_1_7, Style.WIDTH.name: 8,
+        Style.COLOR.name: WATER_COLOR_ZOOM_1_7,
         Style.ZINDEX.name: 0, Style.EDGE_COLOR.name: None
     }, {
+        **Utils.cumulative_zoom_size_multiplier(
+            {"9-10": 10, "8": 1.7, "7": 1.8, "6": 2, "1-5": 2},
+            Style.WIDTH.name),
         "8-10": {Style.COLOR.name: WATER_COLOR_ZOOM_8_10}}),
+
     ([], {
-        Style.ALPHA.name: 1.0, Style.EDGE_ALPHA.name: 1,
+        Style.ALPHA.name: 1.0, Style.EDGE_ALPHA.name: 1.0,
         Style.LINESTYLE.name: '-', Style.EDGE_LINESTYLE.name: '-',
         Style.LINE_CAPSTYLE.name: LineCupStyles.ROUND.value, Style.EDGE_CAPSTYLE.name: LineCupStyles.ROUND.value,
     }),
 ]
-
 
 
 WAYS_STYLES: ElementStyles = [
@@ -621,7 +633,7 @@ landuse_styles_area: ElementStyles = [
     #  {"3-6": {Style.COLOR.name: '#a4a4a4', Style.ALPHA.name: 0.3, Style.ZINDEX.name: 1}}),
 
     ({'landuse': ['allotments', 'retail', 'residential', 'garages', 'commercial']}, {},
-     {"8-10": {Style.COLOR.name: RESIDENTAL_AREA_COLOR_ZOOM_8_10},  
+     {"8-10": {Style.COLOR.name: RESIDENTAL_AREA_COLOR_ZOOM_8_10},
       "7": {Style.COLOR.name: RESIDENTAL_AREA_COLOR_ZOOM_7},
       "1-6": {Style.COLOR.name: RESIDENTAL_AREA_COLOR_ZOOM_1_6}}),
 
