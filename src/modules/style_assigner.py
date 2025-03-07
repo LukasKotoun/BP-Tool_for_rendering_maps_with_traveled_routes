@@ -34,6 +34,8 @@ class StyleAssigner:
                 lower, upper = upper, lower
             return lower <= zoom_level <= upper
         except ValueError:
+            warnings.warn(
+                f"zoom_range ({range_str}) is not int but {type(range_str)}")
             return False
 
     @staticmethod

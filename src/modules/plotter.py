@@ -455,7 +455,6 @@ class Plotter:
                 lines_gdf[Style.LINE_CAPSTYLE.name] = line_capstyle
             if (edge_capstyle is not None):
                 lines_gdf[Style.EDGE_CAPSTYLE.name] = edge_capstyle
-
             groups = GdfUtils.get_groups_by_columns(
                 lines_gdf, [Style.LINE_CAPSTYLE.name, Style.EDGE_CAPSTYLE.name, Style.EDGE_WIDTH.name,
                             Style.EDGE_COLOR.name, Style.EDGE_ALPHA.name], [], False)
@@ -556,15 +555,24 @@ class Plotter:
         if (plotEdges and not cross_roads_by_zindex):
             # plot edge where line is solid or only edge is ploted
             for zindex, ways_group_gdf in groups:
+                areas, ways_group_gdf = GdfUtils.filter_areas(ways_group_gdf, compl=True)
+                if(not areas.empty):
+                    self.areas(areas,zorder_fill=zorder, zorder_edge=zorder, plot_fill=False, plot_edge=True)
                 self.__line_edges(GdfUtils.filter_rows(
                     ways_group_gdf, [{Style.LINESTYLE.name: ['-', 'solid']}, {Style.COLOR.name: '~'}]), edge_capstyle, zorder)
 
         # groups sorted from smalles to biggest zindex
         for zindex, ways_group_gdf in groups:
+            areas, ways_group_gdf = GdfUtils.filter_areas(ways_group_gdf, compl=True)
             # crossroads only on ways with same zindex
             if (plotEdges and cross_roads_by_zindex):
+                if(not areas.empty):
+                    self.areas(areas, zorder_fill=zorder, zorder_edge=zorder, plot_fill=True, plot_edge=True)
                 self.__line_edges(GdfUtils.filter_rows(
                     ways_group_gdf, [{Style.LINESTYLE.name: ['-', 'solid']}, {Style.COLOR.name: '~'}]), edge_capstyle, zorder)
+            else:
+                if(not areas.empty):
+                    self.areas(areas, zorder_fill=zorder, zorder_edge=zorder, plot_fill=True, plot_edge=False)
             # lines - line is solid or edge does not exists, dashed_with_edge_lines - line is dashed and edge exists
             rest_lines, dashed_with_edge_lines = GdfUtils.filter_rows(
                 ways_group_gdf, [{Style.LINESTYLE.name: ['-', 'solid']}, {Style.EDGE_COLOR.name: '~'}], compl=True)
@@ -634,7 +642,7 @@ class Plotter:
             self.__ways_normal(tunnel_layer_gdf, True, False, zorder=zorder)
 
     @time_measurement("wayplot")
-    def ways(self, ways_gdf: GeoDataFrame, areas_over_normal_ways_gdf: GeoDataFrame, over_filter=None):
+    def ways(self, ways_gdf: GeoDataFrame, over_filter=None):
         if (ways_gdf.empty):
             return
         # water ways and tunnels
@@ -657,8 +665,6 @@ class Plotter:
             ways_gdf, {'bridge': ''}, compl=True)
         self.__ways_normal(ways_gdf, True, False)
         
-        self.areas(areas_over_normal_ways_gdf, 2)
-
         # bridges
         self.__bridges(ways_bridge_gdf)
 
@@ -668,31 +674,32 @@ class Plotter:
                 ways_gdf, over_filter), True, True, 'butt', 'butt')
 
     @time_measurement("areaPlot")
-    def areas(self, areas_gdf: GeoDataFrame, zorder_fill = 1, zorder_edge = 2):
+    def areas(self, areas_gdf: GeoDataFrame, zorder_fill: int = 1, zorder_edge: int = 2, plot_fill: bool = True, plot_edge: bool = True):
         if (areas_gdf.empty):
             return
         # plot face
-        face_areas_gdf = GdfUtils.filter_rows(
-            areas_gdf, {Style.COLOR.name: '', Style.ALPHA.name: ''})
-        if (not face_areas_gdf.empty):
-            face_areas_gdf.plot(
-                ax=self.ax, color=face_areas_gdf[Style.COLOR.name], alpha=face_areas_gdf[Style.ALPHA.name],
-                zorder=zorder_fill)
+        if(plot_fill):
+            face_areas_gdf = GdfUtils.filter_rows(
+                areas_gdf, {Style.COLOR.name: '', Style.ALPHA.name: ''})
+            if (not face_areas_gdf.empty):
+                face_areas_gdf.plot(
+                    ax=self.ax, color=face_areas_gdf[Style.COLOR.name], alpha=face_areas_gdf[Style.ALPHA.name], zorder=zorder_fill)
         # plot bounds
-        edge_areas_gdf = GdfUtils.filter_rows(areas_gdf,
-                                              {Style.EDGE_COLOR.name: '', Style.WIDTH.name: '', Style.EDGE_LINESTYLE.name: '', Style.EDGE_ALPHA.name: ''})
-        if (edge_areas_gdf.empty):
-            return
-        groups = GdfUtils.get_groups_by_columns(
-            edge_areas_gdf, [Style.EDGE_CAPSTYLE.name], [self.DEFAULT_CAPSTYLE], False)
-        for capstyle, edge_areas_group_gdf in groups:
-            if (pd.isna(capstyle)):
-                capstyle = self.DEFAULT_CAPSTYLE
-            edge_areas_group_gdf.boundary.plot(ax=self.ax, color=edge_areas_group_gdf[Style.EDGE_COLOR.name],
-                                               linewidth=edge_areas_group_gdf[
-                Style.WIDTH.name], alpha=edge_areas_group_gdf[Style.EDGE_ALPHA.name],
-                linestyle=edge_areas_group_gdf[Style.EDGE_LINESTYLE.name],
-                path_effects=[pe.Stroke(capstyle=capstyle)], zorder=zorder_edge)
+        if(plot_edge):
+            edge_areas_gdf = GdfUtils.filter_rows(areas_gdf,
+                                                {Style.EDGE_COLOR.name: '', Style.WIDTH.name: '', Style.EDGE_LINESTYLE.name: '', Style.EDGE_ALPHA.name: ''})
+            if (edge_areas_gdf.empty):
+                return
+            groups = GdfUtils.get_groups_by_columns(
+                edge_areas_gdf, [Style.EDGE_CAPSTYLE.name], [self.DEFAULT_CAPSTYLE], False)
+            for capstyle, edge_areas_group_gdf in groups:
+                if (pd.isna(capstyle)):
+                    capstyle = self.DEFAULT_CAPSTYLE
+                edge_areas_group_gdf.boundary.plot(ax=self.ax, color=edge_areas_group_gdf[Style.EDGE_COLOR.name],
+                                                linewidth=edge_areas_group_gdf[
+                    Style.WIDTH.name], alpha=edge_areas_group_gdf[Style.EDGE_ALPHA.name],
+                    linestyle=edge_areas_group_gdf[Style.EDGE_LINESTYLE.name],
+                    path_effects=[pe.Stroke(capstyle=capstyle)], zorder=zorder_edge)
 
     @time_measurement("gpxsPlot")
     def gpxs(self, gpxs_gdf: GeoDataFrame):

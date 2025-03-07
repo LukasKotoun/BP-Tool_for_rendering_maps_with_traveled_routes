@@ -12,7 +12,10 @@ from modules.utils import Utils
 GPXS_STYLES_SCALE = []
 # (filer for split from areas, filter for ploting)
 AREAS_OVER_WAYS_FILTER = ([{'highway': ['pedestrian', 'footway']}, {'amenity': ['parking', 'motorcycle_parking']}],
-                          [{'highway': ['pedestrian', 'footway'], 'area': 'yes'}, {'amenity': ['parking', 'motorcycle_parking']}])
+                          [{'highway': ['pedestrian', 'footway'], 'area': 'yes'},
+                           {'highway': ['pedestrian', 'footway'], 'place': ['square']},
+                           {'amenity': ['parking', 'motorcycle_parking']}])
+
 WAYS_WITHOUT_CROSSING = {"1-4": {'highway': 'motorway'}, "5-10": None}
 WATER_COLOR_ZOOM_8_10 = "#9fc4e2"
 WATER_COLOR_ZOOM_1_7 = "#9abfdc"
@@ -113,7 +116,7 @@ place_styles: ElementStyles = [
 
 # text color or MARKER color turn of by string "None" instead of None
 natural_styles_nodes: ElementStyles = [
-    # todo size 
+    # todo size
     ({'natural': 'peak'}, {
         Style.ZINDEX.name: 30, Style.MIN_PLOT_REQ.name: MinPlot.MARKER_TEXT2.name,
         # marker
@@ -184,7 +187,7 @@ NODES_STYLES: ElementStyles = [
 # styles that must be assigned to all way features
 # scaled styles - relative to polygon (not paper)
 WAYS_STYLES_SCALE = [Style.WIDTH.name]
-# dashed highways z index 0-waterways, 1-14 - dashedways, 15-20 - barrier, 21-50 normal ways, 60-70 aeroway, 70-80 - aerialway, 90 - 100 (subway - 20) - railways
+# dashed highways z index 0-waterways, 1-14 - dashedways, 15-20 - barrier, 21-50 normal ways or areas as ways, 60-70 aeroway, 70-80 - aerialway, 90 - 100 (subway - 20) - railways
 
 # bridges overwrite because bridge have separated styles with bridge..
 highway_styles_bridges_overwrite: ElementStyles = [
@@ -207,11 +210,12 @@ highway_styles_tunnels: ElementStyles = [
      'tunnel': ''},
       {'highway': ['secondary', 'secondary_link'],
        'covered': ''}
-      ], {Style.COLOR.name: "#e4e791"}),
+      ], {Style.COLOR.name: "#fbf8b0"}),
     # default color and all edge styles
-    ([{'highway': '', 'tunnel': ''}, {'highway': '', 'covered': ''}], {Style.EDGE_LINESTYLE.name: (2, (3, 1)),
-                                                                       Style.EDGE_CAPSTYLE.name: LineCupStyles.BUTT.value,
-                                                                       Style.COLOR.name: "#f6f9f5", Style.EDGE_COLOR.name: "#B0A78D", Style.LINESTYLE.name: "-"})]
+    ([{'highway': '', 'tunnel': '', 'bridge': '~'}, {'highway': '', 'covered': '', 'bridge': '~'}],
+     {Style.EDGE_LINESTYLE.name: (2, (3, 1)),
+      Style.EDGE_CAPSTYLE.name: LineCupStyles.BUTT.value,
+      Style.COLOR.name: "#f1f4ee", Style.EDGE_COLOR.name: NORMAL_WAY_EDGE_COLOR, Style.LINESTYLE.name: "-"})]
 
 highway_styles_main: ElementStyles = [
     # todo size
@@ -253,7 +257,6 @@ highway_styles_main: ElementStyles = [
     # todo size
     ({'highway': ['residential', 'unclassified', 'pedestrian']}, {Style.ZINDEX.name: 40, Style.COLOR.name: NORMAL_WAY_COLOR,
                                                                   Style.EDGE_COLOR.name: NORMAL_WAY_EDGE_COLOR}),
-
 ]
 
 highway_styles_surface_special_and_paths: ElementStyles = [
@@ -325,7 +328,8 @@ highway_styles_special_and_paths: ElementStyles = [
      {"1-8": {Style.COLOR.name: UNPAVED_WAY_COLOR, Style.EDGE_COLOR.name: None, Style.LINESTYLE.name: "-",
               Style.LINE_CAPSTYLE.name: LineCupStyles.ROUND.value, Style.PLOT_ON_BRIDGE.name: True}}),
 
-    ({'highway': 'footway'}, {Style.ZINDEX.name: 30},
+    ({'highway': 'footway'}, {Style.ZINDEX.name: 30, Style.COLOR.name: NORMAL_WAY_COLOR,
+                              Style.EDGE_COLOR.name: NORMAL_WAY_EDGE_COLOR, },
      {"1-8": {Style.COLOR.name: UNPAVED_WAY_COLOR, Style.EDGE_COLOR.name: None, Style.LINESTYLE.name: "-",
               Style.LINE_CAPSTYLE.name: LineCupStyles.ROUND.value, Style.PLOT_ON_BRIDGE.name: True}
       }),
@@ -348,7 +352,6 @@ highway_styles_special_and_paths: ElementStyles = [
      ),
 
 ]
-
 
 # railways
 # bridges overwrite because bridge have separated styles with bridge..
@@ -373,11 +376,10 @@ railway_styles_tunnels: ElementStyles = [
 
     ([{'railway': 'tram', 'tunnel': ''},
      {'railway': 'tram', 'covered': ''}], {
-        Style.EDGE_LINESTYLE.name: (3, (7, 4)),
-        Style.EDGE_CAPSTYLE.name: LineCupStyles.BUTT.value
+        Style.LINESTYLE.name: (3, (7, 4)),
+        Style.LINE_CAPSTYLE.name: LineCupStyles.BUTT.value
     }),
 
-    # todo size - same as normal tram
     ([{'railway': 'funicular', 'tunnel': ''},
      {'railway': 'funicular', 'covered': ''}], {
         Style.COLOR.name: None,
@@ -423,25 +425,23 @@ railway_styles: ElementStyles = [
         Style.ZINDEX.name: 99,
         Style.COLOR.name: '#FFFFFF',
         Style.EDGE_COLOR.name: '#474747',
-        Style.EDGE_LINESTYLE.name: (0, (5, 5)),
-        Style.LINESTYLE.name: (0, (5, 5)), Style.EDGE_WIDTH_RATIO.name: 1 + 0.8,
-        Style.EDGE_WIDTH_DASHED_CONNECT_RATIO.name: 0.4,
+        Style.LINESTYLE.name: (0, (5, 5)), Style.EDGE_LINESTYLE.name: (0, (5, 5)),
+        Style.EDGE_WIDTH_RATIO.name: 1 + 0.8, Style.EDGE_WIDTH_DASHED_CONNECT_RATIO.name: 0.4,
         Style.LINE_CAPSTYLE.name: LineCupStyles.ROUND.value, Style.EDGE_CAPSTYLE.name: LineCupStyles.ROUND.value
     }, {
         **Utils.cumulative_zoom_size_multiplier(
-            {"10": 20, "8-9": 2, "7": 2, "1-6": 1.8},
+            {"10": 20, "8-9": 2, "7": 2,
+                "1-6": (1.8, {Style.LINESTYLE.name: (0, (4, 8))})},
             Style.WIDTH.name),
-        "1-6": {Style.LINESTYLE.name: (0, (4, 8))}
     }),
 
-    # # todo size - 8
     ({'railway': 'tram'}, {
-        Style.COLOR.name: '#404040', Style.WIDTH.name: 4
+        Style.COLOR.name: '#404040'
     },
-     { **Utils.cumulative_zoom_size_multiplier(
-            {"10": 4, "9": 2, "1-8": 2},
-            Style.WIDTH.name),}
-     ),
+        {**Utils.cumulative_zoom_size_multiplier(
+         {"10": 4, "9": 1.5, "1-8": 1.2},
+         Style.WIDTH.name)}
+    ),
 
 ]
 
@@ -454,10 +454,9 @@ aerialway_styles: ElementStyles = [
         Style.EDGE_WIDTH_DASHED_CONNECT_RATIO.name: 0.3, Style.ZINDEX.name: 80
     }, {
         **Utils.cumulative_zoom_size_multiplier(
-            {"10": 20, "8-9": 2, "7": 2, "1-6": 1.8},
-            Style.WIDTH.name),
-        "1-6": {Style.LINESTYLE.name: (0, (4, 8))},
-    }),
+            {"10": 20, "8-9": 2, "7": 2,
+                "1-6": (1.8, {Style.LINESTYLE.name: (0, (4, 8))})},
+            Style.WIDTH.name)}),
 
     ({'aerialway': ['chair_lift']}, {
         Style.LINESTYLE.name: (0, (3, 5)),
@@ -465,9 +464,9 @@ aerialway_styles: ElementStyles = [
         Style.ZINDEX.name: 79
     }, {
         **Utils.cumulative_zoom_size_multiplier(
-            {"10": 20, "9": 1.5, "8": 1.3, "7": 1.6, "1-6": 2.4},
-            Style.WIDTH.name),
-        "1-6": {Style.LINESTYLE.name: (0, (3, 8))},
+            {"10": 20, "9": 1.5, "8": 1.3, "7": 1.6,
+                "1-6": (2.4, {Style.LINESTYLE.name: (0, (3, 8))})},
+            Style.WIDTH.name)
     }),
 ]
 
@@ -554,9 +553,9 @@ ways_styles_default: ElementStyles = [
         Style.ZINDEX.name: 70
     }, {
         **Utils.cumulative_zoom_size_multiplier(
-            {"10": 20, "9": 1.5, "8": 1.2, "7": 1.5, "1-6": 2.2},
-            Style.WIDTH.name),
-        "1-6": {Style.LINESTYLE.name: (0, (0.1, 8))},
+            {"10": 20, "9": 1.5, "8": 1.2, "7": 1.5,
+                "1-6": (2.2, {Style.LINESTYLE.name: (0, (0.1, 8))})},
+            Style.WIDTH.name)
     }),
 
     ({'barrier': ''}, {
@@ -667,7 +666,8 @@ building_styles_area: ElementStyles = [
     ({'building': ['church', 'synagogue', 'cathedral', 'temple', 'monastery']}, {}, {
         "8-10": {Style.COLOR.name: '#908b84'}}),
 
-    ([{'building': ['university', 'hospital', 'public', 'clinic', 'supermarket']}, {'building': '', 'historic': ''}], {  # same as historic..
+    ([{'building': ['university', 'hospital', 'public', 'clinic', 'supermarket']},
+      {'building': '', 'historic': ''}], {}, {  # same as historic..
         "8-10": {Style.COLOR.name: '#bab09a'}}),
 
     ({'building': ['industrial', 'warehouse']}, {}, {
@@ -689,7 +689,8 @@ natural_styles_area: ElementStyles = [
 
 amenity_styles_area: ElementStyles = [
     ({'amenity': ['parking', 'motorcycle_parking']},
-     {Style.COLOR.name: '#FFFFFF'}),
+     {Style.COLOR.name: '#FFFFFF', Style.ZINDEX.name: 41}),
+
     ({'amenity': 'grave_yard'}, {Style.COLOR.name: GREEN_AREA_COLOR_ZOOM_1_7},
      {"8-10": {Style.COLOR.name: GREEN_AREA_COLOR_ZOOM_8_10}}),
     # other tagsR default
@@ -714,7 +715,8 @@ area_styles_default: ElementStyles = [
      {"7": {Style.COLOR.name: RESIDENTAL_AREA_COLOR_ZOOM_7},
       "1-6": {Style.COLOR.name: RESIDENTAL_AREA_COLOR_ZOOM_1_6}}),
 
-    ({'highway': ['pedestrian', 'footway']}, {Style.COLOR.name: '#FFFFFF'}),
+    ({'highway': ['pedestrian', 'footway']}, {
+     Style.COLOR.name: '#FFFFFF', Style.ZINDEX.name: 41}),
 
 
     # ({'boundary': ''}, {

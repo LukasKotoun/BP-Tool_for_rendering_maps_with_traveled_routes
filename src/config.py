@@ -8,7 +8,7 @@ from common.map_enums import Style, ColorMode, PaperSize, MapOrientation, Marker
 # --------------------------------------------------------------map area--------------------------------------------------------------
 # OSM_INPUT_FILE_NAMES: str = ['../osm_files/vys.osm.pbf','../osm_files/jihmor.osm.pbf']
 # OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/vysJihE.osm.pbf'
-OSM_INPUT_FILE_NAMES: str | list[str] = ['../osm_files/skways.osm.pbf']
+OSM_INPUT_FILE_NAMES: str | list[str] = ['../osm_files/skbr.osm.pbf']
 # OSM_INPUT_FILE_NAMES: str | list[str] = '../trebic.osm.pbf'
 # extract - will be always true
 OSM_WANT_EXTRACT_AREA: bool = False
@@ -46,8 +46,7 @@ OUTPUT_PDF_NAME: str = '../pdfs/divocina'
 # AREA: WantedArea = [{'area': [(17.1374492,48.1955133), (17.2557239, 48.1951700), (17.2557239, 48.1444531), (17.1377925, 48.1452547)], "plot":False}] # zoom
 
 # slovensko - bratislava centrum  - skbr
-# AREA: WantedArea = [{'area': [(17.0797297, 48.1649183), (17.1410558, 48.1642600), (
-#     17.1413133, 48.1383769), (17.0762106, 48.1384056)], "plot": False}]  # zoom
+AREA: WantedArea = [{'area': [(17.0797297, 48.1649183), (17.1410558, 48.1642600), (17.1413133, 48.1383769), (17.0762106, 48.1384056)], "plot": False}]  # zoom
 
 # slovensko - voj prostor  - skvoj
 # AREA: WantedArea = [{'area': [(17.0325058,48.6691606), (17.6252633, 48.6856314), (17.6225169, 48.1661969), (17.0031625, 48.1808503)], "plot":False}] # zoom
@@ -61,7 +60,7 @@ OUTPUT_PDF_NAME: str = '../pdfs/divocina'
 # slovensko - potok, reka, kanal, silnice 1,2,3 a dalnice, zelecnice, residental,
 # service, footway
 # industrial zona - skways
-AREA: WantedArea = [{'area': [(16.8529242,48.4770300), (17.2031475, 48.4733883), (17.1986503, 48.3386914), (16.8525808, 48.3382350)], "plot":False}] # zoom
+# AREA: WantedArea = [{'area': [(16.8529242,48.4770300), (17.2031475, 48.4733883), (17.1986503, 48.3386914), (16.8525808, 48.3382350)], "plot":False}] # zoom
 
 
 # nemecko - funicular tunnel a railway tunnel - gefun
@@ -210,28 +209,28 @@ unwanted_nodes_tags: UnwantedTags = {
 wanted_ways: WantedCategories = {
     # all
     # ways connected with links
-    # 'highway': {
-    #     'motorway', # zoom none
-    #             'trunk', # zoom none
-    #             'primary', # zoom none
-    #             'secondary', # zoom 2
-    #             'tertiary', # zoom 3
-    #             # 'motorway_link',# zoom none - smaller only
-    #             # 'trunk_link',# zoom none - smaller only
-    #             # 'primary_link',# zoom none - smaller only
-    #             # 'secondary_link',# zoom 2
-    #             # 'tertiary_link',# zoom 3
-    #             # 'residential',# zoom 5 - same size as unclassified
-    #             # 'unclassified',# zoom 6 - same size as residential
-    #             # 'service',# zoom - 6
-    #             # 'pedestrian',# zoom 5 - same as residental 
-    #             # 'cycleway',# zoom 6
-    #             # 'raceway',# zoom 3
-    #             # 'steps', # zoom 6
-    #             # 'footway',# zoom 6
-    #             # 'track', # zoom 6
-    #             # 'path'
-    #             },# zoom 6
+    'highway': {
+        'motorway', # zoom none
+                'trunk', # zoom none
+                'primary', # zoom none
+                'secondary', # zoom 2
+                'tertiary', # zoom 3
+                'motorway_link',# zoom none - smaller only
+                'trunk_link',# zoom none - smaller only
+                'primary_link',# zoom none - smaller only
+                'secondary_link',# zoom 2
+                'tertiary_link',# zoom 3
+                'residential',# zoom 5 - same size as unclassified
+                'unclassified',# zoom 6 - same size as residential
+                'service',# zoom - 6
+                'pedestrian',# zoom 5 - same as residental 
+                'cycleway',# zoom 6
+                'raceway',# zoom 3
+                'steps', # zoom 6
+                'footway',# zoom 6
+                'track', # zoom 6
+                'path'
+                },# zoom 6
     
     'railway': {'rail', # service - service smaller 6, 3 normal
                 'light_rail', #- service smaller 6, 3 normal
@@ -282,6 +281,7 @@ wanted_ways: WantedCategories = {
     # 'natural': {'coastline'},
 }
 
+
 unwanted_ways_tags: UnwantedTags = {
     # 'highway':['coridor','via_ferrata','crossing','traffic_island','proposed','construction' ],
     'railway': {
@@ -309,8 +309,7 @@ wanted_areas: WantedCategories = {
                 'bus_station', 'hospital', 'clinic', 'place_of_worship'}, # zoom 2
     'building': set({}),  # zoom 2
     'aeroway': {'aerodrome'}, # zoom 5
-
-    'highway': {'pedestrian', 'footway'}, # zoom 2
+    'highway': {'pedestrian', 'footway'},
 }
 
 unwanted_areas_tags: UnwantedTags = {
@@ -396,12 +395,12 @@ NODES_ROUND_COLUMNS = ['ele']
 
 
 
-WAYS_ADDITIONAL_COLUMNS = ['bridge', 'layer', 'tunnel', 'historic',
+WAYS_ADDITIONAL_COLUMNS = ['bridge', 'layer', 'tunnel', 'historic', 
                            'surface', 'tracktype', 'service', 'intermittent', 'covered']
 WAYS_NUMERIC_COLUMNS = []
 WAYS_ROUND_COLUMNS = []
 
-AREA_ADDITIONAL_COLUMNS = ['area']
+AREA_ADDITIONAL_COLUMNS = ['area', 'type', 'place']
 AREA_NUMERIC_COLUMNS = []
 AREA_ROUND_COLUMNS = []
 

@@ -230,14 +230,6 @@ class Utils:
 
         return scale
 
-    #! not used
-    @staticmethod
-    def count_missing_values(keys: list[str], styles: FeaturesCategoryStyle, missing_style: Style) -> int:
-        count = 0
-        for key in keys:
-            if key not in styles or missing_style not in styles[key].keys():
-                count += 1
-        return count
 
     @staticmethod
     def get_zoom_level(value, mapping, threshold_above_lower=0.25):
@@ -325,15 +317,27 @@ class Utils:
 
     @staticmethod
     def cumulative_zoom_size_multiplier(data, key):
-        """Returns a dictionary where each key maps to {key: cumulative value}."""
+        """Returns a dictionary where each key maps to {key: cumulative value, ...extra dict...}.
+
+        Each multiplier in data can be:
+        - A number, or
+        - A tuple: (number, extra_dict), where extra_dict is merged into the output.
+        """
         cumulative = None
         result = {}
-
         for dict_key, multiplier in data.items():
-            if cumulative is None:
-                cumulative = multiplier
+            if isinstance(multiplier, tuple):
+                # Unpack the tuple into the numerical multiplier and extra dictionary.
+                multiplier_value, extra_dict = multiplier
             else:
-                cumulative *= multiplier
-            result[dict_key] = {key: cumulative}  # Use the provided key dynamically
+                multiplier_value = multiplier
+                extra_dict = {}
+
+            if cumulative is None:
+                cumulative = multiplier_value
+            else:
+                cumulative *= multiplier_value
+
+            result[dict_key] = {key: cumulative, **extra_dict}
 
         return result

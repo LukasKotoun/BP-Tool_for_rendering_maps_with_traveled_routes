@@ -222,7 +222,7 @@ class GdfUtils:
     @staticmethod
     def create_points_from_polygons_gdf(gdf: GeoDataFrame):
         if(gdf.empty):
-            return
+            return gdf
         original_crs = gdf.crs
         gdf = GdfUtils.change_crs(gdf, CRS_DISPLAY)
         gdf = gdf[gdf.geometry.type.isin(["Polygon", "MultiPolygon"])].reset_index(drop=True)
@@ -280,6 +280,11 @@ class GdfUtils:
         for column in columns:
             if (column in gdf):
                 gdf[column] = gdf[column].astype("category")
+                
+    @staticmethod
+    def remove_na_columns(gdf: GeoDataFrame) -> None:
+        empty_cols = [col for col in gdf.columns if gdf[col].isna().all()]
+        GdfUtils.remove_columns(gdf, empty_cols)
 
     @staticmethod
     def combine_rows_gdf(gdf: GeoDataFrame) -> GeoDataFrame:
@@ -308,6 +313,8 @@ class GdfUtils:
         for column in columns:
             if (column in gdf):
                 gdf[column] = gdf[column].fillna(value)
+            else:
+                gdf[column] = value
 
     @time_measurement("mergeLines")
     @staticmethod
@@ -345,9 +352,12 @@ class GdfUtils:
 
     @staticmethod
     def combine_gdfs(gdfs: list[GeoDataFrame]) -> GeoDataFrame:
+        non_empty_gdfs = [gdf for gdf in gdfs if not gdf.empty]
+        if(not non_empty_gdfs):
+            return GdfUtils.create_empty_gdf(gdfs[0].crs)
         if (len(gdfs) == 1):
             return gdfs[0]
-        return pd.concat(gdfs, ignore_index=True)  # concat to one gdf
+        return pd.concat(non_empty_gdfs, ignore_index=True)  # concat to one gdf
 
     @staticmethod
     def expand_gdf_area_fitPaperSize(area_gdf: GeoDataFrame, pdf_dim: DimensionsTuple):
@@ -519,6 +529,11 @@ class GdfUtils:
         return GdfUtils.filter_rows(gdf, {Style.MARKER.name: '', Style.COLOR.name: '', Style.WIDTH.name: '',
                                           Style.EDGE_WIDTH.name: '', Style.EDGE_COLOR.name: '', Style.ALPHA.name: ''})
     # to some utils or main
+    @staticmethod
+    def filter_areas(gdf: GeoDataFrame, compl: bool = False, neg: bool = False) -> GeoDataFrame | tuple[GeoDataFrame, GeoDataFrame]:
+        return GdfUtils.return_filtered(gdf, gdf.geom_type.isin(["Polygon", "MultiPolygon"]), compl=compl, neg=neg)
+      
+
 
     @staticmethod
     @time_measurement("filter")

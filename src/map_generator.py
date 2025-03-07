@@ -254,7 +254,7 @@ def main() -> None:
     zoom_level = Utils.get_zoom_level(
         map_scaling_factor, ZOOM_MAPPING, 0.1)
     print(map_scaling_factor, zoom_level)
-    zoom_level = 2
+    zoom_level = 10
     print(map_scaling_factor, zoom_level)
     
     # fifth function - parse osm file and get gdfs and than remove osm file
@@ -278,7 +278,8 @@ def main() -> None:
     # reqired_area_polygon = GdfUtils.create_polygon_from_gdf(map_area_gdf)
     # if (not GdfUtils.are_gdf_geometry_inside_geometry(gpxs_gdf, reqired_area_polygon)):
     #     warnings.warn("Some gpx files are not whole inside selected map area.")
-
+     # prepare style dict
+  
     # ------------osm file loading------------
     osm_file_parser = OsmDataParser(
         wanted_nodes, wanted_nodes_from_area, wanted_ways, wanted_areas,
@@ -300,6 +301,8 @@ def main() -> None:
         nodes_gdf = GdfUtils.get_rows_inside_area(
             nodes_gdf, map_area_gdf)
     gdfs_convert_loaded_columns(gpxs_gdf, nodes_gdf, ways_gdf, areas_gdf)
+    for var_name, var_value in MAP_THEME['variables'].items():
+        MAP_THEME['variables'][var_name] = StyleAssigner.convert_variables_from_dynamic(var_value, zoom_level)
     
     # ------------prefiltering nodes by importance------------
     if (PEAKS_FILTER_SENSITIVITY is not None):
@@ -308,10 +311,7 @@ def main() -> None:
             ELE_PROMINENCE_MAX_DIFF_RATIO)
     if(MIN_POPULATION is not None):
         nodes_gdf = GdfUtils.filter_place_by_population(nodes_gdf, PLACES_TO_FILTER_BY_POPULATION, MIN_POPULATION)
-    # prepare style dict
-    for var_name, var_value in MAP_THEME['variables'].items():
-        MAP_THEME['variables'][var_name] = StyleAssigner.convert_variables_from_dynamic(var_value, zoom_level)
-    
+   
     # seven function - get bg gdf
     # get coastline and determine where is land and where water
     coast_gdf, ways_gdf = GdfUtils.filter_rows(
@@ -322,6 +322,7 @@ def main() -> None:
 
     # prepare styles
     process_bridges_and_tunnels(ways_gdf, PLOT_BRIDGES, PLOT_TUNNELS)
+
     ways_gdf = GdfUtils.merge_lines_gdf(ways_gdf, [])
     gpxs_gdf = GdfUtils.merge_lines_gdf(gpxs_gdf, [])
     # assing zoom specific styles
@@ -349,7 +350,11 @@ def main() -> None:
         ways_gdf, ways_styles, WAYS_DONT_CATEGORIZE)
     StyleAssigner.assign_styles(
         areas_gdf, areas_styles, AREAS_DONT_CATEGORIZE)
-
+    # remove all na columns - if there are some
+    GdfUtils.remove_na_columns(gpxs_gdf)
+    GdfUtils.remove_na_columns(nodes_gdf)
+    GdfUtils.remove_na_columns(ways_gdf)
+    GdfUtils.remove_na_columns(areas_gdf)
     # ------------scaling and column calc------------ - to function
     # ninth - prepare/edit styled columns
     gdfs_prepare_styled_columns(gpxs_gdf, nodes_gdf, ways_gdf,
@@ -382,8 +387,9 @@ def main() -> None:
     area_over_ways_filter = MAP_THEME['variables'][MapThemeVariable.AREAS_OVER_WAYS_FILTER]
     areas_over_normal_ways, areas_gdf = GdfUtils.filter_rows(
         areas_gdf,  area_over_ways_filter[0], compl=True)
-    areas_over_normal_ways =  GdfUtils.filter_rows(areas_over_normal_ways, area_over_ways_filter[1])
-
+    areas_as_ways =  GdfUtils.filter_rows(areas_over_normal_ways, area_over_ways_filter[1])
+    if(not areas_as_ways.empty):
+        ways_gdf = GdfUtils.combine_gdfs([ways_gdf, areas_as_ways])
     # this to to plotter settings - todo add to enum as plotter_settings
     plotter_settings = {"map_area_gdf": map_area_gdf, "paper_dimensions_mm": paper_dimensions_mm,
                         "map_scaling_factor": map_scaling_factor, "text_bounds_overflow_threshold": TEXT_BOUNDS_OVERFLOW_THRESHOLD,
@@ -397,7 +403,6 @@ def main() -> None:
                       map_scaling_factor, TEXT_BOUNDS_OVERFLOW_THRESHOLD, TEXT_WRAP_NAMES_LEN, outer_map_area_gdf)
     plotter.init(
         MAP_THEME['variables'][MapThemeVariable.LAND_COLOR], bg_gdf)
-
     plotter.areas(areas_gdf)
     del areas_gdf
     if (not boundary_map_area_gdf.empty):
@@ -405,9 +410,8 @@ def main() -> None:
                               color="black")
         
     del boundary_map_area_gdf
-    plotter.ways(ways_gdf, areas_over_normal_ways, MAP_THEME['variables'][MapThemeVariable.WAYS_WITHOUT_CROSSING_FILTER])
+    plotter.ways(ways_gdf, MAP_THEME['variables'][MapThemeVariable.WAYS_WITHOUT_CROSSING_FILTER])
     del ways_gdf
-    del areas_over_normal_ways
 
     plotter.gpxs(gpxs_gdf)
     del gpxs_gdf
