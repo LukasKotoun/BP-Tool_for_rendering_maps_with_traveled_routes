@@ -8,12 +8,12 @@ from common.map_enums import Style, ColorMode, PaperSize, MapOrientation, Marker
 # --------------------------------------------------------------map area--------------------------------------------------------------
 # OSM_INPUT_FILE_NAMES: str = ['../osm_files/vys.osm.pbf','../osm_files/jihmor.osm.pbf']
 # OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/vysJihE.osm.pbf'
-OSM_INPUT_FILE_NAMES: str | list[str] = ['../osm_files/sklet.osm.pbf']
+OSM_INPUT_FILE_NAMES: str | list[str] = ['../osm_files/skways.osm.pbf']
 # OSM_INPUT_FILE_NAMES: str | list[str] = '../trebic.osm.pbf'
 # extract - will be always true
 OSM_WANT_EXTRACT_AREA: bool = False
 # set if want osm file cutting using osmium command line tool (need to be uinstalled), If not set to None
-OSM_OUTPUT_FILE_NAME: None | str = '../osm_files/brtnice.osm.pbf'
+OSM_OUTPUT_FILE_NAME: None | str = '../osm_files/skways.osm.pbf'
 
 OUTPUT_PDF_NAME: str = '../pdfs/divocina'
 
@@ -43,7 +43,7 @@ OUTPUT_PDF_NAME: str = '../pdfs/divocina'
 # AREA: WantedArea = [{'area': [(18.9836906,49.2351414), (19.1019653, 49.2350294), (19.1017936, 49.1852375), (18.9838622, 49.1870325)], "plot":False}] # zoom
 
 # slovensko - letiste - sklet
-AREA: WantedArea = [{'area': [(17.1374492,48.1955133), (17.2557239, 48.1951700), (17.2557239, 48.1444531), (17.1377925, 48.1452547)], "plot":False}] # zoom
+# AREA: WantedArea = [{'area': [(17.1374492,48.1955133), (17.2557239, 48.1951700), (17.2557239, 48.1444531), (17.1377925, 48.1452547)], "plot":False}] # zoom
 
 # slovensko - bratislava centrum  - skbr
 # AREA: WantedArea = [{'area': [(17.0797297, 48.1649183), (17.1410558, 48.1642600), (
@@ -58,11 +58,20 @@ AREA: WantedArea = [{'area': [(17.1374492,48.1955133), (17.2557239, 48.1951700),
 # slovensko - bratislava area way  - skareaway
 # AREA: WantedArea = [{'area': [(17.1848258,48.1529047), (17.2031475, 48.1531017), (17.2038558, 48.1396642), (17.1842006, 48.1394925)], "plot":False}] # zoom
 
+# slovensko - potok, reka, kanal, silnice 1,2,3 a dalnice, zelecnice, residental,
+# service, footway
+# industrial zona - skways
+AREA: WantedArea = [{'area': [(16.8529242,48.4770300), (17.2031475, 48.4733883), (17.1986503, 48.3386914), (16.8525808, 48.3382350)], "plot":False}] # zoom
+
+
 # nemecko - funicular tunnel a railway tunnel - gefun
 # AREA: WantedArea = [{'area': [(8.6807722,49.4195719), (8.7399353, 49.4195644), (8.7400211, 49.3951311), (8.6807550, 49.3952708)], "plot":False}] # zoom
 
+
 # rozhledna - baliny
 #AREA: WantedArea = [{"area": "Baliny, Česko", "plot": True, "category": 0, "width": None}]
+
+
 # zricenina - rokstejn - Brtnice
 # AREA: WantedArea = [{"area": "Brtnice, Česko", "plot": True, "category": 0, "width": None}]
 
@@ -116,7 +125,7 @@ AREA: WantedArea = [{'area': [(17.1374492,48.1955133), (17.2557239, 48.1951700),
 # AREA: WantedArea = ["Texas, USA"]
 
 PAPER_DIMENSIONS: PaperSize | tuple[float |
-                                    None, float | None] = PaperSize.A6.dimensions
+                                    None, float | None] = PaperSize.A4.dimensions
 # PAPER_DIMENSIONS: PaperSize | tuple[float | None, float | None] = PaperSize.A4.dimensions
 # set own dimensions. If one is left as 'None' it will be automaticaly calculated using area size
 # PAPER_DIMENSIONS = (1100, None)
@@ -177,12 +186,15 @@ wanted_nodes: WantedCategories = {
     'place': {'city', 
               'town', # zoom 1
               'village'}, # zoom 3
+    # subrub zoom 5
+    # locality # zoom 7
     'natural': {'peak'}, # zoom 1
     'man_made': {'tower'}, # zoom 7
     'historic': {'castle'}, # zoom 7
 }
 
 wanted_nodes_from_area: WantedCategories = {
+    'man_made': {'tower'}, # zoom 7
     'historic': {'castle'}, # zoom 7
 }
 
@@ -203,21 +215,22 @@ wanted_ways: WantedCategories = {
                 'primary', # zoom none
                 'secondary', # zoom 2
                 'tertiary', # zoom 3
-                'motorway_link',# zoom none - smaller only
-                'trunk_link',# zoom none - smaller only
-                'primary_link',# zoom none - smaller only
-                'secondary_link',# zoom 2
-                'tertiary_link',# zoom 3
-                'residential',# zoom 5 - same size as unclassified
-                'unclassified',# zoom 6 - same size as residential
-                'service',# zoom - 6
-                'pedestrian',# zoom 5 - same as residental 
-                'cycleway',# zoom 6
-                'raceway',# zoom 3
-                'steps', # zoom 6
-                'footway',# zoom 6
-                'track', # zoom 6
-                'path'},# zoom 6
+                # 'motorway_link',# zoom none - smaller only
+                # 'trunk_link',# zoom none - smaller only
+                # 'primary_link',# zoom none - smaller only
+                # 'secondary_link',# zoom 2
+                # 'tertiary_link',# zoom 3
+                # 'residential',# zoom 5 - same size as unclassified
+                # 'unclassified',# zoom 6 - same size as residential
+                # 'service',# zoom - 6
+                # 'pedestrian',# zoom 5 - same as residental 
+                # 'cycleway',# zoom 6
+                # 'raceway',# zoom 3
+                # 'steps', # zoom 6
+                # 'footway',# zoom 6
+                # 'track', # zoom 6
+                # 'path'
+                },# zoom 6
     
     'railway': {'rail', # service - service smaller 6, 3 normal
                 'light_rail', #- service smaller 6, 3 normal
@@ -232,23 +245,26 @@ wanted_ways: WantedCategories = {
     'aerialway': {'cable_car',# zoom 4
                   'gondola',# zoom 4
                   'chair_lift',# zoom 4
+                  'mixed_lift',# zoom 4
                   't-bar', # zoom 5 a ostatní
                   'j-bar', 
                   'platter',
                   'rope_tow',
                   'magic_carpet',
                   'zip_line',
-                  'goods'},
+                  'goods'
+                  },
     
     'barrier': {'city_wall', # zoom 8
                 'wall',  # zoom 8
                 'cable_barrier'}, # zoom 8
     
     'waterway': {'river', # zoom never
-                 'canal',  # zoom 4
-                 'stream', # zoom 4
-                 'drain', # zoom 4
-                 'ditch'}, # zoom 4
+                #  'canal',  # zoom 4
+                #  'stream', # zoom 4
+                #  'drain', # zoom 6
+                #  'ditch'
+                 }, # zoom 6
 
 
     # 'natural': {'coastline'},

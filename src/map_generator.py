@@ -61,6 +61,9 @@ def gdfs_prepare_styled_columns(gpxs_gdf, nodes_gdf, ways_gdf, areas_gdf, map_sc
                                       Style.START_MARKER_EDGE_RATIO.name])
     GdfUtils.create_derivated_columns(gpxs_gdf, Style.FINISH_MARKER_EDGE_WIDTH.name, Style.FINISH_MARKER_WIDHT.name, [
                                       Style.FINISH_MARKER_EDGE_RATIO.name])
+    
+    GdfUtils.remove_columns(gpxs_gdf, [Style.START_MARKER_EDGE_RATIO.name, Style.FINISH_MARKER_EDGE_RATIO.name,
+                                        Style.EDGE_WIDTH_RATIO.name])
 
     # ----nodes----
     # set base width - scale by muplitpliers and object scaling factor
@@ -250,8 +253,10 @@ def main() -> None:
     # zoom level to endpoint specific - always from that biger area
     zoom_level = Utils.get_zoom_level(
         map_scaling_factor, ZOOM_MAPPING, 0.1)
-    # zoom_level = 6
     print(map_scaling_factor, zoom_level)
+    zoom_level = 2
+    print(map_scaling_factor, zoom_level)
+    
     # fifth function - parse osm file and get gdfs and than remove osm file
     # ------------get elements from osm file------------
     try:
@@ -303,7 +308,6 @@ def main() -> None:
             ELE_PROMINENCE_MAX_DIFF_RATIO)
     if(MIN_POPULATION is not None):
         nodes_gdf = GdfUtils.filter_place_by_population(nodes_gdf, PLACES_TO_FILTER_BY_POPULATION, MIN_POPULATION)
-
     # prepare style dict
     for var_name, var_value in MAP_THEME['variables'].items():
         MAP_THEME['variables'][var_name] = StyleAssigner.convert_variables_from_dynamic(var_value, zoom_level)
@@ -395,17 +399,22 @@ def main() -> None:
         MAP_THEME['variables'][MapThemeVariable.LAND_COLOR], bg_gdf)
 
     plotter.areas(areas_gdf)
-    
+    del areas_gdf
     if (not boundary_map_area_gdf.empty):
         plotter.area_boundary(boundary_map_area_gdf,
                               color="black")
         
+    del boundary_map_area_gdf
     plotter.ways(ways_gdf, areas_over_normal_ways, MAP_THEME['variables'][MapThemeVariable.WAYS_WITHOUT_CROSSING_FILTER])
+    del ways_gdf
+    del areas_over_normal_ways
 
     plotter.gpxs(gpxs_gdf)
+    del gpxs_gdf
     plotter.clip()
 
     plotter.nodes(nodes_gdf, TEXT_WRAP_NAMES_LEN)
+    del nodes_gdf
     plotter.generate_pdf(OUTPUT_PDF_NAME)
     # plotter.show_plot()
 
