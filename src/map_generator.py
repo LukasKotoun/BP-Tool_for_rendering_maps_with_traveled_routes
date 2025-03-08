@@ -251,10 +251,11 @@ def main() -> None:
     map_scale = Utils.get_scale(GdfUtils.get_bounds_gdf(
         GdfUtils.change_crs(map_area_gdf, CRS_OSM)), paper_dimensions_mm)
     # zoom level to endpoint specific - always from that biger area
+    # todo zoom from structure for - nodes, ways, areas
     zoom_level = Utils.get_zoom_level(
         map_scaling_factor, ZOOM_MAPPING, 0.3)
     print(map_scaling_factor, zoom_level)
-    zoom_level = 6
+    zoom_level = 7
     print(map_scaling_factor, zoom_level)
     
     # fifth function - parse osm file and get gdfs and than remove osm file
@@ -358,10 +359,6 @@ def main() -> None:
     
     # ------------filter nodes by min req------------
     nodes_gdf = GdfUtils.check_filter_nodes_min_req(nodes_gdf)
-    GdfUtils.remove_na_columns(gpxs_gdf)
-    GdfUtils.remove_na_columns(nodes_gdf)
-    GdfUtils.remove_na_columns(ways_gdf)
-    GdfUtils.remove_na_columns(areas_gdf)
 
     # 10 function - sort
     areas_gdf['area_size'] = areas_gdf.geometry.area
@@ -387,15 +384,13 @@ def main() -> None:
     areas_over_normal_ways, areas_gdf = GdfUtils.filter_rows(
         areas_gdf,  area_over_ways_filter[0], compl=True)
     areas_as_ways =  GdfUtils.filter_rows(areas_over_normal_ways, area_over_ways_filter[1])
-    GdfUtils.remove_na_columns(areas_as_ways)
     if(not areas_as_ways.empty and not ways_gdf.empty):
         ways_gdf = GdfUtils.combine_gdfs([ways_gdf, areas_as_ways])
     # this to to plotter settings - todo add to enum as plotter_settings
     plotter_settings = {"map_area_gdf": map_area_gdf, "paper_dimensions_mm": paper_dimensions_mm,
                         "map_scaling_factor": map_scaling_factor, "text_bounds_overflow_threshold": TEXT_BOUNDS_OVERFLOW_THRESHOLD,
                         "text_wrap_names_len": TEXT_WRAP_NAMES_LEN, "outer_map_area_gdf": outer_map_area_gdf,
-                        "map_bg_color": MAP_THEME['variables'][MapThemeVariable.LAND_COLOR],
-                        'ways_over_filter': MAP_THEME['variables'][MapThemeVariable.WAYS_WITHOUT_CROSSING_FILTER]}
+                        "map_bg_color": MAP_THEME['variables'][MapThemeVariable.LAND_COLOR]}
         
     
     
@@ -410,7 +405,7 @@ def main() -> None:
                               color="black")
         
     del boundary_map_area_gdf
-    plotter.ways(ways_gdf, MAP_THEME['variables'][MapThemeVariable.WAYS_WITHOUT_CROSSING_FILTER])
+    plotter.ways(ways_gdf)
     del ways_gdf
 
     plotter.gpxs(gpxs_gdf)

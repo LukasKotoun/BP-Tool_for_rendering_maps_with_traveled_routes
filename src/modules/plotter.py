@@ -540,7 +540,7 @@ class Plotter:
                              alpha=row.ALPHA, linestyle=row.LINESTYLE, path_effects=[
                                  pe.Stroke(capstyle=line_capstyle)], zorder=zorder)
 
-    def __ways_normal(self, gdf: GeoDataFrame, plotEdges: bool = False, cross_roads_by_zindex=False, line_capstyle: str = None, edge_capstyle: str = None,
+    def __ways_normal(self, gdf: GeoDataFrame, plotEdges: bool = False, line_capstyle: str = None, edge_capstyle: str = None,
                       zorder: int = 2):
         """Plot ways based on z-index and capstyles. 
 
@@ -550,29 +550,41 @@ class Plotter:
         """
         if (gdf.empty):
             return
-        groups = GdfUtils.get_groups_by_columns(
-            gdf, [Style.ZINDEX.name], [], False)
-        if (plotEdges and not cross_roads_by_zindex):
+       
+        if (plotEdges):
+            if(edge_capstyle is None):
+                edges_gdf = GdfUtils.filter_rows(gdf, {Style.EDGE_CAPSTYLE.name: ['~butt']})
+            else:
+                edges_gdf = gdf.copy()
+            groups = GdfUtils.get_groups_by_columns(
+            edges_gdf, [Style.ZINDEX.name], [], False)
             # plot edge where line is solid or only edge is ploted
             for zindex, ways_group_gdf in groups:
+                # first filter by crossroads
                 areas, ways_group_gdf = GdfUtils.filter_areas(ways_group_gdf, compl=True)
                 if(not areas.empty):
-                    self.areas(areas,zorder_fill=zorder, zorder_edge=zorder, plot_fill=False, plot_edge=True)
+                    self.areas(areas, zorder_fill=zorder, zorder_edge=zorder, plot_fill=False, plot_edge=True)
                 self.__line_edges(GdfUtils.filter_rows(
                     ways_group_gdf, [{Style.LINESTYLE.name: ['-', 'solid']}, {Style.COLOR.name: '~'}]), edge_capstyle, zorder)
-
+                
+        groups = GdfUtils.get_groups_by_columns(
+            gdf, [Style.ZINDEX.name], [], False)
         # groups sorted from smalles to biggest zindex
         for zindex, ways_group_gdf in groups:
             areas, ways_group_gdf = GdfUtils.filter_areas(ways_group_gdf, compl=True)
+            ways_without_crossroads = GdfUtils.filter_rows(ways_group_gdf, {Style.PLOT_WITHOUT_CROSSING.name: True})
             # crossroads only on ways with same zindex
-            if (plotEdges and cross_roads_by_zindex):
-                if(not areas.empty):
-                    self.areas(areas, zorder_fill=zorder, zorder_edge=zorder, plot_fill=True, plot_edge=True)
+            if(not ways_without_crossroads.empty):
                 self.__line_edges(GdfUtils.filter_rows(
-                    ways_group_gdf, [{Style.LINESTYLE.name: ['-', 'solid']}, {Style.COLOR.name: '~'}]), edge_capstyle, zorder)
-            else:
-                if(not areas.empty):
-                    self.areas(areas, zorder_fill=zorder, zorder_edge=zorder, plot_fill=True, plot_edge=False)
+                    ways_without_crossroads, [{Style.LINESTYLE.name: ['-', 'solid']}, {Style.COLOR.name: '~'}]), 'butt', zorder)
+            areas_without_crossroads, areas_with_crossroads = GdfUtils.filter_rows(areas, {Style.PLOT_WITHOUT_CROSSING.name: True}, compl=True)
+            # areas without crossroads plot with edge 
+            if(not areas_without_crossroads.empty):
+                self.areas(areas_without_crossroads, zorder_fill=zorder, zorder_edge=zorder, plot_fill=True, plot_edge=True)
+
+            if(not areas_with_crossroads.empty):
+                self.areas(areas_with_crossroads, zorder_fill=zorder, zorder_edge=zorder, plot_fill=True, plot_edge=False)
+                
             # lines - line is solid or edge does not exists, dashed_with_edge_lines - line is dashed and edge exists
             rest_lines, dashed_with_edge_lines = GdfUtils.filter_rows(
                 ways_group_gdf, [{Style.LINESTYLE.name: ['-', 'solid']}, {Style.EDGE_COLOR.name: '~'}], compl=True)
@@ -624,7 +636,7 @@ class Plotter:
                 return
 
             self.__ways_normal(
-                gdf, True, False, edge_capstyle="butt", zorder=zorder)
+                gdf, True, edge_capstyle="butt", zorder=zorder)
 
         groups = GdfUtils.get_groups_by_columns(
             bridges_gdf, ['layer', Style.ZINDEX.name], [], False)
@@ -639,10 +651,10 @@ class Plotter:
         groups = GdfUtils.get_groups_by_columns(
             tunnels_gdf, ['layer', Style.ZINDEX.name], [], False)
         for (layer, zindex), tunnel_layer_gdf in groups:
-            self.__ways_normal(tunnel_layer_gdf, True, False, zorder=zorder)
+            self.__ways_normal(tunnel_layer_gdf, True, zorder=zorder)
 
     @time_measurement("wayplot")
-    def ways(self, ways_gdf: GeoDataFrame, over_filter=None):
+    def ways(self, ways_gdf: GeoDataFrame):
         if (ways_gdf.empty):
             return
         # water ways and tunnels
@@ -652,7 +664,7 @@ class Plotter:
             waterways_gdf, {'tunnel': ''}, compl=True)
 
         self.__tunnels(waterways_tunnel_gdf)
-        self.__ways_normal(waterways_gdf, True, False)
+        self.__ways_normal(waterways_gdf, True)
     
         # normal tunnels
         ways_tunnel_gdf, ways_gdf = GdfUtils.filter_rows(
@@ -663,15 +675,10 @@ class Plotter:
         # normal ways
         ways_bridge_gdf, ways_gdf = GdfUtils.filter_rows(
             ways_gdf, {'bridge': ''}, compl=True)
-        self.__ways_normal(ways_gdf, True, False)
+        self.__ways_normal(ways_gdf, True)
         
         # bridges
         self.__bridges(ways_bridge_gdf)
-
-        # ways to prevent crossroads
-        if (over_filter is not None):
-            self.__ways_normal(GdfUtils.filter_rows(
-                ways_gdf, over_filter), True, True, 'butt', 'butt')
 
     @time_measurement("areaPlot")
     def areas(self, areas_gdf: GeoDataFrame, zorder_fill: int = 1, zorder_edge: int = 2, plot_fill: bool = True, plot_edge: bool = True):
@@ -705,7 +712,7 @@ class Plotter:
     def gpxs(self, gpxs_gdf: GeoDataFrame):
         if (gpxs_gdf.empty):
             return
-        self.__ways_normal(gpxs_gdf, True, False, zorder=5)
+        self.__ways_normal(gpxs_gdf, True, zorder=5)
         # above text in settings...
 
         gpx_start_markers = GdfUtils.filter_rows(gpxs_gdf, {Style.START_MARKER.name: '', Style.START_MARKER_WIDHT.name: '',

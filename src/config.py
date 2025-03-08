@@ -8,12 +8,12 @@ from common.map_enums import Style, ColorMode, PaperSize, MapOrientation, Marker
 # --------------------------------------------------------------map area--------------------------------------------------------------
 # OSM_INPUT_FILE_NAMES: str = ['../osm_files/vys.osm.pbf','../osm_files/jihmor.osm.pbf']
 # OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/vysJihE.osm.pbf'
-OSM_INPUT_FILE_NAMES: str | list[str] = ['../osm_files/skways.osm.pbf']
+OSM_INPUT_FILE_NAMES: str | list[str] = ['../osm_files/skbr.osm.pbf']
 # OSM_INPUT_FILE_NAMES: str | list[str] = '../trebic.osm.pbf'
 # extract - will be always true
 OSM_WANT_EXTRACT_AREA: bool = False
 # set if want osm file cutting using osmium command line tool (need to be uinstalled), If not set to None
-OSM_OUTPUT_FILE_NAME: None | str = '../osm_files/skways.osm.pbf'
+OSM_OUTPUT_FILE_NAME: None | str = '../osm_files/skgrave.osm.pbf'
 
 OUTPUT_PDF_NAME: str = '../pdfs/divocina'
 
@@ -34,6 +34,18 @@ OUTPUT_PDF_NAME: str = '../pdfs/divocina'
 # rakousko - cestičky u koní -rkon
 # AREA: WantedArea = [{'area': [(15.9759536,48.0569747), (16.0298253, 48.0564572), (16.0299514, 48.0315206), (15.9758781, 48.0318936)], "plot":False}] # zoom 8/15
 
+# rakousko - dalince konce a trunk - rtrunk
+# AREA: WantedArea = [{'area': [(16.7637897,48.6661533), (16.5724411, 48.6708094), (16.5820542, 48.7711483), (16.7701950, 48.7706958)], "plot":False}] # zoom 8/15
+
+# slovensko - aminety grave - skgrave
+# AREA: WantedArea = [{'area': [(17.5622753,48.2370358), (17.5805572, 48.2372431), (17.5798706, 48.2319261), (17.5622325, 48.2326694)], "plot":False}] # zoom 8/15
+
+# slovensko - cesty/tunel - pathtunel -skprimlink
+# AREA: WantedArea = [{'area': [(17.0829244,48.1368075), (17.11670941, 48.1362819), (17.1167183,48.1188031), (17.0824389, 48.1203419)], "plot":False}] # zoom 8/15
+
+# slovensko - cesty/tunel - pathtunel -skseclink
+# AREA: WantedArea = [{'area': [(17.0684572,48.1268372), (17.1043628, 48.1272075), (17.1034186,48.1060056), (17.0688289, 48.1074958)], "plot":False}] # zoom 8/15
+
 # slovensko - cesty/tunel - pathtunel -skptunl
 # AREA: WantedArea = [{'area': [(16.9703950,48.2047167), ( 17.0168581, 48.2045317), (17.0169011, 48.1791842), (16.9623128, 48.1794417)], "plot":False}] # zoom 8/15
 
@@ -46,7 +58,7 @@ OUTPUT_PDF_NAME: str = '../pdfs/divocina'
 # AREA: WantedArea = [{'area': [(17.1374492,48.1955133), (17.2557239, 48.1951700), (17.2557239, 48.1444531), (17.1377925, 48.1452547)], "plot":False}] # zoom
 
 # slovensko - bratislava centrum  - skbr
-# AREA: WantedArea = [{'area': [(17.0797297, 48.1649183), (17.1410558, 48.1642600), (17.1413133, 48.1383769), (17.0762106, 48.1384056)], "plot": False}]  # zoom
+AREA: WantedArea = [{'area': [(17.0797297, 48.1649183), (17.1410558, 48.1642600), (17.1413133, 48.1383769), (17.0762106, 48.1384056)], "plot": False}]  # zoom
 
 # slovensko - voj prostor  - skvoj
 # AREA: WantedArea = [{'area': [(17.0325058,48.6691606), (17.6252633, 48.6856314), (17.6225169, 48.1661969), (17.0031625, 48.1808503)], "plot":False}] # zoom
@@ -60,7 +72,7 @@ OUTPUT_PDF_NAME: str = '../pdfs/divocina'
 # slovensko - potok, reka, kanal, silnice 1,2,3 a dalnice, zelecnice, residental,
 # service, footway
 # industrial zona - skways
-AREA: WantedArea = [{'area': [(16.8529242,48.4770300), (17.2031475, 48.4733883), (17.1986503, 48.3386914), (16.8525808, 48.3382350)], "plot":False}] # zoom
+# AREA: WantedArea = [{'area': [(16.8529242,48.4770300), (17.2031475, 48.4733883), (17.1986503, 48.3386914), (16.8525808, 48.3382350)], "plot":False}] # zoom
 
 
 # nemecko - funicular tunnel a railway tunnel - gefun
@@ -146,7 +158,7 @@ TEXT_BOUNDS_OVERFLOW_THRESHOLD = 0
 
 map_theme = 'mapycz'
 # plot as bridge (True)  or normal way (False)
-PLOT_BRIDGES = True
+PLOT_BRIDGES = False
 # plot as tunnel (True) or normal way (False) - if false and in dont want tags -> will not be plotted at all
 PLOT_TUNNELS = True
 PEAKS_FILTER_SENSITIVITY: float | None = None #2.5
@@ -183,9 +195,9 @@ OUTER_FIT_PAPER_SIZE = False
 
 # wanted_ways: WantedFeatures # where they vanish - already not on map - for mapycz styles
 wanted_nodes: WantedCategories = {
-    # 'place': {'city', 
-    #           'town', # zoom 1
-    #           'village'}, # zoom 3
+     'place': {'city', 
+               'town', # zoom 1
+               'village'}, # zoom 3
     # subrub zoom 5
     # locality # zoom 7
     'natural': {'peak'}, # zoom 1
@@ -212,59 +224,59 @@ wanted_ways: WantedCategories = {
     # ways connected with links
     'highway': {
         'motorway', # zoom none
-                 'motorway_link',# zoom none - smaller only
                  'trunk', # zoom none
-                 'trunk_link',# zoom none - smaller only
-                'primary', # zoom none
-                 'secondary', # zoom 2
-                 'secondary_link',# zoom 2
-        #         'tertiary', # zoom 3
-        #         'primary_link',# zoom none - smaller only
-        #         'tertiary_link',# zoom 3
-                 'residential',# zoom 5 - same size as unclassified
-                 'unclassified',# zoom 6 - same size as residential
-                #  'service',# zoom - 6
-                 'pedestrian',# zoom 5 - same as residental 
-                #  'cycleway',# zoom 6
-                #  'raceway',# zoom 3
-                #  'steps', # zoom 6
-                  'footway',# zoom 6
-                 'track', # zoom 6
-                 'path'
+                 'primary', # zoom none
+                  'secondary', # zoom 2
+                 'tertiary', # zoom 3
+                  'motorway_link',# zoom none - smaller only
+                  'trunk_link',# zoom none - smaller only
+                  'primary_link',# zoom none - smaller only
+                  'secondary_link',# zoom 3
+                  'tertiary_link',# zoom 5
+                  'residential',# zoom 5 - same size as unclassified
+                  'unclassified',# zoom 5 - same size as residential
+                   'service',# zoom - 6
+                  'pedestrian',# zoom 5 - same as residental 
+                   'cycleway',# zoom 6
+                  'raceway',# zoom 3
+                  'steps', # zoom 6
+                   'footway',# zoom 6
+                  'track', # zoom 6
+                  'path'
                 },# zoom 6
     
-    'railway': {'rail', # service - service smaller 6, 3 normal
-                'light_rail', #- service smaller 6, 3 normal
-                "monorail", #- service smaller 6, 3 normal
-                'miniature',  #- service smaller 6, 3 normal
-                'subway', # zoom 6
-                'funicular', # zoom 4
-                'tram'},# zoom 8
-    'aeroway': {'runway',# zoom 3
-                'taxiway'},# zoom 3
+    # 'railway': {'rail', # service - service smaller 6, 3 normal
+    #             'light_rail', #- service smaller 6, 3 normal
+    #             "monorail", #- service smaller 6, 3 normal
+    #             'miniature',  #- service smaller 6, 3 normal
+    #             'subway', # zoom 6
+    #             'funicular', # zoom 4
+    #             'tram'},# zoom 8
+    # 'aeroway': {'runway',# zoom 3
+    #             'taxiway'},# zoom 3
     
-    'aerialway': {'cable_car',# zoom 4
-                  'gondola',# zoom 4
-                  'chair_lift',# zoom 4
-                  'mixed_lift',# zoom 4
-                  't-bar', # zoom 5 a ostatní
-                  'j-bar', 
-                  'platter',
-                  'rope_tow',
-                  'magic_carpet',
-                  'zip_line',
-                  'goods'
-                  },
+    # 'aerialway': {'cable_car',# zoom 4
+    #               'gondola',# zoom 4
+    #               'chair_lift',# zoom 4
+    #               'mixed_lift',# zoom 4
+    #               't-bar', # zoom 5 a ostatní
+    #               'j-bar', 
+    #               'platter',
+    #               'rope_tow',
+    #               'magic_carpet',
+    #               'zip_line',
+    #               'goods'
+    #               },
     
-    'barrier': {'city_wall', # zoom 8
-                'wall',  # zoom 8
-                'cable_barrier'}, # zoom 8
+    # 'barrier': {'city_wall', # zoom 8
+    #             'wall',  # zoom 8
+    #             'cable_barrier'}, # zoom 8
     
     'waterway': {'river', # zoom never
-                 'canal',  # zoom 4
-                 'stream', # zoom 4
-                 'drain', # zoom 6
-                 'ditch'
+                #  'canal',  # zoom 4
+                #  'stream', # zoom 4
+                #  'drain', # zoom 6
+                #  'ditch'
                  }, # zoom 6
     'route': {'ferry'} # none
 
@@ -307,11 +319,12 @@ wanted_areas: WantedCategories = {
     # all water (except pools) is in natural
     'natural': {'wood', 'water', 'scrub', 'heath', 'grassland', 'bay', 'beach', 'sand'}, # zoom never
     # občanské vybavení
+    # parking zoom 6
     'amenity': {'motorcycle_parking', 'parking', 'grave_yard', 'school', 'university', 'college', 'kindergarten'
                 'bus_station', 'hospital', 'clinic', 'place_of_worship'}, # zoom 2
     'building': set({}),  # zoom 2
     'aeroway': {'aerodrome'}, # zoom 5
-    'highway': {'pedestrian', 'footway'},
+    'highway': {'pedestrian', 'footway'}, # zoom 6
 }
 
 unwanted_areas_tags: UnwantedTags = {

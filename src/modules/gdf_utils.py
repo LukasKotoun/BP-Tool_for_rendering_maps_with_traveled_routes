@@ -352,7 +352,10 @@ class GdfUtils:
 
     @staticmethod
     def combine_gdfs(gdfs: list[GeoDataFrame]) -> GeoDataFrame:
+        
         non_empty_gdfs = [gdf for gdf in gdfs if not gdf.empty]
+        for gdf in non_empty_gdfs:
+            GdfUtils.remove_na_columns(gdf)
         if(not non_empty_gdfs):
             return GdfUtils.create_empty_gdf(gdfs[0].crs)
         if (len(gdfs) == 1):
