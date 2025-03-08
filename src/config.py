@@ -146,7 +146,7 @@ TEXT_BOUNDS_OVERFLOW_THRESHOLD = 0
 
 map_theme = 'mapycz'
 # plot as bridge (True)  or normal way (False)
-PLOT_BRIDGES = False
+PLOT_BRIDGES = True
 # plot as tunnel (True) or normal way (False) - if false and in dont want tags -> will not be plotted at all
 PLOT_TUNNELS = True
 PEAKS_FILTER_SENSITIVITY: float | None = None #2.5
@@ -211,15 +211,15 @@ wanted_ways: WantedCategories = {
     # all
     # ways connected with links
     'highway': {
-        # 'motorway', # zoom none
-        #         'trunk', # zoom none
+        'motorway', # zoom none
+                 'motorway_link',# zoom none - smaller only
+                 'trunk', # zoom none
+                 'trunk_link',# zoom none - smaller only
                 'primary', # zoom none
-        #         'secondary', # zoom 2
+                 'secondary', # zoom 2
+                 'secondary_link',# zoom 2
         #         'tertiary', # zoom 3
-        #         'motorway_link',# zoom none - smaller only
-        #         'trunk_link',# zoom none - smaller only
         #         'primary_link',# zoom none - smaller only
-        #         'secondary_link',# zoom 2
         #         'tertiary_link',# zoom 3
                  'residential',# zoom 5 - same size as unclassified
                  'unclassified',# zoom 6 - same size as residential

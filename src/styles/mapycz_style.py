@@ -17,7 +17,7 @@ AREAS_OVER_WAYS_FILTER = ([{'highway': ['pedestrian', 'footway']}, {'amenity': [
                                'place': ['square']},
                            {'amenity': ['parking', 'motorcycle_parking']}])
 
-WAYS_WITHOUT_CROSSING = {"1-4": {'highway': 'motorway'}, "5-10": None}
+WAYS_WITHOUT_CROSSING = {"1-5": {'highway': ['motorway', 'trunk']}, "5-10": None}
 WATER_COLOR_ZOOM_8_10 = "#9fc4e2"
 WATER_COLOR_ZOOM_1_7 = "#9abfdc"
 
@@ -39,15 +39,15 @@ WATER_COLOR = {"1-7": WATER_COLOR_ZOOM_1_7, "8-10": WATER_COLOR_ZOOM_8_10}
 LAND_COLOR = '#f1f0e5'
 # todo dashed way size
 DASHED_LAND_WAYS_CUMULATIVE_SIZE = Utils.cumulative_zoom_size_multiplier(
-    {"10": 7, '9': 1.1, '8': 1.5, "7-1": 2},
+    {"10-10": 7, '9-9': 1.1, '8-8': 1.5, "7-1": 2},
     Style.WIDTH.name)
 
 SMALL_NONDASHED_CUMULATIVE_SIZE = Utils.cumulative_zoom_size_multiplier(
-    {"10": 12, "9-8": 1.1, "7-1": 1.5},
+    {"10-10": 12, "9-8": 1.1, "7-1": 1.5},
     Style.WIDTH.name)
 
 SPECIAL_WAYS_CUMULATIVE_SIZE = Utils.cumulative_zoom_size_multiplier({
-    "10-9": 19, "8": 1.4, "7-1": 1.8},
+    "10-9": 19, "8-8": 1.4, "7-1": 1.8},
     Style.WIDTH.name)
 # Example data
 
@@ -232,31 +232,64 @@ highway_styles_tunnels: ElementStyles = [
 highway_styles_main: ElementStyles = [
     # todo size
     ({'highway': 'motorway'}, {Style.COLOR.name: '#9bd772', Style.ZINDEX.name: 50,
-     Style.WIDTH.name: 32, Style.EDGE_COLOR.name: "#629157"}),
+      Style.EDGE_COLOR.name: "#629157"},{
+        **Utils.cumulative_zoom_size_multiplier({
+            "10":42, "9": 1.3, "8": 1.5, "7": 1.8, "5-6": 1.6,
+            "4": 1.6, "3": 1.6, "2": 1.6, "1": 1.2},
+            Style.WIDTH.name),
+        "7-8": {Style.EDGE_WIDTH_RATIO.name: 1 + 0.5,
+            Style.BRIDGE_EDGE_WIDTH_RATIO.name: 1 + 0.5},
+        "4-6": {Style.EDGE_WIDTH_RATIO.name: 1 + 2,
+            Style.BRIDGE_EDGE_WIDTH_RATIO.name: 1 + 2},
+        "1-3": {Style.EDGE_WIDTH_RATIO.name: 1 + 2.5,
+            Style.BRIDGE_EDGE_WIDTH_RATIO.name: 1 + 2.5},
+     }),
     # todo size
-    ({'highway': 'motorway_link'}, {Style.COLOR.name: '#9bd772', Style.ZINDEX.name: 49,
-     Style.WIDTH.name: 32, Style.EDGE_COLOR.name: "#629157"}),
+    ({'highway': 'motorway_link'}, {Style.COLOR.name: '#9bd772', Style.ZINDEX.name: 46,
+     Style.EDGE_COLOR.name: "#629157"},{
+        **Utils.cumulative_zoom_size_multiplier({
+            "9-10":30, "8": 1.2, "7": 1.8, "6": 1.8, "5": 1.3,
+            "4": 1.7, "3": 1.6, "2": 1.4, "1": 1.4},
+            Style.WIDTH.name),
+        "9": {Style.EDGE_WIDTH_RATIO.name: 1 + 0.5,
+            Style.BRIDGE_EDGE_WIDTH_RATIO.name: 1 + 0.5},
+        "1-8": {Style.EDGE_WIDTH_RATIO.name: 1 + 0.8,
+            Style.BRIDGE_EDGE_WIDTH_RATIO.name: 1 + 0.8}
+     }),
 
     # todo size
-    ({'highway': 'trunk'}, {Style.COLOR.name: '#9bd772', Style.ZINDEX.name: 48,
+    ({'highway': 'trunk'}, {Style.COLOR.name: '#9bd772', Style.ZINDEX.name: 49,
      Style.WIDTH.name: 26, Style.EDGE_COLOR.name: "#629157"}),
     # todo size
-    ({'highway': 'trunk_link'}, {Style.COLOR.name: '#9bd772', Style.ZINDEX.name: 47,
+    ({'highway': 'trunk_link'}, {Style.COLOR.name: '#9bd772', Style.ZINDEX.name: 45,
      Style.WIDTH.name: 26, Style.EDGE_COLOR.name: "#629157"}),
 
     # todo size
-    ({'highway': 'primary'}, {Style.COLOR.name: '#ffcc78', Style.ZINDEX.name: 46,
+    ({'highway': 'primary'}, {Style.COLOR.name: '#ffcc78', Style.ZINDEX.name: 48,
      Style.WIDTH.name: 22, Style.EDGE_COLOR.name: "#e8a542"}),
     # todo size
-    ({'highway': 'primary_link'}, {Style.COLOR.name: '#ffcc78', Style.ZINDEX.name: 45,
+    ({'highway': 'primary_link'}, {Style.COLOR.name: '#ffcc78', Style.ZINDEX.name: 44,
                                    Style.WIDTH.name: 22, Style.EDGE_COLOR.name: "#e8a542"}),
 
+    ({'highway': 'secondary'}, {Style.COLOR.name: '#faef75', Style.ZINDEX.name: 47,
+                                Style.WIDTH.name: 20, Style.EDGE_COLOR.name: "#cdc139"},{
+        **Utils.cumulative_zoom_size_multiplier({
+            "10":40, "9": 1.2, "8": 1.4, "7": 1.8, "6": 1.5,
+            "5": 1.5, "4": 1.6, "1-3": 1.6},
+            Style.WIDTH.name),
+        "7-9": {Style.EDGE_WIDTH_RATIO.name: 1 + 0.5,
+            Style.BRIDGE_EDGE_WIDTH_RATIO.name: 1 + 0.5},
+        "1-6": {Style.EDGE_WIDTH_RATIO.name: 1 + 0.7,
+            Style.BRIDGE_EDGE_WIDTH_RATIO.name: 1 + 0.7},
+     }),
+    
     # todo size
-    ({'highway': 'secondary'}, {Style.COLOR.name: '#faef75', Style.ZINDEX.name: 45,
-                                Style.WIDTH.name: 20, Style.EDGE_COLOR.name: "#cdc139"}),
-    # todo size
-    ({'highway': 'secondary_link'}, {Style.COLOR.name: '#faef75', Style.ZINDEX.name: 44,
-     Style.WIDTH.name: 20, Style.EDGE_COLOR.name: "#cdc139"}),
+    ({'highway': 'secondary_link'}, {Style.COLOR.name: '#faef75', Style.ZINDEX.name: 43,
+     Style.WIDTH.name: 20, Style.EDGE_COLOR.name: "#cdc139"},{
+        **Utils.cumulative_zoom_size_multiplier({
+            "10":28},
+            Style.WIDTH.name)
+     }),
 
     # todo size
     ({'highway': 'tertiary'}, {Style.ZINDEX.name: 43, Style.COLOR.name: NORMAL_WAY_COLOR,
@@ -271,9 +304,8 @@ highway_styles_main: ElementStyles = [
      {
         **Utils.cumulative_zoom_size_multiplier(
             {"9-10": 27, "8": 1.3, "7": 1.8, "1-6": 1.6}, Style.WIDTH.name),
-        "1-8": {Style.EDGE_WIDTH_RATIO.name: 1 + 0.5,
+        "7-8": {Style.EDGE_WIDTH_RATIO.name: 1 + 0.5,
                 Style.BRIDGE_EDGE_WIDTH_RATIO.name: 1 + 0.5},
-        
     }),
 ]
 
