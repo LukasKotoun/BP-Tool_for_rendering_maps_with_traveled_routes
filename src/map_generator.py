@@ -247,7 +247,6 @@ def main() -> None:
 
         map_scaling_factor = Utils.calc_map_scaling_factor(map_area_dimensions,
                                                                          paper_dimensions_mm)
-        
     map_scale = Utils.get_scale(GdfUtils.get_bounds_gdf(
         GdfUtils.change_crs(map_area_gdf, CRS_OSM)), paper_dimensions_mm)
     # zoom level to endpoint specific - always from that biger area
@@ -255,7 +254,7 @@ def main() -> None:
     zoom_level = Utils.get_zoom_level(
         map_scaling_factor, ZOOM_MAPPING, 0.3)
     print(map_scaling_factor, zoom_level)
-    # zoom_level = 8
+    # zoom_level = 5
     print(map_scaling_factor, zoom_level)
     
     # fifth function - parse osm file and get gdfs and than remove osm file
@@ -304,7 +303,7 @@ def main() -> None:
     gdfs_convert_loaded_columns(gpxs_gdf, nodes_gdf, ways_gdf, areas_gdf)
     for var_name, var_value in MAP_THEME['variables'].items():
         MAP_THEME['variables'][var_name] = StyleAssigner.convert_variables_from_dynamic(var_value, zoom_level)
-    
+
     # ------------prefiltering nodes by importance------------
     if (PEAKS_FILTER_SENSITIVITY is not None):
         nodes_gdf = GdfUtils.filter_peaks_by_prominence(

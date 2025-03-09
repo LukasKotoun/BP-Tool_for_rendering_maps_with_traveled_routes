@@ -37,6 +37,10 @@ RESIDENTAL_AREA_COLOR_ZOOM_1_6 = '#e2d5b7'
 CITY_POINT_COLOR = '#e4d6b7'
 CITY_POINT_EDGE_COLOR = '#b5ab8c'
 
+RESERVATION_EDGE_CUMULATIVE_SIZE = Utils.cumulative_zoom_size_multiplier(
+            {"10-10": 40, "9-9": 2, '8-8': 2, "7-7": 2, "6-5": 1.5,
+             "4-3": 1.2, "2-1": 1.4
+             }, Style.WIDTH.name)
 
 WATER_COLOR = {"1-7": WATER_COLOR_ZOOM_1_7, "8-10": WATER_COLOR_ZOOM_8_10}
 LAND_COLOR = '#f1f0e5'
@@ -96,104 +100,129 @@ GPXS_STYLES: ElementStyles = [
 
 NODES_STYLES_SCALE = []
 place_styles: ElementStyles = [
-    # todo biger than normal city size
-    # ({'place': 'city', 'capital': 'yes'}, {Style.ZINDEX.name: 51},
-    #  {"6":{Style.TEXT_FONT_SIZE.name: 17},
-    #   "5":{Style.TEXT_FONT_SIZE.name: 14},
-    #   "1-4":{Style.TEXT_FONT_SIZE.name: 12},
-    #   "1-6": {Style.TEXT_WEIGHT.name: 'bold'},
-    #   "1-2": {Style.WIDTH.name: 5},
-    # }),
-    
-    ({'place': 'city'}, {
+    ({'place': 'city', 'capital': 'yes'}, {Style.ZINDEX.name: 51},
+     {"4-6": {Style.TEXT_FONT_SIZE.name: 16, Style.TEXT_WEIGHT.name: 'bold'},
+      "1-3": {Style.TEXT_FONT_SIZE.name: 13, Style.TEXT_WEIGHT.name: 'bold'},
+      "1-2": {Style.WIDTH.name: 5}
+      }),
+
+    ([{'place': 'city'}, {'place': 'town', 'capital': 'yes'}], {
         Style.ZINDEX.name: 50
     },
         {
-        "8-10": {Style.TEXT_FONT_SIZE.name: 17},
-        "6-7": {Style.TEXT_FONT_SIZE.name: 14},
-        "1-5": {Style.TEXT_FONT_SIZE.name: 10},
+        "4-10": {Style.TEXT_FONT_SIZE.name: 15},
+        "1-3": {Style.TEXT_FONT_SIZE.name: 12},
         "2-7": {Style.TEXT_WEIGHT.name: 'bold'},
         "1-2": {Style.MARKER.name: "o", Style.COLOR.name: CITY_POINT_COLOR, Style.MIN_PLOT_REQ.name: MinPlot.MARKER_TEXT1.name,
-                  Style.TEXT1_POSITIONS.name: [TextPositions.TOP, TextPositions.BOTTOM, TextPositions.RIGHT], Style.EDGE_WIDTH_RATIO.name: 0.1,
-                  Style.WIDTH.name: 4, Style.EDGE_COLOR.name: CITY_POINT_EDGE_COLOR}
+                Style.EDGE_WIDTH_RATIO.name: 0.15, Style.WIDTH.name: 4, Style.EDGE_COLOR.name: CITY_POINT_EDGE_COLOR}
     }),
-    # todo size
+    
     ({'place': 'town'}, {
         Style.ZINDEX.name: 49
     },
         {
-        "8-10": {Style.TEXT_FONT_SIZE.name: 16},
-        "6-7": {Style.TEXT_FONT_SIZE.name: 12},
-        "1-5": {Style.TEXT_FONT_SIZE.name: 9},
+        "7-10": {Style.TEXT_FONT_SIZE.name: 13},
+        "5-6": {Style.TEXT_FONT_SIZE.name: 12},
+        "4": {Style.TEXT_FONT_SIZE.name: 11.5},
+        "3": {Style.TEXT_FONT_SIZE.name: 9},
         "4-7": {Style.TEXT_WEIGHT.name: 'bold'},
-        "1-2": {Style.MARKER.name: "o", Style.COLOR.name: CITY_POINT_COLOR, Style.MIN_PLOT_REQ.name: MinPlot.MARKER_TEXT1.name,
-                  Style.TEXT1_POSITIONS.name: [TextPositions.TOP, TextPositions.BOTTOM, TextPositions.RIGHT], Style.EDGE_WIDTH_RATIO.name: 0.1, Style.WIDTH.name: 2.8,
-                  Style.EDGE_COLOR.name: CITY_POINT_EDGE_COLOR}
+        "1-2": {Style.TEXT_FONT_SIZE.name: 8, Style.MARKER.name: "o", Style.COLOR.name: CITY_POINT_COLOR, Style.MIN_PLOT_REQ.name: MinPlot.MARKER_TEXT1.name,
+                Style.EDGE_WIDTH_RATIO.name: 0.15,Style.WIDTH.name: 3.3, Style.EDGE_COLOR.name: CITY_POINT_EDGE_COLOR}
     }),
-    # todo size
     ({'place': 'village'}, {
-        Style.TEXT_FONT_SIZE.name: 10, Style.ZINDEX.name: 48
+        Style.ZINDEX.name: 48
     },
         {
-        "10-10": {Style.TEXT_FONT_SIZE.name: 15},
+        "6-10": {Style.TEXT_FONT_SIZE.name: 11},
+        "4-5": {Style.TEXT_FONT_SIZE.name: 9},
+        "1-3": {Style.TEXT_FONT_SIZE.name: 7},
         "1-2": {Style.MARKER.name: "o", Style.COLOR.name: CITY_POINT_COLOR, Style.MIN_PLOT_REQ.name: MinPlot.MARKER_TEXT1.name,
-                  Style.TEXT1_POSITIONS.name: [TextPositions.TOP, TextPositions.BOTTOM, TextPositions.RIGHT], Style.EDGE_WIDTH_RATIO.name: 0.2,
-                  Style.WIDTH.name: 5, Style.EDGE_COLOR.name: CITY_POINT_EDGE_COLOR}
+                Style.EDGE_WIDTH_RATIO.name: 0.15, Style.WIDTH.name: 2.8, Style.EDGE_COLOR.name: CITY_POINT_EDGE_COLOR}
     }),
-    # todo add local, subrub
+    
+    ({'place': 'suburb'}, {
+        Style.ZINDEX.name: 47
+    },
+        {
+        "1-6": {Style.TEXT_COLOR.name: '#383838'},
+        "6-10": {Style.TEXT_FONT_SIZE.name: 10},
+        "4-5": {Style.TEXT_FONT_SIZE.name: 9},
+        "1-3": {Style.TEXT_FONT_SIZE.name: 8},
+    }),
+    
+    ({'place': 'neighbourhood'}, {
+        Style.ZINDEX.name: 46, Style.TEXT_COLOR.name: '#6b6b6b'
+    },
+        {
+        "6-10": {Style.TEXT_FONT_SIZE.name: 8},
+        "1-5": {Style.TEXT_FONT_SIZE.name: 7},
+    }),
+    
+    ({'place': 'locality'}, {
+        Style.ZINDEX.name: 45, Style.TEXT_COLOR.name: '#6b6b6b'
+    },
+        {
+        "7-10": {Style.TEXT_FONT_SIZE.name: 5},
+        "1-6": {Style.TEXT_FONT_SIZE.name: 4},
+    }),
 ]
 
 
 # text color or MARKER color turn of by string "None" instead of None
 natural_styles_nodes: ElementStyles = [
-    # todo size
     ({'natural': 'peak'}, {
         Style.ZINDEX.name: 30, Style.MIN_PLOT_REQ.name: MinPlot.MARKER_TEXT2.name,
         # marker
         Style.MARKER.name: "^", Style.MARKER_HORIZONTAL_ALIGN.name: "center",
-        Style.COLOR.name: "#412a1c", Style.EDGE_COLOR.name: "None",
+        Style.COLOR.name: "#412a1c", Style.EDGE_COLOR.name: "None", Style.WIDTH.name: 2,
         # text
-        Style.TEXT_FONT_SIZE.name: 6, Style.WIDTH.name: 3,  Style.TEXT1_POSITIONS.name: [TextPositions.TOP],
-        Style.TEXT2_POSITIONS.name: [TextPositions.BOTTOM], Style.TEXT_OUTLINE_WIDTH_RATIO.name: 0.2,
-
+        Style.TEXT_COLOR.name: "#443732", Style.TEXT_OUTLINE_COLOR.name: '#FFFFFF',
+        Style.TEXT1_POSITIONS.name: [TextPositions.TOP], Style.TEXT2_POSITIONS.name: [TextPositions.BOTTOM],
+        Style.TEXT_OUTLINE_WIDTH_RATIO.name: 0.3, Style.TEXT_WRAP_LEN.name: 20  # Style.TEXT_WEIGHT.name: 'bold',
+    }, {
+        "7-10": {Style.TEXT_FONT_SIZE.name: 6.5, Style.TEXT_OUTLINE_WIDTH_RATIO.name: 0.3},
+        "1-6": {Style.TEXT_FONT_SIZE.name: 4.5, Style.TEXT_OUTLINE_WIDTH_RATIO.name: 0.3},
     })
 ]
+
 icons_above_styles_nodes: ElementStyles = [
-    # todo size
     ({'man_made': 'tower', 'tower:type': ['observation', 'watchtower']}, {
-        Style.MIN_PLOT_REQ.name: MinPlot.MARKER.name,
+        Style.MIN_PLOT_REQ.name: MinPlot.MARKER.name, Style.ZINDEX.name: 20,
         # marker
         Style.MARKER.name: MarkersCodes.FA_TOWER_OBSERVATION.value, Style.MARKER_FONT_PROPERTIES.name: font_awesome_prop,
-        Style.COLOR.name: "#99441e", Style.EDGE_COLOR.name: "#FFFFFF", Style.WIDTH.name: 7,
-        Style.EDGE_WIDTH_RATIO.name: 0.1,
-        Style.MARKER_HORIZONTAL_ALIGN.name: "center", Style.MARKER_ABOVE_OTHERS.name: MarkerAbove.NORMAL,
+        Style.COLOR.name: "#99441e", Style.EDGE_COLOR.name: "#FFFFFF", 
+        Style.EDGE_WIDTH_RATIO.name: 0.15, Style.MARKER_ABOVE_OTHERS.name: MarkerAbove.NORMAL,
         # text
-        Style.TEXT_COLOR.name: "#000000", Style.TEXT_OUTLINE_COLOR.name: '#FFFFFF',
+        Style.TEXT_COLOR.name: "#8c7359", Style.TEXT_OUTLINE_COLOR.name: '#FFFFFF',
         Style.TEXT1_POSITIONS.name: [TextPositions.BOTTOM],
-        Style.TEXT_FONT_SIZE.name: 6, Style.TEXT_OUTLINE_WIDTH_RATIO.name: 0.2,
+    }, {
+        "7-10": {Style.TEXT_FONT_SIZE.name: 6, Style.WIDTH.name: 9, Style.TEXT_OUTLINE_WIDTH_RATIO.name: 0.2},
+        "1-6": {Style.TEXT_FONT_SIZE.name: 4.5, Style.WIDTH.name: 7, Style.TEXT_OUTLINE_WIDTH_RATIO.name: 0.3,
+                Style.WIDTH.name: 5.5},
     }),
-    # todo size - text on zoom 10-9
+
     ({'historic': ['castle']}, {
-        Style.MIN_PLOT_REQ.name: MinPlot.MARKER.name,
+        Style.MIN_PLOT_REQ.name: MinPlot.MARKER.name, Style.ZINDEX.name: 19,
         # marker
         Style.MARKER.name: MarkersCodes.MU_CASTLE.value, Style.MARKER_FONT_PROPERTIES.name: material_design_prop,
-        Style.COLOR.name: "#846252", Style.EDGE_COLOR.name: "#FFFFFF", Style.WIDTH.name: 7,
-        Style.EDGE_WIDTH_RATIO.name: 0.1,
-        Style.MARKER_HORIZONTAL_ALIGN.name: "center", Style.MARKER_ABOVE_OTHERS.name: MarkerAbove.NORMAL,
+        Style.COLOR.name: "#846252", Style.EDGE_COLOR.name: "#FFFFFF", Style.WIDTH.name: 7.5,
+        Style.MARKER_ABOVE_OTHERS.name: MarkerAbove.NORMAL,
         # text
-        Style.TEXT_COLOR.name: "#000000", Style.TEXT_OUTLINE_COLOR.name: '#FFFFFF',
+        Style.TEXT_COLOR.name: "#8c7359", Style.TEXT_OUTLINE_COLOR.name: '#FFFFFF',
         Style.TEXT1_POSITIONS.name: [TextPositions.BOTTOM],
-        Style.TEXT_FONT_SIZE.name: 6, Style.TEXT_OUTLINE_WIDTH_RATIO.name: 0.2,
+    }, {
+        "7-10": {Style.TEXT_FONT_SIZE.name: 6, Style.TEXT_OUTLINE_WIDTH_RATIO.name: 0.2,  Style.EDGE_WIDTH_RATIO.name: 0.15},
+        "1-6": {Style.TEXT_FONT_SIZE.name: 4.5, Style.TEXT_OUTLINE_WIDTH_RATIO.name: 0.3,
+                Style.WIDTH.name: 5.5, Style.EDGE_WIDTH_RATIO.name: 0.1},
     })
 ]
 
 nodes_styles_default: ElementStyles = [
     ({'natural': ''}, {
-        Style.TEXT_COLOR.name: "#000000", Style.TEXT_OUTLINE_COLOR.name: '#FFFFFF'
     }),
 
     # natural must be before place - some peaks are also places
-    ({'place': ['city', 'town', 'village']}, {
+    ({'place': ''}, {
         Style.TEXT_OUTLINE_WIDTH_RATIO.name: 0.2, Style.MIN_PLOT_REQ.name: MinPlot.TEXT1.name,
         Style.TEXT_COLOR.name: "#000000", Style.TEXT_OUTLINE_COLOR.name: '#FFFFFF',
         Style.TEXT1_POSITIONS.name: [
@@ -758,13 +787,6 @@ landuse_styles_area: ElementStyles = [
                  Style.EDGE_ALPHA.name: 1, Style.EDGE_LINESTYLE.name: '-'}
     }),
 
-    # # todo zoom level - zeptat se jestli jo nebo ne
-    # ({'landuse': 'military'}, {
-    #     Style.EDGE_ALPHA.name: 0.7, Style.COLOR.name: None,
-    #     Style.EDGE_COLOR.name: "#a4a4a4", Style.WIDTH.name: 70,
-    #     Style.EDGE_LINESTYLE.name: "-"},
-    #  {"3-6": {Style.COLOR.name: '#a4a4a4', Style.ALPHA.name: 0.3, Style.ZINDEX.name: 1}}),
-
     ({'landuse': ['allotments', 'retail', 'residential', 'garages', 'commercial']}, {},
      {"8-10": {Style.COLOR.name: RESIDENTAL_AREA_COLOR_ZOOM_8_10},
       "7": {Style.COLOR.name: RESIDENTAL_AREA_COLOR_ZOOM_7},
@@ -787,11 +809,6 @@ leisure_styles_area: ElementStyles = [
      {Style.COLOR.name: '#def7d3'}),
     ({'leisure': 'swimming_pool'}, {Style.COLOR.name: WATER_COLOR_ZOOM_1_7},
      {"8-10": {Style.COLOR.name: WATER_COLOR_ZOOM_8_10}}),
-
-
-    ({'leisure': 'nature_reserve'}, {Style.COLOR.name: None, Style.EDGE_COLOR.name: '#97BB72',
-                                     Style.WIDTH.name: 80,
-                                     Style.EDGE_ALPHA.name: 0.85, Style.EDGE_LINESTYLE.name: '-'})
 ]
 
 # dynamic change color based on zoom level
@@ -831,6 +848,17 @@ amenity_styles_area: ElementStyles = [
                  Style.EDGE_ALPHA.name: 1, Style.EDGE_LINESTYLE.name: '-'}}),
 ]
 
+boundary_styles: ElementStyles = [
+    ({'boundary': 'national_park'}, {
+        Style.COLOR.name: None, Style.EDGE_ALPHA.name: 1, Style.ZINDEX.name: 1
+    }, {
+        "6-10": {Style.EDGE_COLOR.name: '#a4c280'},
+        "4-5": {Style.EDGE_COLOR.name: '#a3be85', Style.COLOR.name: '#a3be85', Style.ALPHA.name: 0.4},
+        "1-3": {Style.EDGE_COLOR.name: '#779e47', Style.COLOR.name: '#779e47', Style.ALPHA.name: 0.4},
+        **RESERVATION_EDGE_CUMULATIVE_SIZE
+    }),
+]
+
 
 area_styles_default: ElementStyles = [
     ({'landuse': ''},  {Style.COLOR.name: LAND_COLOR}),
@@ -857,18 +885,18 @@ area_styles_default: ElementStyles = [
             Style.WIDTH.name)
     }),
 
-
-    # ({'boundary': ''}, {
-    #     Style.COLOR.name: None, Style.EDGE_COLOR.name: '#97BB72',
-    #     Style.WIDTH.name: 80, Style.EDGE_LINESTYLE.name: '-',
-    #     Style.EDGE_ALPHA.name: 0.85
-    # })
+    ({'boundary': ''}, {
+        Style.COLOR.name: None, Style.EDGE_COLOR.name: None,
+        Style.EDGE_LINESTYLE.name: '-'
+    }),
+    
     ([], {
         Style.COLOR.name: LAND_COLOR, Style.ALPHA.name: 1.0
     })
 ]
 
 AREAS_STYLES: ElementStyles = [
+    *boundary_styles,
     *natural_styles_area,
     *landuse_styles_area,
     *leisure_styles_area,

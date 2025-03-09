@@ -92,7 +92,7 @@ class Plotter:
         if (isinstance(marker, list)):
             marker = marker[0]
         bbox = marker.get_tightbbox()
-        if (bbox is None):
+        if (not Utils.is_bbox_valid(bbox)):
             # marker is plotted outside of the figure
             marker.remove()
             return None
@@ -157,7 +157,7 @@ class Plotter:
                                                           path_effects=[pe.withStroke(linewidth=row.TEXT_OUTLINE_WIDTH,
                                                                                       alpha=row.EDGE_ALPHA, foreground=row.TEXT_OUTLINE_COLOR)], zorder=zorder)
             bbox = text_anotation.get_tightbbox()
-            if (bbox is None):
+            if (not Utils.is_bbox_valid(bbox)):
                 # text is plotted outside of the figure
                 text_anotation.remove()
                 text_anotation = None
@@ -182,7 +182,7 @@ class Plotter:
                                        path_effects=[pe.withStroke(linewidth=row.TEXT_OUTLINE_WIDTH,
                                                                    alpha=row.EDGE_ALPHA, foreground=row.TEXT_OUTLINE_COLOR)], zorder=zorder)
         bbox = text_plot.get_tightbbox()
-        if (bbox is None):
+        if (not Utils.is_bbox_valid(bbox)):
             # text is plotted outside of the figure
             text_plot.remove()
             return None

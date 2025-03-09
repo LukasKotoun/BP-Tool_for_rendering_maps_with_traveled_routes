@@ -13,6 +13,7 @@ from common.map_enums import Style, MapOrientation, PaperSize, WorldSides
 
 from common.common_helpers import time_measurement
 
+
 class Utils:
     @staticmethod
     def set_orientation(tuple: DimensionsTuple, wanted_orientation: MapOrientation) -> DimensionsTuple:
@@ -193,7 +194,6 @@ class Utils:
 
         return area_bounds
 
-
     @staticmethod
     def calc_map_scaling_factor(map_dimensions_m, paper_dimensions_mm):
         """_summary_
@@ -230,7 +230,6 @@ class Utils:
 
         return scale
 
-
     @staticmethod
     def get_zoom_level(value, mapping, threshold_above_lower=0.25):
         zooms = sorted(mapping.items(), key=lambda x: -x[1])
@@ -249,7 +248,7 @@ class Utils:
         return zooms[-1][0]  # lowest level
 
     @staticmethod
-    def wrap_text(text: str, width: int, replace_whitespace: bool=False):
+    def wrap_text(text: str, width: int, replace_whitespace: bool = False):
         if (text is None):
             return None
         if (width == 0 or width is None):
@@ -269,7 +268,7 @@ class Utils:
         expanded_bbox = Bbox.from_extents(bbox.x0 - expand_x, bbox.y0 - expand_y,
                                           bbox.x1 + expand_x, bbox.y1 + expand_y)
         return expanded_bbox
-    
+
     @staticmethod
     def expand_bounds_dict(bounds: BoundsDict, percent_expand: int = 0) -> Bbox:
         if (percent_expand == 0):
@@ -284,32 +283,41 @@ class Utils:
             WorldSides.SOUTH.name: bounds[WorldSides.SOUTH.name] - expand_y,
             WorldSides.NORTH.name: bounds[WorldSides.NORTH.name] + expand_y
         }
-        
+
     @staticmethod
-    def get_value(row, column_name: str, default_value: any=None):
+    def get_value(row, column_name: str, default_value: any = None):
         value = getattr(row, column_name, None)
         if pd.isna(value):
             return default_value
         return value
-    
+
+    @staticmethod
+    def is_bbox_valid(bbox: Bbox):
+        return bbox is not None and bbox.x0 < bbox.x1 and bbox.y0 < bbox.y1
+
     @staticmethod
     def add_bbox_to_list_and_index(bbox: Bbox, bbox_list: list[Bbox], idx: rtree.index.Index):
         bbox_list.append(bbox)
         idx.insert(len(bbox_list)-1, bbox.extents)  # Use the list index as ID
-    
+
     @staticmethod
     def check_bbox_position(bbox_to_overlap: Bbox, bbox_to_overflow: Bbox, bbox_index: rtree.index.Index | None,
                             ax, text_bounds_overflow_threshold, reqired_area_polygon) -> bool:
-        if(bbox_index is not None):
-            matches = list(bbox_index.intersection(bbox_to_overlap.extents))
-            for match in matches:
-                if(match is not None):
-                    return False
+        if (bbox_index is not None):
+            try:
+                matches = list(bbox_index.intersection(
+                    bbox_to_overlap.extents))
+                for match in matches:
+                    if (match is not None):
+                        return False
+            except Exception as e:
+                print(e)
+                return False
 
         # check overlap with other bbox
         if math.isclose(text_bounds_overflow_threshold, 0):
             return True
-        
+
         # check if bbox is inside required area
         bbox_polygon = geometry.box(
             bbox_to_overflow.x0, bbox_to_overflow.y0, bbox_to_overflow.x1, bbox_to_overflow.y1)

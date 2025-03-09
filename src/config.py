@@ -8,12 +8,12 @@ from common.map_enums import Style, ColorMode, PaperSize, MapOrientation, Marker
 # --------------------------------------------------------------map area--------------------------------------------------------------
 # OSM_INPUT_FILE_NAMES: str = ['../osm_files/vys.osm.pbf','../osm_files/jihmor.osm.pbf']
 # OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/vysJihE.osm.pbf'
-OSM_INPUT_FILE_NAMES: str | list[str] = ['../osm_files/skbr.osm.pbf']
+OSM_INPUT_FILE_NAMES: str | list[str] = ['../osm_files/hv.osm.pbf']
 # OSM_INPUT_FILE_NAMES: str | list[str] = '../trebic.osm.pbf'
 # extract - will be always true
 OSM_WANT_EXTRACT_AREA: bool = False
 # set if want osm file cutting using osmium command line tool (need to be uinstalled), If not set to None
-OSM_OUTPUT_FILE_NAME: None | str = '../osm_files/skgrave.osm.pbf'
+OSM_OUTPUT_FILE_NAME: None | str = '../osm_files/rnpark.osm.pbf'
 
 OUTPUT_PDF_NAME: str = '../pdfs/divocina'
 
@@ -37,6 +37,10 @@ OUTPUT_PDF_NAME: str = '../pdfs/divocina'
 # rakousko - dalince konce a trunk - rtrunk
 # AREA: WantedArea = [{'area': [(16.7637897,48.6661533), (16.5724411, 48.6708094), (16.5820542, 48.7711483), (16.7701950, 48.7706958)], "plot":False}] # zoom 8/15
 
+#rakousko - dalince konce a trunk - rnpark
+# AREA: WantedArea = [{'area': [(16.6840794, 47.8736964), (16.9535233, 47.8754153), (16.9468556, 47.7549778), (16.6704806, 47.7522078)], "plot":False}] # zoom 8/15
+
+
 # slovensko - aminety grave - skgrave
 # AREA: WantedArea = [{'area': [(17.5622753,48.2370358), (17.5805572, 48.2372431), (17.5798706, 48.2319261), (17.5622325, 48.2326694)], "plot":False}] # zoom 8/15
 
@@ -58,7 +62,7 @@ OUTPUT_PDF_NAME: str = '../pdfs/divocina'
 # AREA: WantedArea = [{'area': [(17.1374492,48.1955133), (17.2557239, 48.1951700), (17.2557239, 48.1444531), (17.1377925, 48.1452547)], "plot":False}] # zoom
 
 # slovensko - bratislava centrum  - skbr
-AREA: WantedArea = [{'area': [(17.0797297, 48.1649183), (17.1410558, 48.1642600), (17.1413133, 48.1383769), (17.0762106, 48.1384056)], "plot": False}]  # zoom
+# AREA: WantedArea = [{'area': [(17.0797297, 48.1649183), (17.1410558, 48.1642600), (17.1413133, 48.1383769), (17.0762106, 48.1384056)], "plot": False}]  # zoom
 
 # slovensko - voj prostor  - skvoj
 # AREA: WantedArea = [{'area': [(17.0325058,48.6691606), (17.6252633, 48.6856314), (17.6225169, 48.1661969), (17.0031625, 48.1808503)], "plot":False}] # zoom
@@ -104,10 +108,8 @@ AREA: WantedArea = [{'area': [(17.0797297, 48.1649183), (17.1410558, 48.1642600)
 # AREA: WantedArea = [(0.3733594, 54.1375764), (27.5538867, 54.1118236),(27.5538867, 40.9478483), (0.3294142, 41.1136006)]  # zoom none/6 - 0.000095
 
 
-# AREA: WantedArea = ["Česko","Vysočina, Česko", "Jihomoravský kraj, Česko"]
-# AREA: WantedArea = ["Brno, Česko"]
-# AREA: WantedArea = ["Jihomoravský kraj, Česko", "Kraj Vysočina, Česko"]
-# AREA: WantedArea = [{"area": "Brno, Česko", "plot": True, "category": 5, "width": None}]
+
+AREA: WantedArea = [{"area": "Horní vilémovice, Česko", "plot": True, "category": 5, "width": None}]
 # AREA: WantedArea = [{"area": "Brno, Česko", "plot": True, "category": 5, "width": None}]
 # AREA: WantedArea = [{"area": "Baliny, Česko", "plot": True, "category": 0, "width": None}]
 # AREA: WantedArea =[{"area": "Jihomoravský kraj, Česko", "plot": True, "category": 2, "width": 1},
@@ -169,23 +171,24 @@ MIN_POPULATION: int | None = None
 PLACES_TO_FILTER_BY_POPULATION = ['city', 'town', 'village']
 # --------------------------------------------------------------preview--------------------------------------------------------------
 # NOTE: must have same settings as the resulting one when generating for large format printing
-WANT_PREVIEW: bool = True
+WANT_PREVIEW: bool = False
 # OUTER_AREA: WantedArea = [(15.7034756,48.6941575), (15.9206889,48.6941186), (15.9198775, 48.5926164), (15.7030222, 48.5936264)] # zoom 13 - 0.012257255675006467
 
 # area for that you are creating smaller preview (bigger than normal area)
 # OUTER_AREA: WantedArea =  "Vysočina, Česko"
 
-OUTER_AREA: WantedArea =  [{"area": "Česko", "plot": True, "category": 2, "width": 1},
-                           {"area": "Slovensko", "plot": True, "category": 2, "width": 1}]
+OUTER_AREA: WantedArea =  [{"area": "Bratislava", "plot": True, "category": 2, "width": 1}]
+# OUTER_AREA: WantedArea =  [{"area": "Česko", "plot": True, "category": 2, "width": 1},
+#                            {"area": "Slovensko", "plot": True, "category": 2, "width": 1}]
 # OUTER_AREA: WantedArea = [{"area": "Jihomoravský kraj, Česko", "plot": True, "category": 2, "width": 1},
                         #   {"area": "Praha, Česko", "plot": True, "category": 1, "width": 1}]
 # OUTER_AREA: WantedArea = "Česko"
 # OUTER_AREA: WantedArea = [(15.7396182, 49.3111173), (16.0273871, 49.3028839),
 #                     (16.0266146, 49.1439064), (15.6712219, 49.1928600)]
 
-OUTER_PAPER_DIMENSIONS = PaperSize.A0.dimensions  # real paper size
+# OUTER_PAPER_DIMENSIONS = PaperSize.A0.dimensions  # real paper size
 # or set own #if one is left none if will be automaticaly calculated by area size
-# OUTER_PAPER_DIMENSIONS = (1100, None)
+OUTER_PAPER_DIMENSIONS = (2000, None)
 # what side of paper was set (smaller true bigger false)(only if only one side in custom dimension was set)
 OUTER_GIVEN_SMALLER_PAPER_DIMENSION = True
 # set how will resulted paper be oriented, AUTOMATIC is Recommended
@@ -198,9 +201,11 @@ OUTER_FIT_PAPER_SIZE = False
 wanted_nodes: WantedCategories = {
      'place': {'city', 
                'town', # zoom 1
-               'village'}, # zoom 3
-    # subrub zoom 5
-    # locality # zoom 7
+               'village',# zoom 3
+               'suburb', # zoom 5
+               'neighbourhood', # zoom 7
+               'locality'}, # zoom 7
+     
     'natural': {'peak'}, # zoom 1
     'man_made': {'tower'}, # zoom 7
     'historic': {'castle'}, # zoom 7
@@ -246,43 +251,43 @@ wanted_ways: WantedCategories = {
                   'path'
                 },# zoom 6
     
-    # 'railway': {'rail', # service - service smaller 6, 3 normal
-    #             'light_rail', #- service smaller 6, 3 normal
-    #             "monorail", #- service smaller 6, 3 normal
-    #             'miniature',  #- service smaller 6, 3 normal
-    #             'subway', # zoom 6
-    #             'funicular', # zoom 4
-    #             'tram'},# zoom 8
-    # 'aeroway': {'runway',# zoom 3
-    #             'taxiway'},# zoom 3
+    'railway': {'rail', # service - service smaller 6, 3 normal
+                'light_rail', #- service smaller 6, 3 normal
+                "monorail", #- service smaller 6, 3 normal
+                'miniature',  #- service smaller 6, 3 normal
+                'subway', # zoom 6
+                'funicular', # zoom 4
+                'tram'},# zoom 8
+    'aeroway': {'runway',# zoom 3
+                'taxiway'},# zoom 3
     
-    # 'aerialway': {'cable_car',# zoom 4
-    #               'gondola',# zoom 4
-    #               'chair_lift',# zoom 4
-    #               'mixed_lift',# zoom 4
-    #               't-bar', # zoom 5 a ostatní
-    #               'j-bar', 
-    #               'platter',
-    #               'rope_tow',
-    #               'magic_carpet',
-    #               'zip_line',
-    #               'goods'
-    #               },
+    'aerialway': {'cable_car',# zoom 4
+                  'gondola',# zoom 4
+                  'chair_lift',# zoom 4
+                  'mixed_lift',# zoom 4
+                  't-bar', # zoom 5 a ostatní
+                  'j-bar', 
+                  'platter',
+                  'rope_tow',
+                  'magic_carpet',
+                  'zip_line',
+                  'goods'
+                  },
     
-    # 'barrier': {'city_wall', # zoom 8
-    #             'wall',  # zoom 8
-    #             'cable_barrier'}, # zoom 8
+    'barrier': {'city_wall', # zoom 8
+                'wall',  # zoom 8
+                'cable_barrier'}, # zoom 8
     
     'waterway': {'river', # zoom never
-                #  'canal',  # zoom 4
-                #  'stream', # zoom 4
-                #  'drain', # zoom 6
-                #  'ditch'
+                  'canal',  # zoom 4
+                  'stream', # zoom 4
+                  'drain', # zoom 6
+                  'ditch'
                  }, # zoom 6
-    'route': {'ferry'} # none
+    'route': {'ferry'}, # none
 
 
-    # 'natural': {'coastline'},
+    'natural': {'coastline'},
 
 
 
@@ -313,16 +318,17 @@ unwanted_ways_tags: UnwantedTags = {
 wanted_areas: WantedCategories = {
     # all areas - osm can have more tags? how to do it
     'landuse': {'farmland', 'forest', 'residential', 'commercial', 'retail', 'industrial', 'allotments', 'retail',
-                'meadow', 'grass', 'landfill', 'cemetery', 'vineyard', 'orchard', 'garages', 'military',
+                'meadow', 'grass', 'landfill', 'cemetery', 'vineyard', 'orchard', 'garages',
                 'quarry', 'recreation_ground'},  # zoom never
     'leisure': {'park', 'pitch', 'garden', 'golf_course',
-                'nature_reserve', 'playground', 'stadium', 'swimming_pool', 'sports_centre'}, # zoom 2
-    # all water (except pools) is in natural
+               'playground', 'stadium', 'swimming_pool', 'sports_centre'}, # zoom 2
+    # # all water (except pools) is in natural
     'natural': {'wood', 'water', 'scrub', 'heath', 'grassland', 'bay', 'beach', 'sand'}, # zoom never
     # občanské vybavení
     # parking zoom 6
     'amenity': {'motorcycle_parking', 'parking', 'grave_yard', 'school', 'university', 'college', 'kindergarten'
                 'bus_station', 'hospital', 'clinic', 'place_of_worship'}, # zoom 2
+    'boundary' : {'national_park'},
     'building': set({}),  # zoom 2
     'aeroway': {'aerodrome'}, # zoom 5
     'highway': {'pedestrian', 'footway'}, # zoom 6
@@ -421,9 +427,8 @@ AREA_NUMERIC_COLUMNS = []
 AREA_ROUND_COLUMNS = []
 
 DERIVATE_COLUMNS_NODES = [
-    # ({'place': ['city', 'town', 'village']}, Style.TEXT1.name, 'name', None),
     
-    ({'place': ['city', 'town', 'village']}, Style.TEXT1.name, 'name', None),
+    ({'place': ''}, Style.TEXT1.name, 'name', None),
     # try to set with filter in derivated columns
     ({'man_made': 'tower'}, Style.TEXT1.name, 'name', None),
     ({'natural': 'peak'}, Style.TEXT1.name, 'name', None),
