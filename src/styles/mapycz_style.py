@@ -34,6 +34,10 @@ RESIDENTAL_AREA_COLOR_ZOOM_8_10 = '#f0e7d5'
 RESIDENTAL_AREA_COLOR_ZOOM_7 = '#e8dbbd'
 RESIDENTAL_AREA_COLOR_ZOOM_1_6 = '#e2d5b7'
 
+CITY_POINT_COLOR = '#e4d6b7'
+CITY_POINT_EDGE_COLOR = '#b5ab8c'
+
+
 WATER_COLOR = {"1-7": WATER_COLOR_ZOOM_1_7, "8-10": WATER_COLOR_ZOOM_8_10}
 LAND_COLOR = '#f1f0e5'
 
@@ -92,31 +96,49 @@ GPXS_STYLES: ElementStyles = [
 
 NODES_STYLES_SCALE = []
 place_styles: ElementStyles = [
-    # todo size
+    # todo biger than normal city size
+    # ({'place': 'city', 'capital': 'yes'}, {Style.ZINDEX.name: 51},
+    #  {"6":{Style.TEXT_FONT_SIZE.name: 17},
+    #   "5":{Style.TEXT_FONT_SIZE.name: 14},
+    #   "1-4":{Style.TEXT_FONT_SIZE.name: 12},
+    #   "1-6": {Style.TEXT_WEIGHT.name: 'bold'},
+    #   "1-2": {Style.WIDTH.name: 5},
+    # }),
+    
     ({'place': 'city'}, {
-        Style.TEXT_FONT_SIZE.name: 25, Style.ZINDEX.name: 50
+        Style.ZINDEX.name: 50
     },
         {
-        "10-10": {Style.TEXT_FONT_SIZE.name: 15}
+        "8-10": {Style.TEXT_FONT_SIZE.name: 17},
+        "6-7": {Style.TEXT_FONT_SIZE.name: 14},
+        "1-5": {Style.TEXT_FONT_SIZE.name: 10},
+        "2-7": {Style.TEXT_WEIGHT.name: 'bold'},
+        "1-2": {Style.MARKER.name: "o", Style.COLOR.name: CITY_POINT_COLOR, Style.MIN_PLOT_REQ.name: MinPlot.MARKER_TEXT1.name,
+                  Style.TEXT1_POSITIONS.name: [TextPositions.TOP, TextPositions.BOTTOM, TextPositions.RIGHT], Style.EDGE_WIDTH_RATIO.name: 0.1,
+                  Style.WIDTH.name: 4, Style.EDGE_COLOR.name: CITY_POINT_EDGE_COLOR}
     }),
     # todo size
     ({'place': 'town'}, {
-        Style.TEXT_FONT_SIZE.name: 10, Style.ZINDEX.name: 49
+        Style.ZINDEX.name: 49
     },
         {
-        "10-10": {Style.TEXT_FONT_SIZE.name: 5, Style.MARKER.name: "o", Style.COLOR.name: "#e4d6b7", Style.MIN_PLOT_REQ.name: MinPlot.MARKER_TEXT1.name,
+        "8-10": {Style.TEXT_FONT_SIZE.name: 16},
+        "6-7": {Style.TEXT_FONT_SIZE.name: 12},
+        "1-5": {Style.TEXT_FONT_SIZE.name: 9},
+        "4-7": {Style.TEXT_WEIGHT.name: 'bold'},
+        "1-2": {Style.MARKER.name: "o", Style.COLOR.name: CITY_POINT_COLOR, Style.MIN_PLOT_REQ.name: MinPlot.MARKER_TEXT1.name,
                   Style.TEXT1_POSITIONS.name: [TextPositions.TOP, TextPositions.BOTTOM, TextPositions.RIGHT], Style.EDGE_WIDTH_RATIO.name: 0.1, Style.WIDTH.name: 2.8,
-                  Style.EDGE_COLOR.name: "#b6ac8c"}
+                  Style.EDGE_COLOR.name: CITY_POINT_EDGE_COLOR}
     }),
     # todo size
     ({'place': 'village'}, {
         Style.TEXT_FONT_SIZE.name: 10, Style.ZINDEX.name: 48
     },
         {
-        "10-10": {Style.TEXT_FONT_SIZE.name: 5},
-        "11-14": {Style.TEXT_FONT_SIZE.name: 8, Style.MARKER.name: "o", Style.COLOR.name: "#e4d6b7", Style.MIN_PLOT_REQ.name: MinPlot.MARKER_TEXT1.name,
+        "10-10": {Style.TEXT_FONT_SIZE.name: 15},
+        "1-2": {Style.MARKER.name: "o", Style.COLOR.name: CITY_POINT_COLOR, Style.MIN_PLOT_REQ.name: MinPlot.MARKER_TEXT1.name,
                   Style.TEXT1_POSITIONS.name: [TextPositions.TOP, TextPositions.BOTTOM, TextPositions.RIGHT], Style.EDGE_WIDTH_RATIO.name: 0.2,
-                  Style.WIDTH.name: 5, Style.EDGE_COLOR.name: "#b6ac8c", Style.MARKER_ABOVE_OTHERS.name: MarkerAbove.NONE}
+                  Style.WIDTH.name: 5, Style.EDGE_COLOR.name: CITY_POINT_EDGE_COLOR}
     }),
     # todo add local, subrub
 ]

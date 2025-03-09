@@ -255,7 +255,7 @@ def main() -> None:
     zoom_level = Utils.get_zoom_level(
         map_scaling_factor, ZOOM_MAPPING, 0.3)
     print(map_scaling_factor, zoom_level)
-    zoom_level = 7
+    # zoom_level = 8
     print(map_scaling_factor, zoom_level)
     
     # fifth function - parse osm file and get gdfs and than remove osm file

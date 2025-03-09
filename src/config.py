@@ -169,15 +169,16 @@ MIN_POPULATION: int | None = None
 PLACES_TO_FILTER_BY_POPULATION = ['city', 'town', 'village']
 # --------------------------------------------------------------preview--------------------------------------------------------------
 # NOTE: must have same settings as the resulting one when generating for large format printing
-WANT_PREVIEW: bool = False
+WANT_PREVIEW: bool = True
 # OUTER_AREA: WantedArea = [(15.7034756,48.6941575), (15.9206889,48.6941186), (15.9198775, 48.5926164), (15.7030222, 48.5936264)] # zoom 13 - 0.012257255675006467
 
 # area for that you are creating smaller preview (bigger than normal area)
 # OUTER_AREA: WantedArea =  "Vysočina, Česko"
 
-# OUTER_AREA: WantedArea =  [{"area": "Trebic, Česko", "plot": True, "category": 2, "width": 1}]
-OUTER_AREA: WantedArea = [{"area": "Jihomoravský kraj, Česko", "plot": True, "category": 2, "width": 1},
-                          {"area": "Praha, Česko", "plot": True, "category": 1, "width": 1}]
+OUTER_AREA: WantedArea =  [{"area": "Česko", "plot": True, "category": 2, "width": 1},
+                           {"area": "Slovensko", "plot": True, "category": 2, "width": 1}]
+# OUTER_AREA: WantedArea = [{"area": "Jihomoravský kraj, Česko", "plot": True, "category": 2, "width": 1},
+                        #   {"area": "Praha, Česko", "plot": True, "category": 1, "width": 1}]
 # OUTER_AREA: WantedArea = "Česko"
 # OUTER_AREA: WantedArea = [(15.7396182, 49.3111173), (16.0273871, 49.3028839),
 #                     (16.0266146, 49.1439064), (15.6712219, 49.1928600)]
@@ -404,7 +405,7 @@ FOLDER_COLOR_DIS_PALLET = True
 # --------------filters for map elements--------------
 # columns that are used for ploting nodes name for city, ele for elevation points
 # only for columns in osm file
-NODES_ADDITIONAL_COLUMNS = ['name', 'ele', 'population', 'tower:type']
+NODES_ADDITIONAL_COLUMNS = ['name', 'ele', 'population', 'tower:type', 'capital']
 NODES_NUMERIC_COLUMNS = ['ele', 'population']
 NODES_ROUND_COLUMNS = ['ele']
 

@@ -160,7 +160,16 @@ class PaperSize(Enum):
     A6: tuple[Literal[105], Literal[148]] = (105, 148)
     A7: tuple[Literal[74], Literal[105]] = (74, 105)
     A8: tuple[Literal[52], Literal[74]] = (52, 74)
-
+    A9: tuple[Literal[37], Literal[52]] = (37, 52)
+    A10: tuple[Literal[26], Literal[37]] = (26, 37)
+    A11: tuple[Literal[18], Literal[26]] = (18, 26)
+    A12: tuple[Literal[13], Literal[18]] = (13, 18)
+    A13: tuple[Literal[9], Literal[13]] = (9, 13)
+    A14: tuple[Literal[6], Literal[9]] = (6, 9)
+    A15: tuple[Literal[4], Literal[6]] = (4, 6)
+    A16: tuple[Literal[3], Literal[4]] = (3, 4)
+    A17: tuple[Literal[2], Literal[3]] = (2, 3)
+    A18: tuple[Literal[1], Literal[2]] = (1, 2)
     @property
     def dimensions(self) -> tuple[float, float]:
         return self.value  # Returns the dimensions (width, height)
