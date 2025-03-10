@@ -4,7 +4,7 @@ from typing import Callable
 from osmium.osm.types import TagList, Node, Way, Area
 from shapely.geometry import Point, LineString, Polygon
 import subprocess
-
+import tempfile
 import sys
 import os
 
@@ -56,7 +56,6 @@ class ValidGeometryFilter(osmium.SimpleHandler):
             if self.wanted_ways is not None and not self._apply_filters(self.wanted_ways, way.tags):
                 self.invalid_ways_ids.append(way.id)
                 return
-                
         
             shapely_geometry: LineString = self.wkt_loads_func(
                 self.geom_factory_linestring(way))
@@ -87,28 +86,35 @@ def remove_ids(input_file_path: str, output_file_path: str, ways_ids: list[int],
     if (not ways_ids and not relations_ids):
         return
 
-    command = [
+    ids = []
+    if ways_ids:
+        for id in ways_ids:
+            ids.append(f"w{id}")
+    if relations_ids:
+        for id in relations_ids:
+            ids.append(f"r{id}")
+    ids_str = " ".join(ids)
+    
+    with tempfile.NamedTemporaryFile(mode='w+', delete=True) as tmp:
+        tmp.write(ids_str)
+        command = [
         'osmium', 'removeid',
         input_file_path,
         '--overwrite',
-        '-o', output_file_path]
-    if ways_ids:
-        for id in ways_ids:
-            command.append(f"w{id}")
-    if relations_ids:
-        for id in relations_ids:
-            command.append(f"r{id}")
-    try:
-        subprocess.run(command, check=True)
-    except Exception as e:
-        raise Exception(
-            f"Cannot remove osm file id (error: {e}), check if osmium command line tool is installed")
+        '-o', output_file_path,
+        '--id-file', tmp.name]
+        
+        try:
+            subprocess.run(command, check=True)
+        except Exception as e:
+            raise Exception(
+                f"Cannot remove osm file id (error: {e}), check if osmium command line tool is installed")
 
 
 def filter_valid_geometries(input_file, output_file, wanted_ways=None, wanted_areas=None):
     handler = ValidGeometryFilter(wanted_ways, wanted_areas)
     handler.apply_file(input_file)
-    print(f"Found {len(handler.invalid_ways_ids)} invalid ways ")
+    print(f"Found {len(handler.invalid_ways_ids)} invalid ways")
     print(f"Found {len(handler.invalid_relation_ids)} invalid relations")
     remove_ids(input_file, output_file, handler.invalid_ways_ids, handler.invalid_relation_ids)
     
@@ -132,6 +138,5 @@ if __name__ == "__main__":
         
     wanted_ways = None
     wanted_areas = None
-
 
     filter_valid_geometries(input_file, output_file, wanted_ways, wanted_areas)
