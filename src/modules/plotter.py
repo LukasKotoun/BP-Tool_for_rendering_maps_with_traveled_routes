@@ -23,8 +23,9 @@ class Plotter:
 
     MM_TO_INCH = 25.4
     DEFAULT_CAPSTYLE = "round"
-    TEXT_EXPAND_PERCENT = 40  # to settings as text parametter for removal
+    TEXT_EXPAND_PERCENT = 5  # to settings as text parametter for removal
     MARKER_EXPAND_PERCENT = 5
+    
     MARKER_ABOVE_NORMAL_ZORDER = 4
     MARKER_ABOVE_ALL_ZORDER = 5
 

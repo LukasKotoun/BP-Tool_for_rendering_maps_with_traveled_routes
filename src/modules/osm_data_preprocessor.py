@@ -2,7 +2,7 @@ import tempfile
 import subprocess
 import os
 from datetime import datetime
-
+import uuid
 
 from geopandas import GeoDataFrame
 
@@ -12,8 +12,7 @@ class OsmDataPreprocessor:
         # Can be a string (place name) or a list of coordinates
         self.osm_input_files: list[str] | str = osm_input_files
         if osm_output_file is None:
-            # todo add some ranomd hash
-            self.osm_output_file = f'extract_output_{datetime.now().strftime("%Y%m%d%H%M%S")}.osm.pbf'
+            self.osm_output_file = f'extract_output_{uuid.uuid4()}__{datetime.now().strftime("%Y%m%d%H%M%S")}.osm.pbf'
         else:
             self.osm_output_file = osm_output_file
 
@@ -64,8 +63,7 @@ class OsmDataPreprocessor:
             for index, osm_input_file in enumerate(self.osm_input_files):
                 print(f"Extracting area from file {
                       index + 1}/{len(self.osm_input_files)}: {osm_input_file}")
-                extracted_file_name = self.__extract_area(osm_input_file, f'temp_output_for_merge_file_{
-                                                          index}_{datetime.now().strftime("%Y%m%d%H%M%S")}_.osm', temp_geojson_path)
+                extracted_file_name = self.__extract_area(osm_input_file, f'temp_output_for_merge_file_{index}_{uuid.uuid4()}.osm', temp_geojson_path)
                 extracted_files_names.append(extracted_file_name)
 
             try:

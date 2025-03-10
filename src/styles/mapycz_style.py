@@ -38,23 +38,23 @@ CITY_POINT_COLOR = '#e4d6b7'
 CITY_POINT_EDGE_COLOR = '#b5ab8c'
 
 RESERVATION_EDGE_CUMULATIVE_SIZE = Utils.cumulative_zoom_size_multiplier(
-            {"10-10": 40, "9-9": 2, '8-8': 2, "7-7": 2, "6-5": 1.5,
-             "4-3": 1.2, "2-1": 1.4
-             }, Style.WIDTH.name)
+    {"10-10": 40, "9-9": 2, '8-8': 2, "7-7": 2, "6-5": 1.5,
+     "4-3": 1.2, "2-1": 1.4
+     }, Style.WIDTH.name)
 
 WATER_COLOR = {"1-7": WATER_COLOR_ZOOM_1_7, "8-10": WATER_COLOR_ZOOM_8_10}
 LAND_COLOR = '#f1f0e5'
 
 DASHED_LAND_WAYS_CUMULATIVE_SIZE = Utils.cumulative_zoom_size_multiplier(
-    {"10-10": 7, '9-9': 1.1, '8-8': 1.5, "7-1": 2},
+    {"10-10": 7, '9-9': 1.1, '8-8': 1.5, "7-4": 2, "3-1": 1.5},
     Style.WIDTH.name)
 
 SMALL_NONDASHED_CUMULATIVE_SIZE = Utils.cumulative_zoom_size_multiplier(
-    {"10-10": 12, "9-8": 1.1, "7": 1.5},
+    {"10-10": 12, "9-8": 1.1, "7-4": 1.5, "3-1": 1.4},
     Style.WIDTH.name)
 
 SPECIAL_WAYS_CUMULATIVE_SIZE = Utils.cumulative_zoom_size_multiplier({
-    "10-9": 19, "8-8": 1.4, "7-1": 1.8},
+    "10-9": 19, "8-8": 1.4, "7-4": 2, "3-1": 1.5},
     Style.WIDTH.name)
 
 # -------------------gpx-------------------
@@ -107,7 +107,7 @@ place_styles: ElementStyles = [
       }),
 
     ([{'place': 'city'}, {'place': 'town', 'capital': 'yes'}], {
-        Style.ZINDEX.name: 50
+        Style.ZINDEX.name: 50,
     },
         {
         "4-10": {Style.TEXT_FONT_SIZE.name: 15},
@@ -116,7 +116,7 @@ place_styles: ElementStyles = [
         "1-2": {Style.MARKER.name: "o", Style.COLOR.name: CITY_POINT_COLOR, Style.MIN_PLOT_REQ.name: MinPlot.MARKER_TEXT1.name,
                 Style.EDGE_WIDTH_RATIO.name: 0.15, Style.WIDTH.name: 4, Style.EDGE_COLOR.name: CITY_POINT_EDGE_COLOR}
     }),
-    
+
     ({'place': 'town'}, {
         Style.ZINDEX.name: 49
     },
@@ -127,43 +127,34 @@ place_styles: ElementStyles = [
         "3": {Style.TEXT_FONT_SIZE.name: 9},
         "4-7": {Style.TEXT_WEIGHT.name: 'bold'},
         "1-2": {Style.TEXT_FONT_SIZE.name: 8, Style.MARKER.name: "o", Style.COLOR.name: CITY_POINT_COLOR, Style.MIN_PLOT_REQ.name: MinPlot.MARKER_TEXT1.name,
-                Style.EDGE_WIDTH_RATIO.name: 0.15,Style.WIDTH.name: 3.3, Style.EDGE_COLOR.name: CITY_POINT_EDGE_COLOR}
+                Style.EDGE_WIDTH_RATIO.name: 0.15, Style.WIDTH.name: 3.3, Style.EDGE_COLOR.name: CITY_POINT_EDGE_COLOR}
     }),
     ({'place': 'village'}, {
         Style.ZINDEX.name: 48
     },
         {
-        "6-10": {Style.TEXT_FONT_SIZE.name: 11},
-        "4-5": {Style.TEXT_FONT_SIZE.name: 9},
+        "6-10": {Style.TEXT_FONT_SIZE.name: 10},
+        "4-5": {Style.TEXT_FONT_SIZE.name: 8},
         "1-3": {Style.TEXT_FONT_SIZE.name: 7},
         "1-2": {Style.MARKER.name: "o", Style.COLOR.name: CITY_POINT_COLOR, Style.MIN_PLOT_REQ.name: MinPlot.MARKER_TEXT1.name,
                 Style.EDGE_WIDTH_RATIO.name: 0.15, Style.WIDTH.name: 2.8, Style.EDGE_COLOR.name: CITY_POINT_EDGE_COLOR}
     }),
-    
+
     ({'place': 'suburb'}, {
         Style.ZINDEX.name: 47
     },
         {
-        "1-6": {Style.TEXT_COLOR.name: '#383838'},
-        "6-10": {Style.TEXT_FONT_SIZE.name: 10},
-        "4-5": {Style.TEXT_FONT_SIZE.name: 9},
-        "1-3": {Style.TEXT_FONT_SIZE.name: 8},
-    }),
-    
-    ({'place': 'neighbourhood'}, {
-        Style.ZINDEX.name: 46, Style.TEXT_COLOR.name: '#6b6b6b'
-    },
-        {
+        "1-7": {Style.TEXT_COLOR.name: '#454444'},
         "6-10": {Style.TEXT_FONT_SIZE.name: 8},
         "1-5": {Style.TEXT_FONT_SIZE.name: 7},
     }),
-    
+
+    ({'place': 'neighbourhood'}, {
+        Style.ZINDEX.name: 46, Style.TEXT_COLOR.name: '#616060', Style.TEXT_FONT_SIZE.name: 6
+    }),
+
     ({'place': 'locality'}, {
-        Style.ZINDEX.name: 45, Style.TEXT_COLOR.name: '#6b6b6b'
-    },
-        {
-        "7-10": {Style.TEXT_FONT_SIZE.name: 5},
-        "1-6": {Style.TEXT_FONT_SIZE.name: 4},
+        Style.ZINDEX.name: 24, Style.TEXT_COLOR.name: '#616060', Style.TEXT_FONT_SIZE.name: 5
     }),
 ]
 
@@ -173,15 +164,13 @@ natural_styles_nodes: ElementStyles = [
     ({'natural': 'peak'}, {
         Style.ZINDEX.name: 30, Style.MIN_PLOT_REQ.name: MinPlot.MARKER_TEXT2.name,
         # marker
-        Style.MARKER.name: "^", Style.MARKER_HORIZONTAL_ALIGN.name: "center",
-        Style.COLOR.name: "#412a1c", Style.EDGE_COLOR.name: "None", Style.WIDTH.name: 2,
+        Style.MARKER.name: "^", Style.MARKER_HORIZONTAL_ALIGN.name: "center", Style.TEXT_FONTFAMILY.name: 'Georgia',
+        Style.COLOR.name: "#443833", Style.EDGE_COLOR.name: "None", Style.WIDTH.name: 3,
         # text
-        Style.TEXT_COLOR.name: "#443732", Style.TEXT_OUTLINE_COLOR.name: '#FFFFFF',
+        Style.TEXT_WEIGHT.name: 'heavy', Style.TEXT_STYLE.name: 'italic', Style.TEXT_FONT_SIZE.name: 6,
+        Style.TEXT_COLOR.name: "#443833", Style.TEXT_OUTLINE_COLOR.name: '#FFFFFF',
         Style.TEXT1_POSITIONS.name: [TextPositions.TOP], Style.TEXT2_POSITIONS.name: [TextPositions.BOTTOM],
-        Style.TEXT_OUTLINE_WIDTH_RATIO.name: 0.3, Style.TEXT_WRAP_LEN.name: 20  # Style.TEXT_WEIGHT.name: 'bold',
-    }, {
-        "7-10": {Style.TEXT_FONT_SIZE.name: 6.5, Style.TEXT_OUTLINE_WIDTH_RATIO.name: 0.3},
-        "1-6": {Style.TEXT_FONT_SIZE.name: 4.5, Style.TEXT_OUTLINE_WIDTH_RATIO.name: 0.3},
+        Style.TEXT_OUTLINE_WIDTH_RATIO.name: 0.3, Style.TEXT_WRAP_LEN.name: 20
     })
 ]
 
@@ -190,30 +179,25 @@ icons_above_styles_nodes: ElementStyles = [
         Style.MIN_PLOT_REQ.name: MinPlot.MARKER.name, Style.ZINDEX.name: 20,
         # marker
         Style.MARKER.name: MarkersCodes.FA_TOWER_OBSERVATION.value, Style.MARKER_FONT_PROPERTIES.name: font_awesome_prop,
-        Style.COLOR.name: "#99441e", Style.EDGE_COLOR.name: "#FFFFFF", 
+        Style.COLOR.name: "#99441e", Style.EDGE_COLOR.name: "#FFFFFF", Style.WIDTH.name: 7,
         Style.EDGE_WIDTH_RATIO.name: 0.15, Style.MARKER_ABOVE_OTHERS.name: MarkerAbove.NORMAL,
         # text
-        Style.TEXT_COLOR.name: "#8c7359", Style.TEXT_OUTLINE_COLOR.name: '#FFFFFF',
-        Style.TEXT1_POSITIONS.name: [TextPositions.BOTTOM],
-    }, {
-        "7-10": {Style.TEXT_FONT_SIZE.name: 6, Style.WIDTH.name: 9, Style.TEXT_OUTLINE_WIDTH_RATIO.name: 0.2},
-        "1-6": {Style.TEXT_FONT_SIZE.name: 4.5, Style.WIDTH.name: 7, Style.TEXT_OUTLINE_WIDTH_RATIO.name: 0.3,
-                Style.WIDTH.name: 5.5},
+        Style.TEXT_COLOR.name: "#8c7359", Style.TEXT_OUTLINE_COLOR.name: '#FFFFFF', Style.TEXT_FONT_SIZE.name: 5,
+        Style.TEXT1_POSITIONS.name: [TextPositions.BOTTOM], Style.TEXT_OUTLINE_WIDTH_RATIO.name: 0.2,
+        Style.TEXT_WRAP_LEN.name: 20
     }),
 
     ({'historic': ['castle']}, {
         Style.MIN_PLOT_REQ.name: MinPlot.MARKER.name, Style.ZINDEX.name: 19,
         # marker
         Style.MARKER.name: MarkersCodes.MU_CASTLE.value, Style.MARKER_FONT_PROPERTIES.name: material_design_prop,
-        Style.COLOR.name: "#846252", Style.EDGE_COLOR.name: "#FFFFFF", Style.WIDTH.name: 7.5,
-        Style.MARKER_ABOVE_OTHERS.name: MarkerAbove.NORMAL,
+        Style.COLOR.name: "#846252", Style.EDGE_COLOR.name: "#FFFFFF", Style.WIDTH.name: 7,
+        Style.MARKER_ABOVE_OTHERS.name: MarkerAbove.NONE, Style.EDGE_WIDTH_RATIO.name: 0.15,
         # text
+        Style.TEXT_FONT_SIZE.name: 5,
         Style.TEXT_COLOR.name: "#8c7359", Style.TEXT_OUTLINE_COLOR.name: '#FFFFFF',
-        Style.TEXT1_POSITIONS.name: [TextPositions.BOTTOM],
-    }, {
-        "7-10": {Style.TEXT_FONT_SIZE.name: 6, Style.TEXT_OUTLINE_WIDTH_RATIO.name: 0.2,  Style.EDGE_WIDTH_RATIO.name: 0.15},
-        "1-6": {Style.TEXT_FONT_SIZE.name: 4.5, Style.TEXT_OUTLINE_WIDTH_RATIO.name: 0.3,
-                Style.WIDTH.name: 5.5, Style.EDGE_WIDTH_RATIO.name: 0.1},
+        Style.TEXT1_POSITIONS.name: [TextPositions.BOTTOM], Style.TEXT_OUTLINE_WIDTH_RATIO.name: 0.2,
+        Style.TEXT_WRAP_LEN.name: 20
     })
 ]
 
@@ -229,8 +213,9 @@ nodes_styles_default: ElementStyles = [
             TextPositions.TOP, TextPositions.BOTTOM, TextPositions.RIGHT]
     }),
     ([], {
+
         Style.ALPHA.name: 1, Style.EDGE_ALPHA.name: 1,
-        Style.TEXT_FONTFAMILY.name: 'DejaVu Sans',
+        Style.TEXT_FONTFAMILY.name: 'Arial',
         Style.TEXT_STYLE.name: 'normal',
         Style.TEXT_WEIGHT.name: 'normal', Style.TEXT_WRAP_LEN.name: 15
     })
@@ -388,7 +373,7 @@ highway_styles_main: ElementStyles = [
       Style.EDGE_COLOR.name: NORMAL_WAY_EDGE_COLOR},
      {
         **Utils.cumulative_zoom_size_multiplier(
-            {"9-10": 27, "8": 1.3, "7": 1.8, "6-1": 1.8}, Style.WIDTH.name),
+            {"9-10": 27, "8": 1.3, "7": 1.8, "6-3": 1.8, "2-1": 1.5}, Style.WIDTH.name),
         "7-8": {Style.EDGE_WIDTH_RATIO.name: 1 + 0.5,
                 Style.BRIDGE_EDGE_WIDTH_RATIO.name: 1 + 0.5},
         "1-6": {Style.EDGE_WIDTH_RATIO.name: 1 + 0.8,
@@ -539,7 +524,7 @@ railway_styles_service: ElementStyles = [
       'service': ['crossover', 'siding', 'spur', 'yard']}, {
     }, {
         **Utils.cumulative_zoom_size_multiplier(
-            {"10": 8, "9": 1.2, "8": 1.8, "1-7": 1.7}, Style.WIDTH.name)
+            {"10": 8, "9": 1.2, "8": 1.8, "4-7": 1.7, "1-3": 1.5}, Style.WIDTH.name)
     })]
 
 railway_styles: ElementStyles = [
@@ -562,7 +547,8 @@ railway_styles: ElementStyles = [
     ({'railway': ['rail', 'disused', 'light_rail', "monorail", 'miniature', "subway"]}, {},
      {
         **Utils.cumulative_zoom_size_multiplier(
-            {"10": 11, "9": 1.2, "8": 1.6, "7": 2.1, "6": 2.3, "1-5": 2},
+            {"10": 11, "9": 1.2, "8": 1.6, "7": 2.1,
+                "6": 2.3, "5": 2, "2-4": 1.3, "1": 1.3},
             Style.WIDTH.name)
     }),
 
@@ -584,7 +570,7 @@ railway_styles: ElementStyles = [
         Style.COLOR.name: '#404040'
     },
         {**Utils.cumulative_zoom_size_multiplier(
-         {"10": 4, "9": 1.5, "1-8": 1.2},
+         {"10": 4, "9": 1.5, "6-8": 1.2, "1-5": 1.3},
          Style.WIDTH.name)}
     ),
 
@@ -600,8 +586,10 @@ aerialway_styles: ElementStyles = [
     }, {
         **Utils.cumulative_zoom_size_multiplier(
             {"10": 20, "8-9": 2, "7": 2,
-                "1-6": (1.8, {Style.LINESTYLE.name: (0, (4, 8))})},
-            Style.WIDTH.name)}),
+                "3-6": 1.8, "1-2": 1.5},
+            Style.WIDTH.name),
+        "1-6": {Style.LINESTYLE.name: (0, (4, 8))}
+    }),
 
     ({'aerialway': ['chair_lift']}, {
         Style.LINESTYLE.name: (0, (3, 5)),
@@ -610,8 +598,9 @@ aerialway_styles: ElementStyles = [
     }, {
         **Utils.cumulative_zoom_size_multiplier(
             {"10": 20, "9": 1.5, "8": 1.3, "7": 1.6,
-                "1-6": (2.4, {Style.LINESTYLE.name: (0, (3, 8))})},
-            Style.WIDTH.name)
+                "3-6": 2.4, "1-2": 1.5},
+            Style.WIDTH.name),
+        "1-6": {Style.LINESTYLE.name: (0, (3, 8))}
     }),
 ]
 
@@ -656,7 +645,7 @@ waterway_styles: ElementStyles = [
 
     ({'waterway': ['canal']}, {}, {
         **Utils.cumulative_zoom_size_multiplier(
-            {"8-10": 30, "7": 1.8, "6": 1.7, "1-5": 1.7},
+            {"8-10": 30, "7": 1.8, "6": 1.7, "3-5": 1.7, "1-2": 1.4},
             Style.WIDTH.name)
     }),
 ]
@@ -708,7 +697,7 @@ ways_styles_default: ElementStyles = [
         Style.COLOR.name: "#909090"
     }, {
         **Utils.cumulative_zoom_size_multiplier(
-            {"9-10": 8, "1-8": 1.5},
+            {"9-10": 8, "5-8": 1.5, "1-4": 1.4},
             Style.WIDTH.name),
     }),
 
@@ -727,7 +716,7 @@ ways_styles_default: ElementStyles = [
         Style.ZINDEX.name: 0, Style.EDGE_COLOR.name: None
     }, {
         **Utils.cumulative_zoom_size_multiplier(
-            {"9-10": 10, "8": 1.7, "7": 1.8, "6": 2, "1-5": 2},
+            {"9-10": 10, "8": 1.7, "7": 1.8, "6": 2, "3-5": 2, "1-2": 1.4},
             Style.WIDTH.name),
         "8-10": {Style.COLOR.name: WATER_COLOR_ZOOM_8_10}}),
 
@@ -889,7 +878,7 @@ area_styles_default: ElementStyles = [
         Style.COLOR.name: None, Style.EDGE_COLOR.name: None,
         Style.EDGE_LINESTYLE.name: '-'
     }),
-    
+
     ([], {
         Style.COLOR.name: LAND_COLOR, Style.ALPHA.name: 1.0
     })

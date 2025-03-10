@@ -8,14 +8,15 @@ from common.map_enums import Style, ColorMode, PaperSize, MapOrientation, Marker
 # --------------------------------------------------------------map area--------------------------------------------------------------
 # OSM_INPUT_FILE_NAMES: str = ['../osm_files/vys.osm.pbf','../osm_files/jihmor.osm.pbf']
 # OSM_INPUT_FILE_NAMES: str | list[str] = '../osm_files/vysJihE.osm.pbf'
-OSM_INPUT_FILE_NAMES: str | list[str] = ['../osm_files/hv.osm.pbf']
+# OSM_INPUT_FILE_NAMES: str | list[str] = ['../test.osm.pbf']
+OSM_INPUT_FILE_NAMES: str | list[str] = ['../osm_files/zoo.osm.pbf']
 # OSM_INPUT_FILE_NAMES: str | list[str] = '../trebic.osm.pbf'
 # extract - will be always true
 OSM_WANT_EXTRACT_AREA: bool = False
 # set if want osm file cutting using osmium command line tool (need to be uinstalled), If not set to None
-OSM_OUTPUT_FILE_NAME: None | str = '../osm_files/rnpark.osm.pbf'
+OSM_OUTPUT_FILE_NAME: None | str = '../osm_files/zoo.osm.pbf'
 
-OUTPUT_PDF_NAME: str = '../pdfs/divocina'
+OUTPUT_PDF_NAME: str = '../pdfs/invalid'
 
 # AREA: WantedArea = [(-18.14143,65.68868),(-18.08538,65.68868),(-18.08538,65.67783),(-18.14143,65.67783)] #island
 # AREA: WantedArea = [(6.94872,4.84293),(6.99314,4.84293),(6.99314,4.81603),(6.94872,4.81603)] #afrika
@@ -39,6 +40,9 @@ OUTPUT_PDF_NAME: str = '../pdfs/divocina'
 
 #rakousko - dalince konce a trunk - rnpark
 # AREA: WantedArea = [{'area': [(16.6840794, 47.8736964), (16.9535233, 47.8754153), (16.9468556, 47.7549778), (16.6704806, 47.7522078)], "plot":False}] # zoom 8/15
+
+#rakousko - invalidní oblast - rinvalid
+AREA: WantedArea = [{'area': [(16.3351344, 48.2143981), (16.3379578, 48.2144222), (16.3377272, 48.2127386), (16.3351631, 48.2128781)], "plot":False}] # zoom 8/15
 
 
 # slovensko - aminety grave - skgrave
@@ -92,24 +96,20 @@ OUTPUT_PDF_NAME: str = '../pdfs/divocina'
 
 
 # zoom testing
-# AREA: WantedArea = [(15.8149639,48.6439769), (15.8183625, 48.6439700), (15.8183439, 48.6423997), (15.8149561, 48.6424158)] # zoom none/19  - 0.7832305054706878
-# AREA: WantedArea = [(15.8131475,48.6445003), (15.8199369, 48.6445106), (15.8199317, 48.6413736), (15.8131403, 48.6413914)] # zoom none/18  - 0.39254868520064207
-# AREA: WantedArea = [{'area':[(15.8096936,48.6459956), (15.8232333, 48.6460311), (15.8232550, 48.6397219), (15.8097686, 48.6397503)], "plot":False] # zoom 10/17 - 0.19673458447026707
-# AREA: WantedArea = [(15.8036264,48.6490436), (15.8307706, 48.6489869), (15.8307706, 48.6363825), (15.8035836, 48.6365244)] # zoom 9/16 - 0.0981350054744773
-# AREA: WantedArea = [(15.8408317, 48.6556897), (15.7863853, 48.6557486), (15.7865139, 48.6306536), (15.8407161, 48.6304267)] # zoom 8/15 - 0.049002255315964124
-# AREA: WantedArea = [(15.7568897,48.6700053), (15.8648558, 48.6704314), (15.8651992, 48.6197892), (15.7563658, 48.6202431)] # zoom 7/14 - 0.024514500087610937
-# AREA: WantedArea = [(15.7034756,48.6941575), (15.9206889, 48.6941186), (15.9198775, 48.5926164), (15.7030222, 48.5936264)] # zoom 6/13 - 0.012257255675006467
-# AREA: WantedArea = [(15.5986414,48.7535425), (16.0311167, 48.7533311), (16.0307733, 48.5528361), (15.5975000, 48.5544269)] # zoom 5/12 - 0.0061528912374338475
-# AREA: WantedArea = [(15.3856592,48.8443469), (16.2499850, 48.8453725), (16.2499850, 48.4415864), (15.3854983, 48.4465967)] # zoom 4/11 - 0.0030862202898378687
-# AREA: WantedArea = [(14.8355758,49.0061161), (16.5771717,49.0046311), (16.5799181, 48.2009656), (14.8385853, 48.2055419)] # zoom 3/10 - 0.001529514243755352
-# AREA: WantedArea = [(14.0269703,49.4851617), (17.5151294,49.4833772), (17.5096361,47.8731517), (14.0297167, 47.8786783)] # zoom 2/9 - 0.000764872334474359
-# AREA: WantedArea = [(12.4551956,50.4569714), (19.4047778,50.4934189), (19.3992847, 47.2727942), (12.4284594, 47.3100528)] # zoom 1/8 - 0.0003824361562733402
-# AREA: WantedArea = [(7.4931519,51.7666714), (21.3850633,51.7483686),(21.3740772, 45.3686397), (7.4983447, 45.3454797) ] # zoom none/7 - 0.0001920539454228724
-# AREA: WantedArea = [(0.3733594, 54.1375764), (27.5538867, 54.1118236),(27.5538867, 40.9478483), (0.3294142, 41.1136006)]  # zoom none/6 - 0.000095
+# AREA: WantedArea = [{'area':[(15.8096936,48.6459956), (15.8232333, 48.6460311), (15.8232550, 48.6397219), (15.8097686, 48.6397503)], "plot": False}] # zoom 10/17 - 0.19673458447026707
+# AREA: WantedArea = [{'area':[(15.8036264,48.6490436), (15.8307706, 48.6489869), (15.8307706, 48.6363825), (15.8035836, 48.6365244)], "plot": False}] # zoom 9/16 - 0.0981350054744773
+# AREA: WantedArea = [{'area':[(15.8408317, 48.6556897), (15.7863853, 48.6557486), (15.7865139, 48.6306536), (15.8407161, 48.6304267)], "plot": False}] # zoom 8/15 - 0.049002255315964124
+# AREA: WantedArea = [{'area':[(15.7568897,48.6700053), (15.8648558, 48.6704314), (15.8651992, 48.6197892), (15.7563658, 48.6202431)], "plot": False}] # zoom 7/14 - 0.024514500087610937
+# AREA: WantedArea = [{'area':[(15.7034756,48.6941575), (15.9206889, 48.6941186), (15.9198775, 48.5926164), (15.7030222, 48.5936264)], "plot": False}] # zoom 6/13 - 0.012257255675006467
+# AREA: WantedArea = [{'area':[(15.5986414,48.7535425), (16.0311167, 48.7533311), (16.0307733, 48.5528361), (15.5975000, 48.5544269)], "plot": False}] # zoom 5/12 - 0.0061528912374338475
+# AREA: WantedArea = [{'area':[(15.3856592,48.8443469), (16.2499850, 48.8453725), (16.2499850, 48.4415864), (15.3854983, 48.4465967)], "plot": False}] # zoom 4/11 - 0.0030862202898378687
+# AREA: WantedArea = [{'area':[(14.8355758,49.0061161), (16.5771717,49.0046311), (16.5799181, 48.2009656), (14.8385853, 48.2055419)], "plot": False}] # zoom 3/10 - 0.001529514243755352
+# AREA: WantedArea = [{'area':[(14.0269703,49.4851617), (17.5151294,49.4833772), (17.5096361,47.8731517), (14.0297167, 47.8786783], "plot": False}] # zoom 2/9 - 0.000764872334474359
+# AREA: WantedArea = [{'area':[(12.4551956,50.4569714), (19.4047778,50.4934189), (19.3992847, 47.2727942), (12.4284594, 47.3100528)], "plot": False}] # zoom 1/8 - 0.0003824361562733402
 
 
 
-AREA: WantedArea = [{"area": "Horní vilémovice, Česko", "plot": True, "category": 5, "width": None}]
+# AREA: WantedArea = [{"area": "Slovensko", "plot": False}]
 # AREA: WantedArea = [{"area": "Brno, Česko", "plot": True, "category": 5, "width": None}]
 # AREA: WantedArea = [{"area": "Baliny, Česko", "plot": True, "category": 0, "width": None}]
 # AREA: WantedArea =[{"area": "Jihomoravský kraj, Česko", "plot": True, "category": 2, "width": 1},
@@ -150,34 +150,34 @@ GIVEN_SMALLER_PAPER_DIMENSION: bool = True
 WANTED_ORIENTATION: MapOrientation = MapOrientation.AUTOMATIC
 
 FIT_PAPER_SIZE = True
-FIT_PAPER_SIZE_BOUNDS_PLOT = True
+FIT_PAPER_SIZE_BOUNDS_PLOT = False
 
 
 # text general
 TEXT_WRAP_NAMES_LEN = 15  # len or 0/None if not wrap (15 default)
 # if allow is false set threashold (0-1) how much of text must be inside
-TEXT_BOUNDS_OVERFLOW_THRESHOLD = 0
+TEXT_BOUNDS_OVERFLOW_THRESHOLD = 0.97
 
 map_theme = 'mapycz'
 # plot as bridge (True)  or normal way (False)
 PLOT_BRIDGES = False
 # plot as tunnel (True) or normal way (False) - if false and in dont want tags -> will not be plotted at all
 PLOT_TUNNELS = True
-PEAKS_FILTER_SENSITIVITY: float | None = None #2.5
+PEAKS_FILTER_SENSITIVITY: float | None = 2.5
 ELE_PROMINENCE_MAX_DIFF_RATIO = 3
 
 # from fe by zoom or from be map styles by zoom
-MIN_POPULATION: int | None = None
+MIN_POPULATION: int | None = 300
 PLACES_TO_FILTER_BY_POPULATION = ['city', 'town', 'village']
 # --------------------------------------------------------------preview--------------------------------------------------------------
 # NOTE: must have same settings as the resulting one when generating for large format printing
-WANT_PREVIEW: bool = False
+WANT_PREVIEW: bool = True
 # OUTER_AREA: WantedArea = [(15.7034756,48.6941575), (15.9206889,48.6941186), (15.9198775, 48.5926164), (15.7030222, 48.5936264)] # zoom 13 - 0.012257255675006467
 
 # area for that you are creating smaller preview (bigger than normal area)
 # OUTER_AREA: WantedArea =  "Vysočina, Česko"
 
-OUTER_AREA: WantedArea =  [{"area": "Bratislava", "plot": True, "category": 2, "width": 1}]
+OUTER_AREA: WantedArea =  [{"area": "Česko", "plot": True, "category": 2, "width": 1}]
 # OUTER_AREA: WantedArea =  [{"area": "Česko", "plot": True, "category": 2, "width": 1},
 #                            {"area": "Slovensko", "plot": True, "category": 2, "width": 1}]
 # OUTER_AREA: WantedArea = [{"area": "Jihomoravský kraj, Česko", "plot": True, "category": 2, "width": 1},
@@ -188,7 +188,7 @@ OUTER_AREA: WantedArea =  [{"area": "Bratislava", "plot": True, "category": 2, "
 
 # OUTER_PAPER_DIMENSIONS = PaperSize.A0.dimensions  # real paper size
 # or set own #if one is left none if will be automaticaly calculated by area size
-OUTER_PAPER_DIMENSIONS = (2000, None)
+OUTER_PAPER_DIMENSIONS = (50000, None)
 # what side of paper was set (smaller true bigger false)(only if only one side in custom dimension was set)
 OUTER_GIVEN_SMALLER_PAPER_DIMENSION = True
 # set how will resulted paper be oriented, AUTOMATIC is Recommended
@@ -201,19 +201,20 @@ OUTER_FIT_PAPER_SIZE = False
 wanted_nodes: WantedCategories = {
      'place': {'city', 
                'town', # zoom 1
-               'village',# zoom 3
-               'suburb', # zoom 5
-               'neighbourhood', # zoom 7
-               'locality'}, # zoom 7
+            #    'village',# zoom 3
+            #    'suburb', # zoom 5
+            #    'neighbourhood', # zoom 7
+            #    'locality'
+               }, # zoom 7
      
     'natural': {'peak'}, # zoom 1
-    'man_made': {'tower'}, # zoom 7
-    'historic': {'castle'}, # zoom 7
+    # 'man_made': {'tower'}, # zoom 7
+    # 'historic': {'castle'}, # zoom 7
 }
 
 wanted_nodes_from_area: WantedCategories = {
-    'man_made': {'tower'}, # zoom 7
-    'historic': {'castle'}, # zoom 7
+    # 'man_made': {'tower'}, # zoom 7
+    # 'historic': {'castle'}, # zoom 7
 }
 
 
@@ -233,31 +234,32 @@ wanted_ways: WantedCategories = {
                  'trunk', # zoom none
                  'primary', # zoom none
                   'secondary', # zoom 2
-                 'tertiary', # zoom 3
+                #  'tertiary', # zoom 3
                   'motorway_link',# zoom none - smaller only
                   'trunk_link',# zoom none - smaller only
                   'primary_link',# zoom none - smaller only
                   'secondary_link',# zoom 3
-                  'tertiary_link',# zoom 5
-                  'residential',# zoom 5 - same size as unclassified
-                  'unclassified',# zoom 5 - same size as residential
-                   'service',# zoom - 6
+                #   'tertiary_link',# zoom 5
+                #   'residential',# zoom 5 - same size as unclassified
+                #   'unclassified',# zoom 5 - same size as residential
+                #    'service',# zoom - 6
                   'pedestrian',# zoom 5 - same as residental 
-                   'cycleway',# zoom 6
+                #    'cycleway',# zoom 6
                   'raceway',# zoom 3
-                  'steps', # zoom 6
-                   'footway',# zoom 6
-                  'track', # zoom 6
-                  'path'
-                },# zoom 6
+                #   'steps', # zoom 6
+                 #   'footway',# zoom 6
+                #    'track', # zoom 6 (5)
+                #    'path'
+                },# zoom 6 (5)
     
     'railway': {'rail', # service - service smaller 6, 3 normal
                 'light_rail', #- service smaller 6, 3 normal
                 "monorail", #- service smaller 6, 3 normal
                 'miniature',  #- service smaller 6, 3 normal
-                'subway', # zoom 6
+                # 'subway', # zoom 6
                 'funicular', # zoom 4
-                'tram'},# zoom 8
+                'tram'
+                },# zoom 8
     'aeroway': {'runway',# zoom 3
                 'taxiway'},# zoom 3
     
@@ -274,15 +276,15 @@ wanted_ways: WantedCategories = {
                   'goods'
                   },
     
-    'barrier': {'city_wall', # zoom 8
-                'wall',  # zoom 8
-                'cable_barrier'}, # zoom 8
+    # 'barrier': {'city_wall', # zoom 8
+    #             'wall',  # zoom 8
+    #             'cable_barrier'}, # zoom 8
     
     'waterway': {'river', # zoom never
                   'canal',  # zoom 4
-                  'stream', # zoom 4
-                  'drain', # zoom 6
-                  'ditch'
+                #   'stream', # zoom 4
+                #   'drain', # zoom 6
+                #   'ditch'
                  }, # zoom 6
     'route': {'ferry'}, # none
 
@@ -323,12 +325,13 @@ wanted_areas: WantedCategories = {
     'leisure': {'park', 'pitch', 'garden', 'golf_course',
                'playground', 'stadium', 'swimming_pool', 'sports_centre'}, # zoom 2
     # # all water (except pools) is in natural
-    'natural': {'wood', 'water', 'scrub', 'heath', 'grassland', 'bay', 'beach', 'sand'}, # zoom never
+    'natural': {'wood', 'water', 'scrub', 'heath', 'grassland',
+                'bay', 'beach', 'sand'}, # zoom never
     # občanské vybavení
     # parking zoom 6
     'amenity': {'motorcycle_parking', 'parking', 'grave_yard', 'school', 'university', 'college', 'kindergarten'
                 'bus_station', 'hospital', 'clinic', 'place_of_worship'}, # zoom 2
-    'boundary' : {'national_park'},
+    'boundary' : {'national_park'}, # zoom 1
     'building': set({}),  # zoom 2
     'aeroway': {'aerodrome'}, # zoom 5
     'highway': {'pedestrian', 'footway'}, # zoom 6

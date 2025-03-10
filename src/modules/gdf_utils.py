@@ -637,6 +637,7 @@ class GdfUtils:
 
         peaks['prominence'] = prominence
         if(ele_prominence_max_diff_ratio is not None and ele_prominence_max_diff_ratio > 0):
+            # filter prominent peaks also with max prominence ele ratio
             peaks = peaks[is_prominent & ~(peaks['prominence'] > peaks['ele'] * ele_prominence_max_diff_ratio)]
         else:
             peaks = peaks[is_prominent]
@@ -651,6 +652,8 @@ class GdfUtils:
         places, rest = GdfUtils.filter_rows(
             nodes_gdf, {'place': place_to_filter}, compl=True)
         places = GdfUtils.filter_rows(places, {'population': ''})
+        if(places.empty):
+            return rest
         places = places[places['population'] >= min_population]
         return GdfUtils.combine_gdfs([places, rest])
 
