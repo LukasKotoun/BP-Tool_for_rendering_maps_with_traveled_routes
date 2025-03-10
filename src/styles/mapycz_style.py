@@ -847,7 +847,18 @@ boundary_styles: ElementStyles = [
         **RESERVATION_EDGE_CUMULATIVE_SIZE
     }),
 ]
-
+areas_with_ways: ElementStyles = [
+    ([{'highway': ['pedestrian', 'footway']},
+      {'amenity': ['parking', 'motorcycle_parking']}], {
+        Style.COLOR.name: '#FFFFFF', Style.ZINDEX.name: 41,
+        Style.EDGE_COLOR.name: NORMAL_WAY_EDGE_COLOR,
+        Style.EDGE_ALPHA.name: 1, Style.EDGE_LINESTYLE.name: '-'
+    }, {
+        **Utils.cumulative_zoom_size_multiplier({
+            "10": 8, "9": 1.6, "8": 1.8, "7": 1.8, "1-6": 1.6},
+            Style.WIDTH.name)
+    }),
+]
 
 area_styles_default: ElementStyles = [
     ({'landuse': ''},  {Style.COLOR.name: LAND_COLOR}),
@@ -863,17 +874,7 @@ area_styles_default: ElementStyles = [
       "1-6": {Style.COLOR.name: RESIDENTAL_AREA_COLOR_ZOOM_1_6}}),
 
     # areas that will be ploted with ways
-    ([{'highway': ['pedestrian', 'footway']},
-      {'amenity': ['parking', 'motorcycle_parking']}], {
-        Style.COLOR.name: '#FFFFFF', Style.ZINDEX.name: 41,
-        Style.EDGE_COLOR.name: NORMAL_WAY_EDGE_COLOR,
-        Style.EDGE_ALPHA.name: 1, Style.EDGE_LINESTYLE.name: '-'
-    }, {
-        **Utils.cumulative_zoom_size_multiplier({
-            "10": 8, "9": 1.6, "8": 1.8, "7": 1.8, "1-6": 1.6},
-            Style.WIDTH.name)
-    }),
-
+    
     ({'boundary': ''}, {
         Style.COLOR.name: None, Style.EDGE_COLOR.name: None,
         Style.EDGE_LINESTYLE.name: '-'
@@ -885,6 +886,7 @@ area_styles_default: ElementStyles = [
 ]
 
 AREAS_STYLES: ElementStyles = [
+    *areas_with_ways,
     *boundary_styles,
     *natural_styles_area,
     *landuse_styles_area,
