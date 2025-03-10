@@ -48,11 +48,12 @@ class Plotter:
     def init(self, map_bg_color: str, bg_gdf: GeoDataFrame, area_zoom_preview: None | DimensionsTuple = None):
         self.fig, self.ax = plt.subplots(figsize=(self.paper_dimensions_mm[0]/self.MM_TO_INCH,
                                                   # convert mm to inch
-                                                  self.paper_dimensions_mm[1]/self.MM_TO_INCH))
+                                                  self.paper_dimensions_mm[1]/self.MM_TO_INCH), dpi=50)
         self.fig.subplots_adjust(
             left=0, right=1, top=1, bottom=0)
         self.ax.axis('off')
         self.zoom()
+        
         self.reqired_area_gdf.plot(ax=self.ax, color=map_bg_color)
         if (not bg_gdf.empty):
             bg_gdf.plot(ax=self.ax, color=bg_gdf[Style.COLOR.name])
