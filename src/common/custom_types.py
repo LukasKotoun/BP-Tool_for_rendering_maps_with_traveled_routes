@@ -1,4 +1,4 @@
-from common.map_enums import WorldSides, Style, TextPositions, MinPlot, MarkerAbove
+from common.map_enums import WorldSides, Style, TextPositions, MinPlot, MarkerPosition
 from typing import NamedTuple, Optional
 from collections import namedtuple
 
@@ -79,7 +79,7 @@ class MarkerOneAnotationRow(NamedTuple):
     # marker optional
     MARKER_VERTICAL_ALIGN: Optional[str] = 'center'
     MARKER_HORIZONTAL_ALIGN: Optional[str] = 'center'
-    MARKER_ABOVE_OTHERS: Optional[MarkerAbove] = MarkerAbove.NONE
+    MARKER_LAYER_POSITION: Optional[MarkerPosition] = MarkerPosition.NORMAL
     MARKER_FONT_PROPERTIES: Optional[any] = None
     
     
@@ -120,5 +120,5 @@ class MarkerTwoAnotationRow(NamedTuple):
     # marker optional
     MARKER_VERTICAL_ALIGN: Optional[str] = 'center'
     MARKER_HORIZONTAL_ALIGN: Optional[str] = 'center'
-    MARKER_ABOVE_OTHERS: Optional[MarkerAbove] = MarkerAbove.NONE
+    MARKER_LAYER_POSITION: Optional[MarkerPosition] = MarkerPosition.NORMAL
     MARKER_FONT_PROPERTIES: Optional[any] = None

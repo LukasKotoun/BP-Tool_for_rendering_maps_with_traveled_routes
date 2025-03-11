@@ -10,6 +10,7 @@ from modules.style_assigner import StyleAssigner
 from modules.plotter import Plotter
 from modules.gpx_manager import GpxManager
 from modules.received_structure_processor import ReceivedStructureProcessor
+import os
 
 from common.common_helpers import time_measurement
 
@@ -57,9 +58,9 @@ def gdfs_prepare_styled_columns(gpxs_gdf, nodes_gdf, ways_gdf, areas_gdf, map_sc
 
     GdfUtils.create_derivated_columns(gpxs_gdf, Style.EDGE_WIDTH.name, Style.WIDTH.name, [
                                       Style.EDGE_WIDTH_RATIO.name])
-    GdfUtils.create_derivated_columns(gpxs_gdf, Style.START_MARKER_EDGE_WIDTH.name, Style.START_MARKER_WIDHT.name, [
+    GdfUtils.create_derivated_columns(gpxs_gdf, Style.START_MARKER_EDGE_WIDTH.name, Style.START_MARKER_WIDTH.name, [
                                       Style.START_MARKER_EDGE_RATIO.name])
-    GdfUtils.create_derivated_columns(gpxs_gdf, Style.FINISH_MARKER_EDGE_WIDTH.name, Style.FINISH_MARKER_WIDHT.name, [
+    GdfUtils.create_derivated_columns(gpxs_gdf, Style.FINISH_MARKER_EDGE_WIDTH.name, Style.FINISH_MARKER_WIDTH.name, [
                                       Style.FINISH_MARKER_EDGE_RATIO.name])
     
     GdfUtils.remove_columns(gpxs_gdf, [Style.START_MARKER_EDGE_RATIO.name, Style.FINISH_MARKER_EDGE_RATIO.name,
@@ -254,13 +255,15 @@ def main() -> None:
     zoom_level = Utils.get_zoom_level(
         map_scaling_factor, ZOOM_MAPPING, 0.3)
     print(map_scaling_factor, zoom_level)
-    # zoom_level = 7
+    # zoom_level = 10
     print(map_scaling_factor, zoom_level)
     
     # fifth function - parse osm file and get gdfs and than remove osm file
     # ------------get elements from osm file------------
+    remove_osm_after_load = False
     try:
         if (OSM_WANT_EXTRACT_AREA):
+            remove_osm_after_load = True if OSM_OUTPUT_FILE_NAME is None else False
             # todo check if osmium is instaled else return?
             osm_data_preprocessor = OsmDataPreprocessor(
                 OSM_INPUT_FILE_NAMES, OSM_OUTPUT_FILE_NAME)
@@ -287,7 +290,13 @@ def main() -> None:
         node_additional_columns=NODES_ADDITIONAL_COLUMNS, way_additional_columns=WAYS_ADDITIONAL_COLUMNS)
     nodes_gdf, ways_gdf, areas_gdf = osm_file_parser.create_gdf(
         osm_file_name, CRS_OSM, CRS_DISPLAY)
-    # todo remove osm file after parsing
+    
+    if(remove_osm_after_load):
+        try:
+            os.remove(osm_file_name)
+        except:
+            warnings.warn("Error while removing osm file.")
+            
     # ------------gpxs------------
     # from FE
     gpx_manager = GpxManager(GPX_FOLDER, CRS_DISPLAY)
@@ -404,15 +413,16 @@ def main() -> None:
                               color="black")
         
     del boundary_map_area_gdf
+   
     plotter.ways(ways_gdf)
     del ways_gdf
-
+    # must be before nodes
     plotter.gpxs(gpxs_gdf)
-    del gpxs_gdf
     plotter.clip()
 
     plotter.nodes(nodes_gdf, TEXT_WRAP_NAMES_LEN)
     del nodes_gdf
+    
     plotter.generate_pdf(OUTPUT_PDF_NAME)
     # plotter.show_plot()
 

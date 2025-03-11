@@ -1,5 +1,5 @@
 from common.custom_types import ElementStyles, FeatureStyles
-from common.map_enums import Style, TextPositions, MinPlot, MarkerAbove, MarkersCodes, LineCupStyles, MapThemeVariable
+from common.map_enums import Style, TextPositions, MinPlot, MarkerPosition, MarkersCodes, LineCupStyles, MapThemeVariable
 from config import font_awesome_prop, material_design_prop
 from modules.utils import Utils
 #! edge linestyle is suported only dashed or not dashed on not solid lines
@@ -75,13 +75,14 @@ gpxs_styles_default: ElementStyles = [
      Style.ALPHA.name: 0.7,  Style.ZINDEX.name: 0}),
     ([], {Style.COLOR.name: 'Green', Style.WIDTH.name: 1, Style.ALPHA.name: 1.0, Style.LINESTYLE.name: "-",
           Style.START_MARKER.name: "o",
-          Style.START_MARKER_WIDHT.name: 2, Style.START_MARKER_EDGE_RATIO.name: 0.1,
+          Style.START_MARKER_WIDTH.name: 2, Style.START_MARKER_EDGE_RATIO.name: 0.1,
           Style.START_MARKER_COLOR.name: "#18ac0d", Style.START_MARKER_EDGE_COLOR.name: "#FFFFFF", Style.START_MARKER_ALPHA.name: 1.0,
           Style.FINISH_MARKER.name: "\uf11e",
           Style.FINISH_MARKER_HORIZONTAL_ALIGN.name: "left", Style.FINISH_MARKER_VERTICAL_ALIGN.name: "bottom",
-          Style.FINISH_MARKER_WIDHT.name: 5, Style.FINISH_MARKER_EDGE_RATIO.name: 0.1,
+          Style.FINISH_MARKER_WIDTH.name: 12, Style.FINISH_MARKER_EDGE_RATIO.name: 0.1,
           Style.FINISH_MARKER_COLOR.name: "#000000", Style.FINISH_MARKER_EDGE_COLOR.name: "#FFFFFF", Style.FINISH_MARKER_ALPHA.name: 1.0,
-          Style.FINISH_MARKER_FONT_PROPERTIES.name: font_awesome_prop
+          Style.FINISH_MARKER_FONT_PROPERTIES.name: font_awesome_prop,
+          Style.GPX_ABOVE_TEXT.name: True, Style.MARKER_LAYER_POSITION.name: MarkerPosition.UNDER_TEXT_OVERLAP
           })
 ]
 
@@ -93,9 +94,6 @@ GPXS_STYLES: ElementStyles = [
 
 
 # -------------------nodes-------------------
-# marker minimum:
-# text minimum:
-# styles that must be assigned to all node features
 # zorder: castle: 28, towers: 29 peaks: 30, place names 40-50,
 
 NODES_STYLES_SCALE = []
@@ -180,7 +178,7 @@ icons_above_styles_nodes: ElementStyles = [
         # marker
         Style.MARKER.name: MarkersCodes.FA_TOWER_OBSERVATION.value, Style.MARKER_FONT_PROPERTIES.name: font_awesome_prop,
         Style.COLOR.name: "#99441e", Style.EDGE_COLOR.name: "#FFFFFF", Style.WIDTH.name: 7,
-        Style.EDGE_WIDTH_RATIO.name: 0.15, Style.MARKER_ABOVE_OTHERS.name: MarkerAbove.NORMAL,
+        Style.EDGE_WIDTH_RATIO.name: 0.15, Style.MARKER_LAYER_POSITION.name: MarkerPosition.ABOVE_NORMAL,
         # text
         Style.TEXT_COLOR.name: "#8c7359", Style.TEXT_OUTLINE_COLOR.name: '#FFFFFF', Style.TEXT_FONT_SIZE.name: 5,
         Style.TEXT1_POSITIONS.name: [TextPositions.BOTTOM], Style.TEXT_OUTLINE_WIDTH_RATIO.name: 0.2,
@@ -192,7 +190,7 @@ icons_above_styles_nodes: ElementStyles = [
         # marker
         Style.MARKER.name: MarkersCodes.MU_CASTLE.value, Style.MARKER_FONT_PROPERTIES.name: material_design_prop,
         Style.COLOR.name: "#846252", Style.EDGE_COLOR.name: "#FFFFFF", Style.WIDTH.name: 7,
-        Style.MARKER_ABOVE_OTHERS.name: MarkerAbove.NONE, Style.EDGE_WIDTH_RATIO.name: 0.15,
+        Style.EDGE_WIDTH_RATIO.name: 0.15,
         # text
         Style.TEXT_FONT_SIZE.name: 5,
         Style.TEXT_COLOR.name: "#8c7359", Style.TEXT_OUTLINE_COLOR.name: '#FFFFFF',
@@ -245,16 +243,22 @@ highway_styles_tunnels: ElementStyles = [
       {'highway': ['motorway', 'motorway_link'],
       'covered': ''}
       ],
-     {Style.COLOR.name: "#a9de86"}),
+     {Style.COLOR.name: "#a9de86", Style.EDGE_COLOR.name: "#629157"}),
 
-    ([{'highway': ['trunk', 'primary', 'trunk_link', 'primary_link'], 'tunnel': ''},
-      {'highway': ['trunk', 'primary', 'trunk_link', 'primary_link'], 'covered': ''}],
-     {Style.COLOR.name: "#fde5bb"}),
+    ([{'highway': ['trunk', 'trunk_link'], 'tunnel': ''},
+      {'highway': ['trunk', 'trunk_link'], 'covered': ''}],
+     {Style.COLOR.name: "#a9de86", Style.EDGE_COLOR.name: "#629157"}),
+
+    ([{'highway': ['primary', 'primary_link'], 'tunnel': ''},
+      {'highway': ['primary', 'primary_link'], 'covered': ''}],
+     {Style.COLOR.name: "#ffe6bd", Style.EDGE_COLOR.name: "#e8a542"}),
+
     ([{'highway': ['secondary', 'secondary_link'],
      'tunnel': ''},
       {'highway': ['secondary', 'secondary_link'],
        'covered': ''}
-      ], {Style.COLOR.name: "#fbf8b0"}),
+      ], {Style.COLOR.name: "#fbf8b0", Style.EDGE_COLOR.name: "#cdc139"}),
+    
     # default color and all edge styles
     ([{'highway': '', 'tunnel': '', 'bridge': '~'}, {'highway': '', 'covered': '', 'bridge': '~'}],
      {Style.EDGE_LINESTYLE.name: (2, (3, 1)),
@@ -653,7 +657,6 @@ waterway_styles: ElementStyles = [
 
 ways_styles_default: ElementStyles = [
     ({'highway': ''}, {
-        Style.WIDTH.name: 20,  # todo remove width
         Style.EDGE_WIDTH_RATIO.name: 1 + 0.3,
         Style.COLOR.name: NORMAL_WAY_COLOR,
         Style.EDGE_COLOR.name: NORMAL_WAY_EDGE_COLOR
@@ -747,8 +750,8 @@ WAYS_STYLES: ElementStyles = [
     *highway_styles_surface_special_and_paths,
     *highway_styles_special_and_paths,
 
-    *waterway_styles,
     *waterway_styles_tunnels,
+    *waterway_styles,
 
     *ways_styles_default,
 ]
@@ -793,9 +796,20 @@ leisure_styles_area: ElementStyles = [
     ({'leisure': ['garden', 'park']}, {Style.COLOR.name: GREEN_AREA_COLOR_ZOOM_1_7},
      {"8-10": {Style.COLOR.name: GREEN_AREA_COLOR_ZOOM_8_10}}),
     ({'leisure': ['golf_course', 'playground', 'pitch']},
-     {Style.COLOR.name: '#e3edc6'}),
+     {Style.COLOR.name: '#e3edc6',
+      Style.EDGE_ALPHA.name: 1, Style.EDGE_LINESTYLE.name: '-',
+      Style.EDGE_COLOR.name: '#b5c48b'}, {
+          **Utils.cumulative_zoom_size_multiplier({
+              "10": 4, "9": 1.4, "8": 1.4, "7": 1.4, "1-6": 1.5},
+              Style.WIDTH.name)
+    }),
     ({'leisure': ['sports_centre']},
-     {Style.COLOR.name: '#def7d3'}),
+     {Style.COLOR.name: '#def7d3', Style.EDGE_ALPHA.name: 1, Style.EDGE_LINESTYLE.name: '-',
+      Style.EDGE_COLOR.name: '#b5c48b'}, {
+          **Utils.cumulative_zoom_size_multiplier({
+              "10": 4, "9": 1.4, "8": 1.4, "7": 1.4, "1-6": 1.5},
+              Style.WIDTH.name)
+    }),
     ({'leisure': 'swimming_pool'}, {Style.COLOR.name: WATER_COLOR_ZOOM_1_7},
      {"8-10": {Style.COLOR.name: WATER_COLOR_ZOOM_8_10}}),
 ]
@@ -855,7 +869,7 @@ areas_with_ways: ElementStyles = [
         Style.EDGE_ALPHA.name: 1, Style.EDGE_LINESTYLE.name: '-'
     }, {
         **Utils.cumulative_zoom_size_multiplier({
-            "10": 8, "9": 1.6, "8": 1.8, "7": 1.8, "1-6": 1.6},
+            "10": 6, "9": 1.6, "8": 1.8, "7": 1.8, "1-6": 1.6},
             Style.WIDTH.name)
     }),
 ]
@@ -874,7 +888,7 @@ area_styles_default: ElementStyles = [
       "1-6": {Style.COLOR.name: RESIDENTAL_AREA_COLOR_ZOOM_1_6}}),
 
     # areas that will be ploted with ways
-    
+
     ({'boundary': ''}, {
         Style.COLOR.name: None, Style.EDGE_COLOR.name: None,
         Style.EDGE_LINESTYLE.name: '-'
