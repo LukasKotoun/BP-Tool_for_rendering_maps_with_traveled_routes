@@ -58,37 +58,38 @@ SPECIAL_WAYS_CUMULATIVE_SIZE = Utils.cumulative_zoom_size_multiplier({
     Style.WIDTH.name)
 
 # -------------------gpx-------------------
-root_files_styles: ElementStyles = [
-    ({'fileName': 'Grilovačka.gpx'}, {Style.COLOR.name: "Red"}),
-]
+# root_files_styles: ElementStyles = [
+#     ({'fileName': 'Grilovačka.gpx'}, {Style.COLOR.name: "Red"}),
+# ]
 
-folders_styles: ElementStyles = [
-    ({'folder': 'pěšky'}, {Style.COLOR.name: "Blue"}),
-    ({'folder': 'Kolo testování'}, {Style.WIDTH.name: 1, Style.ALPHA.name: 0.7}),
-    ({'folder': 'Kolo'}, {Style.COLOR.name: "Purple"}),
-]
+# folders_styles: ElementStyles = [
+#     ({'folder': 'pěšky'}, {Style.COLOR.name: "Blue"}),
+#     ({'folder': 'Kolo testování'}, {Style.WIDTH.name: 1, Style.ALPHA.name: 0.7}),
+#     ({'folder': 'Kolo'}, {Style.COLOR.name: "Purple"}),
+# ]
 
 gpxs_styles_default: ElementStyles = [
-    ({'fileName': ''}, {Style.COLOR.name: 'Red', Style.WIDTH.name: 1,
-     Style.ALPHA.name: 0.7,  Style.ZINDEX.name: 0}),
-    ({'folder': ''}, {Style.COLOR.name: 'Orange', Style.WIDTH.name: 1,
-     Style.ALPHA.name: 0.7,  Style.ZINDEX.name: 0}),
-    ([], {Style.COLOR.name: 'Green', Style.WIDTH.name: 1, Style.ALPHA.name: 1.0, Style.LINESTYLE.name: "-",
-          Style.START_MARKER.name: "o",
+    ({'fileName': ''}, {}),
+    ({'folder': ''}, {}),
+    ([], {Style.COLOR.name: 'Red', Style.WIDTH.name: 1.3,
+            Style.ALPHA.name: 0.7,  Style.ZINDEX.name: 0, Style.LINESTYLE.name: "-",
+        #   Style.START_MARKER.name: "o",
           Style.START_MARKER_WIDTH.name: 2, Style.START_MARKER_EDGE_RATIO.name: 0.1,
           Style.START_MARKER_COLOR.name: "#18ac0d", Style.START_MARKER_EDGE_COLOR.name: "#FFFFFF", Style.START_MARKER_ALPHA.name: 1.0,
-          Style.FINISH_MARKER.name: "\uf11e",
+
+        #   Style.FINISH_MARKER.name: "\uf11e",
+          
           Style.FINISH_MARKER_HORIZONTAL_ALIGN.name: "left", Style.FINISH_MARKER_VERTICAL_ALIGN.name: "bottom",
           Style.FINISH_MARKER_WIDTH.name: 12, Style.FINISH_MARKER_EDGE_RATIO.name: 0.1,
           Style.FINISH_MARKER_COLOR.name: "#000000", Style.FINISH_MARKER_EDGE_COLOR.name: "#FFFFFF", Style.FINISH_MARKER_ALPHA.name: 1.0,
           Style.FINISH_MARKER_FONT_PROPERTIES.name: font_awesome_prop,
-          Style.GPX_ABOVE_TEXT.name: True, Style.MARKER_LAYER_POSITION.name: MarkerPosition.UNDER_TEXT_OVERLAP
+          Style.GPX_ABOVE_TEXT.name: False, Style.MARKER_LAYER_POSITION.name: MarkerPosition.UNDER_TEXT_OVERLAP
           })
 ]
 
 GPXS_STYLES: ElementStyles = [
-    *folders_styles,  # folder must be first - folder have only some byt file name have all
-    *root_files_styles,
+    # *folders_styles,  # folder must be first - folder have only some byt file name have all
+    # *root_files_styles,
     *gpxs_styles_default,
 ]
 
@@ -121,7 +122,7 @@ place_styles: ElementStyles = [
         {
         "7-10": {Style.TEXT_FONT_SIZE.name: 13},
         "5-6": {Style.TEXT_FONT_SIZE.name: 12},
-        "4": {Style.TEXT_FONT_SIZE.name: 11.5},
+        "4": {Style.TEXT_FONT_SIZE.name: 10},
         "3": {Style.TEXT_FONT_SIZE.name: 9},
         "4-7": {Style.TEXT_WEIGHT.name: 'bold'},
         "1-2": {Style.TEXT_FONT_SIZE.name: 8, Style.MARKER.name: "o", Style.COLOR.name: CITY_POINT_COLOR, Style.MIN_PLOT_REQ.name: MinPlot.MARKER_TEXT1.name,
@@ -178,12 +179,15 @@ icons_above_styles_nodes: ElementStyles = [
         # marker
         Style.MARKER.name: MarkersCodes.FA_TOWER_OBSERVATION.value, Style.MARKER_FONT_PROPERTIES.name: font_awesome_prop,
         Style.COLOR.name: "#99441e", Style.EDGE_COLOR.name: "#FFFFFF", Style.WIDTH.name: 7,
-        Style.EDGE_WIDTH_RATIO.name: 0.15, Style.MARKER_LAYER_POSITION.name: MarkerPosition.ABOVE_NORMAL,
+        Style.EDGE_WIDTH_RATIO.name: 0.15, 
         # text
         Style.TEXT_COLOR.name: "#8c7359", Style.TEXT_OUTLINE_COLOR.name: '#FFFFFF', Style.TEXT_FONT_SIZE.name: 5,
         Style.TEXT1_POSITIONS.name: [TextPositions.BOTTOM], Style.TEXT_OUTLINE_WIDTH_RATIO.name: 0.2,
         Style.TEXT_WRAP_LEN.name: 20
-    }),
+    },{
+        "6-10": {Style.MARKER_LAYER_POSITION.name: MarkerPosition.ABOVE_NORMAL},
+        "1-5": {Style.MARKER_LAYER_POSITION.name: MarkerPosition.UNDER_TEXT_OVERLAP}
+        }),
 
     ({'historic': ['castle']}, {
         Style.MIN_PLOT_REQ.name: MinPlot.MARKER.name, Style.ZINDEX.name: 19,
@@ -196,7 +200,10 @@ icons_above_styles_nodes: ElementStyles = [
         Style.TEXT_COLOR.name: "#8c7359", Style.TEXT_OUTLINE_COLOR.name: '#FFFFFF',
         Style.TEXT1_POSITIONS.name: [TextPositions.BOTTOM], Style.TEXT_OUTLINE_WIDTH_RATIO.name: 0.2,
         Style.TEXT_WRAP_LEN.name: 20
-    })
+    },{
+        "6-10": {Style.MARKER_LAYER_POSITION.name: MarkerPosition.NORMAL},
+        "1-5": {Style.MARKER_LAYER_POSITION.name: MarkerPosition.UNDER_TEXT_OVERLAP}
+        })
 ]
 
 nodes_styles_default: ElementStyles = [
@@ -800,14 +807,14 @@ leisure_styles_area: ElementStyles = [
       Style.EDGE_ALPHA.name: 1, Style.EDGE_LINESTYLE.name: '-',
       Style.EDGE_COLOR.name: '#b5c48b'}, {
           **Utils.cumulative_zoom_size_multiplier({
-              "10": 4, "9": 1.4, "8": 1.4, "7": 1.4, "1-6": 1.5},
+              "10": 4, "9": 1.4, "8": 1.4, "7": 1.4},
               Style.WIDTH.name)
     }),
     ({'leisure': ['sports_centre']},
      {Style.COLOR.name: '#def7d3', Style.EDGE_ALPHA.name: 1, Style.EDGE_LINESTYLE.name: '-',
       Style.EDGE_COLOR.name: '#b5c48b'}, {
           **Utils.cumulative_zoom_size_multiplier({
-              "10": 4, "9": 1.4, "8": 1.4, "7": 1.4, "1-6": 1.5},
+              "10": 4, "9": 1.4, "8": 1.4, "7": 1.4},
               Style.WIDTH.name)
     }),
     ({'leisure': 'swimming_pool'}, {Style.COLOR.name: WATER_COLOR_ZOOM_1_7},
@@ -869,7 +876,7 @@ areas_with_ways: ElementStyles = [
         Style.EDGE_ALPHA.name: 1, Style.EDGE_LINESTYLE.name: '-'
     }, {
         **Utils.cumulative_zoom_size_multiplier({
-            "10": 6, "9": 1.6, "8": 1.8, "7": 1.8, "1-6": 1.6},
+            "10": 6, "9": 1.6, "8": 1.8, "7": 1.8, "4-6": 1.6},
             Style.WIDTH.name)
     }),
 ]

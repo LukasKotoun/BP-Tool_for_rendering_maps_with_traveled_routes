@@ -24,8 +24,6 @@ class Plotter:
 
     MM_TO_INCH = 25.4
     DEFAULT_CAPSTYLE = "round"
-    TEXT_EXPAND_PERCENT = 5  # to settings as text parametter for removal
-    MARKER_EXPAND_PERCENT = 5
 
     MARKER_UNDER_TEXT_ZORDER = 2
     MARKER_ABOVE_NORMAL_ZORDER = 4
@@ -35,11 +33,14 @@ class Plotter:
     GPX_ABOVE_TEXT_ZORDER = 4
 
     def __init__(self, requred_area_gdf: GeoDataFrame, paper_dimensions_mm: DimensionsTuple, map_scaling_factor: float,
-                 point_bounds_overflow_threshold: float, text_wrap_len: int, outer_reqired_area_gdf: GeoDataFrame | None = None):
+                 point_bounds_overflow_threshold: float, text_wrap_len: int, outer_reqired_area_gdf: GeoDataFrame | None = None,
+                 text_expand_percent: int = 5, marker_expand_percent: int = 5):
         self.reqired_area_gdf: GeoDataFrame = requred_area_gdf
         self.reqired_area_polygon: Polygon = GdfUtils.create_polygon_from_gdf(
             self.reqired_area_gdf)
-
+        self.text_expand_percent = text_expand_percent
+        self.marker_expand_percent = marker_expand_percent
+        
         self.outer_reqired_area_gdf = outer_reqired_area_gdf
         self.paper_dimensions_mm = paper_dimensions_mm
         self.map_scaling_factor: float = map_scaling_factor
@@ -49,6 +50,7 @@ class Plotter:
         self.markers_and_texts_id = 0
         self.markers_above_bbox_idx = rtree.index.Index()
         self.markers_and_texts_bbox_idx = rtree.index.Index()
+        
 
     def init(self, map_bg_color: str, bg_gdf: GeoDataFrame, area_zoom_preview: None | DimensionsTuple = None):
         self.fig, self.ax = plt.subplots(figsize=(self.paper_dimensions_mm[0]/self.MM_TO_INCH,
@@ -112,7 +114,7 @@ class Plotter:
         elif (position == MarkerPosition.NORMAL):
             bboxs_index = self.markers_and_texts_bbox_idx
 
-        bbox_expanded = Utils.expand_bbox(bbox, self.MARKER_EXPAND_PERCENT)
+        bbox_expanded = Utils.expand_bbox(bbox, self.marker_expand_percent)
         if (not Utils.check_bbox_position(bbox_expanded, bbox, bboxs_index, self.ax,
                                           self.point_bounds_overflow_threshold, self.polygon_text_inside_display)):
             marker.remove()
@@ -174,7 +176,7 @@ class Plotter:
 
             if (check_bbox_position):
                 bbox_expanded = Utils.expand_bbox(
-                    bbox, self.TEXT_EXPAND_PERCENT)
+                    bbox, self.text_expand_percent)
                 if (not Utils.check_bbox_position(bbox_expanded, bbox, self.markers_and_texts_bbox_idx, self.ax,
                                                   self.point_bounds_overflow_threshold, self.polygon_text_inside_display)):
                     text_anotation.remove()
@@ -197,7 +199,7 @@ class Plotter:
             return None
 
         if (check_bbox_position or store_bbox):
-            bbox_expanded = Utils.expand_bbox(bbox, self.TEXT_EXPAND_PERCENT)
+            bbox_expanded = Utils.expand_bbox(bbox, self.text_expand_percent)
         if (check_bbox_position):
             if (not Utils.check_bbox_position(bbox_expanded, bbox, self.markers_and_texts_bbox_idx, self.ax,
                                               self.point_bounds_overflow_threshold, self.polygon_text_inside_display)):
@@ -246,15 +248,15 @@ class Plotter:
             if (marker is not None):
                 if (marker_position == MarkerPosition.ABOVE_NORMAL):
                     self.markers_above_bbox_idx.insert(self.markers_above_id,
-                                                       Utils.expand_bbox(marker.get_tightbbox(), self.MARKER_EXPAND_PERCENT).extents)
+                                                       Utils.expand_bbox(marker.get_tightbbox(), self.marker_expand_percent).extents)
                     self.markers_above_id += 1
                 elif (marker_position == MarkerPosition.NORMAL):
                     self.markers_and_texts_bbox_idx.insert(self.markers_and_texts_id,
-                                                           Utils.expand_bbox(marker.get_tightbbox(), self.MARKER_EXPAND_PERCENT).extents)
+                                                           Utils.expand_bbox(marker.get_tightbbox(), self.marker_expand_percent).extents)
                     self.markers_and_texts_id += 1
             if (text_annotation is not None):
                 self.markers_and_texts_bbox_idx.insert(self.markers_and_texts_id,
-                                                       Utils.expand_bbox(text_annotation.get_tightbbox(), self.TEXT_EXPAND_PERCENT).extents)
+                                                       Utils.expand_bbox(text_annotation.get_tightbbox(), self.text_expand_percent).extents)
                 self.markers_and_texts_id += 1
         return (marker, text_annotation)
 
@@ -311,19 +313,19 @@ class Plotter:
             if (marker is not None):
                 if (marker_position == MarkerPosition.ABOVE_NORMAL):
                     self.markers_above_bbox_idx.insert(self.markers_above_id,
-                                                       Utils.expand_bbox(marker.get_tightbbox(), self.MARKER_EXPAND_PERCENT).extents)
+                                                       Utils.expand_bbox(marker.get_tightbbox(), self.marker_expand_percent).extents)
                     self.markers_above_id += 1
                 elif (marker_position == MarkerPosition.NORMAL):
                     self.markers_and_texts_bbox_idx.insert(self.markers_and_texts_id,
-                                                           Utils.expand_bbox(marker.get_tightbbox(), self.MARKER_EXPAND_PERCENT).extents)
+                                                           Utils.expand_bbox(marker.get_tightbbox(), self.marker_expand_percent).extents)
                     self.markers_and_texts_id += 1
             if (text1 is not None):
                 self.markers_and_texts_bbox_idx.insert(self.markers_and_texts_id,
-                                                       Utils.expand_bbox(text1.get_tightbbox(), self.TEXT_EXPAND_PERCENT).extents)
+                                                       Utils.expand_bbox(text1.get_tightbbox(), self.text_expand_percent).extents)
                 self.markers_and_texts_id += 1
             if (text2 is not None):
                 self.markers_and_texts_bbox_idx.insert(self.markers_and_texts_id,
-                                                       Utils.expand_bbox(text2.get_tightbbox(), self.TEXT_EXPAND_PERCENT).extents)
+                                                       Utils.expand_bbox(text2.get_tightbbox(), self.text_expand_percent).extents)
                 self.markers_and_texts_id += 1
 
     def __text_gdf_on_points(self, gdf: GeoDataFrame, store_bbox: bool = True, zorder: int = 3):
