@@ -40,7 +40,7 @@ class Plotter:
             self.reqired_area_gdf)
         self.text_expand_percent = text_expand_percent
         self.marker_expand_percent = marker_expand_percent
-        
+
         self.outer_reqired_area_gdf = outer_reqired_area_gdf
         self.paper_dimensions_mm = paper_dimensions_mm
         self.map_scaling_factor: float = map_scaling_factor
@@ -50,7 +50,6 @@ class Plotter:
         self.markers_and_texts_id = 0
         self.markers_above_bbox_idx = rtree.index.Index()
         self.markers_and_texts_bbox_idx = rtree.index.Index()
-        
 
     def init(self, map_bg_color: str, bg_gdf: GeoDataFrame, area_zoom_preview: None | DimensionsTuple = None):
         self.fig, self.ax = plt.subplots(figsize=(self.paper_dimensions_mm[0]/self.MM_TO_INCH,
@@ -161,8 +160,11 @@ class Plotter:
             else:
                 warnings.warn(f"Unknown text position {position}")
                 continue
+            
+            font_properties = Utils.get_value(
+                row, Style.TEXT_FONT_PROPERTIES.name, None)
             text_anotation: Annotation = self.ax.annotate(text, (x, y), textcoords="offset points", xytext=(x_shift, y_shift), ha=ha, va=va,
-                                                          color=row.TEXT_COLOR, fontsize=row.TEXT_FONT_SIZE,
+                                                          color=row.TEXT_COLOR, fontsize=row.TEXT_FONT_SIZE, font_properties=font_properties,
                                                           family=row.TEXT_FONTFAMILY, alpha=row.ALPHA,
                                                           weight=row.TEXT_WEIGHT, style=row.TEXT_STYLE,
                                                           path_effects=[pe.withStroke(linewidth=row.TEXT_OUTLINE_WIDTH,
@@ -188,8 +190,10 @@ class Plotter:
     def __text_on_point(self, row: TextRow, text: str, text_wrap_len=0, store_bbox: bool = True, check_bbox_position: bool = True,
                         zorder: int = 3) -> Text | None:
         text = Utils.wrap_text(text, text_wrap_len, replace_whitespace=False)
+        font_properties = Utils.get_value(
+                row, Style.TEXT_FONT_PROPERTIES.name, None)
         text_plot: Text = self.ax.text(row.geometry.x, row.geometry.y, text, color=row.TEXT_COLOR, fontsize=row.TEXT_FONT_SIZE, family=row.TEXT_FONTFAMILY,
-                                       weight=row.TEXT_WEIGHT, style=row.TEXT_STYLE, ha='center', va='center', alpha=row.ALPHA,
+                                       weight=row.TEXT_WEIGHT, style=row.TEXT_STYLE, ha='center', va='center', alpha=row.ALPHA, font_properties=font_properties,
                                        path_effects=[pe.withStroke(linewidth=row.TEXT_OUTLINE_WIDTH,
                                                                    alpha=row.EDGE_ALPHA, foreground=row.TEXT_OUTLINE_COLOR)], zorder=zorder)
         bbox = text_plot.get_tightbbox()

@@ -115,7 +115,7 @@ class Style(Enum):
     TEXT_STYLE = "TEXT_STYLE"
     TEXT_WEIGHT = "TEXT_WEIGHT"
     TEXT_WRAP_LEN = "TEXT_WRAP_LEN"
-    
+    TEXT_FONT_PROPERTIES = "TEXT_FONT_PROPERTIES"
     TEXT1 = "TEXT1"
     TEXT2 = "TEXT2"
     # nodes annotation requirements

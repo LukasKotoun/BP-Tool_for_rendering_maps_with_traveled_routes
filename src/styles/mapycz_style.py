@@ -121,7 +121,7 @@ place_styles: ElementStyles = [
     },
         {
         "7-10": {Style.TEXT_FONT_SIZE.name: 13},
-        "5-6": {Style.TEXT_FONT_SIZE.name: 12},
+        "5-6": {Style.TEXT_FONT_SIZE.name: 11.5},
         "4": {Style.TEXT_FONT_SIZE.name: 10},
         "3": {Style.TEXT_FONT_SIZE.name: 9},
         "4-7": {Style.TEXT_WEIGHT.name: 'bold'},
@@ -163,7 +163,7 @@ natural_styles_nodes: ElementStyles = [
     ({'natural': 'peak'}, {
         Style.ZINDEX.name: 30, Style.MIN_PLOT_REQ.name: MinPlot.MARKER_TEXT2.name,
         # marker
-        Style.MARKER.name: "^", Style.MARKER_HORIZONTAL_ALIGN.name: "center", Style.TEXT_FONTFAMILY.name: 'Georgia',
+        Style.MARKER.name: "^", Style.MARKER_HORIZONTAL_ALIGN.name: "center", Style.TEXT_FONTFAMILY.name: ['Georgia', 'Arial', 'Arial Unicode MS', 'DejaVu Sans'],
         Style.COLOR.name: "#443833", Style.EDGE_COLOR.name: "None", Style.WIDTH.name: 3,
         # text
         Style.TEXT_WEIGHT.name: 'heavy', Style.TEXT_STYLE.name: 'italic', Style.TEXT_FONT_SIZE.name: 6,
@@ -220,7 +220,8 @@ nodes_styles_default: ElementStyles = [
     ([], {
 
         Style.ALPHA.name: 1, Style.EDGE_ALPHA.name: 1,
-        Style.TEXT_FONTFAMILY.name: 'Arial',
+        # Style.TEXT_FONTFAMILY.name: 'Arial', # todo add mutlplet fonts to conver all
+        Style.TEXT_FONTFAMILY.name: ['Arial', 'Arial Unicode MS', 'DejaVu Sans'],
         Style.TEXT_STYLE.name: 'normal',
         Style.TEXT_WEIGHT.name: 'normal', Style.TEXT_WRAP_LEN.name: 15
     })

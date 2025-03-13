@@ -40,6 +40,8 @@ class TextRow(NamedTuple):
     TEXT_OUTLINE_COLOR: str
     ALPHA: float
     EDGE_ALPHA: float
+    TEXT_FONT_PROPERTIES: Optional[any] = None
+
 
 class MarkerRow(NamedTuple):
     geometry: Point           
@@ -88,6 +90,8 @@ class MarkerOneAnotationRow(NamedTuple):
     TEXT2_POSITIONS: Optional[list[TextPositions]] = []
     TEXT1: Optional[str] = None
     TEXT2: Optional[str] = None
+    TEXT_FONT_PROPERTIES: Optional[any] = None
+
     
 class MarkerTwoAnotationRow(NamedTuple):
     # text and marker
@@ -122,3 +126,4 @@ class MarkerTwoAnotationRow(NamedTuple):
     MARKER_HORIZONTAL_ALIGN: Optional[str] = 'center'
     MARKER_LAYER_POSITION: Optional[MarkerPosition] = MarkerPosition.NORMAL
     MARKER_FONT_PROPERTIES: Optional[any] = None
+    TEXT_FONT_PROPERTIES: Optional[any] = None
