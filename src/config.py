@@ -7,7 +7,7 @@ from common.map_enums import Style, ColorMode, PaperSize, MapOrientation, Marker
 # --------------------------------------------------------------map area--------------------------------------------------------------
 # OSM_INPUT_FILE_NAMES: str = ['../osm_files/vys.osm.pbf','../osm_files/jihmor.osm.pbf']
 # OSM_INPUT_FILE_NAMES: str | list[str] = ['../osm_files/israel.osm.pbf']
-OSM_INPUT_FILE_NAMES: str | list[str] = ['../osm_files/hv.osm.pbf']
+OSM_INPUT_FILE_NAMES: str | list[str] = ['../osm_files/cz.osm.pbf']
 # OSM_INPUT_FILE_NAMES: str | list[str] = ['/zfs-pool/home/xkotou08/BP/czech-republic-latest.osm.pbf']
 # OSM_INPUT_FILE_NAMES: str | list[str] = ['../osm_files/trebic.osm.pbf', '../osm_files/brno.osm.pbf']
 OSM_WANT_EXTRACT_AREA: bool = False
@@ -112,7 +112,7 @@ OUTPUT_PDF_NAME: str = '../pdfs/divocina'
 # AREA: WantedArea = [{'area':[(12.4551956,50.4569714), (19.4047778,50.4934189), (19.3992847, 47.2727942), (12.4284594, 47.3100528)], "plot": False}] # zoom 1/8 - 0.0003824361562733402
 
 
-AREA: WantedArea = [{"area": "Horní vilémovice, Česko", "plot": True, "category": 0, "width": 1}]
+AREA: WantedArea = [{"area": "Česko", "plot": True, "category": 0, "width": 1}]
 # AREA: WantedArea = [{"area": "4", "plot": True, "category": 5, "width": None}]
 # AREA: WantedArea = [{"area": "Baliny, Česko", "plot": True, "category": 0, "width": None}]
 # AREA: WantedArea =[{"area": "Jihomoravský kraj, Česko", "plot": True, "category": 2, "width": 1},
@@ -139,18 +139,17 @@ AREA: WantedArea = [{"area": "Horní vilémovice, Česko", "plot": True, "catego
 # AREA: WantedArea = ["Okres Třebíč, Česko", "Třebíč, Česko", "Okres Jihlava, Česko"]
 # AREA: WantedArea = ["Texas, USA"]
 
-PAPER_DIMENSIONS: PaperSize | tuple[float |
-                                    None, float | None] = PaperSize.A4.dimensions
+# PAPER_DIMENSIONS = PaperSize.A4.dimensions
 # PAPER_DIMENSIONS: PaperSize | tuple[float | None, float | None] = PaperSize.A4.dimensions
 # set own dimensions. If one is left as 'None' it will be automaticaly calculated using area size
-# PAPER_DIMENSIONS = (1100, None)
+PAPER_DIMENSIONS = (1100, None)
 
 # what side of paper was set (smaller true bigger false) - only if only one side in custom dimension was set to None
 GIVEN_SMALLER_PAPER_DIMENSION: bool = True
 # set how will resulted paper be oriented, AUTOMATIC is Recommended
 WANTED_ORIENTATION: MapOrientation = MapOrientation.AUTOMATIC
 
-FIT_PAPER_SIZE = True
+FIT_PAPER_SIZE = False
 FIT_PAPER_SIZE_BOUNDS_PLOT = False
 
 
@@ -164,19 +163,14 @@ MAP_STYLE_THEME = 'mapycz'
 PLOT_BRIDGES = False
 # plot as tunnel (True) or normal way (False) - if false and in dont want tags -> will not be plotted at all
 PLOT_TUNNELS = True
-PEAKS_FILTER_SENSITIVITY: float | None = 2.5
-ELE_PROMINENCE_MAX_DIFF_RATIO = 3
+PEAKS_FILTER_SENSITIVITY: float | None = 3 # is calc as 2.5 * scale * 10 where scale is mm:m so scale * 10 is 1 cm 
 
 # from fe by zoom or from be map styles by zoom
-MIN_POPULATION: int | None = None  # zoom 5 - 500, zoom 4 - 750
+MIN_POPULATION: int | None = 750  # zoom 5 - 500, zoom 4 - 750
 PLACES_TO_FILTER_BY_POPULATION = ['city', 'town', 'village']
 # --------------------------------------------------------------preview--------------------------------------------------------------
 # NOTE: must have same settings as the resulting one when generating for large format printing
 WANT_PREVIEW: bool = False
-# OUTER_AREA: WantedArea = [(15.7034756,48.6941575), (15.9206889,48.6941186), (15.9198775, 48.5926164), (15.7030222, 48.5936264)] # zoom 13 - 0.012257255675006467
-
-# area for that you are creating smaller preview (bigger than normal area)
-# OUTER_AREA: WantedArea =  "Vysočina, Česko"
 
 OUTER_AREA: WantedArea = [
     {"area": "Česko", "plot": False, "category": 2, "width": 1}]
@@ -237,68 +231,68 @@ unwanted_nodes_tags: UnwantedTags = {
 
 wanted_ways: WantedCategories = {
    # all
-    'highway': {
-        'motorway', # zoom none
-                 'trunk', # zoom none
-                 'primary', # zoom none
-                  'secondary', # zoom 2
-                  'tertiary', # zoom 3
-                  'motorway_link',# zoom none - smaller only
-                  'trunk_link',# zoom none - smaller only
-                  'primary_link',# zoom none - smaller only
-                  'secondary_link',# zoom 3
-                   'tertiary_link',# zoom 5
-                   #  'residential',# zoom 5
-                   #  'unclassified',# zoom 5
-                    #  'service',# zoom - 6
-                  # 'pedestrian',# zoom 5
-                    # 'cycleway',# zoom 6
-                    'raceway',# zoom 3
-                #    'steps', # zoom 6
-                    # 'footway',# zoom 6
-                    #  'track', # zoom 6 (5)
-                    #  'path'
-                },# zoom 6 (5)
+    # 'highway': {
+    #     'motorway', # zoom none
+    #              'trunk', # zoom none
+    #              'primary', # zoom none
+    #               'secondary', # zoom 2
+    #               'tertiary', # zoom 3
+    #               'motorway_link',# zoom none - smaller only
+    #               'trunk_link',# zoom none - smaller only
+    #               'primary_link',# zoom none - smaller only
+    #               'secondary_link',# zoom 3
+    #                'tertiary_link',# zoom 5
+    #                #  'residential',# zoom 5
+    #                #  'unclassified',# zoom 5
+    #                 #  'service',# zoom - 6
+    #               # 'pedestrian',# zoom 5
+    #                 # 'cycleway',# zoom 6
+    #                 'raceway',# zoom 3
+    #             #    'steps', # zoom 6
+    #                 # 'footway',# zoom 6
+    #                 #  'track', # zoom 6 (5)
+    #                 #  'path'
+    #             },# zoom 6 (5)
 
-    'railway': {'rail', # service - service smaller 6, 3 normal
-                'light_rail', #- service smaller 6, 3 normal
-                "monorail", #- service smaller 6, 3 normal
-                'miniature',  #- service smaller 7/8
-                # 'subway', # zoom 6
-                # 'funicular', # zoom 4
-              #  'tram'
-                },# zoom 8
-    'aeroway': {'runway',# zoom 3
-                'taxiway'},# zoom 3
+    # 'railway': {'rail', # service - service smaller 6, 3 normal
+    #             'light_rail', #- service smaller 6, 3 normal
+    #             "monorail", #- service smaller 6, 3 normal
+    #             'miniature',  #- service smaller 7/8
+    #             # 'subway', # zoom 6
+    #             # 'funicular', # zoom 4
+    #           #  'tram'
+    #             },# zoom 8
+    # 'aeroway': {'runway',# zoom 3
+    #             'taxiway'},# zoom 3
 
-    'aerialway': {'cable_car',# zoom 4
-                  'gondola',# zoom 4
-                  'chair_lift',# zoom 4
-                  'mixed_lift',# zoom 4
-                #   't-bar', # zoom 5 a ostatní
-                #   'j-bar',
-                #   'platter',
-                #   'rope_tow',
-                #   'magic_carpet',
-                #   'zip_line',
-                #   'goods'
-                  },
+    # 'aerialway': {'cable_car',# zoom 4
+    #               'gondola',# zoom 4
+    #               'chair_lift',# zoom 4
+    #               'mixed_lift',# zoom 4
+    #             #   't-bar', # zoom 5 a ostatní
+    #             #   'j-bar',
+    #             #   'platter',
+    #             #   'rope_tow',
+    #             #   'magic_carpet',
+    #             #   'zip_line',
+    #             #   'goods'
+    #               },
 
-    # 'barrier': {'city_wall', # zoom 8
-    #             'wall',  # zoom 8
-    #             'cable_barrier'}, # zoom 8
+    # # 'barrier': {'city_wall', # zoom 8
+    # #             'wall',  # zoom 8
+    # #             'cable_barrier'}, # zoom 8
 
-    'waterway': {'river', # zoom never
-                  'canal',  # zoom 4
-                #     'stream', # zoom 4
-                #    'drain', # zoom 6
-                #    'ditch'
-                 }, # zoom 6
+    # 'waterway': {'river', # zoom never
+    #               'canal',  # zoom 4
+    #             #     'stream', # zoom 4
+    #             #    'drain', # zoom 6
+    #             #    'ditch'
+    #              }, # zoom 6
 
-    'route': {'ferry'}, # none
+    # 'route': {'ferry'}, # none
 
 
-    'natural': {'coastline'},
+    # 'natural': {'coastline'},
 
 }
 
@@ -310,28 +304,28 @@ unwanted_ways_tags: UnwantedTags = {
 }
 
 wanted_areas: WantedCategories = {
-    #todo all areas - osm can have more tags? how to do it
-    'landuse': {'farmland', 'forest', 'residential', 'commercial', 'retail', 'industrial', 'allotments', 'retail',
-                'meadow', 
-                # 'grass',
-                'landfill', 'cemetery', 'vineyard', 'orchard', 'garages',
-                'quarry', 'recreation_ground'},  # zoom never
-    'leisure': {'park', 'garden',
-                # 'pitch', 'golf_course', 'playground','sports_centre', # zoom 6
-                'stadium', 'swimming_pool'}, # zoom 2
-    # # all water (except pools) is in natural
-    'natural': {'wood', 'water', 'scrub', 'heath', 'grassland',
-                'bay', 'beach', 'sand'}, # zoom never
-    # občanské vybavení
-    # parking zoom 6
+    # #todo all areas - osm can have more tags? how to do it
+    # 'landuse': {'farmland', 'forest', 'residential', 'commercial', 'retail', 'industrial', 'allotments', 'retail',
+    #             'meadow', 
+    #             # 'grass',
+    #             'landfill', 'cemetery', 'vineyard', 'orchard', 'garages',
+    #             'quarry', 'recreation_ground'},  # zoom never
+    # 'leisure': {'park', 'garden',
+    #             # 'pitch', 'golf_course', 'playground','sports_centre', # zoom 6
+    #             'stadium', 'swimming_pool'}, # zoom 2
+    # # # all water (except pools) is in natural
+    # 'natural': {'wood', 'water', 'scrub', 'heath', 'grassland',
+    #             'bay', 'beach', 'sand'}, # zoom never
+    # # občanské vybavení
+    # # parking zoom 6
 
-    'amenity': {
-                #'motorcycle_parking', 'parking', #zoom 6
-                'grave_yard', 'school', 'university', 'college', 'kindergarten'
-                'bus_station', 'hospital', 'clinic', 'place_of_worship'}, # zoom 2
-    'boundary' : {'national_park'}, # zoom 1
-    'building': set({}),  # zoom 2
-     'aeroway': {'aerodrome'}, # zoom 5
+    # 'amenity': {
+    #             #'motorcycle_parking', 'parking', #zoom 6
+    #             'grave_yard', 'school', 'university', 'college', 'kindergarten'
+    #             'bus_station', 'hospital', 'clinic', 'place_of_worship'}, # zoom 2
+    # 'boundary' : {'national_park'}, # zoom 1
+    # 'building': set({}),  # zoom 2
+    #  'aeroway': {'aerodrome'}, # zoom 5
     #'highway': {'pedestrian', 'footway'}, # zoom 6
 }
 

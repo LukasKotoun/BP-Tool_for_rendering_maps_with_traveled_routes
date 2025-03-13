@@ -568,25 +568,23 @@ class GdfUtils:
 
     @staticmethod
     @time_measurement("prominence")
-    def filter_peaks_by_prominence(nodes_gdf: GeoDataFrame, radius: float, min_prominence: float, ele_prominence_max_diff_ratio: float | None = None):
+    def filter_peaks(nodes_gdf: GeoDataFrame, radius: float):
         """
-        Filters peaks based on a simplified prominence criterion.
+        Filter only most significant peaks in given radius.
 
         For each peak in peaks, the function looks for any nearby peak within
-        the given radius. If a higher peak exists and the elevation difference is less 
-        than min_prominence, then the peak is considered less “prominent” and is filtered out.
+        the given radius. If a higher peak exists than peak is not considered significant.
 
         Parameters:
         - peaks (GeoDataFrame): must have a 'geometry' column (Point) and an 'elevation' column.
-        - radius (float): search radius (in units of peaks) to look for competing peaks.
-        - min_prominence (float): minimum required elevation difference for a peak to be considered prominent.
+        - radius (float): search radius (in units of peaks - e.g. meters) to look for competing peaks.
 
         Returns:
         - GeoDataFrame: a filtered GeoDataFrame containing only the peaks meeting the prominence threshold.
         """
         if (nodes_gdf.empty):
             return nodes_gdf
-        if (radius <= 0 or min_prominence <= 0):
+        if (radius <= 0):
             return nodes_gdf
         peaks, rest = GdfUtils.filter_rows(
             nodes_gdf, {'natural': 'peak'}, compl=True)
@@ -601,31 +599,19 @@ class GdfUtils:
         tree = cKDTree(coords)
 
         # Boolean array to mark whether each peak is prominent
-        prominence = pd.Series(index=peaks.index, dtype=float)
         is_prominent = pd.Series(index=peaks.index, dtype=bool)
         # For each peak, query neighbors within the specified radius
         for point_i, (coord, elev) in enumerate(zip(coords, elevations)):
             # Find indices of nearby peaks - make bigger until there are some peaks
             nearby_point_i = tree.query_ball_point(coord, r=radius)
             nearby_point_i.remove(point_i)
-
             # Check for any higher peak with a small elevation gap
-            prominence.at[point_i] = elevations[point_i]
             for nearby_point in nearby_point_i:
                 if elevations[nearby_point] > elev:
-                    curr_peak_prominence = elevations[nearby_point] - elev
-                    prominence.at[point_i] = curr_peak_prominence
-                    if (curr_peak_prominence) < min_prominence:
-                        is_prominent.at[point_i] = False
-                        break
+                    is_prominent.at[point_i] = False
+                    break
 
-        peaks['prominence'] = prominence
-        if (ele_prominence_max_diff_ratio is not None and ele_prominence_max_diff_ratio > 0):
-            # filter prominent peaks also with max prominence ele ratio
-            peaks = peaks[is_prominent & ~(
-                peaks['prominence'] > peaks['ele'] * ele_prominence_max_diff_ratio)]
-        else:
-            peaks = peaks[is_prominent]
+        peaks = peaks[is_prominent]
         return GdfUtils.combine_gdfs([peaks, rest])
 
     @staticmethod

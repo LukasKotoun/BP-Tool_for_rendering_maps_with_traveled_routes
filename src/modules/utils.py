@@ -45,7 +45,7 @@ class Utils:
             given_paper_side: float = paper_dimensions[1]
         side_ratio: float = coresponding_map_side/given_paper_side
         resolved_pdf_side: float = other_map_side/side_ratio
-        return (given_paper_side, resolved_pdf_side)
+        return (int(given_paper_side), int(resolved_pdf_side))
 
     @staticmethod
     def adjust_paper_dimensions(map_dimensions: DimensionsTuple,
@@ -212,7 +212,20 @@ class Utils:
         return (paper_scaling_factor / map_scaling_factor)
 
     @staticmethod
-    def get_scale(map_bounds, paper_dimensions_mm):
+    def get_scale(map_bounds: BoundsDict, paper_dimensions_mm: DimensionsTuple) -> int:
+        """
+        Calculate the scale for the map based on the map bounds and the paper dimensions.
+        In unit of 1:scale, where 1 is mm on paper and scale is m irl. 
+        For example scale 95 means 1mm on paper is 95m in real life.
+        If paper have 200mm the map will have 
+
+        Args:
+            map_bounds (_type_): _description_
+            paper_dimensions_mm (_type_): _description_
+
+        Returns:
+            int: Scale as 1cm on paper is 'scale number' m in real life
+        """
         # Use middle longitude for vertical distance
         midx = (map_bounds[WorldSides.NORTH.value] +
                 map_bounds[WorldSides.SOUTH.value]) / 2
@@ -274,7 +287,8 @@ class Utils:
         if (percent_expand == 0):
             return bounds
         width = bounds[WorldSides.EAST.value] - bounds[WorldSides.WEST.value]
-        height = bounds[WorldSides.NORTH.value] - bounds[WorldSides.SOUTH.value]
+        height = bounds[WorldSides.NORTH.value] - \
+            bounds[WorldSides.SOUTH.value]
         expand_x = (width * percent_expand) / 100
         expand_y = (height * percent_expand) / 100
         return {

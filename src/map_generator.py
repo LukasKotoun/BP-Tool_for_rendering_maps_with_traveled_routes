@@ -270,7 +270,7 @@ def main() -> None:
     # zoom level to endpoint specific - always from that biger area
     zoom_level = Utils.get_zoom_level(
         map_scaling_factor, ZOOM_MAPPING, 0.3)
-    print(map_scaling_factor, zoom_level)
+    print(paper_dimensions_mm, map_scaling_factor, zoom_level)
     # zoom_level_endpoint(OUTER_AREA if WANT_PREVIEW == True else wanted_areas_to_display,
     #                     OUTER_PAPER_DIMENSIONS if WANT_PREVIEW == True else PAPER_DIMENSIONS)
 
@@ -283,7 +283,7 @@ def main() -> None:
                 warnings.warn("osmium is NOT installed")
                 return
             remove_osm_after_load = True if OSM_OUTPUT_FILE_NAME is None else False
-            
+
             osm_data_preprocessor = OsmDataPreprocessor(
                 OSM_INPUT_FILE_NAMES, OSM_TMP_FOLDER, OSM_OUTPUT_FILE_NAME)
             osm_file_name = osm_data_preprocessor.extract_areas(
@@ -338,11 +338,9 @@ def main() -> None:
 
     # ------------prefiltering nodes by importance------------
     if (PEAKS_FILTER_SENSITIVITY is not None):
-        # make distance 10* more than scale and prominence 10* less than scale
-        nodes_gdf = GdfUtils.filter_peaks_by_prominence(
-            nodes_gdf, map_scale*10*PEAKS_FILTER_SENSITIVITY, map_scale /
-            10*(PEAKS_FILTER_SENSITIVITY/2),
-            ELE_PROMINENCE_MAX_DIFF_RATIO)
+        # radius is 1cm on paper * sensitivity
+        nodes_gdf = GdfUtils.filter_peaks(
+            nodes_gdf, map_scale*10*PEAKS_FILTER_SENSITIVITY)
     if (MIN_POPULATION is not None):
         nodes_gdf = GdfUtils.filter_place_by_population(
             nodes_gdf, PLACES_TO_FILTER_BY_POPULATION, MIN_POPULATION)
