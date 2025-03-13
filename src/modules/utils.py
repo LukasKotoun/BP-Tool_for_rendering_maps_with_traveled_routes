@@ -117,10 +117,10 @@ class Utils:
 
     @staticmethod
     def get_dimensions(bounds: BoundsDict) -> DimensionsTuple:
-        width = abs(bounds[WorldSides.EAST.name] -
-                    bounds[WorldSides.WEST.name])  # east - west
-        height = abs(bounds[WorldSides.NORTH.name] -
-                     bounds[WorldSides.SOUTH.name])  # north - south
+        width = abs(bounds[WorldSides.EAST.value] -
+                    bounds[WorldSides.WEST.value])  # east - west
+        height = abs(bounds[WorldSides.NORTH.value] -
+                     bounds[WorldSides.SOUTH.value])  # north - south
         return width, height
 
     @staticmethod
@@ -151,10 +151,10 @@ class Utils:
         new_height = pdf_dim[1] * pdf_to_area_ratio_bigger[1]
 
         return Utils.adjust_bounds_to_fill_paper({
-            WorldSides.WEST.name: center_point.x - (new_width / 2),
-            WorldSides.EAST.name: center_point.x + (new_width / 2),
-            WorldSides.SOUTH.name: center_point.y - (new_height / 2),
-            WorldSides.NORTH.name: center_point.y + (new_height / 2)
+            WorldSides.WEST.value: center_point.x - (new_width / 2),
+            WorldSides.EAST.value: center_point.x + (new_width / 2),
+            WorldSides.SOUTH.value: center_point.y - (new_height / 2),
+            WorldSides.NORTH.value: center_point.y + (new_height / 2)
         }, pdf_dim)
 
     @staticmethod
@@ -181,16 +181,16 @@ class Utils:
             # w/h == pw/ph => w = h * (pw/ph)
             new_width = height * paper_aspect_ratio
             width_diff = (new_width - width) / 2
-            area_bounds[WorldSides.WEST.name] -= width_diff
-            area_bounds[WorldSides.EAST.name] += width_diff
+            area_bounds[WorldSides.WEST.value] -= width_diff
+            area_bounds[WorldSides.EAST.value] += width_diff
         else:
             # Current aspect have longer width to height ratio than paper => adjust height
             # Expand height
             # w/h == pw/ph => h = w / (pw/ph)
             new_height = width / paper_aspect_ratio
             height_diff = (new_height - height) / 2
-            area_bounds[WorldSides.SOUTH.name] -= height_diff
-            area_bounds[WorldSides.NORTH.name] += height_diff
+            area_bounds[WorldSides.SOUTH.value] -= height_diff
+            area_bounds[WorldSides.NORTH.value] += height_diff
 
         return area_bounds
 
@@ -214,13 +214,13 @@ class Utils:
     @staticmethod
     def get_scale(map_bounds, paper_dimensions_mm):
         # Use middle longitude for vertical distance
-        midx = (map_bounds[WorldSides.NORTH.name] +
-                map_bounds[WorldSides.SOUTH.name]) / 2
+        midx = (map_bounds[WorldSides.NORTH.value] +
+                map_bounds[WorldSides.SOUTH.value]) / 2
 
-        height = GeomUtils.get_distance((map_bounds[WorldSides.NORTH.name], map_bounds[WorldSides.WEST.name]), (
-            map_bounds[WorldSides.SOUTH.name], map_bounds[WorldSides.WEST.name]))
+        height = GeomUtils.get_distance((map_bounds[WorldSides.NORTH.value], map_bounds[WorldSides.WEST.value]), (
+            map_bounds[WorldSides.SOUTH.value], map_bounds[WorldSides.WEST.value]))
         width = GeomUtils.get_distance(
-            (midx, map_bounds[WorldSides.WEST.name]), (midx, map_bounds[WorldSides.EAST.name]))
+            (midx, map_bounds[WorldSides.WEST.value]), (midx, map_bounds[WorldSides.EAST.value]))
         # Calculate the scale for width and height
         scale_width = width / paper_dimensions_mm[0]
         scale_height = height / paper_dimensions_mm[1]
@@ -273,15 +273,15 @@ class Utils:
     def expand_bounds_dict(bounds: BoundsDict, percent_expand: int = 0) -> Bbox:
         if (percent_expand == 0):
             return bounds
-        width = bounds[WorldSides.EAST.name] - bounds[WorldSides.WEST.name]
-        height = bounds[WorldSides.NORTH.name] - bounds[WorldSides.SOUTH.name]
+        width = bounds[WorldSides.EAST.value] - bounds[WorldSides.WEST.value]
+        height = bounds[WorldSides.NORTH.value] - bounds[WorldSides.SOUTH.value]
         expand_x = (width * percent_expand) / 100
         expand_y = (height * percent_expand) / 100
         return {
-            WorldSides.WEST.name: bounds[WorldSides.WEST.name] - expand_x,
-            WorldSides.EAST.name: bounds[WorldSides.EAST.name] + expand_x,
-            WorldSides.SOUTH.name: bounds[WorldSides.SOUTH.name] - expand_y,
-            WorldSides.NORTH.name: bounds[WorldSides.NORTH.name] + expand_y
+            WorldSides.WEST.value: bounds[WorldSides.WEST.value] - expand_x,
+            WorldSides.EAST.value: bounds[WorldSides.EAST.value] + expand_x,
+            WorldSides.SOUTH.value: bounds[WorldSides.SOUTH.value] - expand_y,
+            WorldSides.NORTH.value: bounds[WorldSides.NORTH.value] + expand_y
         }
 
     @staticmethod

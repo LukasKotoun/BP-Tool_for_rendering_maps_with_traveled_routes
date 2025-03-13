@@ -13,8 +13,13 @@ class LineCupStyles(Enum):
 
 class MarkersCodes(Enum):
     FA_TOWER_OBSERVATION = "\ue586"
+    FA_FINISH_ICON = '\uf11e'
+    
     MU_CASTLE = "\ueaad"
-    TEST = "\u2713"
+    MPL_TRIANGLE = '^'
+
+    MPL_CIRCLE_MARKER = 'o'
+    
 
 class MinPlot(Enum):  # minimum parts that node must have. If not whole node object is removed
     MARKER_TEXT1_TEXT2 = "MARKER_TEXT1_TEXT2"
@@ -26,6 +31,13 @@ class MinPlot(Enum):  # minimum parts that node must have. If not whole node obj
     TEXT2 = "TEXT2"
     TEXT1_TEXT2 = "TEXT1_TEXT2"
 
+class BaseConfigKeys(Enum):
+    ADDITIONAL_COLUMNS = 'ADDITIONAL_COLUMNS'
+    NUMERIC_COLUMNS = 'NUMERIC_COLUMNS'
+    ROUND_COLUMNS = 'ROUND_COLUMNS'
+    DERIVATE_COLUMNS = 'DERIVATE_COLUMNS'
+    DONT_CATEGORIZE = 'DONT_CATEGORIZE'
+
 class MapThemeVariable(Enum):
     WATER_COLOR = "WATER_COLOR"
     LAND_COLOR = "LAND_COLOR"
@@ -35,12 +47,18 @@ class MapThemeVariable(Enum):
     NODES_STYLES_SCALE = "NODES_STYLES_SCALE"
     WAYS_STYLES_SCALE = "WAYS_STYLES_SCALE"
     AREAS_STYLES_SCALE = "AREAS_STYLES_SCALE"
+    TEXT_BB_EXPAND_PERCENT = "TEXT_BB_EXPAND_PERCENT"
+    MARKER_BB_EXPAND_PERCENT = "MARKER_BB_EXPAND_PERCENT"
 
 class TextPositions(Enum):  
     TOP = "TOP"
     BOTTOM = "BOTTOM"
     LEFT = "LEFT"
     RIGHT = "RIGHT"
+    TOP_LEFT = "TOP_LEFT"
+    TOP_RIGHT = "TOP_RIGHT"
+    BOTTOM_LEFT = "BOTTOM_LEFT"
+    BOTTOM_RIGHT = "BOTTOM_RIGHT"
     
 class MarkerPosition(Enum):
     ABOVE_ALL = "ABOVE_ALL"

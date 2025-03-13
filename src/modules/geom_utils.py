@@ -14,21 +14,21 @@ class GeomUtils:
     @staticmethod
     def get_polygon_bounds(polygon: Polygon) -> BoundsDict:
         bounds: tuple[float] = polygon.bounds
-        return {WorldSides.WEST.name: bounds[0],
-                WorldSides.SOUTH.name: bounds[1],
-                WorldSides.EAST.name: bounds[2],
-                WorldSides.NORTH.name: bounds[3]}
+        return {WorldSides.WEST.value: bounds[0],
+                WorldSides.SOUTH.value: bounds[1],
+                WorldSides.EAST.value: bounds[2],
+                WorldSides.NORTH.value: bounds[3]}
 
 
     @staticmethod
     def create_polygon_from_bounds(area_bounds: BoundsDict) -> Polygon:
         return Polygon([
-            (area_bounds[WorldSides.EAST.name], area_bounds[WorldSides.SOUTH.name]),
-            (area_bounds[WorldSides.EAST.name], area_bounds[WorldSides.NORTH.name]),
-            (area_bounds[WorldSides.WEST.name], area_bounds[WorldSides.NORTH.name]),
-            (area_bounds[WorldSides.WEST.name], area_bounds[WorldSides.SOUTH.name]),
+            (area_bounds[WorldSides.EAST.value], area_bounds[WorldSides.SOUTH.value]),
+            (area_bounds[WorldSides.EAST.value], area_bounds[WorldSides.NORTH.value]),
+            (area_bounds[WorldSides.WEST.value], area_bounds[WorldSides.NORTH.value]),
+            (area_bounds[WorldSides.WEST.value], area_bounds[WorldSides.SOUTH.value]),
             # Closing the polygon
-            (area_bounds[WorldSides.EAST.name], area_bounds[WorldSides.SOUTH.name])
+            (area_bounds[WorldSides.EAST.value], area_bounds[WorldSides.SOUTH.value])
         ])
         
     @staticmethod

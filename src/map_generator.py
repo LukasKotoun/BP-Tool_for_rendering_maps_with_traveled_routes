@@ -1,16 +1,16 @@
 import warnings
 
 from config import *
-from styles.mapycz_style import MAPYCZSTYLE
 from modules.gdf_utils import GdfUtils
 from modules.utils import Utils
 from modules.osm_data_preprocessor import OsmDataPreprocessor
 from modules.osm_data_parser import OsmDataParser
-from modules.style_assigner import StyleAssigner
+from modules.style_assigner import StyleManager
 from modules.plotter import Plotter
 from modules.gpx_manager import GpxManager
 from modules.received_structure_processor import ReceivedStructureProcessor
 import os
+import shutil
 
 from common.common_helpers import time_measurement
 
@@ -43,103 +43,102 @@ def process_bridges_and_tunnels(gdf, want_bridges: bool, want_tunnels: bool):
     return
 
 
-def gdfs_convert_loaded_columns(gpxs_gdf, nodes_gdf, ways_gdf, areas_gdf):
-    GdfUtils.change_columns_to_numeric(nodes_gdf, NODES_NUMERIC_COLUMNS)
-    GdfUtils.convert_numeric_columns_int(nodes_gdf, NODES_ROUND_COLUMNS)
+def gdfs_convert_loaded_columns(gpxs_gdf, nodes_gdf, ways_gdf, areas_gdf, config):
+    GdfUtils.change_columns_to_numeric(
+        nodes_gdf, config['nodes'][BaseConfigKeys.NUMERIC_COLUMNS])
+    GdfUtils.convert_numeric_columns_int(
+        nodes_gdf, config['nodes'][BaseConfigKeys.ROUND_COLUMNS])
 
-    GdfUtils.change_columns_to_numeric(ways_gdf, WAYS_NUMERIC_COLUMNS)
-    GdfUtils.convert_numeric_columns_int(ways_gdf, WAYS_ROUND_COLUMNS)
+    GdfUtils.change_columns_to_numeric(
+        ways_gdf, config['ways'][BaseConfigKeys.NUMERIC_COLUMNS])
+    GdfUtils.convert_numeric_columns_int(
+        ways_gdf, config['ways'][BaseConfigKeys.ROUND_COLUMNS])
 
-    GdfUtils.change_columns_to_numeric(areas_gdf, AREA_NUMERIC_COLUMNS)
-    GdfUtils.convert_numeric_columns_int(areas_gdf, AREA_ROUND_COLUMNS)
+    GdfUtils.change_columns_to_numeric(
+        areas_gdf, config['areas'][BaseConfigKeys.NUMERIC_COLUMNS])
+    GdfUtils.convert_numeric_columns_int(
+        areas_gdf, config['areas'][BaseConfigKeys.ROUND_COLUMNS])
 
 
-def gdfs_prepare_styled_columns(gpxs_gdf, nodes_gdf, ways_gdf, areas_gdf, map_scaling_factor):
+def gdfs_prepare_styled_columns(gpxs_gdf, nodes_gdf, ways_gdf, areas_gdf, map_scaling_factor, config):
     # ----gpx----
     # gpx - is needed in this? will be setted in FE?
 
-    GdfUtils.create_derivated_columns(gpxs_gdf, Style.EDGE_WIDTH.name, Style.WIDTH.name, [
-                                      Style.EDGE_WIDTH_RATIO.name])
-    GdfUtils.create_derivated_columns(gpxs_gdf, Style.START_MARKER_EDGE_WIDTH.name, Style.START_MARKER_WIDTH.name, [
-                                      Style.START_MARKER_EDGE_RATIO.name])
-    GdfUtils.create_derivated_columns(gpxs_gdf, Style.FINISH_MARKER_EDGE_WIDTH.name, Style.FINISH_MARKER_WIDTH.name, [
-                                      Style.FINISH_MARKER_EDGE_RATIO.name])
+    GdfUtils.create_derivated_columns(gpxs_gdf, Style.EDGE_WIDTH.value, Style.WIDTH.value, [
+                                      Style.EDGE_WIDTH_RATIO.value])
+    GdfUtils.create_derivated_columns(gpxs_gdf, Style.START_MARKER_EDGE_WIDTH.value, Style.START_MARKER_WIDTH.value, [
+                                      Style.START_MARKER_EDGE_RATIO.value])
+    GdfUtils.create_derivated_columns(gpxs_gdf, Style.FINISH_MARKER_EDGE_WIDTH.value, Style.FINISH_MARKER_WIDTH.value, [
+                                      Style.FINISH_MARKER_EDGE_RATIO.value])
 
-    GdfUtils.remove_columns(gpxs_gdf, [Style.START_MARKER_EDGE_RATIO.name, Style.FINISH_MARKER_EDGE_RATIO.name,
-                                       Style.EDGE_WIDTH_RATIO.name])
+    GdfUtils.remove_columns(gpxs_gdf, [Style.START_MARKER_EDGE_RATIO.value, Style.FINISH_MARKER_EDGE_RATIO.value,
+                                       Style.EDGE_WIDTH_RATIO.value])
 
     # ----nodes----
     # set base width - scale by muplitpliers and object scaling factor
-    GdfUtils.fill_nan_values(nodes_gdf, [Style.ZINDEX.name], 0)
+    GdfUtils.fill_nan_values(nodes_gdf, [Style.ZINDEX.value], 0)
 
-    GdfUtils.multiply_column_gdf(nodes_gdf, Style.WIDTH.name, [
-        Style.FE_WIDTH_SCALE.name], None)
-    GdfUtils.multiply_column_gdf(nodes_gdf, Style.TEXT_FONT_SIZE.name, [
-                                 Style.FE_TEXT_FONT_SIZE_SCALE.name], None)
+    GdfUtils.multiply_column_gdf(nodes_gdf, Style.WIDTH.value, [
+        Style.FE_WIDTH_SCALE.value], None)
+    GdfUtils.multiply_column_gdf(nodes_gdf, Style.TEXT_FONT_SIZE.value, [
+                                 Style.FE_TEXT_FONT_SIZE_SCALE.value], None)
     # text outline
-    GdfUtils.create_derivated_columns(nodes_gdf, Style.TEXT_OUTLINE_WIDTH.name, Style.TEXT_FONT_SIZE.name, [
-                                      Style.TEXT_OUTLINE_WIDTH_RATIO.name])
+    GdfUtils.create_derivated_columns(nodes_gdf, Style.TEXT_OUTLINE_WIDTH.value, Style.TEXT_FONT_SIZE.value, [
+                                      Style.TEXT_OUTLINE_WIDTH_RATIO.value])
 
     # edge - MARKER size and ways width
-    GdfUtils.create_derivated_columns(nodes_gdf, Style.EDGE_WIDTH.name, Style.WIDTH.name, [
+    GdfUtils.create_derivated_columns(nodes_gdf, Style.EDGE_WIDTH.value, Style.WIDTH.value, [
                                       # ?? maybe remove ...
-                                      Style.EDGE_WIDTH_RATIO.name])
+                                      Style.EDGE_WIDTH_RATIO.value])
     old_column_remove = []
-    for filter, new_column, old_column, fill in DERIVATE_COLUMNS_NODES:
+    for filter, new_column, old_column, fill in config['nodes'][BaseConfigKeys.DERIVATE_COLUMNS]:
         GdfUtils.create_derivated_columns(
             nodes_gdf, new_column, old_column, filter=filter, fill=fill)
         old_column_remove.append(old_column)
 
-    GdfUtils.remove_columns(nodes_gdf, [Style.FE_WIDTH_SCALE.name, Style.FE_TEXT_FONT_SIZE_SCALE.name,
-                                        Style.EDGE_WIDTH_RATIO.name, Style.TEXT_OUTLINE_WIDTH_RATIO.name, *old_column_remove])
+    GdfUtils.remove_columns(nodes_gdf, [Style.FE_WIDTH_SCALE.value, Style.FE_TEXT_FONT_SIZE_SCALE.value,
+                                        Style.EDGE_WIDTH_RATIO.value, Style.TEXT_OUTLINE_WIDTH_RATIO.value, *old_column_remove])
 
     # ----ways----
-    GdfUtils.fill_nan_values(ways_gdf, [Style.ZINDEX.name], 0)
+    GdfUtils.fill_nan_values(ways_gdf, [Style.ZINDEX.value], 0)
 
-    GdfUtils.multiply_column_gdf(ways_gdf, Style.WIDTH.name, [
+    GdfUtils.multiply_column_gdf(ways_gdf, Style.WIDTH.value, [
         # if i will be creationg function with continues width scaling than multiply only by FEwidthscale
-        Style.FE_WIDTH_SCALE.name])
+        Style.FE_WIDTH_SCALE.value])
 
-    GdfUtils.create_derivated_columns(ways_gdf, Style.EDGE_WIDTH.name, Style.WIDTH.name, [
-        Style.EDGE_WIDTH_RATIO.name])
-    GdfUtils.create_derivated_columns(ways_gdf, Style.EDGE_WIDTH_DASHED_CONNECT.name, Style.EDGE_WIDTH_DASHED_CONNECT_RATIO.name, [
-        Style.WIDTH.name])
-    GdfUtils.create_derivated_columns(ways_gdf, Style.BRIDGE_WIDTH.name, Style.WIDTH.name, [     # calc bridge size only for bridges
-                                      Style.BRIDGE_WIDTH_RATIO.name], {'bridge': ''})
-    GdfUtils.create_derivated_columns(ways_gdf, Style.BRIDGE_EDGE_WIDTH.name, Style.BRIDGE_WIDTH.name, [
-                                      Style.BRIDGE_EDGE_WIDTH_RATIO.name], {'bridge': ''})
+    GdfUtils.create_derivated_columns(ways_gdf, Style.EDGE_WIDTH.value, Style.WIDTH.value, [
+        Style.EDGE_WIDTH_RATIO.value])
+    GdfUtils.create_derivated_columns(ways_gdf, Style.EDGE_WIDTH_DASHED_CONNECT.value, Style.EDGE_WIDTH_DASHED_CONNECT_RATIO.value, [
+        Style.WIDTH.value])
+    GdfUtils.create_derivated_columns(ways_gdf, Style.BRIDGE_WIDTH.value, Style.WIDTH.value, [     # calc bridge size only for bridges
+                                      Style.BRIDGE_WIDTH_RATIO.value], {'bridge': ''})
+    GdfUtils.create_derivated_columns(ways_gdf, Style.BRIDGE_EDGE_WIDTH.value, Style.BRIDGE_WIDTH.value, [
+                                      Style.BRIDGE_EDGE_WIDTH_RATIO.value], {'bridge': ''})
 
     old_column_remove = []
-    for filter, new_column, old_column, fill in DERIVATE_COLUMNS_WAYS:
+    for filter, new_column, old_column, fill in config['ways'][BaseConfigKeys.DERIVATE_COLUMNS]:
         GdfUtils.create_derivated_columns(
             ways_gdf, new_column, old_column, filter=filter, fill=fill)
         old_column_remove.append(old_column)
-    GdfUtils.remove_columns(ways_gdf, [Style.FE_WIDTH_SCALE.name, Style.EDGE_WIDTH_RATIO.name, Style.EDGE_WIDTH_DASHED_CONNECT_RATIO.name,
-                                       Style.BRIDGE_WIDTH_RATIO.name, Style.BRIDGE_EDGE_WIDTH_RATIO.name, *old_column_remove])
+    GdfUtils.remove_columns(ways_gdf, [Style.FE_WIDTH_SCALE.value, Style.EDGE_WIDTH_RATIO.value, Style.EDGE_WIDTH_DASHED_CONNECT_RATIO.value,
+                                       Style.BRIDGE_WIDTH_RATIO.value, Style.BRIDGE_EDGE_WIDTH_RATIO.value, *old_column_remove])
 
     # ----areas----
-    GdfUtils.fill_nan_values(areas_gdf, [Style.ZINDEX.name], 0)
+    GdfUtils.fill_nan_values(areas_gdf, [Style.ZINDEX.value], 0)
 
-    GdfUtils.multiply_column_gdf(areas_gdf, Style.WIDTH.name, [
-        Style.FE_WIDTH_SCALE.name])
+    GdfUtils.multiply_column_gdf(areas_gdf, Style.WIDTH.value, [
+        Style.FE_WIDTH_SCALE.value])
 
-    GdfUtils.create_derivated_columns(areas_gdf, Style.EDGE_WIDTH.name, Style.WIDTH.name, [
-                                      Style.EDGE_WIDTH_RATIO.name])
+    GdfUtils.create_derivated_columns(areas_gdf, Style.EDGE_WIDTH.value, Style.WIDTH.value, [
+                                      Style.EDGE_WIDTH_RATIO.value])
     old_column_remove = []
-    for filter, new_column, old_column, fill in DERIVATE_COLUMNS_AREAS:
+    for filter, new_column, old_column, fill in config['areas'][BaseConfigKeys.DERIVATE_COLUMNS]:
         GdfUtils.create_derivated_columns(
             areas_gdf, new_column, old_column, filter=filter, fill=fill)
         old_column_remove.append(old_column)
 
-    GdfUtils.remove_columns(areas_gdf, [Style.FE_WIDTH_SCALE.name,
-                                        Style.EDGE_WIDTH_RATIO.name, *old_column_remove])
-
-# def validate_and_parse_settings(): - return struct
-#     pass
-# def get_map_area_and_boundary(edited settings dict) - 2x gdf
-# def get_map_area_and_boundary(edited settings dict) - 2x gdf
-
-# will be in calc preview endpoint
+    GdfUtils.remove_columns(areas_gdf, [Style.FE_WIDTH_SCALE.value,
+                                        Style.EDGE_WIDTH_RATIO.value, *old_column_remove])
 
 
 def calc_preview(map_area_gdf, paper_dimensions_mm):
@@ -187,6 +186,31 @@ def calc_preview(map_area_gdf, paper_dimensions_mm):
 
     return map_scaling_factor, map_area_gdf, outer_map_area_gdf
 
+# will get all as normal area - only preview endpoint will be different
+
+
+def zoom_level_endpoint(area: WantedArea, paper_dimensions_mm):
+    map_area_gdf = GdfUtils.get_whole_area_gdf(
+        area, 'area', CRS_OSM, CRS_DISPLAY)
+    map_area_gdf = GdfUtils.combine_rows_gdf(map_area_gdf)
+
+    # ------------get paper dimension (size and orientation)------------
+    map_area_dimensions = GdfUtils.get_dimensions_gdf(map_area_gdf)
+    paper_dimensions_mm = Utils.adjust_paper_dimensions(map_area_dimensions, paper_dimensions_mm,
+                                                        GIVEN_SMALLER_PAPER_DIMENSION, WANTED_ORIENTATION)
+
+    if (FIT_PAPER_SIZE):
+        map_area_gdf = GdfUtils.expand_gdf_area_fitPaperSize(
+            map_area_gdf, paper_dimensions_mm)
+        map_area_dimensions = GdfUtils.get_dimensions_gdf(map_area_gdf)
+
+    map_scaling_factor = Utils.calc_map_scaling_factor(map_area_dimensions,
+                                                       paper_dimensions_mm)
+
+    zoom_level = Utils.get_zoom_level(
+        map_scaling_factor, ZOOM_MAPPING, 0.3)
+    print(map_scaling_factor, zoom_level)
+
 
 @time_measurement("main")
 def main() -> None:
@@ -196,13 +220,7 @@ def main() -> None:
     # convert and validate formats from FE - and handle exceptions
     wanted_areas_to_display = ReceivedStructureProcessor.validate_and_convert_areas_strucutre(
         AREA, allowed_keys_and_types=REQ_AREA_DICT_KEYS, key_with_area="area")
-
-    if (map_theme == 'mapycz'):
-        MAP_THEME = MAPYCZSTYLE
-    else:
-        MAP_THEME = MAPYCZSTYLE
-
-    # check if styles and recived dict have all reqired variables - from constants
+    map_theme, base_config = STYLES.get(MAP_STYLE_THEME, DEFAULT_STYLE)
 
     # second function
     # if are for preview is not specified, use whole area
@@ -252,19 +270,22 @@ def main() -> None:
     map_scale = Utils.get_scale(GdfUtils.get_bounds_gdf(
         GdfUtils.change_crs(map_area_gdf, CRS_OSM)), paper_dimensions_mm)
     # zoom level to endpoint specific - always from that biger area
-    # todo zoom from structure for - nodes, ways, areas
     zoom_level = Utils.get_zoom_level(
         map_scaling_factor, ZOOM_MAPPING, 0.3)
     print(map_scaling_factor, zoom_level)
-    # zoom_level = 10
+    # zoom_level_endpoint(OUTER_AREA if WANT_PREVIEW == True else wanted_areas_to_display,
+    #                     OUTER_PAPER_DIMENSIONS if WANT_PREVIEW == True else PAPER_DIMENSIONS)
 
     # fifth function - parse osm file and get gdfs and than remove osm file
     # ------------get elements from osm file------------
     remove_osm_after_load = False
     try:
         if (OSM_WANT_EXTRACT_AREA):
+            if not shutil.which('osmium'):
+                warnings.warn("osmium is NOT installed")
+                return
             remove_osm_after_load = True if OSM_OUTPUT_FILE_NAME is None else False
-            # todo check if osmium is instaled else return?
+            
             osm_data_preprocessor = OsmDataPreprocessor(
                 OSM_INPUT_FILE_NAMES, OSM_OUTPUT_FILE_NAME)
             osm_file_name = osm_data_preprocessor.extract_areas(
@@ -273,21 +294,23 @@ def main() -> None:
             osm_file_name = OSM_INPUT_FILE_NAMES[0]
     except:
         warnings.warn("Error while extracting area from osm file.")
+        # pass err to fe
         return
     # ------------Working in display CRS------------
     map_area_gdf = GdfUtils.change_crs(map_area_gdf, CRS_DISPLAY)
     boundary_map_area_gdf = GdfUtils.change_crs(
         boundary_map_area_gdf, CRS_DISPLAY)
-    # reqired_area_polygon = GdfUtils.create_polygon_from_gdf(map_area_gdf)
-    # if (not GdfUtils.are_gdf_geometry_inside_geometry(gpxs_gdf, reqired_area_polygon)):
-    #     warnings.warn("Some gpx files are not whole inside selected map area.")
     # prepare style dict
 
     # ------------osm file loading------------
     osm_file_parser = OsmDataParser(
         wanted_nodes, wanted_nodes_from_area, wanted_ways, wanted_areas,
-        unwanted_nodes_tags, unwanted_ways_tags, unwanted_areas_tags, area_additional_columns=AREA_ADDITIONAL_COLUMNS,
-        node_additional_columns=NODES_ADDITIONAL_COLUMNS, way_additional_columns=WAYS_ADDITIONAL_COLUMNS)
+        unwanted_nodes_tags, unwanted_ways_tags, unwanted_areas_tags,
+        nodes_additional_columns=base_config['nodes'][BaseConfigKeys.ADDITIONAL_COLUMNS],
+        ways_additional_columns=base_config['ways'][BaseConfigKeys.ADDITIONAL_COLUMNS],
+        areas_additional_columns=base_config['areas'][BaseConfigKeys.ADDITIONAL_COLUMNS]
+    )
+
     nodes_gdf, ways_gdf, areas_gdf = osm_file_parser.create_gdf(
         osm_file_name, CRS_OSM, CRS_DISPLAY)
 
@@ -309,13 +332,15 @@ def main() -> None:
     else:
         nodes_gdf = GdfUtils.get_rows_inside_area(
             nodes_gdf, map_area_gdf)
-    gdfs_convert_loaded_columns(gpxs_gdf, nodes_gdf, ways_gdf, areas_gdf)
-    for var_name, var_value in MAP_THEME['variables'].items():
-        MAP_THEME['variables'][var_name] = StyleAssigner.convert_variables_from_dynamic(
+    gdfs_convert_loaded_columns(
+        gpxs_gdf, nodes_gdf, ways_gdf, areas_gdf, base_config)
+    for var_name, var_value in map_theme['variables'].items():
+        map_theme['variables'][var_name] = StyleManager.convert_variables_from_dynamic(
             var_value, zoom_level)
 
     # ------------prefiltering nodes by importance------------
     if (PEAKS_FILTER_SENSITIVITY is not None):
+        # make distance 10* more than scale and prominence 10* less than scale
         nodes_gdf = GdfUtils.filter_peaks_by_prominence(
             nodes_gdf, map_scale*10*PEAKS_FILTER_SENSITIVITY, map_scale /
             10*(PEAKS_FILTER_SENSITIVITY/2),
@@ -329,8 +354,8 @@ def main() -> None:
     coast_gdf, ways_gdf = GdfUtils.filter_rows(
         ways_gdf, {'natural': 'coastline'}, compl=True)
     bg_gdf = GdfUtils.create_background_gdf(
-        map_area_gdf, coast_gdf, MAP_THEME['variables'][MapThemeVariable.WATER_COLOR],
-        MAP_THEME['variables'][MapThemeVariable.LAND_COLOR])
+        map_area_gdf, coast_gdf, map_theme['variables'][MapThemeVariable.WATER_COLOR],
+        map_theme['variables'][MapThemeVariable.LAND_COLOR])
 
     # prepare styles
     process_bridges_and_tunnels(ways_gdf, PLOT_BRIDGES, PLOT_TUNNELS)
@@ -339,39 +364,39 @@ def main() -> None:
     gpxs_gdf = GdfUtils.merge_lines_gdf(gpxs_gdf, [])
     # assing zoom specific styles
     # eight function - style
-    gpxs_styles = StyleAssigner.convert_from_dynamic(
-        MAP_THEME['styles']['gpxs'], WAYS_STYLE_ZOOM_LEVEL)
-    nodes_styles = StyleAssigner.convert_from_dynamic(
-        MAP_THEME['styles']['nodes'], NODES_STYLE_ZOOM_LEVEL)
-    ways_styles = StyleAssigner.convert_from_dynamic(
-        MAP_THEME['styles']['ways'], WAYS_STYLE_ZOOM_LEVEL)
-    areas_styles = StyleAssigner.convert_from_dynamic(
-        MAP_THEME['styles']['areas'], AREAS_STYLE_ZOOM_LEVEL)
-    
-    if (MAP_THEME['variables'][MapThemeVariable.GPXS_STYLES_SCALE]):
-        StyleAssigner.scale_styles(
-            gpxs_styles, MAP_THEME['variables'][MapThemeVariable.GPXS_STYLES_SCALE], map_scaling_factor)
-    if (MAP_THEME['variables'][MapThemeVariable.NODES_STYLES_SCALE]):
-        StyleAssigner.scale_styles(
-            nodes_styles, MAP_THEME['variables'][MapThemeVariable.NODES_STYLES_SCALE], map_scaling_factor)
-    if (MAP_THEME['variables'][MapThemeVariable.WAYS_STYLES_SCALE]):
-        StyleAssigner.scale_styles(
-            ways_styles, MAP_THEME['variables'][MapThemeVariable.WAYS_STYLES_SCALE], map_scaling_factor)
-    if (MAP_THEME['variables'][MapThemeVariable.AREAS_STYLES_SCALE]):
-        StyleAssigner.scale_styles(
-            areas_styles, MAP_THEME['variables'][MapThemeVariable.AREAS_STYLES_SCALE], map_scaling_factor)
-    StyleAssigner.assign_styles(gpxs_gdf, gpxs_styles)
-    StyleAssigner.assign_styles(
-        nodes_gdf, nodes_styles, NODES_DONT_CATEGORIZE)
-    StyleAssigner.assign_styles(
-        ways_gdf, ways_styles, WAYS_DONT_CATEGORIZE)
-    StyleAssigner.assign_styles(
-        areas_gdf, areas_styles, AREAS_DONT_CATEGORIZE)
+    gpxs_styles = StyleManager.convert_from_dynamic(
+        map_theme['styles']['gpxs'], WAYS_STYLE_ZOOM_LEVEL)
+    nodes_styles = StyleManager.convert_from_dynamic(
+        map_theme['styles']['nodes'], NODES_STYLE_ZOOM_LEVEL)
+    ways_styles = StyleManager.convert_from_dynamic(
+        map_theme['styles']['ways'], WAYS_STYLE_ZOOM_LEVEL)
+    areas_styles = StyleManager.convert_from_dynamic(
+        map_theme['styles']['areas'], AREAS_STYLE_ZOOM_LEVEL)
+
+    if (map_theme['variables'][MapThemeVariable.GPXS_STYLES_SCALE]):
+        StyleManager.scale_styles(
+            gpxs_styles, map_theme['variables'][MapThemeVariable.GPXS_STYLES_SCALE], map_scaling_factor)
+    if (map_theme['variables'][MapThemeVariable.NODES_STYLES_SCALE]):
+        StyleManager.scale_styles(
+            nodes_styles, map_theme['variables'][MapThemeVariable.NODES_STYLES_SCALE], map_scaling_factor)
+    if (map_theme['variables'][MapThemeVariable.WAYS_STYLES_SCALE]):
+        StyleManager.scale_styles(
+            ways_styles, map_theme['variables'][MapThemeVariable.WAYS_STYLES_SCALE], map_scaling_factor)
+    if (map_theme['variables'][MapThemeVariable.AREAS_STYLES_SCALE]):
+        StyleManager.scale_styles(
+            areas_styles, map_theme['variables'][MapThemeVariable.AREAS_STYLES_SCALE], map_scaling_factor)
+    StyleManager.assign_styles(gpxs_gdf, gpxs_styles)
+    StyleManager.assign_styles(
+        nodes_gdf, nodes_styles, base_config['nodes'][BaseConfigKeys.DONT_CATEGORIZE])
+    StyleManager.assign_styles(
+        ways_gdf, ways_styles, base_config['ways'][BaseConfigKeys.DONT_CATEGORIZE])
+    StyleManager.assign_styles(
+        areas_gdf, areas_styles, base_config['areas'][BaseConfigKeys.DONT_CATEGORIZE])
 
     # ------------scaling and column calc------------ - to function
     # ninth - prepare/edit styled columns
     gdfs_prepare_styled_columns(gpxs_gdf, nodes_gdf, ways_gdf,
-                                areas_gdf, map_scaling_factor)
+                                areas_gdf, map_scaling_factor, base_config)
 
     # ------------filter nodes by min req------------
     nodes_gdf = GdfUtils.check_filter_nodes_min_req(nodes_gdf)
@@ -380,6 +405,9 @@ def main() -> None:
     areas_gdf['area_size'] = areas_gdf.geometry.area
     bg_gdf['area_size'] = bg_gdf.area
     # -----sort-----
+    GdfUtils.sort_gdf_by_columns(
+        bg_gdf, ['area_size'], ascending=False, na_position='last')
+
     # sort by population and ele - main sort is by zindex in plotter
     GdfUtils.sort_gdf_by_columns(
         nodes_gdf, ['population', 'prominence', 'ele'], ascending=False, na_position='last')
@@ -388,31 +416,30 @@ def main() -> None:
     GdfUtils.sort_gdf_by_columns(
         areas_gdf, ['area_size'], ascending=False, na_position='last')
     GdfUtils.sort_gdf_by_columns(
-        areas_gdf, [Style.ZINDEX.name], ascending=True, na_position='first', stable=True)
-    GdfUtils.sort_gdf_by_columns(
-        bg_gdf, ['area_size'], ascending=False, na_position='last')
+        areas_gdf, [Style.ZINDEX.value], ascending=True, na_position='first', stable=True)
 
     # 11 function - plot
     # ------------plot------------
-    # todo add checks for errors in plotting cals if dict from fe is not correct
-    area_over_ways_filter = MAP_THEME['variables'][MapThemeVariable.AREAS_OVER_WAYS_FILTER]
+    # todo add checks for errors in plotting
+    area_over_ways_filter = map_theme['variables'][MapThemeVariable.AREAS_OVER_WAYS_FILTER]
     areas_over_normal_ways, areas_gdf = GdfUtils.filter_rows(
         areas_gdf,  area_over_ways_filter[0], compl=True)
     areas_as_ways = GdfUtils.filter_rows(
         areas_over_normal_ways, area_over_ways_filter[1])
     if (not areas_as_ways.empty and not ways_gdf.empty):
         ways_gdf = GdfUtils.combine_gdfs([ways_gdf, areas_as_ways])
-    # this to to plotter settings - todo add to enum as plotter_settings
+
     plotter_settings = {"map_area_gdf": map_area_gdf, "paper_dimensions_mm": paper_dimensions_mm,
                         "map_scaling_factor": map_scaling_factor, "text_bounds_overflow_threshold": TEXT_BOUNDS_OVERFLOW_THRESHOLD,
                         "text_wrap_names_len": TEXT_WRAP_NAMES_LEN, "outer_map_area_gdf": outer_map_area_gdf,
-                        "map_bg_color": MAP_THEME['variables'][MapThemeVariable.LAND_COLOR]}
+                        "map_bg_color": map_theme['variables'][MapThemeVariable.LAND_COLOR]}
 
     plotter = Plotter(map_area_gdf, paper_dimensions_mm,
                       map_scaling_factor, TEXT_BOUNDS_OVERFLOW_THRESHOLD, TEXT_WRAP_NAMES_LEN, outer_map_area_gdf,
-                      TEXT_EXPAND_PERCENT, MARKER_EXPAND_PERCENT)
+                      map_theme['variables'][MapThemeVariable.TEXT_BB_EXPAND_PERCENT],
+                      map_theme['variables'][MapThemeVariable.MARKER_BB_EXPAND_PERCENT])
     plotter.init(
-        MAP_THEME['variables'][MapThemeVariable.LAND_COLOR], bg_gdf)
+        map_theme['variables'][MapThemeVariable.LAND_COLOR], bg_gdf)
     plotter.areas(areas_gdf)
     del areas_gdf
     if (not boundary_map_area_gdf.empty):

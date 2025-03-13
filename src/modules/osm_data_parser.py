@@ -12,7 +12,7 @@ class OsmDataParser():
 
     def __init__(self, wanted_nodes: WantedCategories, wanted_nodes_from_area: WantedCategories, wanted_ways: WantedCategories, wanted_areas: WantedCategories, 
                  unwanted_nodes_tags: UnwantedTags, unwanted_ways_tags: UnwantedTags, unwanted_areas_tags: UnwantedTags,
-                 node_additional_columns: dict[str] = {}, way_additional_columns: dict[str] = {}, area_additional_columns: dict[str] = {}):
+                 nodes_additional_columns: dict[str] = {}, ways_additional_columns: dict[str] = {}, areas_additional_columns: dict[str] = {}):
         self.wanted_nodes = wanted_nodes
         self.wanted_nodes_from_area = wanted_nodes_from_area
         self.wanted_ways = wanted_ways
@@ -23,9 +23,9 @@ class OsmDataParser():
         
         # merge always wanted columns (map objects) with additions wanted info columns
         self.nodes_columns = list(wanted_nodes.keys()) + \
-            node_additional_columns
-        self.way_columns = list(wanted_ways.keys()) + way_additional_columns
-        self.area_columns = list(wanted_areas.keys()) + area_additional_columns
+            nodes_additional_columns
+        self.way_columns = list(wanted_ways.keys()) + ways_additional_columns
+        self.area_columns = list(wanted_areas.keys()) + areas_additional_columns
 
     @staticmethod
     def _apply_filters_not_allowed(not_allowed_tags: UnwantedTags, tags: TagList, curr_tag_key_inside: str | None = None):

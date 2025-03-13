@@ -4,20 +4,12 @@ import pandas as pd
 from geopandas import GeoDataFrame
 from modules.gdf_utils import GdfUtils
 
-# import numpy as np
-# import matplotlib.pyplot as plt
-# from matplotlib.colors import to_rgba
-
 from modules.utils import Utils
 from common.map_enums import Style, ColorMode
 from common.custom_types import FeaturesCategoriesStyles, WantedCategories, FeatureStyles, FeaturesCategoryStyle, ElementStyles
 
-# element or static or map element and gpx...?
 
-# todo to styleManager
-
-
-class StyleAssigner:
+class StyleManager:
     def __init__(self):
         pass
 
@@ -44,7 +36,7 @@ class StyleAssigner:
             return variable
         zoom_variable = variable
         for zoom_range, zoom_value in variable.items():
-            if (StyleAssigner.__check_range(zoom_range, zoom_level)):
+            if (StyleManager.__check_range(zoom_range, zoom_level)):
                 return zoom_value
         return zoom_variable
 
@@ -60,7 +52,7 @@ class StyleAssigner:
                     f"zoom_styles ({zoom_styles})is not dict but {type(zoom_styles)}")
                 continue
             for zoom_range, zoom_style_values in zoom_styles.items():
-                if (StyleAssigner.__check_range(zoom_range, zoom_level)):
+                if (StyleManager.__check_range(zoom_range, zoom_level)):
                     styles_filter = {**zoom_style_values, **styles_filter}
             styles = {**styles_default, **styles_filter}
             normal_styles.append((filter, styles))
