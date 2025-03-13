@@ -15,8 +15,6 @@ import shutil
 from common.common_helpers import time_measurement
 
 
-# some class like map generator or someting and parse to functions that will be called in endpoints
-
 def process_bridges_and_tunnels(gdf, want_bridges: bool, want_tunnels: bool):
     GdfUtils.change_columns_to_numeric(gdf, ['layer'])
     GdfUtils.fill_nan_values(gdf, ['layer'], 0)
@@ -287,7 +285,7 @@ def main() -> None:
             remove_osm_after_load = True if OSM_OUTPUT_FILE_NAME is None else False
             
             osm_data_preprocessor = OsmDataPreprocessor(
-                OSM_INPUT_FILE_NAMES, OSM_OUTPUT_FILE_NAME)
+                OSM_INPUT_FILE_NAMES, OSM_TMP_FOLDER, OSM_OUTPUT_FILE_NAME)
             osm_file_name = osm_data_preprocessor.extract_areas(
                 map_area_gdf, CRS_OSM)
         else:
@@ -453,7 +451,7 @@ def main() -> None:
     # must be before nodes
     plotter.gpxs(gpxs_gdf)
     plotter.clip()
-
+    del gpxs_gdf
     plotter.nodes(nodes_gdf, TEXT_WRAP_NAMES_LEN)
     del nodes_gdf
 

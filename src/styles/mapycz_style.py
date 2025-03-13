@@ -17,7 +17,7 @@ AREAS_OVER_WAYS_FILTER = ([{'highway': ['pedestrian', 'footway']}, {'amenity': [
                                'place': ['square']},
                            {'amenity': ['parking', 'motorcycle_parking']}])
 
-DEFAULT_FALLBACK_FONTS = ['Arial Unicode MS', 'DejaVu Sans']
+DEFAULT_FONTS = ['Arial Unicode MS', 'DejaVu Sans']
 
 WATER_COLOR_ZOOM_8_10 = "#9fc4e2"
 WATER_COLOR_ZOOM_1_7 = "#9abfdc"
@@ -49,7 +49,6 @@ RESERVATION_EDGE_CUMULATIVE_SIZE = Utils.cumulative_zoom_size_multiplier(
     {"10-10": 40, "9-9": 2, '8-8': 2, "7-7": 2, "6-5": 1.5,
      "4-3": 1.2, "2-1": 1.4
      }, Style.WIDTH.value)
-
 
 
 DASHED_LAND_WAYS_CUMULATIVE_SIZE = Utils.cumulative_zoom_size_multiplier(
@@ -175,7 +174,7 @@ natural_styles_nodes: ElementStyles = [
         Style.ZINDEX.value: 30, Style.MIN_PLOT_REQ.value: MinPlot.MARKER_TEXT2.value,
         # marker
         Style.MARKER.value: MarkersCodes.MPL_TRIANGLE.value, Style.MARKER_HORIZONTAL_ALIGN.value: "center",
-        Style.TEXT_FONTFAMILY.value: ['Georgia', 'Arial', *DEFAULT_FALLBACK_FONTS],
+        Style.TEXT_FONTFAMILY.value: ['Georgia', *DEFAULT_FONTS],
         Style.COLOR.value: "#443833", Style.EDGE_COLOR.value: "None", Style.WIDTH.value: 3,
         # text
         Style.TEXT_WEIGHT.value: 'heavy', Style.TEXT_STYLE.value: 'italic', Style.TEXT_FONT_SIZE.value: 6,
@@ -230,7 +229,7 @@ nodes_styles_default: ElementStyles = [
     }),
     ([], {
         Style.ALPHA.value: 1, Style.EDGE_ALPHA.value: 1,
-        Style.TEXT_FONTFAMILY.value: ['Arial', *DEFAULT_FALLBACK_FONTS],
+        Style.TEXT_FONTFAMILY.value: [*DEFAULT_FONTS],
         Style.TEXT_STYLE.value: 'normal',
         Style.TEXT_WEIGHT.value: 'normal', Style.TEXT_WRAP_LEN.value: 15
     })
@@ -798,12 +797,18 @@ landuse_styles_area: ElementStyles = [
       "7": {Style.COLOR.value: RESIDENTAL_AREA_COLOR_ZOOM_7},
       "1-6": {Style.COLOR.value: RESIDENTAL_AREA_COLOR_ZOOM_1_6}}),
 
-    ({'landuse': ['industrial', 'farmyard', 'brownfield', 'quarry', 'landfill']},
+    ({'landuse': ['industrial', 'farmyard', 'brownfield', 'landfill']},
      {},
      {"8-10": {Style.COLOR.value: INDUSTRIAL_AREA_COLOR_ZOOM_8_10},
       "7": {Style.COLOR.value: INDUSTRIAL_AREA_COLOR_ZOOM_7},
-      "5-6": {Style.COLOR.value: INDUSTRIAL_AREA_COLOR_ZOOM_7},
+      "5-6": {Style.COLOR.value: INDUSTRIAL_AREA_COLOR_ZOOM_5_6},
       "1-4": {Style.COLOR.value: RESIDENTAL_AREA_COLOR_ZOOM_1_6}}),
+
+    ({'landuse': 'quarry'},
+     {},
+     {"8-10": {Style.COLOR.value: INDUSTRIAL_AREA_COLOR_ZOOM_8_10},
+      "7": {Style.COLOR.value: INDUSTRIAL_AREA_COLOR_ZOOM_7},
+      "1-6": {Style.COLOR.value: INDUSTRIAL_AREA_COLOR_ZOOM_5_6}}),
 ]
 
 leisure_styles_area: ElementStyles = [
