@@ -66,7 +66,7 @@ class Plotter:
 
         polygon_text_inside = GdfUtils.create_polygon_from_gdf(
             self.reqired_area_gdf) if self.outer_reqired_area_gdf is None else GdfUtils.create_polygon_from_gdf(self.outer_reqired_area_gdf)
-        self.polygon_text_inside_display: Polygon | MultiPolygon = GeomUtils.transform_geometry_to_display(
+        self.polygon_text_inside_display: Polygon | MultiPolygon = GeomUtils.transform_geometry_to_display_coords(
             self.ax, polygon_text_inside)
         
     def __filter_invalid_texts(self, gdf):
@@ -87,14 +87,14 @@ class Plotter:
         elif (position == MarkerPosition.UNDER_TEXT_OVERLAP):
             zorder = self.MARKER_UNDER_TEXT_ZORDER
 
-        font_properties = Utils.get_value(
+        font_properties = Utils.get_name_tuple_value(
             row, Style.MARKER_FONT_PROPERTIES.value, None)
         try:
             if (pd.notna(font_properties)):
                 # icon using font properties
-                va = Utils.get_value(
+                va = Utils.get_name_tuple_value(
                     row, Style.MARKER_VERTICAL_ALIGN.value, "center")
-                ha = Utils.get_value(
+                ha = Utils.get_name_tuple_value(
                     row, Style.MARKER_HORIZONTAL_ALIGN.value, "center")
                 marker: Text = self.ax.text(row.geometry.x, row.geometry.y, row.MARKER, color=row.COLOR, fontsize=row.WIDTH,
                                             font_properties=font_properties, alpha=row.ALPHA,
@@ -190,7 +190,7 @@ class Plotter:
                 warnings.warn(f"Unknown text position {position}")
                 continue
             
-            font_properties = Utils.get_value(
+            font_properties = Utils.get_name_tuple_value(
                 row, Style.TEXT_FONT_PROPERTIES.value, None)
             text_anotation: Annotation = self.ax.annotate(text, (x, y), textcoords="offset points", xytext=(x_shift, y_shift), ha=ha, va=va,
                                                           color=row.TEXT_COLOR, fontsize=row.TEXT_FONT_SIZE, font_properties=font_properties,
@@ -219,7 +219,7 @@ class Plotter:
     def __text_on_point(self, row: TextRow, text: str, text_wrap_len=0, store_bbox: bool = True, check_bbox_position: bool = True,
                         zorder: int = 3) -> Text | None:
         text = Utils.wrap_text(text, text_wrap_len, replace_whitespace=False)
-        font_properties = Utils.get_value(
+        font_properties = Utils.get_name_tuple_value(
                 row, Style.TEXT_FONT_PROPERTIES.value, None)
         text_plot: Text = self.ax.text(row.geometry.x, row.geometry.y, text, color=row.TEXT_COLOR, fontsize=row.TEXT_FONT_SIZE, family=row.TEXT_FONTFAMILY,
                                        weight=row.TEXT_WEIGHT, style=row.TEXT_STYLE, ha='center', va='center', alpha=row.ALPHA, font_properties=font_properties,
@@ -249,7 +249,7 @@ class Plotter:
         if (row.MIN_PLOT_REQ in {MinPlot.TEXT1_TEXT2.value, MinPlot.MARKER_TEXT1_TEXT2.value}):
             return (None, None)
 
-        marker_position = Utils.get_value(
+        marker_position = Utils.get_name_tuple_value(
             row, Style.MARKER_LAYER_POSITION.value, MarkerPosition.NORMAL)
         marker = self.__marker(
             row, store_bbox=False, position=marker_position, zorder=marker_zorder)
@@ -258,7 +258,7 @@ class Plotter:
                                                     MinPlot.MARKER_TEXT1_OR_TEXT2.value}):
             return (None, None)
         # can have text in text1 or text2
-        text_wrap_len = Utils.get_value(
+        text_wrap_len = Utils.get_name_tuple_value(
             row, Style.TEXT_WRAP_LEN.value, self.text_wrap_len)
         if (text_row == Style.TEXT1.value):
             text = row.TEXT1
@@ -294,7 +294,7 @@ class Plotter:
         return (marker, text_annotation)
 
     def __marker_with_two_annotations(self, row: MarkerTwoAnotationRow, store_bbox: bool = True, text_zorder: int = 3, marker_zorder: int = 2) -> tuple[Line2D, Text, Text]:
-        marker_position = Utils.get_value(
+        marker_position = Utils.get_name_tuple_value(
             row, Style.MARKER_LAYER_POSITION.value, MarkerPosition.NORMAL)
         marker = self.__marker(row, store_bbox=False, position=marker_position,
                                zorder=marker_zorder)
@@ -305,7 +305,7 @@ class Plotter:
             return (None, None, None)
 
         # must have text in text1 and text2
-        text_wrap_len = Utils.get_value(
+        text_wrap_len = Utils.get_name_tuple_value(
             row, Style.TEXT_WRAP_LEN.value, self.text_wrap_len)
         # check if text1 and text2 have same positions - merge and plot as one text
         if (row.TEXT1_POSITIONS == row.TEXT2_POSITIONS):
@@ -365,8 +365,8 @@ class Plotter:
         gdf = self.__filter_invalid_texts(gdf)
 
         for row in gdf.itertuples(index=False):
-            text1 = Utils.get_value(row, Style.TEXT1.value, None)
-            text2 = Utils.get_value(row, Style.TEXT2.value, None)
+            text1 = Utils.get_name_tuple_value(row, Style.TEXT1.value, None)
+            text2 = Utils.get_name_tuple_value(row, Style.TEXT2.value, None)
             if (text1 is not None and text2 is not None):
                 text = str(text1) + '\n' + str(text2)
             elif (text1 is not None):
@@ -375,13 +375,13 @@ class Plotter:
                 text = text2
 
             self.__text_on_point(
-                row, text, Utils.get_value(row, Style.TEXT_WRAP_LEN.value, self.text_wrap_len), store_bbox, True, zorder=zorder)
+                row, text, Utils.get_name_tuple_value(row, Style.TEXT_WRAP_LEN.value, self.text_wrap_len), store_bbox, True, zorder=zorder)
 
     def __markers_gdf(self, gdf: GeoDataFrame, store_bbox: bool = True, zorder: int = 2):
         gdf = self.__filter_invalid_markers(gdf)
         for row in gdf.itertuples(index=False):
             self.__marker(row, store_bbox=store_bbox,
-                          position=Utils.get_value(
+                          position=Utils.get_name_tuple_value(
                               row, Style.MARKER_LAYER_POSITION.value, MarkerPosition.NORMAL), zorder=zorder)
 
     def __markers_gdf_with_one_annotation(self, gdf: GeoDataFrame, store_bbox: bool = True, text_zorder: int = 3, marker_zorder: int = 2):
@@ -389,7 +389,7 @@ class Plotter:
         gdf = self.__filter_invalid_texts(gdf)
 
         for row in gdf.itertuples(index=False):
-            text1 = Utils.get_value(row, Style.TEXT1.value, None)
+            text1 = Utils.get_name_tuple_value(row, Style.TEXT1.value, None)
             if (text1 is not None):
                 self.__marker_with_one_annotation(
                     row, Style.TEXT1.value, store_bbox, text_zorder=text_zorder, marker_zorder=marker_zorder)
@@ -557,9 +557,9 @@ class Plotter:
 
         for row in lines_gdf.itertuples(index=False):
             geom = row.geometry
-            line_capstyle = Utils.get_value(
+            line_capstyle = Utils.get_name_tuple_value(
                 row, Style.LINE_CAPSTYLE.value, self.DEFAULT_CAPSTYLE)
-            edge_capstyle = Utils.get_value(
+            edge_capstyle = Utils.get_name_tuple_value(
                 row, Style.EDGE_CAPSTYLE.value, self.DEFAULT_CAPSTYLE)
             if isinstance(geom, MultiLineString):
                 for line in geom.geoms:  # Extract each LineString
@@ -776,16 +776,16 @@ class Plotter:
                 ALPHA=row.START_MARKER_ALPHA,
                 EDGE_WIDTH=row.START_MARKER_EDGE_WIDTH,
                 EDGE_COLOR=row.START_MARKER_EDGE_COLOR,
-                MARKER_FONT_PROPERTIES=Utils.get_value(
+                MARKER_FONT_PROPERTIES=Utils.get_name_tuple_value(
                     row, Style.START_MARKER_FONT_PROPERTIES.value, None),
-                MARKER_HORIZONTAL_ALIGN=Utils.get_value(
+                MARKER_HORIZONTAL_ALIGN=Utils.get_name_tuple_value(
                     row, Style.START_MARKER_HORIZONTAL_ALIGN.value, "center"),
-                MARKER_VERTICAL_ALIGN=Utils.get_value(
+                MARKER_VERTICAL_ALIGN=Utils.get_name_tuple_value(
                     row, Style.START_MARKER_VERTICAL_ALIGN.value, "center"),
             )
-            marker_default_position = MarkerPosition.ABOVE_ALL if Utils.get_value(
+            marker_default_position = MarkerPosition.ABOVE_ALL if Utils.get_name_tuple_value(
                 row, Style.GPX_ABOVE_TEXT.value, False) else MarkerPosition.UNDER_TEXT_OVERLAP
-            start_marker_position = Utils.get_value(
+            start_marker_position = Utils.get_name_tuple_value(
                 row, Style.MARKER_LAYER_POSITION.value, marker_default_position)
             self.__marker(mapped_row, position=start_marker_position)
 
@@ -801,16 +801,16 @@ class Plotter:
                 ALPHA=row.FINISH_MARKER_ALPHA,
                 EDGE_WIDTH=row.FINISH_MARKER_EDGE_WIDTH,
                 EDGE_COLOR=row.FINISH_MARKER_EDGE_COLOR,
-                MARKER_FONT_PROPERTIES=Utils.get_value(
+                MARKER_FONT_PROPERTIES=Utils.get_name_tuple_value(
                     row, Style.FINISH_MARKER_FONT_PROPERTIES.value, None),
-                MARKER_HORIZONTAL_ALIGN=Utils.get_value(
+                MARKER_HORIZONTAL_ALIGN=Utils.get_name_tuple_value(
                     row, Style.FINISH_MARKER_HORIZONTAL_ALIGN.value, "center"),
-                MARKER_VERTICAL_ALIGN=Utils.get_value(
+                MARKER_VERTICAL_ALIGN=Utils.get_name_tuple_value(
                     row, Style.FINISH_MARKER_VERTICAL_ALIGN.value, "center"),
             )
-            marker_default_position = MarkerPosition.ABOVE_ALL if Utils.get_value(
+            marker_default_position = MarkerPosition.ABOVE_ALL if Utils.get_name_tuple_value(
                 row, Style.GPX_ABOVE_TEXT.value, False) else MarkerPosition.UNDER_TEXT_OVERLAP
-            finish_marker_position = Utils.get_value(
+            finish_marker_position = Utils.get_name_tuple_value(
                 row, Style.MARKER_LAYER_POSITION.value, marker_default_position)
             self.__marker(mapped_row, position=finish_marker_position)
 

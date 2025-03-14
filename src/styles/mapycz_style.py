@@ -777,7 +777,6 @@ AREAS_STYLES_SCALE = [Style.WIDTH.value]
 
 landuse_styles_area: ElementStyles = [
 
-    ({'landuse': 'farmland'}, {Style.COLOR.value: None}),
     ({'landuse': ['vineyard', 'orchard']}, {Style.COLOR.value: '#e1ebbe'}),
 
     ({'landuse': ['basin', 'salt_pond']}, {Style.COLOR.value: WATER_COLOR_ZOOM_1_7},
@@ -856,9 +855,8 @@ natural_styles_area: ElementStyles = [
         "8-10": {Style.COLOR.value: GREEN_AREA_COLOR_ZOOM_8_10}
     }),
 
-    ({'natural': ['water', 'bay']}, {Style.COLOR.value: WATER_COLOR_ZOOM_1_7},
+    ({'natural': 'water'}, {Style.COLOR.value: WATER_COLOR_ZOOM_1_7},
      {"8-10": {Style.COLOR.value: WATER_COLOR_ZOOM_8_10}}),
-    ({'natural': ['beach', 'sand']}, {Style.COLOR.value: None}),
 ]
 
 amenity_styles_area: ElementStyles = [
@@ -901,9 +899,9 @@ area_styles_default: ElementStyles = [
         Style.EDGE_LINESTYLE.value: '-'
     }),
 
-    ({'natural': ''}, {Style.COLOR.value: None}),
-    ({'landuse': ''},  {Style.COLOR.value: None}),
-    ({'leisure': ''}, {Style.COLOR.value: None}),
+    # ({'natural': ''}, {Style.COLOR.value: None}),
+    # ({'landuse': ''},  {Style.COLOR.value: None}),
+    # ({'leisure': ''}, {Style.COLOR.value: None}),
 
     ({'aeroway': ''}, {Style.COLOR.value: INDUSTRIAL_AREA_COLOR_ZOOM_5_6}),
     ({'building': ''}, {Style.COLOR.value: '#e1d4bb'},

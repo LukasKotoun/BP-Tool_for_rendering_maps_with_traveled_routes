@@ -40,7 +40,6 @@ def process_bridges_and_tunnels(gdf, want_bridges: bool, want_tunnels: bool):
         GdfUtils.remove_columns(gdf, ['tunnel'])
     return
 
-
 def gdfs_convert_loaded_columns(gpxs_gdf, nodes_gdf, ways_gdf, areas_gdf, config):
     GdfUtils.change_columns_to_numeric(
         nodes_gdf, config['nodes'][BaseConfigKeys.NUMERIC_COLUMNS])
@@ -57,10 +56,7 @@ def gdfs_convert_loaded_columns(gpxs_gdf, nodes_gdf, ways_gdf, areas_gdf, config
     GdfUtils.convert_numeric_columns_int(
         areas_gdf, config['areas'][BaseConfigKeys.ROUND_COLUMNS])
 
-
 def gdfs_prepare_styled_columns(gpxs_gdf, nodes_gdf, ways_gdf, areas_gdf, map_scaling_factor, config):
-    # ----gpx----
-    # gpx - is needed in this? will be setted in FE?
 
     GdfUtils.create_derivated_columns(gpxs_gdf, Style.EDGE_WIDTH.value, Style.WIDTH.value, [
                                       Style.EDGE_WIDTH_RATIO.value])
@@ -140,21 +136,14 @@ def gdfs_prepare_styled_columns(gpxs_gdf, nodes_gdf, ways_gdf, areas_gdf, map_sc
 
 
 def calc_preview(map_area_gdf, paper_dimensions_mm):
-    """
-        NOTE: using constants from config file
-    Args:
-        map_area_gdf (_type_): _description_
-        paper_dimensions_mm (_type_): _description_
 
-    Returns:
-        _type_: _description_
-    """
     wanted_outer_areas_to_display = ReceivedStructureProcessor.validate_and_convert_areas_strucutre(
         OUTER_AREA, allowed_keys_and_types=REQ_AREA_DICT_KEYS, key_with_area="area")
     outer_map_area_gdf = GdfUtils.get_whole_area_gdf(
         wanted_outer_areas_to_display, 'area', CRS_OSM, CRS_DISPLAY)
     outer_map_area_gdf = GdfUtils.combine_rows_gdf(outer_map_area_gdf)
     outer_map_area_dimensions = GdfUtils.get_dimensions_gdf(outer_map_area_gdf)
+    
     # map in meters for calc automatic orientation and same pdf sides proportions
     outer_paper_dimensions_mm = Utils.adjust_paper_dimensions(outer_map_area_dimensions, OUTER_PAPER_DIMENSIONS,
                                                               OUTER_GIVEN_SMALLER_PAPER_DIMENSION,
@@ -164,28 +153,17 @@ def calc_preview(map_area_gdf, paper_dimensions_mm):
             outer_map_area_gdf, outer_paper_dimensions_mm)
         outer_map_area_dimensions = GdfUtils.get_dimensions_gdf(
             outer_map_area_gdf)
-        # for testing - should be same as normal area after preview calc
-    # outer map scale
-        # outer_map_area_bounds = GdfUtils.get_bounds_gdf(GdfUtils.change_crs(outer_map_area_gdf, CRS_OSM)) # real scale cacl
-        # map_scale = Utils.get_scale(outer_map_area_bounds, outer_paper_dimensions_mm)
     map_scaling_factor = Utils.calc_map_scaling_factor(
         outer_map_area_dimensions, outer_paper_dimensions_mm)
-    # calc map factor for creating automatic array with wanted elements - for preview area (without area_zoom_preview)
-    # ?? to doc - need because it will clip by required area - and that will be some big area in not clipping (cant use only first approach)
-    # ?? req area je potom velká jako pdf stránka (přes celou stránku) a ne jako puvodně chtěná oblast a tedy by k žádnému zaříznutí nedošlo
-    # map_area_gdf = needs to be in display cords
+    
     # calc bounds so area_zoom_preview will be 1 and will fill whole paper
     paper_fill_bounds = Utils.calc_bounds_to_fill_paper_with_ratio(map_area_gdf.union_all().centroid,
                                                                    paper_dimensions_mm, outer_map_area_dimensions,
                                                                    outer_paper_dimensions_mm)
-    # area will be changing -> create copy for bounds plotting
     map_area_gdf = GdfUtils.create_gdf_from_bounds(
         paper_fill_bounds, CRS_DISPLAY)
 
     return map_scaling_factor, map_area_gdf, outer_map_area_gdf
-
-# will get all as normal area - only preview endpoint will be different
-
 
 def zoom_level_endpoint(area: WantedArea, paper_dimensions_mm):
     map_area_gdf = GdfUtils.get_whole_area_gdf(
@@ -369,18 +347,15 @@ def main() -> None:
     areas_styles = StyleManager.convert_from_dynamic(
         map_theme['styles']['areas'], AREAS_STYLE_ZOOM_LEVEL)
 
-    if (map_theme['variables'][MapThemeVariable.GPXS_STYLES_SCALE]):
-        StyleManager.scale_styles(
+    StyleManager.scale_styles(
             gpxs_styles, map_theme['variables'][MapThemeVariable.GPXS_STYLES_SCALE], map_scaling_factor)
-    if (map_theme['variables'][MapThemeVariable.NODES_STYLES_SCALE]):
-        StyleManager.scale_styles(
+    StyleManager.scale_styles(
             nodes_styles, map_theme['variables'][MapThemeVariable.NODES_STYLES_SCALE], map_scaling_factor)
-    if (map_theme['variables'][MapThemeVariable.WAYS_STYLES_SCALE]):
-        StyleManager.scale_styles(
+    StyleManager.scale_styles(
             ways_styles, map_theme['variables'][MapThemeVariable.WAYS_STYLES_SCALE], map_scaling_factor)
-    if (map_theme['variables'][MapThemeVariable.AREAS_STYLES_SCALE]):
-        StyleManager.scale_styles(
+    StyleManager.scale_styles(
             areas_styles, map_theme['variables'][MapThemeVariable.AREAS_STYLES_SCALE], map_scaling_factor)
+    
     StyleManager.assign_styles(gpxs_gdf, gpxs_styles)
     StyleManager.assign_styles(
         nodes_gdf, nodes_styles, base_config['nodes'][BaseConfigKeys.DONT_CATEGORIZE])

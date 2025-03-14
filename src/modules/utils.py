@@ -71,42 +71,6 @@ class Utils:
                 paper_dimensions, map_orientaion)
         return paper_dimensions
 
-    @staticmethod
-    def calc_zoom_for_smaller_area(bigger_area_dim: DimensionsTuple, bigger_area_pdf_dim: DimensionsTuple,
-                                   smaller_area_dim: DimensionsTuple,
-                                   smaller_area_pdf_dim: DimensionsTuple) -> DimensionsTuple:
-        """Calculate ares ratio relative to pdf size coresponding to areas.
-
-            Calculate the ratio of width and length between the smaller and larger area
-            based on their ratio to the corresponding dimensions of the PDF to which they are to be rendered.
-            Useful for calculcating how should be smaller area in preview zoomed 
-
-        Args:
-            bigger_area_dim (DimensionsTuple): (width, height)
-            bigger_area_pdf_dim (DimensionsTuple): (width, height)
-            smaller_area_dim (DimensionsTuple): (width, height)
-            smaller_area_pdf_dim (DimensionsTuple): (width, height)
-
-        Returns:
-            DimensionsTuple: relative ratio area dimension (width, height) 
-            if is <1 bigger area will have smaller detail - need unzoom in smaler area
-            if is >1 bigger area will have bigger detail - need zoom in smaler area
-        """
-
-        # calc level of detail - bigger number => can have more details
-        bigger_area_detail_level = Utils.calc_ratios(
-            bigger_area_pdf_dim, bigger_area_dim)
-        # calc level of detail - bigger number => can have more details
-        smaller_area_detail_level = Utils.calc_ratios(
-            smaller_area_pdf_dim, smaller_area_dim)
-
-        # if bigger area have bigger detail level than smaller area => need zoom (to increase detail for preview)  on smaller area
-        # if smaller area have bigger detail level than bigger area => need unzoom (to decrease detail for preview) on smaller area
-        width_zoom = bigger_area_detail_level[0] / smaller_area_detail_level[0]
-        height_zoom = bigger_area_detail_level[1] / \
-            smaller_area_detail_level[1]
-
-        return width_zoom, height_zoom
 
     @staticmethod
     def calc_ratios(area1: DimensionsTuple, area2: DimensionsTuple) -> DimensionsTuple:
@@ -299,7 +263,7 @@ class Utils:
         }
 
     @staticmethod
-    def get_value(row, column_name: str, default_value: any = None):
+    def get_name_tuple_value(row, column_name: str, default_value: any = None):
         value = getattr(row, column_name, None)
         if pd.isna(value):
             return default_value
@@ -308,11 +272,6 @@ class Utils:
     @staticmethod
     def is_bbox_valid(bbox: Bbox):
         return bbox is not None and bbox.x0 < bbox.x1 and bbox.y0 < bbox.y1
-
-    @staticmethod
-    def add_bbox_to_list_and_index(bbox: Bbox, bbox_list: list[Bbox], idx: rtree.index.Index):
-        bbox_list.append(bbox)
-        idx.insert(len(bbox_list)-1, bbox.extents)  # Use the list index as ID
 
     @staticmethod
     def check_bbox_position(bbox_to_overlap: Bbox, bbox_to_overflow: Bbox, bbox_index: rtree.index.Index | None,

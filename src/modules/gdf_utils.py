@@ -5,9 +5,10 @@ from geopandas import GeoDataFrame
 import pandas as pd
 import osmnx as ox
 import numpy as np
-from shapely.geometry import Polygon, GeometryCollection, MultiLineString, LineString, Point
+from shapely.geometry import Polygon, MultiLineString, LineString, Point
 from osmium import FileProcessor
 from shapely.ops import split
+from scipy.spatial import cKDTree
 
 from modules.utils import Utils
 from config import CRS_DISPLAY
@@ -17,8 +18,6 @@ from common.custom_types import BoundsDict, DimensionsTuple, WantedAreas, RowsCo
 from common.common_helpers import time_measurement
 
 
-import numpy as np
-from scipy.spatial import cKDTree
 
 
 class GdfUtils:
@@ -56,6 +55,7 @@ class GdfUtils:
         gdf.columns = [mapping_dict.get(col, col) for col in gdf.columns]
         return gdf
 
+    #! unused
     @staticmethod
     def columns_to_upper(gdf, to_upper):
         """Change GeoDataFrame column names to upper case."""
@@ -129,11 +129,6 @@ class GdfUtils:
         return Utils.get_dimensions(bounds)
 
     # ------------creating------------
-
-    @staticmethod
-    def create_gdf_from_geometry_and_attributes(geometry: list, tags: list[dict], fromCrs: str) -> GeoDataFrame:
-        return GeoDataFrame(pd.DataFrame(tags).assign(
-            geometry=geometry), crs=fromCrs)
 
     @staticmethod
     def create_gdf_from_file_processor(fp: FileProcessor, fromCrs: str, columns=[]) -> GeoDataFrame:
