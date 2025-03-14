@@ -339,7 +339,7 @@ highway_styles_main: ElementStyles = [
                 Style.BRIDGE_EDGE_WIDTH_RATIO.value: 1 + 0.7},
     }),
 
-    ({'highway': 'tertiary'}, {Style.ZINDEX.value: 43, Style.COLOR.value: NORMAL_WAY_COLOR,
+    ({'highway': 'tertiary'}, {Style.ZINDEX.value: 46, Style.COLOR.value: NORMAL_WAY_COLOR,
                                Style.EDGE_COLOR.value: NORMAL_WAY_EDGE_COLOR}, {
         **Utils.cumulative_zoom_size_multiplier({
             "10": 40, "9": 1.2, "8": 1.4, "7": 1.8, "6": 1.5,
@@ -351,13 +351,13 @@ highway_styles_main: ElementStyles = [
                 Style.BRIDGE_EDGE_WIDTH_RATIO.value: 1 + 0.7},
     }),
 
-    ({'highway': 'motorway_link'}, {Style.COLOR.value: '#9bd772', Style.ZINDEX.value: 46,
+    ({'highway': 'motorway_link'}, {Style.COLOR.value: '#9bd772', Style.ZINDEX.value: 45,
      Style.EDGE_COLOR.value: "#629157"}),
 
-    ({'highway': 'trunk_link'}, {Style.COLOR.value: '#9bd772', Style.ZINDEX.value: 45,
+    ({'highway': 'trunk_link'}, {Style.COLOR.value: '#9bd772', Style.ZINDEX.value: 44,
                                  Style.EDGE_COLOR.value: "#629157"}),
 
-    ({'highway': 'primary_link'}, {Style.COLOR.value: '#ffcc78', Style.ZINDEX.value: 44,
+    ({'highway': 'primary_link'}, {Style.COLOR.value: '#ffcc78', Style.ZINDEX.value: 43,
                                    Style.EDGE_COLOR.value: "#e8a542"}),
 
     ({'highway': ['motorway_link', 'trunk_link', 'primary_link']}, {}, {
@@ -371,7 +371,7 @@ highway_styles_main: ElementStyles = [
                 Style.BRIDGE_EDGE_WIDTH_RATIO.value: 1 + 0.8}
     }),
 
-    ({'highway': 'secondary_link'}, {Style.COLOR.value: '#faef75', Style.ZINDEX.value: 43,
+    ({'highway': 'secondary_link'}, {Style.COLOR.value: '#faef75', Style.ZINDEX.value: 42,
      Style.EDGE_COLOR.value: "#cdc139"}, {
         **Utils.cumulative_zoom_size_multiplier({
             "9-10": 30, "8": 1.3, "7": 1.7, "6": 1.6, "5": 1.3,
@@ -383,7 +383,7 @@ highway_styles_main: ElementStyles = [
                 Style.BRIDGE_EDGE_WIDTH_RATIO.value: 1 + 0.8}
     }),
 
-    ({'highway': 'tertiary_link'}, {Style.ZINDEX.value: 42}),
+    ({'highway': 'tertiary_link'}, {Style.ZINDEX.value: 41}),
 
     ({'highway': ['residential', 'unclassified', 'pedestrian', 'tertiary_link']},
      {Style.ZINDEX.value: 40, Style.COLOR.value: NORMAL_WAY_COLOR,

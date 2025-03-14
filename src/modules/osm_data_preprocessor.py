@@ -12,6 +12,8 @@ class OsmDataPreprocessor:
         # Can be a string (place name) or a list of coordinates
         self.osm_input_files: list[str] | str = osm_input_files
         if osm_output_file is None:
+            if not os.path.exists(osm_tmp_folder):
+                os.makedirs(osm_tmp_folder)
             if (osm_tmp_folder[-1] != '/'):
                 osm_tmp_folder += '/'
             self.osm_output_file = f'{osm_tmp_folder}extract_output_{uuid.uuid4()}__{datetime.now().strftime("%Y%m%d%H%M%S")}.osm.pbf'

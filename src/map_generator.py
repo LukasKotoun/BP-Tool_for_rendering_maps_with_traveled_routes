@@ -285,7 +285,7 @@ def main() -> None:
             remove_osm_after_load = True if OSM_OUTPUT_FILE_NAME is None else False
 
             osm_data_preprocessor = OsmDataPreprocessor(
-                OSM_INPUT_FILE_NAMES, OSM_TMP_FOLDER, OSM_OUTPUT_FILE_NAME)
+                OSM_INPUT_FILE_NAMES, OSM_TMP_FILE_FOLDER, OSM_OUTPUT_FILE_NAME)
             osm_file_name = osm_data_preprocessor.extract_areas(
                 map_area_gdf, CRS_OSM)
         else:
