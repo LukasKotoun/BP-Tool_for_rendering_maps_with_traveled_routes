@@ -7,7 +7,7 @@ from common.map_enums import Style, ColorMode, PaperSize, MapOrientation, Marker
 # --------------------------------------------------------------map area--------------------------------------------------------------
 # OSM_INPUT_FILE_NAMES: str = ['../osm_files/vys.osm.pbf','../osm_files/jihmor.osm.pbf']
 # OSM_INPUT_FILE_NAMES: str | list[str] = ['../osm_files/israel.osm.pbf']
-OSM_INPUT_FILE_NAMES: str | list[str] = ['../osm_files/cz.osm.pbf']
+OSM_INPUT_FILE_NAMES: str | list[str] = ['../osm_files/brno.osm.pbf']
 # OSM_INPUT_FILE_NAMES: str | list[str] = ['/zfs-pool/home/xkotou08/BP/czech-republic-latest.osm.pbf']
 # OSM_INPUT_FILE_NAMES: str | list[str] = ['../osm_files/trebic.osm.pbf', '../osm_files/brno.osm.pbf']
 OSM_WANT_EXTRACT_AREA: bool = False
@@ -112,7 +112,7 @@ OUTPUT_PDF_NAME: str = '../pdfs/divocina'
 # AREA: WantedArea = [{'area':[(12.4551956,50.4569714), (19.4047778,50.4934189), (19.3992847, 47.2727942), (12.4284594, 47.3100528)], "plot": False}] # zoom 1/8 - 0.0003824361562733402
 
 
-AREA: WantedArea = [{"area": "Česko", "plot": True, "category": 0, "width": 1}]
+AREA: WantedArea = [{"area": "Brno, Česko", "plot": True, "category": 0, "width": 1}]
 # AREA: WantedArea = [{"area": "4", "plot": True, "category": 5, "width": None}]
 # AREA: WantedArea = [{"area": "Baliny, Česko", "plot": True, "category": 0, "width": None}]
 # AREA: WantedArea =[{"area": "Jihomoravský kraj, Česko", "plot": True, "category": 2, "width": 1},
@@ -139,17 +139,16 @@ AREA: WantedArea = [{"area": "Česko", "plot": True, "category": 0, "width": 1}]
 # AREA: WantedArea = ["Okres Třebíč, Česko", "Třebíč, Česko", "Okres Jihlava, Česko"]
 # AREA: WantedArea = ["Texas, USA"]
 
-# PAPER_DIMENSIONS = PaperSize.A4.dimensions
-# PAPER_DIMENSIONS: PaperSize | tuple[float | None, float | None] = PaperSize.A4.dimensions
+PAPER_DIMENSIONS = PaperSize.A0.dimensions
 # set own dimensions. If one is left as 'None' it will be automaticaly calculated using area size
-PAPER_DIMENSIONS = (1100, None)
+# PAPER_DIMENSIONS = (1100, None)
 
 # what side of paper was set (smaller true bigger false) - only if only one side in custom dimension was set to None
 GIVEN_SMALLER_PAPER_DIMENSION: bool = True
 # set how will resulted paper be oriented, AUTOMATIC is Recommended
 WANTED_ORIENTATION: MapOrientation = MapOrientation.AUTOMATIC
 
-FIT_PAPER_SIZE = False
+FIT_PAPER_SIZE = True
 FIT_PAPER_SIZE_BOUNDS_PLOT = False
 
 
@@ -304,29 +303,28 @@ unwanted_ways_tags: UnwantedTags = {
 }
 
 wanted_areas: WantedCategories = {
-    # #todo all areas - osm can have more tags? how to do it
-    # 'landuse': {'farmland', 'forest', 'residential', 'commercial', 'retail', 'industrial', 'allotments', 'retail',
-    #             'meadow', 
-    #             # 'grass',
-    #             'landfill', 'cemetery', 'vineyard', 'orchard', 'garages',
-    #             'quarry', 'recreation_ground'},  # zoom never
-    # 'leisure': {'park', 'garden',
-    #             # 'pitch', 'golf_course', 'playground','sports_centre', # zoom 6
-    #             'stadium', 'swimming_pool'}, # zoom 2
-    # # # all water (except pools) is in natural
-    # 'natural': {'wood', 'water', 'scrub', 'heath', 'grassland',
-    #             'bay', 'beach', 'sand'}, # zoom never
-    # # občanské vybavení
-    # # parking zoom 6
+    
+    'landuse': {'farmland', 'forest', 'residential', 'commercial', 'retail', 'industrial', 'allotments', 'retail',
+                'meadow', 
+                # 'grass',
+                'landfill', 'cemetery', 'vineyard', 'orchard', 'garages',
+                'quarry', 'recreation_ground'},  # zoom never
+    'leisure': {'park', 'garden',
+                # 'pitch', 'golf_course', 'playground','sports_centre', # zoom 6
+                'swimming_pool'}, # zoom 2
+    # # all water (except pools) is in natural
+    'natural': {'wood', 'water', 'scrub', 'heath', 'grassland',
+                'bay', 'beach', 'sand'}, # zoom never 
+    # parking zoom 6
 
-    # 'amenity': {
-    #             #'motorcycle_parking', 'parking', #zoom 6
-    #             'grave_yard', 'school', 'university', 'college', 'kindergarten'
-    #             'bus_station', 'hospital', 'clinic', 'place_of_worship'}, # zoom 2
-    # 'boundary' : {'national_park'}, # zoom 1
-    # 'building': set({}),  # zoom 2
-    #  'aeroway': {'aerodrome'}, # zoom 5
-    #'highway': {'pedestrian', 'footway'}, # zoom 6
+    'amenity': {
+                #'motorcycle_parking', 'parking', #zoom 6
+                'grave_yard', 'school', 'university', 'college', 'kindergarten'
+                'bus_station', 'hospital', 'clinic', 'place_of_worship'}, # zoom 2
+    'boundary' : {'national_park'}, # zoom 1
+    'building': set({}),  # zoom 2
+    'aeroway': {'aerodrome'}, # zoom 5
+    'highway': {'pedestrian', 'footway'}, # zoom 6
 }
 
 unwanted_areas_tags: UnwantedTags = {

@@ -477,9 +477,9 @@ highway_styles_special_and_paths: ElementStyles = [
               Style.LINE_CAPSTYLE.value: LineCupStyles.ROUND.value, Style.PLOT_ON_BRIDGE.value: True}}),
 
     ({'highway': 'footway'}, {Style.ZINDEX.value: 30, Style.COLOR.value: NORMAL_WAY_COLOR,
-                              Style.EDGE_COLOR.value: NORMAL_WAY_EDGE_COLOR, },
+                              Style.EDGE_COLOR.value: NORMAL_WAY_EDGE_COLOR},
      {"1-8": {Style.COLOR.value: UNPAVED_WAY_COLOR, Style.EDGE_COLOR.value: None, Style.LINESTYLE.value: "-",
-              Style.LINE_CAPSTYLE.value: LineCupStyles.ROUND.value, Style.PLOT_ON_BRIDGE.value: True}
+              Style.LINE_CAPSTYLE.value: LineCupStyles.ROUND.value}
       }),
 
     ({'highway': ['footway', 'steps', 'cycleway']}, {},
@@ -490,10 +490,10 @@ highway_styles_special_and_paths: ElementStyles = [
 
 
     ({'highway': 'track'}, {Style.ZINDEX.value: 14, Style.COLOR.value: UNPAVED_WAY_COLOR, Style.LINESTYLE.value: (7, (10, 4)),
-     Style.EDGE_COLOR.value: None, Style.PLOT_ON_BRIDGE.value: None},
+     Style.EDGE_COLOR.value: None, Style.PLOT_ON_BRIDGE.value: False},
      {"1-7": {Style.PLOT_ON_BRIDGE.value: True}}),
     ({'highway': 'path'}, {Style.ZINDEX.value: 13, Style.COLOR.value: UNPAVED_WAY_COLOR, Style.LINESTYLE.value: (3, (5, 4)),
-     Style.EDGE_COLOR.value: None, Style.PLOT_ON_BRIDGE.value: None},
+     Style.EDGE_COLOR.value: None, Style.PLOT_ON_BRIDGE.value: False},
      {"1-7": {Style.PLOT_ON_BRIDGE.value: True}}),
     ({'highway': ['path', 'track']}, {}, {
         **DASHED_LAND_WAYS_CUMULATIVE_SIZE
@@ -684,6 +684,7 @@ ways_styles_default: ElementStyles = [
     ({'railway': ''}, {
         Style.ZINDEX.value: 90
     }),
+
     ({'railway': '', 'bridge': ''}, {
         Style.BRIDGE_EDGE_LINESTYLE.value: '-', Style.BRIDGE_LINESTYLE.value: '-',
         Style.BRIDGE_EDGE_COLOR.value: '#707070', Style.BRIDGE_COLOR.value: "#FFFFFF",
@@ -776,7 +777,7 @@ AREAS_STYLES_SCALE = [Style.WIDTH.value]
 
 landuse_styles_area: ElementStyles = [
 
-    ({'landuse': 'farmland'}, {Style.COLOR.value: '#EDEDE0'}),
+    ({'landuse': 'farmland'}, {Style.COLOR.value: None}),
     ({'landuse': ['vineyard', 'orchard']}, {Style.COLOR.value: '#e1ebbe'}),
 
     ({'landuse': ['basin', 'salt_pond']}, {Style.COLOR.value: WATER_COLOR_ZOOM_1_7},
@@ -857,6 +858,7 @@ natural_styles_area: ElementStyles = [
 
     ({'natural': ['water', 'bay']}, {Style.COLOR.value: WATER_COLOR_ZOOM_1_7},
      {"8-10": {Style.COLOR.value: WATER_COLOR_ZOOM_8_10}}),
+    ({'natural': ['beach', 'sand']}, {Style.COLOR.value: None}),
 ]
 
 amenity_styles_area: ElementStyles = [
@@ -894,27 +896,27 @@ areas_with_ways: ElementStyles = [
 ]
 
 area_styles_default: ElementStyles = [
-    ({'landuse': ''},  {Style.COLOR.value: LAND_COLOR}),
-    ({'leisure': ''}, {Style.COLOR.value: LAND_COLOR}),
-    ({'natural': ''}, {Style.COLOR.value: LAND_COLOR}),
-
-    ({'aeroway': ''}, {Style.COLOR.value: INDUSTRIAL_AREA_COLOR_ZOOM_5_6}),
-    ({'building': ''}, {Style.COLOR.value: '#e1d4bb'},
-     {"7": {Style.COLOR.value: RESIDENTAL_AREA_COLOR_ZOOM_7},
-      "1-6": {Style.COLOR.value: RESIDENTAL_AREA_COLOR_ZOOM_1_6}}),
-    ({'amenity': ''}, {Style.COLOR.value: RESIDENTAL_AREA_COLOR_ZOOM_8_10},
-     {"7": {Style.COLOR.value: RESIDENTAL_AREA_COLOR_ZOOM_7},
-      "1-6": {Style.COLOR.value: RESIDENTAL_AREA_COLOR_ZOOM_1_6}}),
-
-    # areas that will be ploted with ways
-
     ({'boundary': ''}, {
         Style.COLOR.value: None, Style.EDGE_COLOR.value: None,
         Style.EDGE_LINESTYLE.value: '-'
     }),
 
+    ({'natural': ''}, {Style.COLOR.value: None}),
+    ({'landuse': ''},  {Style.COLOR.value: None}),
+    ({'leisure': ''}, {Style.COLOR.value: None}),
+
+    ({'aeroway': ''}, {Style.COLOR.value: INDUSTRIAL_AREA_COLOR_ZOOM_5_6}),
+    ({'building': ''}, {Style.COLOR.value: '#e1d4bb'},
+     {"7": {Style.COLOR.value: RESIDENTAL_AREA_COLOR_ZOOM_7},
+      "1-6": {Style.COLOR.value: RESIDENTAL_AREA_COLOR_ZOOM_1_6}}),
+    
+    ({'amenity': ''}, {Style.COLOR.value: RESIDENTAL_AREA_COLOR_ZOOM_8_10},
+     {"7": {Style.COLOR.value: RESIDENTAL_AREA_COLOR_ZOOM_7},
+      "1-6": {Style.COLOR.value: RESIDENTAL_AREA_COLOR_ZOOM_1_6}}),
+
+
     ([], {
-        Style.COLOR.value: LAND_COLOR, Style.ALPHA.value: 1.0
+        Style.ALPHA.value: 1.0
     })
 ]
 

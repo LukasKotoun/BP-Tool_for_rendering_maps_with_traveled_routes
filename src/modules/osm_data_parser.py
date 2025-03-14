@@ -183,7 +183,6 @@ class OsmDataParser():
             ways_gdf, [key for key, _ in self.wanted_ways.items()])
         GdfUtils.change_columns_to_categorical(
             areas_gdf, [key for key, _ in self.wanted_areas.items()])
-        # todo filter out invalid - have multiple values at same time??
         print(f"nodes: {nodes_gdf.memory_usage(deep=True).sum()}, ways: {ways_gdf.memory_usage(deep=True).sum()}, areas: {areas_gdf.memory_usage(deep=True).sum()}, combined: {nodes_gdf.memory_usage(deep=True).sum() + ways_gdf.memory_usage(deep=True).sum() + areas_gdf.memory_usage(deep=True).sum()}")
 
         if (toCrs is None):
