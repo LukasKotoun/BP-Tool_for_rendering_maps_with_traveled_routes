@@ -1,17 +1,17 @@
 import math
-from shapely.geometry import Point
 
-from config import *
-from common.custom_types import DimensionsTuple, OptDimensionsTuple
-from shapely.geometry import LineString
-from shapely.ops import linemerge
+import rtree
 import textwrap
-from common.common_helpers import time_measurement
+import pandas as pd
 from shapely import geometry
-
-from pyproj import Geod
+from shapely.geometry import Point
 from matplotlib.transforms import Bbox
-from shapely.geometry import Polygon, GeometryCollection
+
+from modules.geom_utils import GeomUtils
+from common.custom_types import DimensionsTuple, OptDimensionsTuple, BoundsDict, FeaturesCategoryStyle
+from common.map_enums import Style, MapOrientation, PaperSize, WorldSides
+
+from common.common_helpers import time_measurement
 
 
 class Utils:
@@ -45,7 +45,7 @@ class Utils:
             given_paper_side: float = paper_dimensions[1]
         side_ratio: float = coresponding_map_side/given_paper_side
         resolved_pdf_side: float = other_map_side/side_ratio
-        return (given_paper_side, resolved_pdf_side)
+        return (int(given_paper_side), int(resolved_pdf_side))
 
     @staticmethod
     def adjust_paper_dimensions(map_dimensions: DimensionsTuple,
@@ -117,13 +117,12 @@ class Utils:
 
     @staticmethod
     def get_dimensions(bounds: BoundsDict) -> DimensionsTuple:
-        width = abs(bounds[WorldSides.EAST] -
-                    bounds[WorldSides.WEST])  # east - west
-        height = abs(bounds[WorldSides.NORTH] -
-                     bounds[WorldSides.SOUTH])  # north - south
+        width = abs(bounds[WorldSides.EAST.value] -
+                    bounds[WorldSides.WEST.value])  # east - west
+        height = abs(bounds[WorldSides.NORTH.value] -
+                     bounds[WorldSides.SOUTH.value])  # north - south
         return width, height
 
-    # funkce která na zakladě střed, a pomeru velikosti vetší oblasti a papíru zjistí potřebnou velikost oblasti a vrátí ji jako polygon
     @staticmethod
     def calc_bounds_to_fill_paper_with_ratio(center_point: Point, pdf_dim: DimensionsTuple,
                                              bigger_area_dim: DimensionsTuple, bigger_pdf_dim: DimensionsTuple) -> BoundsDict:
@@ -152,10 +151,10 @@ class Utils:
         new_height = pdf_dim[1] * pdf_to_area_ratio_bigger[1]
 
         return Utils.adjust_bounds_to_fill_paper({
-            WorldSides.WEST: center_point.x - (new_width / 2),
-            WorldSides.EAST: center_point.x + (new_width / 2),
-            WorldSides.SOUTH: center_point.y - (new_height / 2),
-            WorldSides.NORTH: center_point.y + (new_height / 2)
+            WorldSides.WEST.value: center_point.x - (new_width / 2),
+            WorldSides.EAST.value: center_point.x + (new_width / 2),
+            WorldSides.SOUTH.value: center_point.y - (new_height / 2),
+            WorldSides.NORTH.value: center_point.y + (new_height / 2)
         }, pdf_dim)
 
     @staticmethod
@@ -182,32 +181,21 @@ class Utils:
             # w/h == pw/ph => w = h * (pw/ph)
             new_width = height * paper_aspect_ratio
             width_diff = (new_width - width) / 2
-            area_bounds[WorldSides.WEST] -= width_diff
-            area_bounds[WorldSides.EAST] += width_diff
+            area_bounds[WorldSides.WEST.value] -= width_diff
+            area_bounds[WorldSides.EAST.value] += width_diff
         else:
             # Current aspect have longer width to height ratio than paper => adjust height
             # Expand height
             # w/h == pw/ph => h = w / (pw/ph)
             new_height = width / paper_aspect_ratio
             height_diff = (new_height - height) / 2
-            area_bounds[WorldSides.SOUTH] -= height_diff
-            area_bounds[WorldSides.NORTH] += height_diff
+            area_bounds[WorldSides.SOUTH.value] -= height_diff
+            area_bounds[WorldSides.NORTH.value] += height_diff
 
         return area_bounds
 
-    # -> Any:
-    def calc_scaling_factor_multiplier(x, min_val, max_val, a=1.894, b=-0.8257):
-        # a and b derived from points f(0.4)=1 and f(0.0004)=300
-        # a = 0.15
-        a = 0.212
-        b = -0.7953
-        # a = 0.385
-        # b = -0.7953
-        y = a * x**b
-        return max(min(y, max_val), min_val)
-
     @staticmethod
-    def calc_map_object_scaling_factor(map_dimensions_m, paper_dimensions_mm, multiply_factor=1):
+    def calc_map_scaling_factor(map_dimensions_m, paper_dimensions_mm):
         """_summary_
 
         Args:
@@ -221,29 +209,31 @@ class Utils:
         map_scaling_factor = (map_dimensions_m[0] + map_dimensions_m[1])
         paper_scaling_factor = (
             paper_dimensions_mm[0] + paper_dimensions_mm[1])
-        map_scaling_factor2 = min(
-            paper_dimensions_mm[0]/map_dimensions_m[0], paper_dimensions_mm[1] / map_dimensions_m[1])
-        print(map_scaling_factor2)
-        print(paper_scaling_factor/map_scaling_factor)
-        return paper_scaling_factor / map_scaling_factor
+        return (paper_scaling_factor / map_scaling_factor)
 
     @staticmethod
-    def get_distance(point1: Point, point2: Point):
-        geod = Geod(ellps="WGS84")
-        _, _, distance_m = geod.inv(point1[1], point1[0], point2[1], point2[0])
-        return distance_m
-        # return map_scaling_factor
+    def get_scale(map_bounds: BoundsDict, paper_dimensions_mm: DimensionsTuple) -> int:
+        """
+        Calculate the scale for the map based on the map bounds and the paper dimensions.
+        In unit of 1:scale, where 1 is mm on paper and scale is m irl. 
+        For example scale 95 means 1mm on paper is 95m in real life.
+        If paper have 200mm the map will have 
 
-    @staticmethod
-    def get_scale(map_bounds, paper_dimensions_mm):
+        Args:
+            map_bounds (_type_): _description_
+            paper_dimensions_mm (_type_): _description_
+
+        Returns:
+            int: Scale as 1cm on paper is 'scale number' m in real life
+        """
         # Use middle longitude for vertical distance
-        midx = (map_bounds[WorldSides.NORTH] +
-                map_bounds[WorldSides.SOUTH]) / 2
+        midx = (map_bounds[WorldSides.NORTH.value] +
+                map_bounds[WorldSides.SOUTH.value]) / 2
 
-        height = Utils.get_distance((map_bounds[WorldSides.NORTH], map_bounds[WorldSides.WEST]), (
-            map_bounds[WorldSides.SOUTH], map_bounds[WorldSides.WEST]))
-        width = Utils.get_distance(
-            (midx, map_bounds[WorldSides.WEST]), (midx, map_bounds[WorldSides.EAST]))
+        height = GeomUtils.get_distance((map_bounds[WorldSides.NORTH.value], map_bounds[WorldSides.WEST.value]), (
+            map_bounds[WorldSides.SOUTH.value], map_bounds[WorldSides.WEST.value]))
+        width = GeomUtils.get_distance(
+            (midx, map_bounds[WorldSides.WEST.value]), (midx, map_bounds[WorldSides.EAST.value]))
         # Calculate the scale for width and height
         scale_width = width / paper_dimensions_mm[0]
         scale_height = height / paper_dimensions_mm[1]
@@ -252,14 +242,6 @@ class Utils:
         scale = max(scale_width, scale_height)
 
         return scale
-
-    @staticmethod
-    def count_missing_values(keys: list[str], styles: FeaturesCategoryStyle, missing_style: StyleKey) -> int:
-        count = 0
-        for key in keys:
-            if key not in styles or missing_style not in styles[key].keys():
-                count += 1
-        return count
 
     @staticmethod
     def get_zoom_level(value, mapping, threshold_above_lower=0.25):
@@ -278,28 +260,15 @@ class Utils:
 
         return zooms[-1][0]  # lowest level
 
-    # @staticmethod
-    # def get_direct_folders_name(root_folder_path: str) -> list[str]:
-    #     """_summary_
-
-    #     Args:
-    #         root_folder_path (str): _description_
-
-    #     Returns:
-    #         list[str]: _description_
-    #     """
-    #     pass
-
     @staticmethod
-    # @time_measurement("wr")
-    def wrap_text(text, width):
+    def wrap_text(text: str, width: int, replace_whitespace: bool = False):
         if (text is None):
             return None
         if (width == 0 or width is None):
             return text
         width = int(width)
         text = str(text)
-        return textwrap.fill(text, width)
+        return textwrap.fill(text, width, replace_whitespace=False)
 
     @staticmethod
     def expand_bbox(bbox: Bbox, percent_expand: int = 0) -> Bbox:
@@ -312,26 +281,85 @@ class Utils:
         expanded_bbox = Bbox.from_extents(bbox.x0 - expand_x, bbox.y0 - expand_y,
                                           bbox.x1 + expand_x, bbox.y1 + expand_y)
         return expanded_bbox
+
     @staticmethod
-    def is_geometry_inside_geometry_threshold(inner: GeometryCollection, outer: GeometryCollection, threshold: float = 0.95) -> bool:
-        bbox_area: float = inner.area
-        intersection_area: float = inner.intersection(outer).area
-        percentage_inside: float = intersection_area / bbox_area
-        return percentage_inside >= threshold
-    
+    def expand_bounds_dict(bounds: BoundsDict, percent_expand: int = 0) -> Bbox:
+        if (percent_expand == 0):
+            return bounds
+        width = bounds[WorldSides.EAST.value] - bounds[WorldSides.WEST.value]
+        height = bounds[WorldSides.NORTH.value] - \
+            bounds[WorldSides.SOUTH.value]
+        expand_x = (width * percent_expand) / 100
+        expand_y = (height * percent_expand) / 100
+        return {
+            WorldSides.WEST.value: bounds[WorldSides.WEST.value] - expand_x,
+            WorldSides.EAST.value: bounds[WorldSides.EAST.value] + expand_x,
+            WorldSides.SOUTH.value: bounds[WorldSides.SOUTH.value] - expand_y,
+            WorldSides.NORTH.value: bounds[WorldSides.NORTH.value] + expand_y
+        }
+
     @staticmethod
-    def check_bbox_position(bbox_to_overlap: Bbox, bbox_to_overflow: Bbox, bbox_list: list[Bbox], ax,
-                            text_bounds_overflow_threshold, reqired_area_polygon) -> bool:
-        # check overlap with other bbox
-        for bbox2 in bbox_list:
-            if (bbox2.overlaps(bbox_to_overlap)):
+    def get_value(row, column_name: str, default_value: any = None):
+        value = getattr(row, column_name, None)
+        if pd.isna(value):
+            return default_value
+        return value
+
+    @staticmethod
+    def is_bbox_valid(bbox: Bbox):
+        return bbox is not None and bbox.x0 < bbox.x1 and bbox.y0 < bbox.y1
+
+    @staticmethod
+    def add_bbox_to_list_and_index(bbox: Bbox, bbox_list: list[Bbox], idx: rtree.index.Index):
+        bbox_list.append(bbox)
+        idx.insert(len(bbox_list)-1, bbox.extents)  # Use the list index as ID
+
+    @staticmethod
+    def check_bbox_position(bbox_to_overlap: Bbox, bbox_to_overflow: Bbox, bbox_index: rtree.index.Index | None,
+                            ax, text_bounds_overflow_threshold, reqired_area_polygon) -> bool:
+        if (bbox_index is not None):
+            try:
+                matches = list(bbox_index.intersection(
+                    bbox_to_overlap.extents))
+                for match in matches:
+                    if (match is not None):
+                        return False
+            except Exception as e:
+                print(e)
                 return False
-        if text_bounds_overflow_threshold == 0:
+
+        # check overlap with other bbox
+        if math.isclose(text_bounds_overflow_threshold, 0):
             return True
+
         # check if bbox is inside required area
-        bbox_to_overflow = bbox_to_overflow.transformed(
-            ax.transData.inverted())
         bbox_polygon = geometry.box(
             bbox_to_overflow.x0, bbox_to_overflow.y0, bbox_to_overflow.x1, bbox_to_overflow.y1)
-        return Utils.is_geometry_inside_geometry_threshold(bbox_polygon, reqired_area_polygon, text_bounds_overflow_threshold)
-        # return GdfUtils.is_geometry_inside_geometry_threshold(bbox_polygon, self.reqired_area_polygon_display, self.text_bounds_overflow_threshold)
+        return GeomUtils.is_geometry_inside_geometry_threshold(bbox_polygon, reqired_area_polygon, text_bounds_overflow_threshold)
+
+    @staticmethod
+    def cumulative_zoom_size_multiplier(data, key):
+        """Returns a dictionary where each key maps to {key: cumulative value, ...extra dict...}.
+
+        Each multiplier in data can be:
+        - A number, or
+        - A tuple: (number, extra_dict), where extra_dict is merged into the output.
+        """
+        cumulative = None
+        result = {}
+        for dict_key, multiplier in data.items():
+            if isinstance(multiplier, tuple):
+                # Unpack the tuple into the numerical multiplier and extra dictionary.
+                multiplier_value, extra_dict = multiplier
+            else:
+                multiplier_value = multiplier
+                extra_dict = {}
+
+            if cumulative is None:
+                cumulative = multiplier_value
+            else:
+                cumulative *= multiplier_value
+
+            result[dict_key] = {key: cumulative, **extra_dict}
+
+        return result

@@ -1,24 +1,20 @@
 import warnings
 
 import osmium
-from shapely import wkt
-import shapely.wkb as wkb
-import pandas as pd
 import geopandas as gpd
-from typing import Callable
 from osmium.osm.types import TagList, Node, Way, Area
-from shapely.geometry import Point, LineString, Polygon
-from modules.gdf_utils import GdfUtils
 
-from common.common_helpers import time_measurement
+from modules.gdf_utils import GdfUtils
 from common.custom_types import WantedCategories, UnwantedTags
+from common.common_helpers import time_measurement
 
 class OsmDataParser():
 
-    def __init__(self, wanted_nodes: WantedCategories, wanted_ways: WantedCategories, wanted_areas: WantedCategories,
+    def __init__(self, wanted_nodes: WantedCategories, wanted_nodes_from_area: WantedCategories, wanted_ways: WantedCategories, wanted_areas: WantedCategories, 
                  unwanted_nodes_tags: UnwantedTags, unwanted_ways_tags: UnwantedTags, unwanted_areas_tags: UnwantedTags,
-                 node_additional_columns: dict[str] = {}, way_additional_columns: dict[str] = {}, area_additional_columns: dict[str] = {}):
+                 nodes_additional_columns: dict[str] = {}, ways_additional_columns: dict[str] = {}, areas_additional_columns: dict[str] = {}):
         self.wanted_nodes = wanted_nodes
+        self.wanted_nodes_from_area = wanted_nodes_from_area
         self.wanted_ways = wanted_ways
         self.wanted_areas = wanted_areas
         self.unwanted_nodes_tags = unwanted_nodes_tags
@@ -27,9 +23,9 @@ class OsmDataParser():
         
         # merge always wanted columns (map objects) with additions wanted info columns
         self.nodes_columns = list(wanted_nodes.keys()) + \
-            node_additional_columns
-        self.way_columns = list(wanted_ways.keys()) + way_additional_columns
-        self.area_columns = list(wanted_areas.keys()) + area_additional_columns
+            nodes_additional_columns
+        self.way_columns = list(wanted_ways.keys()) + ways_additional_columns
+        self.area_columns = list(wanted_areas.keys()) + areas_additional_columns
 
     @staticmethod
     def _apply_filters_not_allowed(not_allowed_tags: UnwantedTags, tags: TagList, curr_tag_key_inside: str | None = None):
@@ -123,13 +119,13 @@ class OsmDataParser():
             def __init__(self, outer_self):
                 self.outer_self = outer_self
                 
-            def node(self, node):
+            def node(self, node: Node):
                 return not (OsmDataParser._apply_filters(self.outer_self.wanted_nodes, node.tags) and OsmDataParser._apply_filters_not_allowed(self.outer_self.unwanted_nodes_tags, node.tags))
             
-            def way(self, way):
+            def way(self, way: Way):
                 return not (OsmDataParser._apply_filters(self.outer_self.wanted_ways, way.tags) and OsmDataParser._apply_filters_not_allowed(self.outer_self.unwanted_ways_tags, way.tags))
             
-            def area(self, area):
+            def area(self, area: Area):
                 return not (OsmDataParser._apply_filters(self.outer_self.wanted_areas, area.tags) and OsmDataParser._apply_filters_not_allowed(self.outer_self.unwanted_areas_tags, area.tags))
  
         if (self.wanted_nodes):
@@ -142,6 +138,20 @@ class OsmDataParser():
         else:
             nodes_gdf = GdfUtils.create_empty_gdf(fromCrs)
             
+        if (self.wanted_nodes_from_area):
+            fp_node_from_area: osmium.FileProcessor = osmium.FileProcessor(file_name)\
+                .with_areas()\
+                .with_filter(osmium.filter.EmptyTagFilter())\
+                .with_filter(osmium.filter.EntityFilter(osmium.osm.AREA))\
+                .with_filter(osmium.filter.KeyFilter(*self.wanted_nodes_from_area.keys()))\
+                .with_filter(ElementsFilter(self))\
+                .with_filter(osmium.filter.GeoInterfaceFilter(tags=self.nodes_columns))
+            nodes_from_area_gdf = GdfUtils.create_gdf_from_file_processor(fp_node_from_area, fromCrs)
+        else:
+            nodes_from_area_gdf = GdfUtils.create_empty_gdf(fromCrs)
+        nodes_gdf = GdfUtils.combine_gdfs([nodes_gdf,  GdfUtils.create_points_from_polygons_gdf(nodes_from_area_gdf)])
+
+
         if (self.wanted_ways):
             fp_way: osmium.FileProcessor = osmium.FileProcessor(file_name)\
                 .with_locations()\
@@ -165,16 +175,15 @@ class OsmDataParser():
             areas_gdf = GdfUtils.create_gdf_from_file_processor(fp_area, fromCrs)
         else:
             areas_gdf = GdfUtils.create_empty_gdf(fromCrs)
-
+            
+        
         GdfUtils.change_columns_to_categorical(
             nodes_gdf, [key for key, _ in self.wanted_nodes.items()])
         GdfUtils.change_columns_to_categorical(
             ways_gdf, [key for key, _ in self.wanted_ways.items()])
         GdfUtils.change_columns_to_categorical(
             areas_gdf, [key for key, _ in self.wanted_areas.items()])
-        
-        print(f"nodes: {nodes_gdf.memory_usage(deep=True).sum()}, ways: {ways_gdf.memory_usage(deep=True).sum()}, areas: {areas_gdf.memory_usage(deep=True).sum(
-        )}, combined: {nodes_gdf.memory_usage(deep=True).sum() + ways_gdf.memory_usage(deep=True).sum() + areas_gdf.memory_usage(deep=True).sum()}")
+        print(f"nodes: {nodes_gdf.memory_usage(deep=True).sum()}, ways: {ways_gdf.memory_usage(deep=True).sum()}, areas: {areas_gdf.memory_usage(deep=True).sum()}, combined: {nodes_gdf.memory_usage(deep=True).sum() + ways_gdf.memory_usage(deep=True).sum() + areas_gdf.memory_usage(deep=True).sum()}")
 
         if (toCrs is None):
             return nodes_gdf, ways_gdf, areas_gdf

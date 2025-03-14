@@ -1,128 +1,175 @@
 from enum import Enum
 from typing import Literal
-
-
 class ColorMode(Enum):
-    DEFAULT = 1
-    SINGLE = 2
-    SHADE = 3
-    PALETTE = 4
+    DEFAULT = "DEFAULT"
+    SINGLE = "SINGLE"
+    SHADE = "SHADE"
+    PALETTE = "PALETTE"
 
+class LineCupStyles(Enum):
+    ROUND = "round"
+    BUTT = "butt"
+    PROJECTING = "projecting"
 
-class BboxCheckSettings(Enum):
-    NONE = 1
-    TEXT = 2
-    MARKER = 3
-    ALL = 4
+class MarkersCodes(Enum):
+    FA_TOWER_OBSERVATION = "\ue586"
+    FA_FINISH_ICON = '\uf11e'
+    
+    MU_CASTLE = "\ueaad"
+    MPL_TRIANGLE = '^'
 
-# what part of point with text can be removed without removing whole object (marker and texts)
-# na začátku jeden velký filtr tohoto v jednom gdf, a nechat jen ty co sedí: např {removable_part: RemovablePart.NOTHING, ikona, text1, }
-# mohl bych dát jeden dict do settings který by prošel data nastavil správně sloupce - tedy text1 a text2 by vlastně zkopíroval vždy podle filtru
-# [({filter}, nový sloupce, původní sloupce)
-# [({filter}, text1, name) - pro všechny nodes
-# [({filter}, text2, ele) - pro některé
-# a pak filtr podle removable_part nebo přejmenovat minimum
+    MPL_CIRCLE_MARKER = 'o'
+    
 
+class MinPlot(Enum):  # minimum parts that node must have. If not whole node object is removed
+    MARKER_TEXT1_TEXT2 = "MARKER_TEXT1_TEXT2"
+    MARKER_TEXT1_OR_TEXT2 = "MARKER_TEXT1_OR_TEXT2"
+    MARKER_TEXT1 = "MARKER_TEXT1"
+    MARKER_TEXT2 = "MARKER_TEXT2"
+    MARKER = "MARKER"
+    TEXT1 = "TEXT1"
+    TEXT2 = "TEXT2"
+    TEXT1_TEXT2 = "TEXT1_TEXT2"
 
-class MinParts(Enum):  # minimum parts that must node have. If not whole node object is removed
-    MARKER_TEXT1_TEXT2 = 1
-    MARKER_TEXT1 = 6
-    MARKER_TEXT2 = 7
-    MARKER = 2
-    TEXT1 = 3
-    TEXT2 = 4
-    TEXT1_TEXT2 = 5
+class BaseConfigKeys(Enum):
+    ADDITIONAL_COLUMNS = 'ADDITIONAL_COLUMNS'
+    NUMERIC_COLUMNS = 'NUMERIC_COLUMNS'
+    ROUND_COLUMNS = 'ROUND_COLUMNS'
+    DERIVATE_COLUMNS = 'DERIVATE_COLUMNS'
+    DONT_CATEGORIZE = 'DONT_CATEGORIZE'
 
-class TextPositions(Enum):  # minimum parts that must node have. If not whole node object is removed
-    TOP = 1
-    BOTTOM = 2
-    LEFT = 3
-    RIGHT = 4
+class MapThemeVariable(Enum):
+    WATER_COLOR = "WATER_COLOR"
+    LAND_COLOR = "LAND_COLOR"
+    AREAS_OVER_WAYS_FILTER = "AREAS_OVER_WAYS_FILTER"
+    WAYS_WITHOUT_CROSSING_FILTER = "WAYS_WITHOUT_CROSSING_FILTER"
+    GPXS_STYLES_SCALE = "GPXS_STYLES_SCALE"
+    NODES_STYLES_SCALE = "NODES_STYLES_SCALE"
+    WAYS_STYLES_SCALE = "WAYS_STYLES_SCALE"
+    AREAS_STYLES_SCALE = "AREAS_STYLES_SCALE"
+    TEXT_BB_EXPAND_PERCENT = "TEXT_BB_EXPAND_PERCENT"
+    MARKER_BB_EXPAND_PERCENT = "MARKER_BB_EXPAND_PERCENT"
 
+class TextPositions(Enum):  
+    TOP = "TOP"
+    BOTTOM = "BOTTOM"
+    LEFT = "LEFT"
+    RIGHT = "RIGHT"
+    TOP_LEFT = "TOP_LEFT"
+    TOP_RIGHT = "TOP_RIGHT"
+    BOTTOM_LEFT = "BOTTOM_LEFT"
+    BOTTOM_RIGHT = "BOTTOM_RIGHT"
+    
+class MarkerPosition(Enum):
+    ABOVE_ALL = "ABOVE_ALL"
+    ABOVE_NORMAL = "ABOVE_NORMAL"
+    NORMAL = "NORMAL"
+    UNDER_TEXT_OVERLAP = "UNDER_TEXT_OVERLAP" # can be under text but also can be above/under normal markers, depends on the zindex (but will overlap)
+    
 
-class StyleKey(Enum):
+class Style(Enum):
     # general
-    COLOR = 1
-    ALPHA = 2
-    ZINDEX = 3
-    WIDTH = 4
-    EDGE_COLOR = 6
-    EDGE_ALPHA = 21
-    EDGE_WIDTH_RATIO = 7
-    WIDTH_SCALE = 30
-    FE_WIDTH_SCALE = 31
+    COLOR = "COLOR"
+    ALPHA = "ALPHA"
+    ZINDEX = "ZINDEX"
+    WIDTH = "WIDTH"
+    EDGE_COLOR = "EDGE_COLOR"
+    EDGE_ALPHA = "EDGE_ALPHA"
+    EDGE_WIDTH_RATIO = "EDGE_WIDTH_RATIO"
+    EDGE_WIDTH_DASHED_CONNECT_RATIO = "EDGE_WIDTH_DASHED_CONNECT_RATIO"
     # lines
-    LINESTYLE = 5
-    LINE_CUP = 35
-    EDGE_LINESTYLE = 8
-    PLOT_ON_BRIDGE = 33
-    EDGE_CUP = 34
+    LINESTYLE = "LINESTYLE"
+    LINE_CAPSTYLE = "LINE_CAPSTYLE"
+    EDGE_CAPSTYLE = "EDGE_CAPSTYLE"
+    EDGE_LINESTYLE = "EDGE_LINESTYLE"
+    PLOT_ON_BRIDGE = "PLOT_ON_BRIDGE"
+    PLOT_WITHOUT_CROSSING = "PLOT_WITHOUT_CROSSING"
+    
     # bridges
-    BRIDGE_COLOR = 9
-    BRIDGE_WIDTH_RATIO = 10
-    BRIDGE_EDGE_COLOR = 11
-    BRIDGE_EDGE_WIDTH_RATIO = 12
+    BRIDGE_COLOR = "BRIDGE_COLOR"
+    BRIDGE_WIDTH_RATIO = "BRIDGE_WIDTH_RATIO"
+    BRIDGE_EDGE_COLOR = "BRIDGE_EDGE_COLOR"
+    BRIDGE_EDGE_WIDTH_RATIO = "BRIDGE_EDGE_WIDTH_RATIO"
+    BRIDGE_LINESTYLE = "BRIDGE_LINESTYLE"
+    BRIDGE_EDGE_LINESTYLE = "BRIDGE_EDGE_LINESTYLE"
+    
     # markers
-    ICON = 13
-    MARKER_CHECK_OVERLAP = 88
-    # gpx
-    START_ICON = 54
-    START_ICON_WIDHT = 59
-    FINISH_ICON = 55
-    FINISH_ICON_WIDHT = 56
-    START_ICON_EDGE_RATIO = 57
-    FINISH_ICON_EDGE_RATIO = 58
-    # ? maybe add START_ICON_WIDHT, START_ICON_EDGE_RATIO, FINISH_ICON_WIDHT, FINISH_ICON_EDGE_RATIO, -> START_ICON_EDGE_WIDTH, FINISH_ICON_EDGE_WIDTH calculated
-
+    MARKER = "MARKER"
+    MARKER_LAYER_POSITION = "MARKER_LAYER_POSITION"
+    MARKER_FONT_PROPERTIES = "MARKER_FONT_PROPERTIES"
+    MARKER_VERTICAL_ALIGN = "MARKER_VERTICAL_ALIGN"
+    MARKER_HORIZONTAL_ALIGN = "MARKER_HORIZONTAL_ALIGN"
+    
+    # gpx - for 2 markers in gpx - used for mapping - same but only with prefix 
+    GPX_ABOVE_TEXT = "GPX_ABOVE_TEXT"
+        #start
+    START_MARKER = "START_MARKER"
+    START_MARKER_WIDTH = "Style.START_MARKER_WIDTH"
+    START_MARKER_EDGE_RATIO = "START_MARKER_EDGE_RATIO"
+    START_MARKER_COLOR = "START_MARKER_COLOR"
+    START_MARKER_EDGE_COLOR = "START_MARKER_EDGE_COLOR"
+    START_MARKER_ALPHA = "START_MARKER_ALPHA"
+    START_MARKER_FONT_PROPERTIES = "START_MARKER_FONT_PROPERTIES"
+    START_MARKER_VERTICAL_ALIGN = "START_MARKER_VERTICAL_ALIGN"
+    START_MARKER_HORIZONTAL_ALIGN = "START_MARKER_HORIZONTAL_ALIGN"
+    
+        #finish
+    FINISH_MARKER = "FINISH_MARKER"
+    FINISH_MARKER_WIDTH = "Style.FINISH_MARKER_WIDTH"
+    FINISH_MARKER_EDGE_RATIO = "FINISH_MARKER_EDGE_RATIO"
+    FINISH_MARKER_COLOR = "FINISH_MARKER_COLOR"
+    FINISH_MARKER_EDGE_COLOR = "FINISH_MARKER_EDGE_COLOR"
+    FINISH_MARKER_ALPHA = "FINISH_MARKER_ALPHA"
+    FINISH_MARKER_FONT_PROPERTIES = "FINISH_MARKER_FONT_PROPERTIES"
+    FINISH_MARKER_VERTICAL_ALIGN = "FINISH_MARKER_VERTICAL_ALIGN"
+    FINISH_MARKER_HORIZONTAL_ALIGN = "FINISH_MARKER_HORIZONTAL_ALIGN"
+    
     # texts
-    TEXT_FONT_SIZE = 14
-    TEXT_FONT_SIZE_SCALE = 32
-    FE_TEXT_FONT_SIZE_SCALE = 32
-    TEXT_OUTLINE_WIDTH_RATIO = 16
-    TEXT_COLOR = 74
-    TEXT_OUTLINE_COLOR = 85
-    TEXT_FONTFAMILY = 59
-    TEXT_STYLE = 60
-    TEXT_WEIGHT = 45
-    TEXT1 = 61
-    TEXT2 = 62
-    TEXT1_POSITIONS = 68
-    TEXT2_POSITIONS = 65
-    TEXT1_WRAP_LEN = 99
-    TEXT2_WRAP_LEN = 100
-    # nodes 
-    MIN_REQ_POINT = 63
+    TEXT_FONT_SIZE = "TEXT_FONT_SIZE"
+    TEXT_OUTLINE_WIDTH_RATIO = "TEXT_OUTLINE_WIDTH_RATIO"
+    TEXT_COLOR = "TEXT_COLOR"
+    TEXT_OUTLINE_COLOR = "TEXT_OUTLINE_COLOR"
+    TEXT_FONTFAMILY = "TEXT_FONTFAMILY"
+    TEXT_STYLE = "TEXT_STYLE"
+    TEXT_WEIGHT = "TEXT_WEIGHT"
+    TEXT_WRAP_LEN = "TEXT_WRAP_LEN"
+    TEXT_FONT_PROPERTIES = "TEXT_FONT_PROPERTIES"
+    TEXT1 = "TEXT1"
+    TEXT2 = "TEXT2"
+    # nodes annotation requirements
+    TEXT1_POSITIONS = "TEXT1_POSITIONS"
+    TEXT2_POSITIONS = "TEXT2_POSITIONS"
+    
+    # nodes annotation requirements for ploting 
+    MIN_PLOT_REQ = "MIN_PLOT_REQ"
+    # nodes min annotation requirements in loading
 
+    #scales
+    FE_WIDTH_SCALE = "FE_WIDTH_SCALE" # lines and icons
+    FE_TEXT_FONT_SIZE_SCALE = "FE_TEXT_FONT_SIZE_SCALE" # text
+    
     # calculated/derivated - cant be set by user
     # calculated like TEXT_FONT_SIZE * TEXT_OUTLINE_WIDTH_RATIO
-    TEXT_OUTLINE_WIDTH = 17
-    # calculated like WIDTH * (1 + EDGE_WIDTH_RATIO)
-    EDGEWIDTH = 18
-    # calculated like WIDTH * (1 + BRIDGE_WIDTH_RATIO)
-    BRIDGE_WIDTH = 19
-    # calculated like BRIDGE_WIDTH * (1 + BRIDGE_EDGE_WIDTH_RATIO)
-    BRIDGE_EDGE_WIDTH = 20
-    # calculated like start START_ICON_WIDHT * START_ICON_EDGE_RATIO
-    START_ICON_EDGE_WIDTH = 60
-    # calculated like FINISH_ICON_WIDHT * FINISH_ICON_EDGE_RATIO
-    FINISH_ICON_EDGE_WIDTH = 61
-
-class StyleType(Enum):
-    DEFAULT = 1
-    ZOOM = 2
-
-
-class AreaBounds(Enum):
-    NONE = 1
-    COMBINED = 2
-    SEPARATED = 3
+    TEXT_OUTLINE_WIDTH = "TEXT_OUTLINE_WIDTH"
+    # calculated like WIDTH * (EDGE_WIDTH_RATIO)
+    EDGE_WIDTH = "EDGE_WIDTH"
+    # calculated like WIDTH * (EDGE_WIDTH_DASHED_CONNECT_RATIO)
+    EDGE_WIDTH_DASHED_CONNECT = "EDGE_WIDTH_DASHED_CONNECT"
+    # calculated like WIDTH * (BRIDGE_WIDTH_RATIO)
+    BRIDGE_WIDTH = "BRIDGE_WIDTH"
+    # calculated like BRIDGE_WIDTH * (BRIDGE_EDGE_WIDTH_RATIO)
+    BRIDGE_EDGE_WIDTH = "BRIDGE_EDGE_WIDTH"
+    # calculated like start Style.START_MARKER_WIDTH * START_MARKER_EDGE_RATIO
+    START_MARKER_EDGE_WIDTH = "START_MARKER_EDGE_WIDTH"
+    # calculated like Style.FINISH_MARKER_WIDTH * FINISH_MARKER_EDGE_RATIO
+    FINISH_MARKER_EDGE_WIDTH = "FINISH_MARKER_EDGE_WIDTH"
 
 
 class WorldSides(Enum):
-    WEST = 'west'
-    EAST = 'east'
-    NORTH = 'north'
-    SOUTH = 'south'
+    WEST = 'WEST'
+    EAST = 'EAST'
+    NORTH = 'NORTH'
+    SOUTH = 'SOUTH'
 
 
 class PaperSize(Enum):
@@ -135,13 +182,22 @@ class PaperSize(Enum):
     A6: tuple[Literal[105], Literal[148]] = (105, 148)
     A7: tuple[Literal[74], Literal[105]] = (74, 105)
     A8: tuple[Literal[52], Literal[74]] = (52, 74)
-
+    A9: tuple[Literal[37], Literal[52]] = (37, 52)
+    A10: tuple[Literal[26], Literal[37]] = (26, 37)
+    A11: tuple[Literal[18], Literal[26]] = (18, 26)
+    A12: tuple[Literal[13], Literal[18]] = (13, 18)
+    A13: tuple[Literal[9], Literal[13]] = (9, 13)
+    A14: tuple[Literal[6], Literal[9]] = (6, 9)
+    A15: tuple[Literal[4], Literal[6]] = (4, 6)
+    A16: tuple[Literal[3], Literal[4]] = (3, 4)
+    A17: tuple[Literal[2], Literal[3]] = (2, 3)
+    A18: tuple[Literal[1], Literal[2]] = (1, 2)
     @property
     def dimensions(self) -> tuple[float, float]:
         return self.value  # Returns the dimensions (width, height)
 
 
 class MapOrientation(Enum):
-    AUTOMATIC = 1
-    LANDSCAPE = 2
-    PORTRAIT = 3
+    AUTOMATIC = "AUTOMATIC"
+    LANDSCAPE = "LANDSCAPE"
+    PORTRAIT = "PORTRAIT"
