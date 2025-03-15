@@ -101,3 +101,31 @@ class ReceivedStructureProcessor:
     @staticmethod
     def validate_and_convert_styles(styles: list, style_names_mapping, style_values_mapping):
         pass
+
+    # @staticmethod
+    # def extract_wanted_categories(input_dict: Dict[str, Any]) -> Dict[str, Any]:
+    #     result = {}
+        
+    #     for key, value in input_dict.items():
+    #         if isinstance(value, dict):
+    #             # Recurse into the dictionary
+    #             result[key] = {sub_key: {} for sub_key in value.keys()}
+    #         else:
+    #             result[key] = value
+        
+    #     return result
+    
+    # @staticmethod
+    # def extract_size_multipliers(input_dict: Dict[str, Any]) -> Dict[str, List[tuple]]:
+    #     result = {"nodes": [], "areas": [], "ways": []}
+
+    #     for key, value in input_dict.items():
+    #         if isinstance(value, dict):
+    #             for sub_key, sub_value in value.items():
+    #                 if isinstance(sub_value, dict):
+    #                     # For deeper dictionaries, include a tuple of the keys and values
+    #                     result[key].append(({sub_key}, sub_value))
+    #                 else:
+    #                     result[key].append(({sub_key}, sub_value))
+        
+    #     return result

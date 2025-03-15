@@ -846,7 +846,8 @@ class Plotter:
             ax=self.ax, color=clipped_area_color, alpha=1, zorder=6)
 
     def area_boundary(self, boundary_map_area_gdf: GeoDataFrame, color: str = 'black', linewidth: float = 1):
-
+        if(boundary_map_area_gdf.empty):
+            return
         groups = GdfUtils.get_groups_by_columns(boundary_map_area_gdf, [
                                                 Style.WIDTH.value], [], False)
         for width, group in groups:

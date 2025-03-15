@@ -19,6 +19,33 @@ class MarkersCodes(Enum):
     MPL_TRIANGLE = '^'
 
     MPL_CIRCLE_MARKER = 'o'
+
+class MapConfigKeys(Enum):
+    MAP_AREA = "map_area" 
+    MAP_AREA_BOUNDARY = "map_area_boundary"
+    MAP_OUTER_AREA = "map_outer_area"
+    PEAKS_FILTER_RADIUS = "peaks_filter_radius" # 0 is for no filter
+    MIN_PLACE_POPULATION = "min_place_population" # 0 is for no filter
+    MAP_SCALING_FACTOR = "map_scaling_factor"
+    PLOT_BRIDGES = "plot_bridges"
+    PLOT_TUNNELS = "plot_tunnels"
+    OSM_FILES = "osm_files" # checked
+    PAPER_DIMENSION_MM = "paper_dimension_mm"
+    WANTED_CATEGORIES = "wanted_categories" # 'nodes', 'nodes_from_area, 'ways', 'areas'
+    UNWANTED_CATEGORIES = "unwanted_categories" # 'nodes', 'ways', 'areas'
+    STYLES_SIZE_CHANGES = "styles_size_changes" # 'nodes', 'ways', 'areas'
+    STYLES_ZOOM_LEVELS = "styles_zoom_levels" # 'nodes', 'ways', 'areas', 'general'
+    MAP_THEME = "map_theme"
+    GPXS = "gpxs" # in front store as list of paths to files
+    GPXS_STYLES = "gpxs_styles"
+
+    PEAKS_FILTER_SENSITIVITY = "peaks_filter_sensitivity" # 0 is for no filter
+    GPXS_CATEGORIES = "gpxs_categories"
+    PREVIEW_PAPER_DIMENSION_MM = "preview_paper_dimension_mm"
+    
+    
+    
+    
     
 
 class MinPlot(Enum):  # minimum parts that node must have. If not whole node object is removed

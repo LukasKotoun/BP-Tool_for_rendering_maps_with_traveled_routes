@@ -2,15 +2,18 @@ import warnings
 import matplotlib.font_manager as fm
 
 from common.custom_types import UnwantedTags, WantedArea, WantedCategories
-from common.map_enums import Style, ColorMode, PaperSize, MapOrientation, MarkersCodes, MapThemeVariable, BaseConfigKeys
+from common.map_enums import Style, ColorMode, PaperSize, MapOrientation, MarkersCodes, MapThemeVariable, BaseConfigKeys, MapConfigKeys
 # from frontend
 # --------------------------------------------------------------map area--------------------------------------------------------------
 # OSM_INPUT_FILE_NAMES: str = ['../osm_files/vys.osm.pbf','../osm_files/jihmor.osm.pbf']
 # OSM_INPUT_FILE_NAMES: str | list[str] = ['../osm_files/israel.osm.pbf']
 OSM_INPUT_FILE_NAMES: str | list[str] = ['../osm_files/trebic.osm.pbf']
+OSM_AVAILABLE_FILES = {
+    'cz': '../osm_files/cz.osm.pbf',
+}
 # OSM_INPUT_FILE_NAMES: str | list[str] = ['/zfs-pool/home/xkotou08/BP/czech-republic-latest.osm.pbf']
 # OSM_INPUT_FILE_NAMES: str | list[str] = ['../osm_files/trebic.osm.pbf', '../osm_files/brno.osm.pbf']
-OSM_WANT_EXTRACT_AREA: bool = True
+
 # set if want osm file cutting using osmium command line tool (need to be uinstalled), If not set to None
 # OSM_OUTPUT_FILE_NAME: None | str = '../osm_files/brnoPrevTest.osm.pbf'
 OSM_TMP_FILE_FOLDER = '../osm_files/tmp'
@@ -111,8 +114,9 @@ OUTPUT_PDF_NAME: str = '../pdfs/divocina'
 # AREA: WantedArea = [{'area':[(14.0269703,49.4851617), (17.5151294,49.4833772), (17.5096361,47.8731517), (14.0297167, 47.8786783], "plot": False}] # zoom 2/9 - 0.000764872334474359
 # AREA: WantedArea = [{'area':[(12.4551956,50.4569714), (19.4047778,50.4934189), (19.3992847, 47.2727942), (12.4284594, 47.3100528)], "plot": False}] # zoom 1/8 - 0.0003824361562733402
 
-
-AREA: WantedArea = [{"area": "Třebíč, Česko", "plot": True, "category": 0, "width": 1}]
+# AREA = []
+# AREA: WantedArea = [{"area": "Česko", "plot": True, "category": 0, "width": 1}]
+AREA: WantedArea = [{"area": "Brno, Česko", "plot": True, "category": 0, "width": 1}]
 # AREA: WantedArea = [{"area": "4", "plot": True, "category": 5, "width": None}]
 # AREA: WantedArea = [{"area": "Baliny, Česko", "plot": True, "category": 0, "width": None}]
 # AREA: WantedArea =[{"area": "Jihomoravský kraj, Česko", "plot": True, "category": 2, "width": 1},
@@ -139,9 +143,9 @@ AREA: WantedArea = [{"area": "Třebíč, Česko", "plot": True, "category": 0, "
 # AREA: WantedArea = ["Okres Třebíč, Česko", "Třebíč, Česko", "Okres Jihlava, Česko"]
 # AREA: WantedArea = ["Texas, USA"]
 
-# PAPER_DIMENSIONS = PaperSize.A4.dimensions
+PAPER_DIMENSIONS = PaperSize.A4.dimensions
 # set own dimensions. If one is left as 'None' it will be automaticaly calculated using area size
-PAPER_DIMENSIONS = (1100, None)
+# PAPER_DIMENSIONS = (1100, None)
 
 # what side of paper was set (smaller true bigger false) - only if only one side in custom dimension was set to None
 GIVEN_SMALLER_PAPER_DIMENSION: bool = True
@@ -159,9 +163,7 @@ TEXT_BOUNDS_OVERFLOW_THRESHOLD = 0.97
 
 MAP_STYLE_THEME = 'mapycz'
 # plot as bridge (True)  or normal way (False)
-PLOT_BRIDGES = True
-# plot as tunnel (True) or normal way (False) - if false and in dont want tags -> will not be plotted at all
-PLOT_TUNNELS = True
+
 # is calc as 2.5 * scale * 10 where scale is mm:m so scale * 10 is 1 cm
 PEAKS_FILTER_SENSITIVITY: float | None = 3
 
@@ -169,32 +171,18 @@ PEAKS_FILTER_SENSITIVITY: float | None = 3
 MIN_POPULATION: int | None = None  # zoom 5 - 500, zoom 4 - 750
 PLACES_TO_FILTER_BY_POPULATION = ['city', 'town', 'village']
 # --------------------------------------------------------------preview--------------------------------------------------------------
-# NOTE: must have same settings as the resulting one when generating for large format printing
-WANT_PREVIEW: bool = False
 
-OUTER_AREA: WantedArea = [
-    {"area": "Česko", "plot": False, "category": 2, "width": 1}]
-# OUTER_AREA: WantedArea =  [{"area": "Česko", "plot": True, "category": 2, "width": 1},
-#                            {"area": "Slovensko", "plot": True, "category": 2, "width": 1}]
-# OUTER_AREA: WantedArea = [{"area": "Jihomoravský kraj, Česko", "plot": True, "category": 2, "width": 1},
-#   {"area": "Praha, Česko", "plot": True, "category": 1, "width": 1}]
-# OUTER_AREA: WantedArea = "Česko"
-# OUTER_AREA: WantedArea = [(15.7396182, 49.3111173), (16.0273871, 49.3028839),
-#                     (16.0266146, 49.1439064), (15.6712219, 49.1928600)]
 
-# OUTER_PAPER_DIMENSIONS = PaperSize.A0.dimensions  # real paper size
-# or set own #if one is left none if will be automaticaly calculated by area size
-# OUTER_PAPER_DIMENSIONS = (5000, None)
+PREVIEW_AREA: WantedArea = [
+    {"area": "Brno, Česko", "plot": False }] 
 
-# OUTER_PAPER_DIMENSIONS = (2000, None)# paper 2m
-OUTER_PAPER_DIMENSIONS = (1100, None)  # paper 2m
-# what side of paper was set (smaller true bigger false)(only if only one side in custom dimension was set)
-OUTER_GIVEN_SMALLER_PAPER_DIMENSION = True
-# set how will resulted paper be oriented, AUTOMATIC is Recommended
-OUTER_WANTED_ORIENTATION = MapOrientation.AUTOMATIC
+# todo orientation in FE
+PREVIEW_PAPER_DIMENSIONS = PaperSize.A4.dimensions 
+
+PREVIEW_GIVEN_SMALLER_PAPER_DIMENSION = True
 
 # expand area
-OUTER_FIT_PAPER_SIZE = False
+PREVIEW_FIT_PAPER_SIZE = True
 
 AREAS_STYLE_ZOOM_LEVEL = 4
 WAYS_STYLE_ZOOM_LEVEL = 4
@@ -203,14 +191,14 @@ NODES_STYLE_ZOOM_LEVEL = 4
 
 # wanted_ways: WantedFeatures # where they vanish - already not on map - for mapycz styles
 wanted_nodes: WantedCategories = {
-    # 'place': {
-    #       'city',
-    #            'town', # zoom 1
+     'place': {
+           'city',
+            'town', # zoom 1
     #            'village',# zoom 3
     #            'suburb', # zoom 5
     #     'neighbourhood',  # zoom 7
     #     'locality'
-    # },  # zoom 7
+     },  # zoom 7
 
     # 'natural': {'peak'},  # zoom 1
     #   'man_made': {'tower'}, # zoom 7
@@ -302,7 +290,6 @@ unwanted_ways_tags: UnwantedTags = {
 }
 
 wanted_areas: WantedCategories = {
-
     'landuse': {  # 'farmland',
         # 'forest',
         'residential', 'commercial', 'retail', 'industrial',
@@ -325,7 +312,7 @@ wanted_areas: WantedCategories = {
         'grave_yard', 'school', 'university', 'college', 'kindergarten'
         'bus_station', 'hospital', 'clinic', 'place_of_worship'},  # zoom 2
     # 'boundary' : {'national_park'}, # zoom 1
-     'building': set({}),  # zoom 4 - default a k tomu možná poznámka do inf. že to může přidat detailnější budovy
+    #  'building': set({}),  # zoom 4 - default a k tomu možná poznámka do inf. že to může přidat detailnější budovy
     # ale kde je vetšina budov je spíš něco z landuse a o dost to zvětšuje soubor takže se to hodí jen když od větších zoomu nebo když chce fakt hodně dětailu
     # 'aeroway': {'aerodrome'}, # zoom 5
     # 'highway': {'pedestrian', 'footway'}, # zoom 6

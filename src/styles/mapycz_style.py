@@ -43,6 +43,8 @@ TEXT_EXPAND_PERCENT = 5
 MARKER_EXPAND_PERCENT = 5
 
 WATER_COLOR = {"1-7": WATER_COLOR_ZOOM_1_7, "8-10": WATER_COLOR_ZOOM_8_10}
+
+
 LAND_COLOR = '#f1f0e5'
 
 RESERVATION_EDGE_CUMULATIVE_SIZE = Utils.cumulative_zoom_size_multiplier(
@@ -907,7 +909,7 @@ area_styles_default: ElementStyles = [
     ({'building': ''}, {Style.COLOR.value: '#e1d4bb'},
      {"7": {Style.COLOR.value: RESIDENTAL_AREA_COLOR_ZOOM_7},
       "1-6": {Style.COLOR.value: RESIDENTAL_AREA_COLOR_ZOOM_1_6}}),
-    
+
     ({'amenity': ''}, {Style.COLOR.value: RESIDENTAL_AREA_COLOR_ZOOM_8_10},
      {"7": {Style.COLOR.value: RESIDENTAL_AREA_COLOR_ZOOM_7},
       "1-6": {Style.COLOR.value: RESIDENTAL_AREA_COLOR_ZOOM_1_6}}),
