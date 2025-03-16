@@ -31,9 +31,8 @@ class MapConfigKeys(Enum):
     PLOT_TUNNELS = "plot_tunnels"
     OSM_FILES = "osm_files" # checked
     PAPER_DIMENSION_MM = "paper_dimension_mm"
-    WANTED_CATEGORIES = "wanted_categories" # 'nodes', 'nodes_from_area, 'ways', 'areas'
+    WANTED_CATEGORIES_AND_STYLES_CHANGES = "wanted_categories" # 'nodes', 'nodes_from_area, 'ways', 'areas'
     UNWANTED_CATEGORIES = "unwanted_categories" # 'nodes', 'ways', 'areas'
-    STYLES_SIZE_CHANGES = "styles_size_changes" # 'nodes', 'ways', 'areas'
     STYLES_ZOOM_LEVELS = "styles_zoom_levels" # 'nodes', 'ways', 'areas', 'general'
     MAP_THEME = "map_theme"
     GPXS = "gpxs" # in front store as list of paths to files

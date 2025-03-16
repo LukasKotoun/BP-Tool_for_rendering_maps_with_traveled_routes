@@ -1,4 +1,6 @@
 import warnings
+import matplotlib
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import matplotlib.patheffects as pe
 from matplotlib.lines import Line2D
@@ -878,7 +880,7 @@ class Plotter:
                           zoom_bounds[WorldSides.NORTH.value]])
 
     def generate_pdf(self, pdf_name: str):
-        plt.savefig(f'{pdf_name}.pdf', format='pdf',
+        plt.savefig(pdf_name, format='pdf',
                     transparent=True, pad_inches=0.1)
 
     def show_plot(self):

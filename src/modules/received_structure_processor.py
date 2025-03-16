@@ -1,4 +1,5 @@
 from common.map_enums import Style
+from common.custom_types import RowsConditions, RowsConditionsAND
 from typing import Dict, List, Union, Any, Optional, Callable
 
 # todo add functions to check for color and linestyle validity
@@ -97,9 +98,9 @@ class ReceivedStructureProcessor:
             edited_data.append(new_item)
 
         return edited_data
-    
+
     @staticmethod
-    def validate_wanted_elements_and_styles(data: Dict[str, Any], allowed_structure: dict, styles_validation: tuple[type, bool, Callable]) -> bool:
+    def validate_wanted_elements_and_styles(data: Dict[str, Any], allowed_structure: dict, styles_validation: dict[str, tuple[type, bool, Callable]]) -> bool:
         """
         Validate the map data structure sent from frontend.
 
@@ -112,62 +113,67 @@ class ReceivedStructureProcessor:
         Raises:
             ValueError: If validation fails
         """
-        # todo add maping to values
-        # Validate top-level keys
-        for category in data.keys():
-            if category not in allowed_structure:
-                raise ValueError(f"Invalid category: {category}")
 
-            # Skip empty categories
-            if not data[category]:
+        # Validate top-level keys - must have all
+        if not all(key in data for key in allowed_structure):
+            raise ValueError(
+                f"Invalid keys: {set(data.keys()) - set(allowed_structure.keys())}")
+
+        for element_category in data.keys():
+            if element_category not in allowed_structure:
+                raise ValueError(
+                    f"Invalid element_category: {element_category}")
+
+            # Skip empty elements categories
+            if not data[element_category]:
                 continue
 
-            # Validate subcategories
-            for subcategory, subcategory_data in data[category].items():
-                if subcategory not in allowed_structure[category]:
+            # Validate element features
+            for element, element_features in data[element_category].items():
+                if element not in allowed_structure[element_category]:
                     raise ValueError(
-                        f"Invalid subcategory: {subcategory} in {category}")
+                        f"Invalid element: {element} in {element_category}")
 
-                allowed_subcategory = allowed_structure[category][subcategory]
+                allowed_element = allowed_structure[element_category][element]
 
                 # Skip empty subcategories
-                if (not subcategory_data and allowed_subcategory == True):
+                if (not element_features and allowed_element == True):
                     continue
                 # Handle different validation rules based on allowed structure
-                # Case 1: Subcategory allowed all is false, must have at least one tag or be missing
-                if (not subcategory_data):
+                # Case 1: element allowed all is false, must have at least one tag or be missing
+                if (not element_features):
                     raise ValueError(
-                        f"Empty element (will have all attributes but must have at least one tag or be missing): {subcategory} in {category}")
-                    
-                elif (any(key in styles_validation for key in subcategory_data.keys()) and allowed_subcategory != True):
-                    raise ValueError(
-                        f"Empty element (will have all attributes but must have at least one tag or be missing): {subcategory} in {category}")
+                        f"Empty element (will have all attributes but must have at least one tag or be missing): {element} in {element_category}")
 
-                elif isinstance(allowed_subcategory, list):
-                    for tag in subcategory_data:
-                        if tag not in allowed_subcategory:
+                elif (any(key in styles_validation for key in element_features.keys()) and allowed_element != True):
+                    raise ValueError(
+                        f"Empty element (will have all attributes but must have at least one tag or be missing): {element} in {element_category}")
+
+                elif isinstance(allowed_element, list):
+                    for tag in element_features:
+                        if tag not in allowed_element:
                             raise ValueError(
-                                f"Invalid tag: {tag} in {category}.{subcategory}")
+                                f"Invalid tag: {tag} in {element_category}.{element}")
 
                         # Validate attributes
-                        tag_data = subcategory_data[tag]
+                        tag_data = element_features[tag]
                         if tag_data and isinstance(tag_data, dict):
-                            if(not ReceivedStructureProcessor.check_dict_values_and_types(tag_data, styles_validation)):
+                            if (not ReceivedStructureProcessor.check_dict_values_and_types(tag_data, styles_validation)):
                                 raise ValueError(
-                                    f"Invalid attribute in {category}.{subcategory}.{tag}")
+                                    f"Invalid attribute in {element_category}.{element}.{tag}")
 
-                # Case 2: Subcategory empty or missing allowed
-                elif allowed_subcategory is True:
-                    if isinstance(subcategory_data, dict):
-                        for attr in subcategory_data:
-                            if not ReceivedStructureProcessor.check_dict_values_and_types(subcategory_data, styles_validation):
+                # Case 2: element empty or missing allowed
+                elif allowed_element is True:
+                    if isinstance(element_features, dict):
+                        for attr in element_features:
+                            if not ReceivedStructureProcessor.check_dict_values_and_types(element_features, styles_validation):
                                 raise ValueError(
-                                    f"Invalid attribute: {attr} in {category}.{subcategory}")
+                                    f"Invalid attribute: {attr} in {element_category}.{element}")
         return True
 
     @staticmethod
     def transform_to_backend_structures(data: Dict[str, Any], allowed_styles: dict[str, tuple[type, bool, Callable]],
-                                        styles_allowed_primary_elements, names_maping: dict[str, str]) -> Dict[str, Any]:
+                                        styles_allowed_primary_elements, names_maping: dict[str, str]) -> tuple[dict, dict]:
         """
         Transform the validated frontend data into two backend structures.
 
@@ -181,34 +187,76 @@ class ReceivedStructureProcessor:
         def has_subsections(dict, allowed_multiply_atributes):
             return any(key not in allowed_multiply_atributes for key in dict)
 
-        # Structure 1: Without attributes
         wanted_categories = {}
-        multiply_filters = {key: [] for key in styles_allowed_primary_elements}
-        for category in data:
-            wanted_categories[category] = {}
-            for subcategory in data[category]:
+        styles_edits = {key: [] for key in styles_allowed_primary_elements}
+        for element_category in data:
+            wanted_categories[element_category] = {}
+            for element in data[element_category]:
                 # Extract tags without attributes
-                wanted_categories[category][subcategory] = set(
-                    {tag for tag in data[category][subcategory] if tag not in allowed_styles})
-                # create pandas filters for assing attributes from FE
-                if (has_subsections(data[category][subcategory], allowed_styles)):
-                    for tag, tag_data in data[category][subcategory].items():
-                        attributes = {
-                            k: v for k, v in tag_data.items() if k in allowed_styles}
-                        if attributes:
-                            attributes = ReceivedStructureProcessor.map_dict_keys(
-                                attributes, names_maping)
-                            path_key = {subcategory: tag}
-                            multiply_filters[category].append(
-                                (path_key, attributes))
-                else:
-                    attributes = {
-                        k: v for k, v in data[category][subcategory].items() if k in allowed_styles}
-                    if attributes:
-                        attributes = ReceivedStructureProcessor.map_dict_keys(
-                                attributes, names_maping)
-                        path_key = {subcategory: ''}
-                        multiply_filters[category].append(
-                            (path_key, attributes))
+                wanted_categories[element_category][element] = set(
+                    {tag for tag in data[element_category][element] if tag not in allowed_styles})
 
-        return wanted_categories, multiply_filters
+                # create pandas filters for assing attributes from FE
+                if (has_subsections(data[element_category][element], allowed_styles)):
+                    for tag, tag_data in data[element_category][element].items():
+                        styles = {
+                            k: v for k, v in tag_data.items() if k in allowed_styles}
+                        if styles:
+                            styles = ReceivedStructureProcessor.map_dict_keys(
+                                styles, names_maping)
+                            condition: RowsConditionsAND = {element: tag}
+                            styles_edits[element_category].append(
+                                (condition, styles))
+                else:
+                    styles = {
+                        k: v for k, v in data[element_category][element].items() if k in allowed_styles}
+                    if styles:
+                        styles = ReceivedStructureProcessor.map_dict_keys(
+                            styles, names_maping)
+                        condition: RowsConditionsAND = {element: ''}
+                        styles_edits[element_category].append(
+                            (condition, styles))
+
+        return wanted_categories, styles_edits
+
+    def validate_gpx_styles(data: dict, normal_keys: list, general_keys: list, styles_validation: dict[str, tuple[type, bool, Callable]], styles_mapping: dict[str, str]) -> bool:
+        result = []
+
+        # Validate structure
+        if not isinstance(data, dict):
+            raise ValueError("Input must be a dictionary")
+        for key in normal_keys:
+            if key in data and isinstance(data[key], dict):
+                for name, value in data[key].items():
+                    if (not ReceivedStructureProcessor.check_dict_values_and_types(value, styles_validation)):
+                        raise ValueError(f"Invalid attribute in {key}.{name}")
+                    result.append(({key: name}, ReceivedStructureProcessor.map_dict_keys(
+                        value, styles_mapping)))
+        for key in general_keys:
+            if key in data and isinstance(data[key], dict):
+                if (not ReceivedStructureProcessor.check_dict_values_and_types(data[key], styles_validation)):
+                    raise ValueError(f"Invalid attribute in {key}")
+                result.append(
+                    ([], ReceivedStructureProcessor.map_dict_keys(value, data[key])))
+
+        return result
+
+    @staticmethod
+    def validate_and_convert_osm_files(osm_files: List[str], mapping_dict: dict[str, str]) -> List[str]:
+        if (any(file not in mapping_dict for file in osm_files)):
+            raise ValueError("Invalid osm files")
+        return [mapping_dict[file] for file in osm_files]
+
+    @staticmethod
+    def validate_and_convert_paper_dimension(paper_dimensions: list[float, float]) -> tuple[float, float]:
+        if len(paper_dimensions) != 2:
+            raise ValueError("Paper dimensions must have exactly 2 values")
+        if not all(isinstance(num, (int, float)) and num >= 1 for num in paper_dimensions):
+            raise ValueError("Paper dimensions must have only numbers")
+        return tuple(paper_dimensions)
+
+    @staticmethod
+    def validate_zoom_levels(data, level_validation) -> bool:
+        if (not ReceivedStructureProcessor.check_dict_values_and_types(data, level_validation)):
+            raise ValueError(f"Invalid attribute in")
+        return True

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Send Data with File</title>
+  <script>
+    // Function to send data with a file
+    async function sendData() {
+      // Create a FormData object to send data and file
+      const formData = new FormData();
+
+      // Create a JavaScript object for the data
+     
+
+      // Convert the data object to a JSON string and append it to FormData
+
+      // Get the file input element and select the first file
+      const fileInput = document.getElementById("fileInput");
+      const file = fileInput.files[0];  // Get the first file selected
+    // formData.append('gpxs', [file, file]);
+    if(file != null){
+        formData.append('gpxs', file);
+        formData.append('gpxs', file);
+    }else{
+    }
+ 
+      formData.append('config', 
+
+      JSON.stringify({
+        "osm_files": ['trebic'],
+        "paper_dimensions": [1000, 1800],
+        "paper_preview_dimensions":[100,100],
+        'wanted_categories_and_styles_edit':{
+          'nodes':{},
+          'ways':{
+            'highway':{
+              'primary':{},
+              'secondary':{}
+            }},
+          'areas':{},
+          'nodes_from_area':{}
+        },
+        'styles_zoom_levels':{
+          "nodes":5,
+          "ways":5,
+          "areas":5,
+          "general":5
+        },
+        'gpxs_styles':{},
+        "map_area":[{"area": "Česko",
+        "plot": false, "category": 0, "width": 1}],
+      "fit_paper_size": false,
+        "plot_bridges": false,
+        "plot_tunnels": false,
+        "unwanted_categories": {},
+        "gpxs_categories": {},
+        "map_theme": "mapycz",
+        "min_place_population": 0,
+        "peaks_filter_sensitivity":0,
+        "fit_paper_size_bounds_plot": false,
+        "unwanted_categories":{
+          'nodes':{},
+          'ways':{},
+          'areas':{},
+        },
+      }
+      ));
+    const data = {
+        "gpxs_styles": {
+            "gpxs_styles": 23
+        },
+        // "file": [file]
+    };
+      // Send the data using the fetch API to FastAPI endpoint
+      try {
+        // const response = await fetch('http://localhost:8000/generate_map/', {
+        const response = await fetch('http://localhost:8000/generate_map_preview/', {
+          method: 'POST',
+          body: formData,
+
+        });
+
+        // Parse the JSON response from FastAPI
+        const result = await response.json();
+
+        // Log the result to the console
+        console.log('Response:', result);
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    }
+    async function get() {
+      try {
+        const response = await fetch('http://localhost:8000/tasks/', {
+        });
+
+        // Parse the JSON response from FastAPI
+        const result = await response.json();
+
+        // Log the result to the console
+        console.log('Response:', result);
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    }
+  </script>
+</head>
+<body>
+
+  <h1>Upload File and Data</h1>
+
+  <!-- File input for selecting the file -->
+  <input type="file" id="fileInput" />
+  
+  <!-- Button to trigger the sendData function -->
+  <button onclick="sendData()">Send Data</button>
+  <button onclick="get()"> get</button>
+
+</body>
+</html>
