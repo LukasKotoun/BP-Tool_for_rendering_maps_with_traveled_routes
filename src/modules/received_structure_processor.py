@@ -1,5 +1,5 @@
 from common.map_enums import Style
-from typing import Dict, List, Union, Any, Optional
+from typing import Dict, List, Union, Any, Optional, Callable
 
 # todo add functions to check for color and linestyle validity
 
@@ -44,13 +44,10 @@ class ReceivedStructureProcessor:
         return result
 
     @staticmethod
-    def check_dict_values_and_types(values_dict: dict, allowed_keys_and_types: dict[str, type], must_have_none: bool = False):
+    def check_dict_values_and_types(values_dict: dict, allowed_keys_and_types: dict[str, tuple[type, bool, Callable]]):
         allowed_keys = set(allowed_keys_and_types.keys())
-        if must_have_none:
-            required_keys = set(allowed_keys_and_types.keys())
-        else:
-            required_keys = {
-                k for k, (_, required) in allowed_keys_and_types.items() if required}
+        required_keys = {
+            k for k, (_, required, _) in allowed_keys_and_types.items() if required}
 
         # Extra keys not allowed.
         if set(values_dict.keys()) - allowed_keys:
@@ -61,14 +58,16 @@ class ReceivedStructureProcessor:
             return False
 
         # Check types.
-        for key, (expected_type, _) in allowed_keys_and_types.items():
+        for key, (expected_type, _, validation_func) in allowed_keys_and_types.items():
             if key in values_dict and expected_type is not None:
                 if not isinstance(values_dict[key], expected_type):
+                    return False
+                if validation_func and not validation_func(values_dict[key]):
                     return False
         return True
 
     @staticmethod
-    def validate_and_convert_areas_strucutre(areas_structures: list[dict], allowed_keys_and_types: dict[str, type], key_with_area):
+    def validate_and_convert_areas_strucutre(areas_structures: list[dict], allowed_keys_and_types: dict[str, tuple[type, bool, Callable]], key_with_area):
         if not isinstance(areas_structures, list):
             raise ValueError("Input must be a list.")
 
@@ -98,36 +97,9 @@ class ReceivedStructureProcessor:
             edited_data.append(new_item)
 
         return edited_data
-    # valid_data = {
-    #         "nodes": {
-    #             "place": {
-    #                 "tower": {"width_fe": 1, },
-    #                 "peak": {"width_fe": 1, 'text_width_fe': 3}
-    #             }
-    #         },
-    #         "areas": {
-    #             "leisure": {'farmland': {"width_fe": 2, 'text_width_fe': 3}},
-    #             "buildings": {"width_fe": 2, 'text_width_fe': 3},
-
-    #         },
-    #         "ways": {},
-
-    #     }
-    # validate_wanted_elements_and_styles(valid_data, {
-    #         'nodes': {
-    #             'place': ['peak', 'tower'],
-    #             'location': ['city', 'town']
-    #         },
-    #         'areas_as_nodes': {
-    #             'place': ['peak', 'tower']
-    #         },
-    #         'ways': {},
-    #         'areas': {
-    #             'buildings': True,  # True means any tag is allowed
-    #             'leisure': ['farmland']
-    #         }, ['width_fe', 'text_width_fe']):
+    
     @staticmethod
-    def validate_wanted_elements_and_styles(data: Dict[str, Any], allowed_structure: dict, frontend_styles: list) -> bool:
+    def validate_wanted_elements_and_styles(data: Dict[str, Any], allowed_structure: dict, styles_validation: tuple[type, bool, Callable]) -> bool:
         """
         Validate the map data structure sent from frontend.
 
@@ -140,7 +112,7 @@ class ReceivedStructureProcessor:
         Raises:
             ValueError: If validation fails
         """
-
+        # todo add maping to values
         # Validate top-level keys
         for category in data.keys():
             if category not in allowed_structure:
@@ -162,14 +134,15 @@ class ReceivedStructureProcessor:
                 if (not subcategory_data and allowed_subcategory == True):
                     continue
                 # Handle different validation rules based on allowed structure
-                # Case 1: Subcategory has all tags allowed but must have at least one tag or be missing
+                # Case 1: Subcategory allowed all is false, must have at least one tag or be missing
                 if (not subcategory_data):
                     raise ValueError(
                         f"Empty element (will have all attributes but must have at least one tag or be missing): {subcategory} in {category}")
-                elif (all(key in frontend_styles for key in subcategory_data.keys()) and allowed_subcategory != True):
+                    
+                elif (any(key in styles_validation for key in subcategory_data.keys()) and allowed_subcategory != True):
                     raise ValueError(
                         f"Empty element (will have all attributes but must have at least one tag or be missing): {subcategory} in {category}")
-                    
+
                 elif isinstance(allowed_subcategory, list):
                     for tag in subcategory_data:
                         if tag not in allowed_subcategory:
@@ -179,23 +152,22 @@ class ReceivedStructureProcessor:
                         # Validate attributes
                         tag_data = subcategory_data[tag]
                         if tag_data and isinstance(tag_data, dict):
-                            for attr in tag_data:
-                                if attr not in frontend_styles:
-                                    raise ValueError(
-                                        f"Invalid attribute: {attr} in {category}.{subcategory}.{tag}")
+                            if(not ReceivedStructureProcessor.check_dict_values_and_types(tag_data, styles_validation)):
+                                raise ValueError(
+                                    f"Invalid attribute in {category}.{subcategory}.{tag}")
 
                 # Case 2: Subcategory empty or missing allowed
                 elif allowed_subcategory is True:
                     if isinstance(subcategory_data, dict):
                         for attr in subcategory_data:
-                            if attr not in frontend_styles or isinstance(subcategory_data[attr], dict):
+                            if not ReceivedStructureProcessor.check_dict_values_and_types(subcategory_data, styles_validation):
                                 raise ValueError(
                                     f"Invalid attribute: {attr} in {category}.{subcategory}")
         return True
 
     @staticmethod
-    def transform_to_backend_structures(data: Dict[str, Any], allowed_styles=['width_fe', 'text_width_fe'],
-                                        styles_allowed_primary_elements=['nodes', 'ways', 'areas']) -> Dict[str, Any]:
+    def transform_to_backend_structures(data: Dict[str, Any], allowed_styles: dict[str, tuple[type, bool, Callable]],
+                                        styles_allowed_primary_elements, names_maping: dict[str, str]) -> Dict[str, Any]:
         """
         Transform the validated frontend data into two backend structures.
 
@@ -224,6 +196,8 @@ class ReceivedStructureProcessor:
                         attributes = {
                             k: v for k, v in tag_data.items() if k in allowed_styles}
                         if attributes:
+                            attributes = ReceivedStructureProcessor.map_dict_keys(
+                                attributes, names_maping)
                             path_key = {subcategory: tag}
                             multiply_filters[category].append(
                                 (path_key, attributes))
@@ -231,6 +205,8 @@ class ReceivedStructureProcessor:
                     attributes = {
                         k: v for k, v in data[category][subcategory].items() if k in allowed_styles}
                     if attributes:
+                        attributes = ReceivedStructureProcessor.map_dict_keys(
+                                attributes, names_maping)
                         path_key = {subcategory: ''}
                         multiply_filters[category].append(
                             (path_key, attributes))

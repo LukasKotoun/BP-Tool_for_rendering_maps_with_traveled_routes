@@ -1,3 +1,4 @@
+from styles.mapycz_style import MAPYCZ_STYLE, MAPYCZ_BASE_OSM_CONFIG
 import warnings
 import matplotlib.font_manager as fm
 
@@ -116,7 +117,8 @@ OUTPUT_PDF_NAME: str = '../pdfs/divocina'
 
 # AREA = []
 # AREA: WantedArea = [{"area": "Česko", "plot": True, "category": 0, "width": 1}]
-AREA: WantedArea = [{"area": "Brno, Česko", "plot": True, "category": 0, "width": 1}]
+AREA: WantedArea = [{"area": "Brno, Česko",
+                     "plot": True, "category": 0, "width": 1}]
 # AREA: WantedArea = [{"area": "4", "plot": True, "category": 5, "width": None}]
 # AREA: WantedArea = [{"area": "Baliny, Česko", "plot": True, "category": 0, "width": None}]
 # AREA: WantedArea =[{"area": "Jihomoravský kraj, Česko", "plot": True, "category": 2, "width": 1},
@@ -174,10 +176,10 @@ PLACES_TO_FILTER_BY_POPULATION = ['city', 'town', 'village']
 
 
 PREVIEW_AREA: WantedArea = [
-    {"area": "Brno, Česko", "plot": False }] 
+    {"area": "Brno, Česko", "plot": False}]
 
 # todo orientation in FE
-PREVIEW_PAPER_DIMENSIONS = PaperSize.A4.dimensions 
+PREVIEW_PAPER_DIMENSIONS = PaperSize.A4.dimensions
 
 PREVIEW_GIVEN_SMALLER_PAPER_DIMENSION = True
 
@@ -191,20 +193,19 @@ NODES_STYLE_ZOOM_LEVEL = 4
 
 # wanted_ways: WantedFeatures # where they vanish - already not on map - for mapycz styles
 wanted_nodes: WantedCategories = {
-     'place': {
-           'city',
-            'town', # zoom 1
-    #            'village',# zoom 3
-    #            'suburb', # zoom 5
-    #     'neighbourhood',  # zoom 7
-    #     'locality'
-     },  # zoom 7
+    'place': {
+        'city',
+        'town',  # zoom 1
+        #            'village',# zoom 3
+        #            'suburb', # zoom 5
+        #     'neighbourhood',  # zoom 7
+        #     'locality'
+    },  # zoom 7
 
     # 'natural': {'peak'},  # zoom 1
     #   'man_made': {'tower'}, # zoom 7
     #   'historic': {'castle'}, # zoom 7
 }
-
 wanted_nodes_from_area: WantedCategories = {
     #  'man_made': {'tower'}, # zoom 7
     #  'historic': {'castle'}, # zoom 7
@@ -335,9 +336,15 @@ CRS_DISPLAY = "EPSG:3857"  # WGS 84 / Pseudo-Mercator - unit - meters
 # fm.fontManager.ttflist = fm.createFontList(font_paths)
 
 # key, (types, required)
-REQ_AREA_DICT_KEYS = {"area": (str | list, True), "plot": (bool, True), "category": (
-    int | type(None), False), "width": (int | float | type(None), False)}
+REQ_AREA_DICT_KEYS = {"area": (str | list, True, None), "plot": (bool, True, None), "category": (
+    int | type(None), False, None), "width": (int | float | type(None), False, lambda v: isinstance(v, int) and 0.1 <= v)}
 REQ_AREAS_MAPPING_DICT = {"width": Style.WIDTH.value}
+
+FE_EDIT_STYLES_VALIDATION = {'width_scale': (float | int, False, lambda v: 0.1 <= v),
+                             "text_font_size_scale": (float | int, False, lambda v: 0.1 <= v)}
+FE_EDIT_STYLES_MAPPING = {"width_scale": Style.FE_WIDTH_SCALE.value,
+                          "text_font_size_scale": Style.FE_TEXT_FONT_SIZE_SCALE.value}
+
 try:
     font_paths = fm.findSystemFonts(
         fontpaths='./common/fonts/texts', fontext='ttf')
@@ -417,7 +424,6 @@ MARKERS_UCODE_MAPPING: dict[str, str] = {
     "MPL_start": (MarkersCodes.MPL_CIRCLE_MARKER.value, None, None, None),
 }
 
-from styles.mapycz_style import MAPYCZ_STYLE, MAPYCZ_BASE_OSM_CONFIG
 STYLES = {
     "mapycz": (MAPYCZ_STYLE, MAPYCZ_BASE_OSM_CONFIG),
 }

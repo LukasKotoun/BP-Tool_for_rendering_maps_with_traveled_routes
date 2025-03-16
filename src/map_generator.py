@@ -550,9 +550,44 @@ def preview_map_endpoint():
 
 @time_measurement("main")
 def main() -> None:
-    normal_map_endpoint()
-    # preview_map_endpoint()
+    # normal_map_endpoint()
+    # ReceivedStructureProcessor.validate_and_convert_areas_strucutre(
+    #     AREA, allowed_keys_and_types=REQ_AREA_DICT_KEYS, key_with_area="area")
+    allowed_structure = {
+        'nodes': {
+            'place': ['peak', 'tower'],
+            'location': ['city', 'town']
+        },
+        'areas_as_nodes': {
+            'place': ['peak', 'tower']
+        },
+        'ways': {},
+        'areas': {
+            'buildings': True,  # True means any tag is allowed
+            'leisure': {'farmland':"asd"}
+        },
+    }
+    valid_data = {
+        "nodes": {
+            "place": {
+                "tower": {"width_scale": 0.2},
+                "peak": {"width_scale": 1, 'width_scale': 3}
+            }
+        },
+        "areas": {
+            "leisure": {'farmland': {'text_font_size_scale': 3}},
+            "buildings": {"width_scale": 2, 'text_font_size_scale': 3},
 
+        },
+        "ways": {},
+    }
+    # preview_map_endpoint()
+  
+    print(ReceivedStructureProcessor.validate_wanted_elements_and_styles(valid_data, allowed_structure, FE_EDIT_STYLES_VALIDATION))
+    one, twe = ReceivedStructureProcessor.transform_to_backend_structures(valid_data, FE_EDIT_STYLES_VALIDATION.keys(),
+                                                                          ['nodes', 'ways', 'areas'], FE_EDIT_STYLES_MAPPING)
+    print(one)
+    print(twe)
 
 if __name__ == "__main__":
     main()

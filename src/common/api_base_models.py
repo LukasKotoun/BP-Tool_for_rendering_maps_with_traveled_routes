@@ -1,4 +1,3 @@
-from map_enums import CategoryFilter
 from pydantic import BaseModel, UUID4
 from typing import Any, Dict, List, Optional
 from fastapi import FastAPI, File, UploadFile
@@ -11,9 +10,9 @@ class WantedCategoryFilterModel(BaseModel):
     nodes_from_area: dict[str, dict[str, int]]
 
 class UnwantedCategoryFilterModel(BaseModel):
-    nodes: dict[Any]
-    ways: dict[Any]
-    areas: dict[Any]
+    nodes: dict[str, Any]
+    ways: dict[str, Any]
+    areas: dict[str, Any]
 
 class ZoomLevelsModel(BaseModel):
     nodes: int
