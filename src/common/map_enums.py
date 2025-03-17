@@ -2,6 +2,7 @@ from enum import Enum
 from typing import Literal
 
 class ProcessingStatus(Enum):
+    CANCELLED = "cancelled"
     FAILED = "failed"
     STARTING = "starting"
     IN_QUEUE = "in_queue"
@@ -18,6 +19,14 @@ class ProcessingStatus(Enum):
     FINISHED = "finished"
 
     
+class QueueType(Enum):
+    NORMAL = "normal"
+    PREVIEW = "preview"
+
+class GpxColumns(Enum):
+    FILE_NAME = "file_name"
+    CATEGORY = "category"
+
 class ColorMode(Enum):
     DEFAULT = "DEFAULT"
     SINGLE = "SINGLE"
@@ -55,12 +64,10 @@ class MapConfigKeys(Enum):
     UNWANTED_CATEGORIES = "unwanted_categories" # 'nodes', 'ways', 'areas'
     STYLES_ZOOM_LEVELS = "styles_zoom_levels" # 'nodes', 'ways', 'areas', 'general'
     MAP_THEME = "map_theme"
-    GPXS = "gpxs" # in front store as list of paths to files
+    GPXS = "gpxs"
     GPXS_STYLES = "gpxs_styles"
 
     PEAKS_FILTER_SENSITIVITY = "peaks_filter_sensitivity" # 0 is for no filter
-    GPXS_CATEGORIES = "gpxs_categories"
-    PREVIEW_PAPER_DIMENSION_MM = "preview_paper_dimension_mm"
     
     
 class MinPlot(Enum):  # minimum parts that node must have. If not whole node object is removed

@@ -278,6 +278,8 @@ class ReceivedStructureProcessor:
     def validate_and_convert_osm_files(osm_files: List[str], mapping_dict: dict[str, str]) -> List[str]:
         if (any(file not in mapping_dict for file in osm_files)):
             raise ValueError("Invalid osm files")
+        # Remove duplicates
+        osm_files = list(set(osm_files))
         return [mapping_dict[file] for file in osm_files]
 
     @staticmethod

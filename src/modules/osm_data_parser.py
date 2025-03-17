@@ -11,82 +11,17 @@ from common.common_helpers import time_measurement
 class OsmDataParser():
 
     def __init__(self, wanted_nodes: WantedCategories, wanted_nodes_from_area: WantedCategories, wanted_ways: WantedCategories, wanted_areas: WantedCategories, 
-                 unwanted_nodes_tags: UnwantedTags, unwanted_ways_tags: UnwantedTags, unwanted_areas_tags: UnwantedTags,
                  nodes_additional_columns: dict[str] = {}, ways_additional_columns: dict[str] = {}, areas_additional_columns: dict[str] = {}):
         self.wanted_nodes = wanted_nodes
         self.wanted_nodes_from_area = wanted_nodes_from_area
         self.wanted_ways = wanted_ways
         self.wanted_areas = wanted_areas
-        # self.unwanted_nodes_tags = unwanted_nodes_tags
-        # self.unwanted_ways_tags = unwanted_ways_tags
-        # self.unwanted_areas_tags = unwanted_areas_tags
         
         # merge always wanted columns (map objects) with additions wanted info columns
         self.nodes_columns = list(wanted_nodes.keys()) + \
             nodes_additional_columns
         self.way_columns = list(wanted_ways.keys()) + ways_additional_columns
         self.area_columns = list(wanted_areas.keys()) + areas_additional_columns
-
-    # @staticmethod
-    # def _apply_filters_not_allowed(not_allowed_tags: UnwantedTags, tags: TagList, curr_tag_key_inside: str | None = None):
-    #     """Checking for unwanted tag values in tags. Recursively going through 
-    # nested dictionaries and checks if the map feature that has these tags meets the defined condition (e.g. it is a tram track). 
-    # It then checks that the map feature does not contain any illegal values (e.g. tram track must not lead inside a building)
-
-    # The not_allowed_tags structure that will ensure that tram tracks doesn't have tunnel column with building_passage as value will look like this:
-    #     {
-    #     'railway': { # will ensure that map feature is railway category
-    #         'tram': { # will ensure that map feature is tram track
-    #             'tunnel': ['building_passage'] # and will set that tunnel column of map feature will not have building_passage value
-    #             }
-    #         }   
-    #     }
-    #     Args:
-    #         not_allowed_tags (dict[str, dict[any]]|dict[str, list[str]]): Nested dictionary
-    #         tags (_type_): Tags of concrete map feature (area, way, node)
-    #         curr_tag_key_inside (str, optional): The key to this dict is that the function is nested within (e.g., railway)
-    #         but cannot be a value that is inside a column in a osm data (e.g. tram, forrest...) only name of column in osm data
-
-    #     Returns:
-    #         bool: True if doesn't contain any not allowed tags otherwise false 
-    #     """
-    #     if (not not_allowed_tags):
-    #         return True
-    #     for dict_tag_key, unwanted_values in not_allowed_tags.items():
-    #         # not directly inside any tag and curr tag is not in tags => skip
-    #         if (curr_tag_key_inside is None and dict_tag_key not in tags):
-    #             continue
-
-    #         # Checking if map feature meets the defined conditions
-    #         if (isinstance(unwanted_values, dict)):
-    #             # The unwanted values are more nested => need to go down further
-    #             next_tag_key_inside: str | None = None
-    #             if (dict_tag_key in tags):  # dict_tag_key is tag_key (column name) in tags
-    #                 next_tag_key_inside = dict_tag_key
-
-    #             else:  # tag_key_value after tag_key
-    #                 # check if the value inside the current key matches the dict tag key - map feature meet this condition
-    #                 curr_tag_key_value = tags.get(curr_tag_key_inside)
-    #                 if (curr_tag_key_value != dict_tag_key):
-    #                     continue  # map feature does not meet this conditon for going to this next recursion level => skip
-
-    #             # map feature meet this condition go to next recursion level
-    #             return_value = OsmDataParser._apply_filters_not_allowed(
-    #                 unwanted_values, tags, next_tag_key_inside)
-    #             if (return_value):
-    #                 # unwanted value not found in this branch try to find in some other tag (can't have a single one)
-    #                 continue
-    #             return False  # one unwanted was found, tags are not valid
-
-    #         # map feature meets the defined conditions
-    #         # Check map feature for illegal values in dict_tag_key columns
-    #         dict_key_value = tags.get(dict_tag_key)
-    #         if (dict_key_value is not None):
-    #             # list of unwanted values is empty ban all values, else check for specific value in list
-    #             if not unwanted_values or dict_key_value in unwanted_values:
-    #                 return False
-    #     # does not conntain unwanted tags
-    #     return True
 
     @staticmethod
     def _apply_filters(wanted_features: WantedCategories, tags: TagList):

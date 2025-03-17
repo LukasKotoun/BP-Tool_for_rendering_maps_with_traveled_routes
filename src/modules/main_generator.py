@@ -180,17 +180,23 @@ def calc_preview(map_area_gdf, paper_dimensions_mm, fit_paper_size, preview_map_
     return map_scaling_factor, preview_map_area_gdf, map_area_gdf, map_scale
 
 
-def generate_map(config: dict[MapConfigKeys, any], task_id: str, shared_dict: dict[Any, Any], lock, preview=False) -> None:
+def generate_map(config: dict[MapConfigKeys, any], task_id: str, shared_dict: dict[Any, Any], lock) -> None:
     with lock:
         shared_dict[task_id] = {
             **shared_dict[task_id],  # Keep the existing keys and values
             'status': ProcessingStatus.EXTRACTING.value
         }
+        
     remove_osm_after_load = False if OSM_OUTPUT_FOLDER_FILE_NAME is not None else True
     map_area_gdf = config[MapConfigKeys.MAP_AREA.value]
     try:
         osm_data_preprocessor = OsmDataPreprocessor(
             config[MapConfigKeys.OSM_FILES.value], OSM_TMP_FILE_FOLDER, task_id, OSM_OUTPUT_FOLDER_FILE_NAME)
+        with lock:
+            shared_dict[task_id] = {
+                **shared_dict[task_id],  # Keep the existing keys and values
+                'files': [*shared_dict[task_id]['files'], osm_data_preprocessor.osm_output_file],
+            }
         osm_file = osm_data_preprocessor.extract_areas(
             config[MapConfigKeys.MAP_AREA.value], CRS_OSM)
     except:
@@ -221,10 +227,6 @@ def generate_map(config: dict[MapConfigKeys, any], task_id: str, shared_dict: di
         wanted_nodes_from_area,
         {**wanted_categories['ways'], **MANDATORY_WAYS},
         wanted_categories['areas'],
-        {},{},{},
-        # config[MapConfigKeys.UNWANTED_CATEGORIES.value]['nodes'],
-        # config[MapConfigKeys.UNWANTED_CATEGORIES.value]['ways'],
-        # config[MapConfigKeys.UNWANTED_CATEGORIES.value]['areas'],
         nodes_additional_columns=base_config['nodes'][BaseConfigKeys.ADDITIONAL_COLUMNS],
         ways_additional_columns=base_config['ways'][BaseConfigKeys.ADDITIONAL_COLUMNS],
         areas_additional_columns=base_config['areas'][BaseConfigKeys.ADDITIONAL_COLUMNS]
@@ -232,12 +234,14 @@ def generate_map(config: dict[MapConfigKeys, any], task_id: str, shared_dict: di
 
     nodes_gdf, ways_gdf, areas_gdf = osm_file_parser.create_gdf(
         osm_file, CRS_OSM, CRS_DISPLAY)
-
+    print(shared_dict[task_id])
     if (remove_osm_after_load):
-        try:
-            os.remove(osm_file)
-        except:
-            warnings.warn("Error while removing osm file.")
+        Utils.remove_file(osm_file)
+        shared_dict[task_id] = {
+                **shared_dict[task_id],
+                'files': [file for file in shared_dict[task_id]['files'] if file != osm_file],
+            }
+    print(shared_dict[task_id])
 
     # ------------gpxs------------
     with lock:
@@ -300,7 +304,6 @@ def generate_map(config: dict[MapConfigKeys, any], task_id: str, shared_dict: di
         map_theme['styles']['areas'], config[MapConfigKeys.STYLES_ZOOM_LEVELS.value]['areas'])
     # combine styles
     gpxs_styles = [*config[MapConfigKeys.GPXS_STYLES.value], *gpxs_styles]
-    print(gpxs_styles)
     nodes_styles = [*nodes_styles, *styles_size_edits['nodes']]
     ways_styles = [*ways_styles, *styles_size_edits['ways']]
     areas_styles = [*areas_styles, *styles_size_edits['areas']]
@@ -423,10 +426,4 @@ def generate_map(config: dict[MapConfigKeys, any], task_id: str, shared_dict: di
             'status':  ProcessingStatus.FILE_SAVING.value
         }
     plotter.generate_pdf(pdf_name)
-    with lock:
-        shared_dict[task_id] = {
-            **shared_dict[task_id],
-            'files': [],
-            'status': ProcessingStatus.FINISHED.value,
-            'pid': None
-        }
+

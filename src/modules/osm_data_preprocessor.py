@@ -2,7 +2,7 @@ import tempfile
 import subprocess
 import os
 from datetime import datetime
-
+from modules.utils import Utils
 from geopandas import GeoDataFrame
 
 
@@ -12,11 +12,11 @@ class OsmDataPreprocessor:
         self.osm_input_files: list[str] | str = osm_input_files
         self.task_id = task_id
         self.osm_tmp_folder = osm_tmp_folder
-        if not os.path.exists(self.osm_tmp_folder):
-            os.makedirs(self.osm_tmp_folder)
+        
         if (self.osm_tmp_folder[-1] != '/'):
             self.osm_tmp_folder += '/'
-            
+        os.makedirs(self.osm_tmp_folder, exist_ok=True)
+       
         if osm_output_file is None:
             self.osm_output_file = f'{self.osm_tmp_folder}extracted_output_{self.task_id}.osm.pbf'
         else:
@@ -46,7 +46,7 @@ class OsmDataPreprocessor:
         try:
             subprocess.run(command, check=True)
         except Exception as e:
-            os.remove(temp_geojson_path)
+            Utils.remove_file(temp_geojson_path)
             raise Exception(
                 f"Cannot extract osm file, check if osmium command line tool is installed")
         return osm_output_file
@@ -84,7 +84,7 @@ class OsmDataPreprocessor:
             finally:
                 # remove temp files
                 for tmp_file in extracted_files_names:
-                    os.remove(tmp_file)
+                    Utils.remove_file(tmp_file)
 
-        os.remove(temp_geojson_path)
+        Utils.remove_file(temp_geojson_path)
         return self.osm_output_file

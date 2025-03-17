@@ -1,8 +1,11 @@
 import math
+import warnings
 
 import rtree
 import textwrap
 import pandas as pd
+import os
+
 from shapely import geometry
 from shapely.geometry import Point
 from matplotlib.transforms import Bbox
@@ -322,3 +325,18 @@ class Utils:
             result[dict_key] = {key: cumulative, **extra_dict}
 
         return result
+
+    @staticmethod
+    def remove_file(file_path):
+        try:
+            if os.path.exists(file_path) and os.path.isfile(file_path):
+                os.remove(file_path)
+        except Exception as e:
+            warnings.warn(f"Error cleaning up file {file_path}: {str(e)}")
+            
+    @staticmethod
+    def extract_original_name(file_name, task_id):# -> Any:
+        prefix = task_id + '_'
+        if file_name.startswith(prefix):
+            return file_name[len(prefix):]
+        return file_name

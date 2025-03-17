@@ -6,7 +6,7 @@ from fastapi import FastAPI, File, UploadFile, Form
 from fastapi.middleware.cors import CORSMiddleware
 import json
 from typing import List, Optional
-
+import time
 from config import *
 from common.map_enums import ProcessingStatus
 from modules.main_generator import generate_map, calc_preview, get_map_area_gdf
@@ -19,13 +19,17 @@ from modules.style_assigner import StyleManager
 from modules.plotter import Plotter
 from modules.gpx_manager import GpxManager
 from modules.received_structure_processor import ReceivedStructureProcessor
+from modules.task_queue_manager import MapTaskQueueManager
 import os
 from multiprocessing import Lock
 import shutil
 
-
 shared_tasks = multiprocessing.Manager().dict()
 shared_tasks_lock = Lock()
+
+task_queue_manager = MapTaskQueueManager(max_normal_tasks=MAX_CONCURRENT_TASKS_NORMAL,
+                                         max_preview_tasks=MAX_CONCURRENT_TASKS_PREVIEW,
+                                         gpx_tmp_folder=GPX_TMP_FOLDER, gpx_crs=CRS_DISPLAY)
 
 server_app = FastAPI()
 server_app.add_middleware(
@@ -76,8 +80,9 @@ def zoom_level_endpoint(area: WantedArea, paper_dimensions_mm, wanted_orientatio
 @server_app.post("/generate-map-normal", response_model=GeneratorResponseStatusModel)
 def generate_map_normal(gpxs: Optional[List[UploadFile]] = File(None),
                         config: str = Form(...)):
+    # validate
     try:
-        # todo validate unwanted categories
+        # todo validate gpx names and files names
         config: MapGeneratorConfigModel = MapGeneratorConfigModel(
             **json.loads(config))
         osm_files = ReceivedStructureProcessor.validate_and_convert_osm_files(
@@ -89,8 +94,8 @@ def generate_map_normal(gpxs: Optional[List[UploadFile]] = File(None),
             config.paper_dimensions)
         ReceivedStructureProcessor.validate_wanted_elements_and_styles(
             config.wanted_categories_and_styles_edit, ALLOWED_WANTED_ELEMENTS_STRUCTURE, FE_EDIT_STYLES_VALIDATION)
-        gpxs_styles = ReceivedStructureProcessor.validate_and_convert_gpx_styles(config.gpxs_styles, [
-            'categories', 'file_names'], ['general'], GPX_STYLES_VALIDATION, GPX_STYLES_MAPPING)
+        gpxs_styles = ReceivedStructureProcessor.validate_and_convert_gpx_styles(
+            config.gpxs_styles, GPX_NORMAL_COLUMNS, GPX_GENERAL_KEYS, GPX_STYLES_VALIDATION, GPX_STYLES_MAPPING)
 
         map_area = ReceivedStructureProcessor.validate_and_convert_areas_strucutre(
             config.map_area, REQ_AREA_DICT_KEYS, key_with_area="area")
@@ -98,7 +103,8 @@ def generate_map_normal(gpxs: Optional[List[UploadFile]] = File(None),
             map_area, True)
     except Exception as e:
         return {"message": f"Error in data validation: {e}", "status": ProcessingStatus.FAILED.value}
-    print(gpxs_styles)
+
+    # calc needed values before storing in front - are different for normal and preview
     # ------------get paper dimension (size and orientation)------------
     map_area_dimensions = GdfUtils.get_dimensions_gdf(map_area_gdf)
     if (config.fit_paper_size):
@@ -118,19 +124,13 @@ def generate_map_normal(gpxs: Optional[List[UploadFile]] = File(None),
     map_area_gdf = GdfUtils.change_crs(map_area_gdf, CRS_DISPLAY)
     boundary_map_area_gdf = GdfUtils.change_crs(
         boundary_map_area_gdf, CRS_DISPLAY)
-
     peaks_filter_radius = map_scale * 10 * config.peaks_filter_sensitivity
 
-    # todo check for front and by that convert to gdf from memory or store as tmp files
-    # and by that also use config.gpxs_categories
-    gpx_manager = GpxManager(GPX_FOLDER, CRS_DISPLAY)
-    gpxs_gdf = gpx_manager.get_gpxs_gdf()
+    gpxs_gdf = GpxManager.load_to_gdf_from_memory(gpxs, config.gpxs_categories, CRS_DISPLAY)
 
-    # check how it will be recived from FE and change or remap
     map_generator_config = {
         MapConfigKeys.MAP_AREA.value: map_area_gdf,
         MapConfigKeys.GPXS.value: gpxs_gdf,
-        MapConfigKeys.GPXS_CATEGORIES.value: [],
         MapConfigKeys.MAP_OUTER_AREA.value: None,
         MapConfigKeys.MAP_AREA_BOUNDARY.value: boundary_map_area_gdf,
         MapConfigKeys.MAP_SCALING_FACTOR.value: map_scaling_factor,
@@ -149,33 +149,27 @@ def generate_map_normal(gpxs: Optional[List[UploadFile]] = File(None),
     }
     task_id: str = uuid7str()
 
-    process = multiprocessing.Process(
-        target=generate_map, args=(map_generator_config, task_id, shared_tasks, shared_tasks_lock, False))
-
-    with shared_tasks_lock:
-        process.start()
-        shared_tasks[task_id] = {
-            "status": ProcessingStatus.STARTING.value,
-            "pid": process.pid,
-            "files": [],
-            "process_running": False
-        }
-    return {"message": "Map is generating", "task_id": task_id, "status": ProcessingStatus.STARTING.value}
+    status = task_queue_manager.add_task(
+        map_generator_config, task_id, shared_tasks, shared_tasks_lock, QueueType.NORMAL)
+    print(task_queue_manager.get_queue_size())
+    return {"message": "Map is generating", "task_id": task_id, "status": status}
 
 
 @server_app.post("/generate-map-preview", response_model=GeneratorResponseStatusModel)
 def preview_map_endpoint(gpxs: Optional[List[UploadFile]] = File(None),
                          config: str = Form(...)):
+    # Validate 
     try:
-        # data validation
-        # todo validate unwanted categories
+        # todo validate gpx names and files
         config: MapGeneratorConfigModel = MapGeneratorConfigModel(
             **json.loads(config))
         osm_files = ReceivedStructureProcessor.validate_and_convert_osm_files(
             config.osm_files, OSM_AVAILABLE_FILES)
+        
         ReceivedStructureProcessor.validate_zoom_levels(
             config.styles_zoom_levels.dict(), ZOOM_STYLE_LEVELS_VALIDATION)
         styles_zoom_levels = config.styles_zoom_levels.dict()
+        
         paper_dimensions_mm = ReceivedStructureProcessor.validate_and_convert_paper_dimension(
             config.paper_dimensions)
         preview_paper_dimensions_mm = paper_dimensions_mm = ReceivedStructureProcessor.validate_and_convert_paper_dimension(
@@ -183,8 +177,9 @@ def preview_map_endpoint(gpxs: Optional[List[UploadFile]] = File(None),
         ReceivedStructureProcessor.validate_wanted_elements_and_styles(
             config.wanted_categories_and_styles_edit, ALLOWED_WANTED_ELEMENTS_STRUCTURE, FE_EDIT_STYLES_VALIDATION)
 
-        gpxs_styles = ReceivedStructureProcessor.validate_gpx_styles(config.gpxs_styles, [
-            'categories', 'names'], ['general'], GPX_STYLES_VALIDATION, GPX_STYLES_MAPPING)
+        gpxs_styles = ReceivedStructureProcessor.validate_and_convert_gpx_styles(
+            config.gpxs_styles, GPX_NORMAL_COLUMNS, GPX_GENERAL_KEYS, GPX_STYLES_VALIDATION, GPX_STYLES_MAPPING)
+        
         map_area = ReceivedStructureProcessor.validate_and_convert_areas_strucutre(
             config.map_area, REQ_AREA_DICT_KEYS, key_with_area="area")
         map_area_gdf, boundary_map_area_gdf = get_map_area_gdf(
@@ -198,11 +193,10 @@ def preview_map_endpoint(gpxs: Optional[List[UploadFile]] = File(None),
                 preview_map_area, False)
 
     except Exception as e:
-        return {"message": f"Error in data validation: {e}", "status": "failed"}
+        return {"message": f"Error in data validation: {e}", "status": ProcessingStatus.FAILED.value}
     # area - big area with all settings
     # preview_area - area to display
-
-    # data preparation and preview calculation
+    # calc needed values before storing in front - are different for normal and preview
     (map_scaling_factor, preview_map_area_gdf, map_area_gdf,
      map_scale) = calc_preview(map_area_gdf, paper_dimensions_mm, config.fit_paper_size, preview_map_area_gdf, preview_paper_dimensions_mm)
 
@@ -213,9 +207,7 @@ def preview_map_endpoint(gpxs: Optional[List[UploadFile]] = File(None),
 
     peaks_filter_radius = map_scale * 10 * config.peaks_filter_sensitivity
 
-    # todo check for front and by that convert to gdf from memory or store as tmp files
-    gpx_manager = GpxManager(GPX_FOLDER, CRS_DISPLAY)
-    gpxs_gdf = gpx_manager.get_gpxs_gdf()
+    gpxs_gdf = GpxManager.load_to_gdf_from_memory(gpxs, config.gpxs_categories, CRS_DISPLAY)
 
     # config for map generator
     map_generator_config = {
@@ -238,18 +230,11 @@ def preview_map_endpoint(gpxs: Optional[List[UploadFile]] = File(None),
     }
     task_id: str = uuid7str()
 
-    process = multiprocessing.Process(
-        target=generate_map, args=(map_generator_config, task_id, shared_tasks, shared_tasks_lock, False))
-    with shared_tasks_lock:
-        process.start()
-        shared_tasks[task_id] = {
-            "status": ProcessingStatus.STARTING.value,
-            "files": [],
-            "pid": process.pid,
-            "process_running": False
-        }
+    status = task_queue_manager.add_task(
+        map_generator_config, task_id, shared_tasks, shared_tasks_lock, QueueType.PREVIEW)
+    print(task_queue_manager.get_queue_size())
 
-    return {"message": "Map preview is generating", "task_id": task_id, "status": ProcessingStatus.STARTING.value}
+    return {"message": "Map preview is generating", "task_id": task_id, "status": status}
 
 
 @server_app.get("/tasks")
@@ -289,37 +274,11 @@ def shutdown_cleanup():
     """
     Cleanup any running processes and tmp files on server shutdown.
     """
-    # with shared_tasks_lock:
-    #     task = shared_tasks.get(task_id)
-    #     if not task:
-    #         print(f"Task {task_id} not found.")
-    #         return
-
-    #     pid = task.get("pid")
-    #     process_running = task.get("process_running", False)
-    #     files = task.get("files", [])
-
-    #     # Kill the process if it's running
-    #     if process_running and pid:
-    #         try:
-    #             os.kill(pid, signal.SIGTERM)  # Send terminate signal
-    #             print(f"Terminated process {pid} for task {task_id}")
-    #         except ProcessLookupError:
-    #             print(f"Process {pid} not found, may have already exited.")
-    #         except PermissionError:
-    #             print(f"Permission denied when trying to kill process {pid}")
-
-    #     # Remove temporary files
-    #     for file_path in files:
-    #         if os.path.exists(file_path):
-    #             try:
-    #                 os.remove(file_path)
-    #                 print(f"Removed file: {file_path}")
-    #             except Exception as e:
-    #                 print(f"Error removing file {file_path}: {e}")
-
-    #     # Update task status
-    #     task["process_running"] = False
-    #     task["files"] = []
-    #     shared_tasks[task_id] = task
-    #     print(f"Cleanup completed for task {task_id}")
+    print("Shutting down server...")
+    task_queue_manager.clear_queue(shared_tasks, shared_tasks_lock)
+    for task_id, task in shared_tasks.items():
+        print(f"Terminating task {task_id}, {task}")
+        task_queue_manager.terminate_task(task_id, shared_tasks, shared_tasks_lock)
+        print(f"Terminated {task_id}")
+        with shared_tasks_lock:
+            shared_tasks.pop(task_id)
