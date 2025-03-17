@@ -1,6 +1,6 @@
 import warnings
 import matplotlib
-matplotlib.use("Agg")
+matplotlib.use("Agg") # use non-interactive backend - for processing in not main process
 import matplotlib.pyplot as plt
 import matplotlib.patheffects as pe
 from matplotlib.lines import Line2D
@@ -53,7 +53,7 @@ class Plotter:
         self.markers_above_bbox_idx = rtree.index.Index()
         self.markers_and_texts_bbox_idx = rtree.index.Index()
 
-    def init(self, map_bg_color: str, bg_gdf: GeoDataFrame, area_zoom_preview: None | DimensionsTuple = None):
+    def init(self, map_bg_color: str, bg_gdf: GeoDataFrame|None, area_zoom_preview: None | DimensionsTuple = None):
         self.fig, self.ax = plt.subplots(figsize=(self.paper_dimensions_mm[0]/self.MM_TO_INCH,
                                                   # convert mm to inch
                                                   self.paper_dimensions_mm[1]/self.MM_TO_INCH), dpi=50)
@@ -61,10 +61,10 @@ class Plotter:
             left=0, right=1, top=1, bottom=0)
         self.ax.axis('off')
         self.zoom()
-
-        self.reqired_area_gdf.plot(ax=self.ax, color=map_bg_color)
-        if (not bg_gdf.empty):
-            bg_gdf.plot(ax=self.ax, color=bg_gdf[Style.COLOR.value])
+        if(bg_gdf is not None):
+            self.reqired_area_gdf.plot(ax=self.ax, color=map_bg_color)
+            if (not bg_gdf.empty):
+                bg_gdf.plot(ax=self.ax, color=bg_gdf[Style.COLOR.value])
 
         polygon_text_inside = GdfUtils.create_polygon_from_gdf(
             self.reqired_area_gdf) if self.outer_reqired_area_gdf is None else GdfUtils.create_polygon_from_gdf(self.outer_reqired_area_gdf)
@@ -81,12 +81,12 @@ class Plotter:
         return GdfUtils.filter_rows(gdf, {Style.MARKER.value: '', Style.COLOR.value: '', Style.WIDTH.value: '',
                                           Style.EDGE_WIDTH.value: '', Style.EDGE_COLOR.value: '', Style.ALPHA.value: ''})
 
-    def __marker(self, row: MarkerRow, store_bbox: bool = True, position: MarkerPosition = MarkerPosition.NORMAL, zorder: int = 2) -> Line2D | None:
-        if (position == MarkerPosition.ABOVE_ALL):
+    def __marker(self, row: MarkerRow, store_bbox: bool = True, position: MarkerPosition = MarkerPosition.NORMAL.value, zorder: int = 2) -> Line2D | None:
+        if (position == MarkerPosition.ABOVE_ALL.value):
             zorder = self.MARKER_ABOVE_ALL_ZORDER
-        elif (position == MarkerPosition.ABOVE_NORMAL):
+        elif (position == MarkerPosition.ABOVE_NORMAL.value):
             zorder = self.MARKER_ABOVE_NORMAL_ZORDER
-        elif (position == MarkerPosition.UNDER_TEXT_OVERLAP):
+        elif (position == MarkerPosition.UNDER_TEXT_OVERLAP.value):
             zorder = self.MARKER_UNDER_TEXT_ZORDER
 
         font_properties = Utils.get_name_tuple_value(
@@ -120,9 +120,9 @@ class Plotter:
             return None
 
         bboxs_index = None
-        if (position == MarkerPosition.ABOVE_NORMAL):
+        if (position == MarkerPosition.ABOVE_NORMAL.value):
             bboxs_index = self.markers_above_bbox_idx
-        elif (position == MarkerPosition.NORMAL):
+        elif (position == MarkerPosition.NORMAL.value):
             bboxs_index = self.markers_and_texts_bbox_idx
 
         bbox_expanded = Utils.expand_bbox(bbox, self.marker_expand_percent)
@@ -132,11 +132,11 @@ class Plotter:
             return None
 
         if (store_bbox):
-            if (position == MarkerPosition.ABOVE_NORMAL):
+            if (position == MarkerPosition.ABOVE_NORMAL.value):
                 self.markers_above_bbox_idx.insert(
                     self.markers_above_id, bbox_expanded.extents)
                 self.markers_above_id += 1
-            elif (position == MarkerPosition.NORMAL):
+            elif (position == MarkerPosition.NORMAL.value):
                 self.markers_and_texts_bbox_idx.insert(
                     self.markers_and_texts_id, bbox_expanded.extents)
                 self.markers_and_texts_id += 1
@@ -152,38 +152,38 @@ class Plotter:
         for position in text_positions:
             x_shift = 0
             y_shift = 0
-            if (position == TextPositions.TOP):
+            if (position == TextPositions.TOP.value):
                 y_shift += marker_size * 0.8
                 ha = 'center'
                 va = 'bottom'
-            elif (position == TextPositions.BOTTOM):
+            elif (position == TextPositions.BOTTOM.value):
                 y_shift -= marker_size
                 ha = 'center'
                 va = 'top'
-            elif (position == TextPositions.LEFT):
+            elif (position == TextPositions.LEFT.value):
                 x_shift -= marker_size
                 ha = 'right'
                 va = 'center'
-            elif (position == TextPositions.RIGHT):
+            elif (position == TextPositions.RIGHT.value):
                 x_shift += marker_size
                 ha = 'left'
                 va = 'center'
-            elif (position == TextPositions.TOP_LEFT):
+            elif (position == TextPositions.TOP_LEFT.value):
                 x_shift -= marker_size
                 y_shift += marker_size * 0.8
                 ha = 'right'
                 va = 'bottom'
-            elif (position == TextPositions.TOP_RIGHT):
+            elif (position == TextPositions.TOP_RIGHT.value):
                 x_shift += marker_size
                 y_shift += marker_size * 0.8
                 ha = 'left'
                 va = 'bottom'
-            elif (position == TextPositions.BOTTOM_LEFT):
+            elif (position == TextPositions.BOTTOM_LEFT.value):
                 x_shift -= marker_size
                 y_shift -= marker_size
                 ha = 'right'
                 va = 'top'
-            elif (position == TextPositions.BOTTOM_RIGHT):
+            elif (position == TextPositions.BOTTOM_RIGHT.value):
                 x_shift += marker_size
                 y_shift -= marker_size
                 ha = 'left'
@@ -252,7 +252,7 @@ class Plotter:
             return (None, None)
 
         marker_position = Utils.get_name_tuple_value(
-            row, Style.MARKER_LAYER_POSITION.value, MarkerPosition.NORMAL)
+            row, Style.MARKER_LAYER_POSITION.value, MarkerPosition.NORMAL.value)
         marker = self.__marker(
             row, store_bbox=False, position=marker_position, zorder=marker_zorder)
         # if node must have marker return None
@@ -281,11 +281,11 @@ class Plotter:
         # node have ploted minimum parts
         if (store_bbox):
             if (marker is not None):
-                if (marker_position == MarkerPosition.ABOVE_NORMAL):
+                if (marker_position == MarkerPosition.ABOVE_NORMAL.value):
                     self.markers_above_bbox_idx.insert(self.markers_above_id,
                                                        Utils.expand_bbox(marker.get_tightbbox(), self.marker_expand_percent).extents)
                     self.markers_above_id += 1
-                elif (marker_position == MarkerPosition.NORMAL):
+                elif (marker_position == MarkerPosition.NORMAL.value):
                     self.markers_and_texts_bbox_idx.insert(self.markers_and_texts_id,
                                                            Utils.expand_bbox(marker.get_tightbbox(), self.marker_expand_percent).extents)
                     self.markers_and_texts_id += 1
@@ -297,7 +297,7 @@ class Plotter:
 
     def __marker_with_two_annotations(self, row: MarkerTwoAnotationRow, store_bbox: bool = True, text_zorder: int = 3, marker_zorder: int = 2) -> tuple[Line2D, Text, Text]:
         marker_position = Utils.get_name_tuple_value(
-            row, Style.MARKER_LAYER_POSITION.value, MarkerPosition.NORMAL)
+            row, Style.MARKER_LAYER_POSITION.value, MarkerPosition.NORMAL.value)
         marker = self.__marker(row, store_bbox=False, position=marker_position,
                                zorder=marker_zorder)
         # if node must have marker return None
@@ -346,11 +346,11 @@ class Plotter:
         # node have ploted minimum parts
         if (store_bbox):
             if (marker is not None):
-                if (marker_position == MarkerPosition.ABOVE_NORMAL):
+                if (marker_position == MarkerPosition.ABOVE_NORMAL.value):
                     self.markers_above_bbox_idx.insert(self.markers_above_id,
                                                        Utils.expand_bbox(marker.get_tightbbox(), self.marker_expand_percent).extents)
                     self.markers_above_id += 1
-                elif (marker_position == MarkerPosition.NORMAL):
+                elif (marker_position == MarkerPosition.NORMAL.value):
                     self.markers_and_texts_bbox_idx.insert(self.markers_and_texts_id,
                                                            Utils.expand_bbox(marker.get_tightbbox(), self.marker_expand_percent).extents)
                     self.markers_and_texts_id += 1
@@ -384,7 +384,7 @@ class Plotter:
         for row in gdf.itertuples(index=False):
             self.__marker(row, store_bbox=store_bbox,
                           position=Utils.get_name_tuple_value(
-                              row, Style.MARKER_LAYER_POSITION.value, MarkerPosition.NORMAL), zorder=zorder)
+                              row, Style.MARKER_LAYER_POSITION.value, MarkerPosition.NORMAL.value), zorder=zorder)
 
     def __markers_gdf_with_one_annotation(self, gdf: GeoDataFrame, store_bbox: bool = True, text_zorder: int = 3, marker_zorder: int = 2):
         gdf = self.__filter_invalid_markers(gdf)
@@ -765,7 +765,6 @@ class Plotter:
     def __gpx_markers(self, gpxs_gdf: GeoDataFrame):
         if (gpxs_gdf.empty):
             return
-
         gpx_start_markers = GdfUtils.filter_rows(gpxs_gdf, {Style.START_MARKER.value: '', Style.START_MARKER_WIDTH.value: '',
                                                             Style.START_MARKER_COLOR.value: '', Style.START_MARKER_EDGE_COLOR.value: '',
                                                             Style.START_MARKER_EDGE_WIDTH.value: '', Style.START_MARKER_ALPHA.value: ''})
@@ -785,8 +784,8 @@ class Plotter:
                 MARKER_VERTICAL_ALIGN=Utils.get_name_tuple_value(
                     row, Style.START_MARKER_VERTICAL_ALIGN.value, "center"),
             )
-            marker_default_position = MarkerPosition.ABOVE_ALL if Utils.get_name_tuple_value(
-                row, Style.GPX_ABOVE_TEXT.value, False) else MarkerPosition.UNDER_TEXT_OVERLAP
+            marker_default_position = MarkerPosition.ABOVE_ALL.value if Utils.get_name_tuple_value(
+                row, Style.GPX_ABOVE_TEXT.value, False) else MarkerPosition.UNDER_TEXT_OVERLAP.value
             start_marker_position = Utils.get_name_tuple_value(
                 row, Style.MARKER_LAYER_POSITION.value, marker_default_position)
             self.__marker(mapped_row, position=start_marker_position)
@@ -794,9 +793,10 @@ class Plotter:
         gpx_finish_markers = GdfUtils.filter_rows(gpxs_gdf, {Style.FINISH_MARKER.value: '', Style.FINISH_MARKER_WIDTH.value: '',
                                                              Style.FINISH_MARKER_COLOR.value: '', Style.FINISH_MARKER_EDGE_COLOR.value: '',
                                                              Style.FINISH_MARKER_EDGE_WIDTH.value: '', Style.FINISH_MARKER_ALPHA.value: ''})
+        
         for row in gpx_finish_markers.itertuples():
             mapped_row: MarkerRow = MarkerRow(
-                geometry=GeomUtils.get_line_first_point(row.geometry),
+                geometry=GeomUtils.get_line_last_point(row.geometry),
                 MARKER=row.FINISH_MARKER,
                 COLOR=row.FINISH_MARKER_COLOR,
                 WIDTH=row.FINISH_MARKER_WIDTH,
@@ -810,8 +810,8 @@ class Plotter:
                 MARKER_VERTICAL_ALIGN=Utils.get_name_tuple_value(
                     row, Style.FINISH_MARKER_VERTICAL_ALIGN.value, "center"),
             )
-            marker_default_position = MarkerPosition.ABOVE_ALL if Utils.get_name_tuple_value(
-                row, Style.GPX_ABOVE_TEXT.value, False) else MarkerPosition.UNDER_TEXT_OVERLAP
+            marker_default_position = MarkerPosition.ABOVE_ALL.value if Utils.get_name_tuple_value(
+                row, Style.GPX_ABOVE_TEXT.value, False) else MarkerPosition.UNDER_TEXT_OVERLAP.value
             finish_marker_position = Utils.get_name_tuple_value(
                 row, Style.MARKER_LAYER_POSITION.value, marker_default_position)
             self.__marker(mapped_row, position=finish_marker_position)

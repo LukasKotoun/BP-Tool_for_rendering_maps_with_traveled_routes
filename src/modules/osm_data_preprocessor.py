@@ -2,16 +2,15 @@ import tempfile
 import subprocess
 import os
 from datetime import datetime
-import uuid
 
 from geopandas import GeoDataFrame
 
 
 class OsmDataPreprocessor:
-    def __init__(self, osm_input_files: list[str] | str, osm_tmp_folder: str, uuid: str, osm_output_file: str = None):
+    def __init__(self, osm_input_files: list[str] | str, osm_tmp_folder: str, task_id: str, osm_output_file: str = None):
         # Can be a string (place name) or a list of coordinates
         self.osm_input_files: list[str] | str = osm_input_files
-        self.uuid = uuid
+        self.task_id = task_id
         self.osm_tmp_folder = osm_tmp_folder
         if not os.path.exists(self.osm_tmp_folder):
             os.makedirs(self.osm_tmp_folder)
@@ -19,7 +18,7 @@ class OsmDataPreprocessor:
             self.osm_tmp_folder += '/'
             
         if osm_output_file is None:
-            self.osm_output_file = f'{self.osm_tmp_folder}extracted_output_{self.uuid}.osm.pbf'
+            self.osm_output_file = f'{self.osm_tmp_folder}extracted_output_{self.task_id}.osm.pbf'
         else:
             self.osm_output_file = osm_output_file
 
@@ -73,7 +72,7 @@ class OsmDataPreprocessor:
                 print(
                     f"Extracting area from file {index + 1}/{len(self.osm_input_files)}: {osm_input_file}")
                 extracted_file_name = self.__extract_area(
-                    osm_input_file, f'{self.osm_tmp_folder}tmp_osm_merge_file_{index}_{self.uuid}.osm.pbf', temp_geojson_path)
+                    osm_input_file, f'{self.osm_tmp_folder}osm_merge_file_{index}_{self.task_id}.osm.pbf', temp_geojson_path)
                 extracted_files_names.append(extracted_file_name)
 
             try:

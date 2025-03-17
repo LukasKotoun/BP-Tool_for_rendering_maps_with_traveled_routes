@@ -3,6 +3,7 @@ import uuid
 from typing import Any
 
 from config import *
+from common.map_enums import ProcessingStatus
 from modules.gdf_utils import GdfUtils
 from modules.utils import Utils
 from modules.osm_data_parser import OsmDataParser
@@ -24,11 +25,11 @@ def get_map_area_gdf(wanted_areas_to_display, boundary=False):
         boundary_map_area_gdf = GdfUtils.get_areas_borders_gdf(
             GdfUtils.filter_rows(map_area_gdf, {'plot': True, 'width': ''}), 'category')
         boundary_map_area_gdf = GdfUtils.map_gdf_column_names(
-            boundary_map_area_gdf, REQ_AREAS_MAPPING_DICT)
+            boundary_map_area_gdf, REQ_AREAS_KEYS_MAPPING_DICT)
         GdfUtils.remove_columns(boundary_map_area_gdf, [
-                                boundary_map_area_gdf.geometry.name, *REQ_AREAS_MAPPING_DICT.values()], True)
+                                boundary_map_area_gdf.geometry.name, *REQ_AREAS_KEYS_MAPPING_DICT.values()], True)
     GdfUtils.remove_columns(map_area_gdf, [
-                            map_area_gdf.geometry.name, *REQ_AREAS_MAPPING_DICT.values()], True)
+                            map_area_gdf.geometry.name, *REQ_AREAS_KEYS_MAPPING_DICT.values()], True)
     map_area_gdf = GdfUtils.combine_rows_gdf(map_area_gdf)
     if (boundary):
         return map_area_gdf, boundary_map_area_gdf
@@ -78,7 +79,7 @@ def gdfs_convert_loaded_columns(gpxs_gdf, nodes_gdf, ways_gdf, areas_gdf, config
         areas_gdf, config['areas'][BaseConfigKeys.ROUND_COLUMNS])
 
 
-def gdfs_prepare_styled_columns(gpxs_gdf, nodes_gdf, ways_gdf, areas_gdf, map_scaling_factor, config):
+def gdfs_prepare_styled_columns(gpxs_gdf, nodes_gdf, ways_gdf, areas_gdf, config):
 
     GdfUtils.create_derivated_columns(gpxs_gdf, Style.EDGE_WIDTH.value, Style.WIDTH.value, [
                                       Style.EDGE_WIDTH_RATIO.value])
@@ -104,7 +105,6 @@ def gdfs_prepare_styled_columns(gpxs_gdf, nodes_gdf, ways_gdf, areas_gdf, map_sc
 
     # edge - MARKER size and ways width
     GdfUtils.create_derivated_columns(nodes_gdf, Style.EDGE_WIDTH.value, Style.WIDTH.value, [
-                                      # ?? maybe remove ...
                                       Style.EDGE_WIDTH_RATIO.value])
     old_column_remove = []
     for filter, new_column, old_column, fill in config['nodes'][BaseConfigKeys.DERIVATE_COLUMNS]:
@@ -119,14 +119,13 @@ def gdfs_prepare_styled_columns(gpxs_gdf, nodes_gdf, ways_gdf, areas_gdf, map_sc
     GdfUtils.fill_nan_values(ways_gdf, [Style.ZINDEX.value], 0)
 
     GdfUtils.multiply_column_gdf(ways_gdf, Style.WIDTH.value, [
-        # if i will be creationg function with continues width scaling than multiply only by FEwidthscale
         Style.FE_WIDTH_SCALE.value])
 
     GdfUtils.create_derivated_columns(ways_gdf, Style.EDGE_WIDTH.value, Style.WIDTH.value, [
         Style.EDGE_WIDTH_RATIO.value])
     GdfUtils.create_derivated_columns(ways_gdf, Style.EDGE_WIDTH_DASHED_CONNECT.value, Style.EDGE_WIDTH_DASHED_CONNECT_RATIO.value, [
         Style.WIDTH.value])
-    GdfUtils.create_derivated_columns(ways_gdf, Style.BRIDGE_WIDTH.value, Style.WIDTH.value, [     # calc bridge size only for bridges
+    GdfUtils.create_derivated_columns(ways_gdf, Style.BRIDGE_WIDTH.value, Style.WIDTH.value, [# calc bridge size only for bridges
                                       Style.BRIDGE_WIDTH_RATIO.value], {'bridge': ''})
     GdfUtils.create_derivated_columns(ways_gdf, Style.BRIDGE_EDGE_WIDTH.value, Style.BRIDGE_WIDTH.value, [
                                       Style.BRIDGE_EDGE_WIDTH_RATIO.value], {'bridge': ''})
@@ -181,17 +180,17 @@ def calc_preview(map_area_gdf, paper_dimensions_mm, fit_paper_size, preview_map_
     return map_scaling_factor, preview_map_area_gdf, map_area_gdf, map_scale
 
 
-def generate_map(config: dict[MapConfigKeys, any], taskId: str, shared_dict: dict[Any, Any], lock, preview=False) -> None:
+def generate_map(config: dict[MapConfigKeys, any], task_id: str, shared_dict: dict[Any, Any], lock, preview=False) -> None:
     with lock:
-        shared_dict[taskId] = {
-            **shared_dict[taskId],  # Keep the existing keys and values
-            'status': 'extracting'
+        shared_dict[task_id] = {
+            **shared_dict[task_id],  # Keep the existing keys and values
+            'status': ProcessingStatus.EXTRACTING.value
         }
     remove_osm_after_load = False if OSM_OUTPUT_FOLDER_FILE_NAME is not None else True
     map_area_gdf = config[MapConfigKeys.MAP_AREA.value]
     try:
         osm_data_preprocessor = OsmDataPreprocessor(
-            config[MapConfigKeys.OSM_FILES.value], OSM_TMP_FILE_FOLDER, taskId, OSM_OUTPUT_FOLDER_FILE_NAME)
+            config[MapConfigKeys.OSM_FILES.value], OSM_TMP_FILE_FOLDER, task_id, OSM_OUTPUT_FOLDER_FILE_NAME)
         osm_file = osm_data_preprocessor.extract_areas(
             config[MapConfigKeys.MAP_AREA.value], CRS_OSM)
     except:
@@ -203,23 +202,29 @@ def generate_map(config: dict[MapConfigKeys, any], taskId: str, shared_dict: dic
     wanted_categories, styles_size_edits = ReceivedStructureProcessor.transform_to_backend_structures(
         config[MapConfigKeys.WANTED_CATEGORIES_AND_STYLES_CHANGES.value], FE_EDIT_STYLES_VALIDATION.keys(),
         FE_STYLES_ALLOWED_ELEMENTS, FE_EDIT_STYLES_MAPPING)
-
+    
     map_theme, base_config = STYLES.get(
         config[MapConfigKeys.MAP_THEME.value], DEFAULT_STYLE)
     with lock:
-        shared_dict[taskId] = {
-            **shared_dict[taskId],  # Keep the existing keys and values
-            'status': 'loading_data'
+        shared_dict[task_id] = {
+            **shared_dict[task_id],  # Keep the existing keys and values
+            'status': ProcessingStatus.LOADING.value
         }
+    # get categories that are in wanted and also should be loaded from areas
+    wanted_nodes_from_area = {
+        key: [value for value in wanted_categories['nodes'][key] if value in NODES_ALSO_FROM_AREA[key]]
+        for key in wanted_categories['nodes'] if key in NODES_ALSO_FROM_AREA
+    }
     # ------------osm file loading------------
     osm_file_parser = OsmDataParser(
         wanted_categories['nodes'],
-        wanted_categories['nodes_from_area'],
+        wanted_nodes_from_area,
         {**wanted_categories['ways'], **MANDATORY_WAYS},
         wanted_categories['areas'],
-        config[MapConfigKeys.UNWANTED_CATEGORIES.value]['nodes'],
-        config[MapConfigKeys.UNWANTED_CATEGORIES.value]['ways'],
-        config[MapConfigKeys.UNWANTED_CATEGORIES.value]['areas'],
+        {},{},{},
+        # config[MapConfigKeys.UNWANTED_CATEGORIES.value]['nodes'],
+        # config[MapConfigKeys.UNWANTED_CATEGORIES.value]['ways'],
+        # config[MapConfigKeys.UNWANTED_CATEGORIES.value]['areas'],
         nodes_additional_columns=base_config['nodes'][BaseConfigKeys.ADDITIONAL_COLUMNS],
         ways_additional_columns=base_config['ways'][BaseConfigKeys.ADDITIONAL_COLUMNS],
         areas_additional_columns=base_config['areas'][BaseConfigKeys.ADDITIONAL_COLUMNS]
@@ -236,9 +241,9 @@ def generate_map(config: dict[MapConfigKeys, any], taskId: str, shared_dict: dic
 
     # ------------gpxs------------
     with lock:
-        shared_dict[taskId] = {
-            **shared_dict[taskId],  # Keep the existing keys and values
-            'status': 'filtering'
+        shared_dict[task_id] = {
+            **shared_dict[task_id],  # Keep the existing keys and values
+            'status': ProcessingStatus.FILTERING.value
         }
 
     gpxs_gdf = config[MapConfigKeys.GPXS.value]
@@ -277,12 +282,12 @@ def generate_map(config: dict[MapConfigKeys, any], taskId: str, shared_dict: dic
     process_bridges_and_tunnels(ways_gdf, config[MapConfigKeys.PLOT_BRIDGES.value],
                                 config[MapConfigKeys.PLOT_TUNNELS.value])
     with lock:
-        shared_dict[taskId] = {
-            **shared_dict[taskId],  # Keep the existing keys and values
-            'status': 'styling'
+        shared_dict[task_id] = {
+            **shared_dict[task_id],  # Keep the existing keys and values
+            'status': ProcessingStatus.STYLING.value
         }
     ways_gdf = GdfUtils.merge_lines_gdf(ways_gdf, [])
-    gpxs_gdf = GdfUtils.merge_lines_gdf(gpxs_gdf, [])
+
     # assing zoom specific styles
     # eight function - style
     gpxs_styles = StyleManager.convert_from_dynamic(
@@ -295,6 +300,7 @@ def generate_map(config: dict[MapConfigKeys, any], taskId: str, shared_dict: dic
         map_theme['styles']['areas'], config[MapConfigKeys.STYLES_ZOOM_LEVELS.value]['areas'])
     # combine styles
     gpxs_styles = [*config[MapConfigKeys.GPXS_STYLES.value], *gpxs_styles]
+    print(gpxs_styles)
     nodes_styles = [*nodes_styles, *styles_size_edits['nodes']]
     ways_styles = [*ways_styles, *styles_size_edits['ways']]
     areas_styles = [*areas_styles, *styles_size_edits['areas']]
@@ -319,13 +325,13 @@ def generate_map(config: dict[MapConfigKeys, any], taskId: str, shared_dict: dic
 
     # ------------scaling and column calc------------ - to function
     with lock:
-        shared_dict[taskId] = {
-            **shared_dict[taskId],  # Keep the existing keys and values
-            'status': 'preparing_for_plotting'
+        shared_dict[task_id] = {
+            **shared_dict[task_id],  # Keep the existing keys and values
+            'status': ProcessingStatus.PREPARING_FOR_PLOTTING.value
         }
     # ninth - prepare/edit styled columns
     gdfs_prepare_styled_columns(gpxs_gdf, nodes_gdf, ways_gdf,
-                                areas_gdf, map_scaling_factor, base_config)
+                                areas_gdf, base_config)
 
     # ------------filter nodes by min req------------
     nodes_gdf = GdfUtils.check_filter_nodes_min_req(nodes_gdf)
@@ -365,9 +371,9 @@ def generate_map(config: dict[MapConfigKeys, any], taskId: str, shared_dict: dic
     plotter.init(
         map_theme['variables'][MapThemeVariable.LAND_COLOR], bg_gdf)
     with lock:
-        shared_dict[taskId] = {
-            **shared_dict[taskId],  # Keep the existing keys and values
-            'status': 'areas_plotting'
+        shared_dict[task_id] = {
+            **shared_dict[task_id],  # Keep the existing keys and values
+            'status': ProcessingStatus.AREAS_PLOTTING.value
         }
     plotter.areas(areas_gdf)
     del areas_gdf
@@ -375,26 +381,26 @@ def generate_map(config: dict[MapConfigKeys, any], taskId: str, shared_dict: dic
     plotter.area_boundary(config[MapConfigKeys.MAP_AREA_BOUNDARY.value],
                           color="black")
     with lock:
-        shared_dict[taskId] = {
-            **shared_dict[taskId],  # Keep the existing keys and values
-            'status': 'ways_plotting'
+        shared_dict[task_id] = {
+            **shared_dict[task_id],  # Keep the existing keys and values
+            'status': ProcessingStatus.WAYS_PLOTTING.value
         }
     plotter.ways(ways_gdf)
     del ways_gdf
     # must be before nodes
     with lock:
-        shared_dict[taskId] = {
-            **shared_dict[taskId],  # Keep the existing keys and values
-            'status': 'gpxs_plotting'
+        shared_dict[task_id] = {
+            **shared_dict[task_id],  # Keep the existing keys and values
+            'status': ProcessingStatus.GPXS_PLOTTING.value
         }
     plotter.gpxs(gpxs_gdf)
     plotter.clip()
     del gpxs_gdf
 
     with lock:
-        shared_dict[taskId] = {
-            **shared_dict[taskId],  # Keep the existing keys and values
-            'status': 'nodes_plotting'
+        shared_dict[task_id] = {
+            **shared_dict[task_id],  # Keep the existing keys and values
+            'status': ProcessingStatus.NODES_PLOTTING.value
         }
 
     plotter.nodes(nodes_gdf, TEXT_WRAP_NAMES_LEN)
@@ -406,21 +412,21 @@ def generate_map(config: dict[MapConfigKeys, any], taskId: str, shared_dict: dic
         folder = OUTPUT_PDF_FOLDER
         if (OUTPUT_PDF_FOLDER[-1] != '/'):
             folder += OUTPUT_PDF_FOLDER + '/'
-        pdf_name = f'{folder}finalmap_{uuid.uuid4()}__{datetime.now().strftime("%Y%m%d%H%M%S")}.pdf'
+        pdf_name = f'{folder}map_{task_id}.pdf'
     else:
         pdf_name = OUTPUT_PDF_FOLDER_FILE_NAME
 
     with lock:
-        shared_dict[taskId] = {
-            **shared_dict[taskId],
-            'files': [*shared_dict[taskId]['files'], pdf_name],
-            'status': 'file_saving'
+        shared_dict[task_id] = {
+            **shared_dict[task_id],
+            'files': [*shared_dict[task_id]['files'], pdf_name],
+            'status':  ProcessingStatus.FILE_SAVING.value
         }
     plotter.generate_pdf(pdf_name)
     with lock:
-        shared_dict[taskId] = {
-            **shared_dict[taskId],
+        shared_dict[task_id] = {
+            **shared_dict[task_id],
             'files': [],
-            'status': 'finished',
+            'status': ProcessingStatus.FINISHED.value,
             'pid': None
         }

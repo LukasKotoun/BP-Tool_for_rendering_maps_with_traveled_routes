@@ -66,39 +66,23 @@ SPECIAL_WAYS_CUMULATIVE_SIZE = Utils.cumulative_zoom_size_multiplier({
     Style.WIDTH.value)
 
 # -------------------gpx-------------------
-# root_files_styles: ElementStyles = [
-#     ({'fileName': 'Grilovačka.gpx'}, {Style.COLOR.value: "Red"}),
-# ]
 
-# folders_styles: ElementStyles = [
-#     ({'folder': 'pěšky'}, {Style.COLOR.value: "Blue"}),
-#     ({'folder': 'Kolo testování'}, {Style.WIDTH.value: 1, Style.ALPHA.value: 0.7}),
-#     ({'folder': 'Kolo'}, {Style.COLOR.value: "Purple"}),
-# ]
-# non scaled styles - relative to paper size (not polygons)
 GPXS_STYLES_SCALE = []
 gpxs_styles_default: ElementStyles = [
-    ({'fileName': ''}, {}),
-    ({'folder': ''}, {}),
     ([], {
         Style.COLOR.value: 'Red', Style.WIDTH.value: 1.3,
         Style.ALPHA.value: 0.7, Style.ZINDEX.value: 0, Style.EDGE_ALPHA.value: 0.7,
         Style.EDGE_COLOR.value: None, Style.EDGE_WIDTH_RATIO.value: 0.15,
-        # na fe rovnou v jednom nastavení
         Style.EDGE_LINESTYLE.value: "-", Style.EDGE_CAPSTYLE.value: LineCupStyles.BUTT.value,
-        # zase jedno nastavení s tím že
         Style.LINESTYLE.value: "-", Style.LINE_CAPSTYLE.value: LineCupStyles.ROUND.value,
-        # Style.EDGE_WIDTH_DASHED_CONNECT_RATIO.value: 0.5, ????
-        #   Style.START_MARKER.value: MarkersCodes.MPL_START_ICON.value,
-        Style.START_MARKER_WIDTH.value: 2, Style.START_MARKER_EDGE_RATIO.value: 0.1,
+
+        Style.START_MARKER_WIDTH.value: 6, Style.START_MARKER_EDGE_RATIO.value: 0.1,
         Style.START_MARKER_COLOR.value: "#18ac0d", Style.START_MARKER_EDGE_COLOR.value: "#FFFFFF", Style.START_MARKER_ALPHA.value: 1.0,
 
-        # Style.FINISH_MARKER.value: MarkersCodes.FA_FINISH_ICON.value,
-        Style.FINISH_MARKER_HORIZONTAL_ALIGN.value: "left", Style.FINISH_MARKER_VERTICAL_ALIGN.value: "bottom",
-        Style.FINISH_MARKER_WIDTH.value: 12, Style.FINISH_MARKER_EDGE_RATIO.value: 0.1,
+        Style.FINISH_MARKER_WIDTH.value: 6, Style.FINISH_MARKER_EDGE_RATIO.value: 0.1,
         Style.FINISH_MARKER_COLOR.value: "#000000", Style.FINISH_MARKER_EDGE_COLOR.value: "#FFFFFF", Style.FINISH_MARKER_ALPHA.value: 1.0,
-        Style.FINISH_MARKER_FONT_PROPERTIES.value: font_awesome_prop,
-        Style.GPX_ABOVE_TEXT.value: False, Style.MARKER_LAYER_POSITION.value: MarkerPosition.UNDER_TEXT_OVERLAP
+        
+        Style.GPX_ABOVE_TEXT.value: False, Style.MARKER_LAYER_POSITION.value: MarkerPosition.UNDER_TEXT_OVERLAP.value
     })
 ]
 
@@ -187,7 +171,7 @@ natural_styles_nodes: ElementStyles = [
         # text
         Style.TEXT_WEIGHT.value: 'heavy', Style.TEXT_STYLE.value: 'italic', Style.TEXT_FONT_SIZE.value: 6,
         Style.TEXT_COLOR.value: "#443833", Style.TEXT_OUTLINE_COLOR.value: '#FFFFFF',
-        Style.TEXT1_POSITIONS.value: [TextPositions.TOP], Style.TEXT2_POSITIONS.value: [TextPositions.BOTTOM],
+        Style.TEXT1_POSITIONS.value: [TextPositions.TOP.value], Style.TEXT2_POSITIONS.value: [TextPositions.BOTTOM.value],
         Style.TEXT_OUTLINE_WIDTH_RATIO.value: 0.3, Style.TEXT_WRAP_LEN.value: 20
     })
 ]
@@ -201,11 +185,11 @@ icons_above_styles_nodes: ElementStyles = [
         Style.EDGE_WIDTH_RATIO.value: 0.15,
         # text
         Style.TEXT_COLOR.value: "#8c7359", Style.TEXT_OUTLINE_COLOR.value: '#FFFFFF', Style.TEXT_FONT_SIZE.value: 5,
-        Style.TEXT1_POSITIONS.value: [TextPositions.BOTTOM], Style.TEXT_OUTLINE_WIDTH_RATIO.value: 0.2,
+        Style.TEXT1_POSITIONS.value: [TextPositions.BOTTOM.value], Style.TEXT_OUTLINE_WIDTH_RATIO.value: 0.2,
         Style.TEXT_WRAP_LEN.value: 20
     }, {
-        "6-10": {Style.MARKER_LAYER_POSITION.value: MarkerPosition.ABOVE_NORMAL},
-        "1-5": {Style.MARKER_LAYER_POSITION.value: MarkerPosition.UNDER_TEXT_OVERLAP}
+        "6-10": {Style.MARKER_LAYER_POSITION.value: MarkerPosition.ABOVE_NORMAL.value},
+        "1-5": {Style.MARKER_LAYER_POSITION.value: MarkerPosition.UNDER_TEXT_OVERLAP.value}
     }),
 
     ({'historic': ['castle']}, {
@@ -217,11 +201,11 @@ icons_above_styles_nodes: ElementStyles = [
         # text
         Style.TEXT_FONT_SIZE.value: 5,
         Style.TEXT_COLOR.value: "#8c7359", Style.TEXT_OUTLINE_COLOR.value: '#FFFFFF',
-        Style.TEXT1_POSITIONS.value: [TextPositions.BOTTOM], Style.TEXT_OUTLINE_WIDTH_RATIO.value: 0.2,
+        Style.TEXT1_POSITIONS.value: [TextPositions.BOTTOM.value], Style.TEXT_OUTLINE_WIDTH_RATIO.value: 0.2,
         Style.TEXT_WRAP_LEN.value: 20
     }, {
-        "6-10": {Style.MARKER_LAYER_POSITION.value: MarkerPosition.NORMAL},
-        "1-5": {Style.MARKER_LAYER_POSITION.value: MarkerPosition.UNDER_TEXT_OVERLAP}
+        "6-10": {Style.MARKER_LAYER_POSITION.value: MarkerPosition.NORMAL.value},
+        "1-5": {Style.MARKER_LAYER_POSITION.value: MarkerPosition.UNDER_TEXT_OVERLAP.value}
     })
 ]
 
@@ -233,7 +217,7 @@ nodes_styles_default: ElementStyles = [
         Style.TEXT_OUTLINE_WIDTH_RATIO.value: 0.2, Style.MIN_PLOT_REQ.value: MinPlot.TEXT1.value,
         Style.TEXT_COLOR.value: "#000000", Style.TEXT_OUTLINE_COLOR.value: '#FFFFFF',
         Style.TEXT1_POSITIONS.value: [
-            TextPositions.TOP, TextPositions.BOTTOM, TextPositions.RIGHT]
+            TextPositions.TOP.value, TextPositions.BOTTOM.value, TextPositions.RIGHT.value]
     }),
     ([], {
         Style.ALPHA.value: 1, Style.EDGE_ALPHA.value: 1,
@@ -510,6 +494,13 @@ highway_styles_special_and_paths: ElementStyles = [
 ]
 
 
+railway_remove_on_zoom: ElementStyles = [
+    ({'railway': ['rail', 'disused', 'light_rail', "monorail", "subway"],
+      'service': ['crossover', 'siding', 'spur', 'yard']}, {
+    }, {}, {
+        "1-6": {Style.COLOR.value: None, Style.EDGE_COLOR.value: None}})
+]
+
 railway_styles_bridges_overwrite: ElementStyles = [
     ({'railway': ['funicular', 'subway'], 'bridge': ''}, {
         Style.BRIDGE_EDGE_COLOR.value: None, Style.BRIDGE_COLOR.value: None
@@ -755,6 +746,7 @@ ways_styles_default: ElementStyles = [
 
 
 WAYS_STYLES: ElementStyles = [
+    *railway_remove_on_zoom,
     *railway_styles_bridges_overwrite,
     *railway_styles_tunnels,
     *railway_styles_service,

@@ -1,13 +1,14 @@
 import warnings
 
 import multiprocessing
-import uuid
+from uuid_extensions import uuid7str
 from fastapi import FastAPI, File, UploadFile, Form
 from fastapi.middleware.cors import CORSMiddleware
 import json
 from typing import List, Optional
 
 from config import *
+from common.map_enums import ProcessingStatus
 from modules.main_generator import generate_map, calc_preview, get_map_area_gdf
 from common.api_base_models import MapGeneratorConfigModel, GeneratorResponseStatusModel
 from modules.gdf_utils import GdfUtils
@@ -72,8 +73,8 @@ def zoom_level_endpoint(area: WantedArea, paper_dimensions_mm, wanted_orientatio
     return zoom_level
 
 
-@server_app.post("/generate_map", response_model=GeneratorResponseStatusModel)
-def normal_map_endpoint(gpxs: Optional[List[UploadFile]] = File(None),
+@server_app.post("/generate-map-normal", response_model=GeneratorResponseStatusModel)
+def generate_map_normal(gpxs: Optional[List[UploadFile]] = File(None),
                         config: str = Form(...)):
     try:
         # todo validate unwanted categories
@@ -88,16 +89,16 @@ def normal_map_endpoint(gpxs: Optional[List[UploadFile]] = File(None),
             config.paper_dimensions)
         ReceivedStructureProcessor.validate_wanted_elements_and_styles(
             config.wanted_categories_and_styles_edit, ALLOWED_WANTED_ELEMENTS_STRUCTURE, FE_EDIT_STYLES_VALIDATION)
-        gpxs_styles = ReceivedStructureProcessor.validate_gpx_styles(config.gpxs_styles, [
-            'categories', 'names'], ['general'], GPX_STYLES_VALIDATION, GPX_STYLES_MAPPING)
+        gpxs_styles = ReceivedStructureProcessor.validate_and_convert_gpx_styles(config.gpxs_styles, [
+            'categories', 'file_names'], ['general'], GPX_STYLES_VALIDATION, GPX_STYLES_MAPPING)
 
         map_area = ReceivedStructureProcessor.validate_and_convert_areas_strucutre(
             config.map_area, REQ_AREA_DICT_KEYS, key_with_area="area")
         map_area_gdf, boundary_map_area_gdf = get_map_area_gdf(
             map_area, True)
     except Exception as e:
-        return {"message": f"Error in data validation: {e}", "status": "failed"}
-
+        return {"message": f"Error in data validation: {e}", "status": ProcessingStatus.FAILED.value}
+    print(gpxs_styles)
     # ------------get paper dimension (size and orientation)------------
     map_area_dimensions = GdfUtils.get_dimensions_gdf(map_area_gdf)
     if (config.fit_paper_size):
@@ -127,11 +128,9 @@ def normal_map_endpoint(gpxs: Optional[List[UploadFile]] = File(None),
 
     # check how it will be recived from FE and change or remap
     map_generator_config = {
-        # from fe checked and changed to gdf
         MapConfigKeys.MAP_AREA.value: map_area_gdf,
-        # gdf or list of (path_name, category|None)
         MapConfigKeys.GPXS.value: gpxs_gdf,
-        # MapConfigKeys.GPXS_CATEGORIES.value: [],
+        MapConfigKeys.GPXS_CATEGORIES.value: [],
         MapConfigKeys.MAP_OUTER_AREA.value: None,
         MapConfigKeys.MAP_AREA_BOUNDARY.value: boundary_map_area_gdf,
         MapConfigKeys.MAP_SCALING_FACTOR.value: map_scaling_factor,
@@ -145,27 +144,26 @@ def normal_map_endpoint(gpxs: Optional[List[UploadFile]] = File(None),
         MapConfigKeys.PLOT_BRIDGES.value: config.plot_bridges,
         MapConfigKeys.PLOT_TUNNELS.value: config.plot_tunnels,
         MapConfigKeys.WANTED_CATEGORIES_AND_STYLES_CHANGES.value: config.wanted_categories_and_styles_edit,
-        MapConfigKeys.UNWANTED_CATEGORIES.value: config.unwanted_categories,
         MapConfigKeys.STYLES_ZOOM_LEVELS.value: styles_zoom_levels,
         MapConfigKeys.GPXS_STYLES.value: gpxs_styles,
     }
-    task_id = uuid.uuid4()
+    task_id: str = uuid7str()
 
     process = multiprocessing.Process(
         target=generate_map, args=(map_generator_config, task_id, shared_tasks, shared_tasks_lock, False))
-    
+
     with shared_tasks_lock:
         process.start()
         shared_tasks[task_id] = {
-            "status": "starting",
+            "status": ProcessingStatus.STARTING.value,
             "pid": process.pid,
             "files": [],
             "process_running": False
         }
-    return {"message": "Map is generating", "status": "in progress"}
+    return {"message": "Map is generating", "task_id": task_id, "status": ProcessingStatus.STARTING.value}
 
 
-@server_app.post("/generate_map_preview", response_model=GeneratorResponseStatusModel)
+@server_app.post("/generate-map-preview", response_model=GeneratorResponseStatusModel)
 def preview_map_endpoint(gpxs: Optional[List[UploadFile]] = File(None),
                          config: str = Form(...)):
     try:
@@ -233,25 +231,26 @@ def preview_map_endpoint(gpxs: Optional[List[UploadFile]] = File(None),
         MapConfigKeys.PLOT_BRIDGES.value: config.plot_bridges,
         MapConfigKeys.PLOT_TUNNELS.value: config.plot_tunnels,
         MapConfigKeys.WANTED_CATEGORIES_AND_STYLES_CHANGES.value: config.wanted_categories_and_styles_edit,
-        MapConfigKeys.UNWANTED_CATEGORIES.value: config.unwanted_categories,
         MapConfigKeys.STYLES_ZOOM_LEVELS.value: styles_zoom_levels,
         MapConfigKeys.GPXS_STYLES.value: gpxs_styles,
         MapConfigKeys.GPXS.value: gpxs_gdf,
 
     }
-    task_id: uuid.UUID = uuid.uuid4()
+    task_id: str = uuid7str()
+
     process = multiprocessing.Process(
         target=generate_map, args=(map_generator_config, task_id, shared_tasks, shared_tasks_lock, False))
     with shared_tasks_lock:
         process.start()
         shared_tasks[task_id] = {
-            "status": "in_progress",
+            "status": ProcessingStatus.STARTING.value,
             "files": [],
             "pid": process.pid,
             "process_running": False
         }
 
-    return {"message": "Map preview is generating", "status": "in progress"}
+    return {"message": "Map preview is generating", "task_id": task_id, "status": ProcessingStatus.STARTING.value}
+
 
 @server_app.get("/tasks")
 def get_task_status():
@@ -259,7 +258,7 @@ def get_task_status():
     Get the status of a specific task.
     """
     print(shared_tasks)
-    return{ "tasks": shared_tasks}
+    return {"tasks": shared_tasks}
 
 # @server_app.get("/tasks/{job_id}")
 # def get_task_status(job_id: str):

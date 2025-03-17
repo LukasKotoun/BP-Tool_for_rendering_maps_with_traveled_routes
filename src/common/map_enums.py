@@ -1,5 +1,23 @@
 from enum import Enum
 from typing import Literal
+
+class ProcessingStatus(Enum):
+    FAILED = "failed"
+    STARTING = "starting"
+    IN_QUEUE = "in_queue"
+    EXTRACTING = "extracting"
+    LOADING = "loading"
+    FILTERING = "filtering"
+    STYLING = "styling"
+    PREPARING_FOR_PLOTTING = "preparing_for_plotting"
+    AREAS_PLOTTING = "areas_plotting"
+    WAYS_PLOTTING = "ways_plotting"
+    NODES_PLOTTING = "nodes_plotting"
+    GPXS_PLOTTING = "gpxs_plotting"
+    FILE_SAVING = "file_saving"
+    FINISHED = "finished"
+
+    
 class ColorMode(Enum):
     DEFAULT = "DEFAULT"
     SINGLE = "SINGLE"
@@ -13,13 +31,15 @@ class LineCupStyles(Enum):
 
 class MarkersCodes(Enum):
     FA_TOWER_OBSERVATION = "\ue586"
+    #gpx
     FA_FINISH_ICON = '\uf11e'
     
     MU_CASTLE = "\ueaad"
     MPL_TRIANGLE = '^'
-
+    #gpx
     MPL_CIRCLE_MARKER = 'o'
 
+    
 class MapConfigKeys(Enum):
     MAP_AREA = "map_area" 
     MAP_AREA_BOUNDARY = "map_area_boundary"
@@ -43,10 +63,6 @@ class MapConfigKeys(Enum):
     PREVIEW_PAPER_DIMENSION_MM = "preview_paper_dimension_mm"
     
     
-    
-    
-    
-
 class MinPlot(Enum):  # minimum parts that node must have. If not whole node object is removed
     MARKER_TEXT1_TEXT2 = "MARKER_TEXT1_TEXT2"
     MARKER_TEXT1_OR_TEXT2 = "MARKER_TEXT1_OR_TEXT2"
@@ -63,6 +79,8 @@ class BaseConfigKeys(Enum):
     ROUND_COLUMNS = 'ROUND_COLUMNS'
     DERIVATE_COLUMNS = 'DERIVATE_COLUMNS'
     DONT_CATEGORIZE = 'DONT_CATEGORIZE'
+
+
 
 class MapThemeVariable(Enum):
     WATER_COLOR = "WATER_COLOR"

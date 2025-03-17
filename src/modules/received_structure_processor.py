@@ -9,9 +9,28 @@ class ReceivedStructureProcessor:
 
     # def validate_and_convert_paper_dimensions
     @staticmethod
-    def map_dict_keys(input_dict, mapping_dict):
-        """Replace dictionary keys with values in mapping_dict if in mapping_dict, otherwise keep them unchanged."""
-        return {mapping_dict.get(key, key): value for key, value in input_dict.items()}
+    def map_dict(input_dict: dict[str, any], mapping_dict: dict[str, tuple[str, Callable, bool]]):
+        """Replace dictionary keys with new values in mapping_dict and map its values using transform function in mapping_dict
+        If missing from mapping dict keep them unchanged."""
+        output = {}
+        for key, value in input_dict.items():
+            if key in mapping_dict:
+                new_key, transform_func, *unpack = mapping_dict[key]
+
+                new_key = new_key if new_key is not None else key
+                new_value = transform_func(value) if callable(
+                    transform_func) else value
+                if unpack and unpack[0]:
+                    if isinstance(new_value, dict):
+                        output.update(new_value)
+                    else:
+                        raise ValueError(
+                            f"Expected {new_key} to return a dictionary, got {type(new_value)}")
+                else:
+                    output[new_key] = new_value
+            else:
+                output[key] = value
+        return output
 
     @staticmethod
     def validate_and_convert_area_cordinates(polygon_points: list[list[int | float]]):
@@ -59,8 +78,10 @@ class ReceivedStructureProcessor:
             return False
 
         # Check types.
-        for key, (expected_type, _, validation_func) in allowed_keys_and_types.items():
+        for key, (expected_type, required, validation_func) in allowed_keys_and_types.items():
             if key in values_dict and expected_type is not None:
+                if (not required):
+                    expected_type = Union[expected_type, type(None)]
                 if not isinstance(values_dict[key], expected_type):
                     return False
                 if validation_func and not validation_func(values_dict[key]):
@@ -117,12 +138,12 @@ class ReceivedStructureProcessor:
         # Validate top-level keys - must have all
         if not all(key in data for key in allowed_structure):
             raise ValueError(
-                f"Invalid keys: {set(data.keys()) - set(allowed_structure.keys())}")
+                f"Invalid keys in wanted elements and styles: {set(data.keys()) - set(allowed_structure.keys())}")
 
         for element_category in data.keys():
             if element_category not in allowed_structure:
                 raise ValueError(
-                    f"Invalid element_category: {element_category}")
+                    f"Invalid element_category in wanted elements and styles: {element_category}")
 
             # Skip empty elements categories
             if not data[element_category]:
@@ -132,7 +153,7 @@ class ReceivedStructureProcessor:
             for element, element_features in data[element_category].items():
                 if element not in allowed_structure[element_category]:
                     raise ValueError(
-                        f"Invalid element: {element} in {element_category}")
+                        f"Invalid element: {element} in {element_category} (wanted elements and styles")
 
                 allowed_element = allowed_structure[element_category][element]
 
@@ -143,24 +164,24 @@ class ReceivedStructureProcessor:
                 # Case 1: element allowed all is false, must have at least one tag or be missing
                 if (not element_features):
                     raise ValueError(
-                        f"Empty element (will have all attributes but must have at least one tag or be missing): {element} in {element_category}")
+                        f"Empty element (will have all attributes but must have at least one tag or be missing): {element} in {element_category} (wanted elements and styles)")
 
                 elif (any(key in styles_validation for key in element_features.keys()) and allowed_element != True):
                     raise ValueError(
-                        f"Empty element (will have all attributes but must have at least one tag or be missing): {element} in {element_category}")
+                        f"Empty element (will have all attributes but must have at least one tag or be missing): {element} in {element_category} (wanted elements and styles)")
 
                 elif isinstance(allowed_element, list):
                     for tag in element_features:
                         if tag not in allowed_element:
                             raise ValueError(
-                                f"Invalid tag: {tag} in {element_category}.{element}")
+                                f"Invalid tag: {tag} in {element_category}.{element} (wanted elements and styles)")
 
                         # Validate attributes
                         tag_data = element_features[tag]
                         if tag_data and isinstance(tag_data, dict):
                             if (not ReceivedStructureProcessor.check_dict_values_and_types(tag_data, styles_validation)):
                                 raise ValueError(
-                                    f"Invalid attribute in {element_category}.{element}.{tag}")
+                                    f"Invalid attribute in {element_category}.{element}.{tag} (wanted elements and styles)")
 
                 # Case 2: element empty or missing allowed
                 elif allowed_element is True:
@@ -168,12 +189,13 @@ class ReceivedStructureProcessor:
                         for attr in element_features:
                             if not ReceivedStructureProcessor.check_dict_values_and_types(element_features, styles_validation):
                                 raise ValueError(
-                                    f"Invalid attribute: {attr} in {element_category}.{element}")
+                                    f"Invalid attribute: {attr} in {element_category}.{element} (wanted elements and styles)")
         return True
 
     @staticmethod
-    def transform_to_backend_structures(data: Dict[str, Any], allowed_styles: dict[str, tuple[type, bool, Callable]],
-                                        styles_allowed_primary_elements, names_maping: dict[str, str]) -> tuple[dict, dict]:
+    def transform_to_backend_structures(data: Dict[str, Any], allowed_styles: list, styles_allowed_primary_elements: list,
+                                        styles_mapping: dict[str,
+                                                             tuple[str, Callable, bool]] = {}) -> tuple[dict, dict]:
         """
         Transform the validated frontend data into two backend structures.
 
@@ -202,8 +224,8 @@ class ReceivedStructureProcessor:
                         styles = {
                             k: v for k, v in tag_data.items() if k in allowed_styles}
                         if styles:
-                            styles = ReceivedStructureProcessor.map_dict_keys(
-                                styles, names_maping)
+                            styles = ReceivedStructureProcessor.map_dict(
+                                styles, styles_mapping)
                             condition: RowsConditionsAND = {element: tag}
                             styles_edits[element_category].append(
                                 (condition, styles))
@@ -211,33 +233,44 @@ class ReceivedStructureProcessor:
                     styles = {
                         k: v for k, v in data[element_category][element].items() if k in allowed_styles}
                     if styles:
-                        styles = ReceivedStructureProcessor.map_dict_keys(
-                            styles, names_maping)
+                        styles = ReceivedStructureProcessor.map_dict(
+                            styles, styles_mapping)
                         condition: RowsConditionsAND = {element: ''}
                         styles_edits[element_category].append(
                             (condition, styles))
 
         return wanted_categories, styles_edits
 
-    def validate_gpx_styles(data: dict, normal_keys: list, general_keys: list, styles_validation: dict[str, tuple[type, bool, Callable]], styles_mapping: dict[str, str]) -> bool:
+    def validate_and_convert_gpx_styles(data: dict, normal_keys: list, general_keys: list,
+                                        styles_validation: dict[str,
+                                                                tuple[type, bool, Callable]] = {},
+                                        styles_mapping: dict[str, tuple[str, Callable, bool]] = {}) -> bool:
         result = []
-
+        # check it there is key that is not in normal_keys or general_keys
+        if (any(key not in normal_keys + general_keys for key in data)):
+            raise ValueError(
+                f"Invalid gpx style categories (valid area: {normal_keys + general_keys})")
         # Validate structure
         if not isinstance(data, dict):
-            raise ValueError("Input must be a dictionary")
+            raise ValueError("Input must be a dictionary in gpx styles")
         for key in normal_keys:
             if key in data and isinstance(data[key], dict):
                 for name, value in data[key].items():
                     if (not ReceivedStructureProcessor.check_dict_values_and_types(value, styles_validation)):
-                        raise ValueError(f"Invalid attribute in {key}.{name}")
-                    result.append(({key: name}, ReceivedStructureProcessor.map_dict_keys(
-                        value, styles_mapping)))
+                        raise ValueError(
+                            f"Invalid attribute in gpx styles {key}.{name} ({value})")
+                    styles = ReceivedStructureProcessor.map_dict(
+                        value, styles_mapping)
+                    result.append(({key: name}, styles))
         for key in general_keys:
             if key in data and isinstance(data[key], dict):
                 if (not ReceivedStructureProcessor.check_dict_values_and_types(data[key], styles_validation)):
-                    raise ValueError(f"Invalid attribute in {key}")
+                    raise ValueError(
+                        f"Invalid attribute in gpx styles {key} ({data[key]})")
+                styles = ReceivedStructureProcessor.map_dict(
+                    data[key], styles_mapping)
                 result.append(
-                    ([], ReceivedStructureProcessor.map_dict_keys(value, data[key])))
+                    ([], styles))
 
         return result
 
@@ -256,7 +289,7 @@ class ReceivedStructureProcessor:
         return tuple(paper_dimensions)
 
     @staticmethod
-    def validate_zoom_levels(data, level_validation) -> bool:
+    def validate_zoom_levels(data: dict, level_validation: dict[str, tuple[type, bool, Callable]]) -> bool:
         if (not ReceivedStructureProcessor.check_dict_values_and_types(data, level_validation)):
-            raise ValueError(f"Invalid attribute in")
+            raise ValueError(f"Invalid zoom level")
         return True

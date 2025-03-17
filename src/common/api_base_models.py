@@ -1,4 +1,4 @@
-from pydantic import BaseModel, UUID4
+from pydantic import BaseModel
 from typing import Any, Dict, List, Optional
 from fastapi import FastAPI, File, UploadFile
 
@@ -23,7 +23,6 @@ class MapGeneratorConfigModel(BaseModel):
     plot_bridges: Optional[bool] = True
     plot_tunnels: Optional[bool] = True
     wanted_categories_and_styles_edit: Any
-    unwanted_categories: Any
     styles_zoom_levels: ZoomLevelsModel
     gpxs_categories: Optional[Dict[str, str]] = {}
     gpxs_styles: Optional[Any] = []
@@ -43,7 +42,6 @@ class ZoomLevelModel(BaseModel):
     plot_bridges: Optional[bool] = True
     plot_tunnels: Optional[bool] = True
     wanted_categories_and_styles_edit: Any
-    unwanted_categories: Any
     styles_zoom_levels: ZoomLevelsModel
     gpxs_categories: Optional[Dict[str, str]] = {}
     gpxs_styles: Optional[Any] = []
@@ -69,6 +67,6 @@ class ZoomLevelModel(BaseModel):
     
 
 class GeneratorResponseStatusModel(BaseModel):
-    job_id: UUID4| None = None
+    task_id: str | None = None
     status: str = 'failed'  # started|queued|processing|completed|failed
     message: str | None = None

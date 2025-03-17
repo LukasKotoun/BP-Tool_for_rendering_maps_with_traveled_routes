@@ -29,53 +29,51 @@
 
       JSON.stringify({
         "osm_files": ['trebic'],
-        "paper_dimensions": [1000, 1800],
+        "map_area":[{"area": "trebic, Česko",
+        "plot": false}, {"area": "Trnava, Česko", "plot":false},
+        {"area":"Horní vilémovice, Česko", "plot": false, 'category':0},],
+        "paper_dimensions": [270, 210],
         "paper_preview_dimensions":[100,100],
-        'wanted_categories_and_styles_edit':{
-          'nodes':{},
-          'ways':{
-            'highway':{
-              'primary':{},
-              'secondary':{}
-            }},
-          'areas':{},
-          'nodes_from_area':{}
-        },
-        'styles_zoom_levels':{
-          "nodes":5,
-          "ways":5,
-          "areas":5,
-          "general":5
-        },
-        'gpxs_styles':{},
-        "map_area":[{"area": "Česko",
-        "plot": false, "category": 0, "width": 1}],
-      "fit_paper_size": false,
+        "fit_paper_size": true,
+        "fit_paper_size_bounds_plot": false,
         "plot_bridges": false,
         "plot_tunnels": false,
-        "unwanted_categories": {},
         "gpxs_categories": {},
         "map_theme": "mapycz",
         "min_place_population": 0,
         "peaks_filter_sensitivity":0,
-        "fit_paper_size_bounds_plot": false,
-        "unwanted_categories":{
-          'nodes':{},
-          'ways':{},
+        'gpxs_styles':{
+          'file_names':{},
+          'categories':{},
+          'general':{'color': "red", 'marker_layer_position': "above_text",
+            'start_marker': "mpl_start", 'finish_marker':"fa_finish"
+          }
+        },
+        'wanted_categories_and_styles_edit':{
+          'nodes':{
+            'natural': {'peak':{}},
+          },
+          'ways':{
+            'highway':{
+              'primary': {},
+              'secondary': {}
+            }},
           'areas':{},
         },
+        'styles_zoom_levels':{
+          "nodes": 5,
+          "ways": 5,
+          "areas": 5,
+          "general": 5
+        },
+     
       }
       ));
-    const data = {
-        "gpxs_styles": {
-            "gpxs_styles": 23
-        },
-        // "file": [file]
-    };
+
       // Send the data using the fetch API to FastAPI endpoint
       try {
-        // const response = await fetch('http://localhost:8000/generate_map/', {
-        const response = await fetch('http://localhost:8000/generate_map_preview/', {
+        const response = await fetch('http://localhost:8000/generate-map-normal/', {
+        // const response = await fetch('http://localhost:8000/generate_map_preview/', {
           method: 'POST',
           body: formData,
 
