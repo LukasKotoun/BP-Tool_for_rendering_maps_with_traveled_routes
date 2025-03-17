@@ -20,8 +20,10 @@ class MapTaskQueueManager:
         self.gpx_crs = gpx_crs
         self.manager = multiprocessing.Manager()
 
-        self.running_normal_processes: ValueProxy[int] = self.manager.Value('i', 0)
-        self.running_preview_processes: ValueProxy[int] = self.manager.Value('i', 0)
+        self.running_normal_processes: ValueProxy[int] = self.manager.Value(
+            'i', 0)
+        self.running_preview_processes: ValueProxy[int] = self.manager.Value(
+            'i', 0)
 
         self.normal_queue: ListProxy[Any] = self.manager.list()
         self.preview_queue = self.manager.list()
@@ -61,14 +63,14 @@ class MapTaskQueueManager:
                         "pid": None,
                         "is_preview": queue_type == QueueType.PREVIEW
                     }
-                
+
                 # Start the process directly
                 self._start_task_process(
                     task_item, shared_tasks, shared_tasks_lock)
 
                 return ProcessingStatus.STARTING.value
-            else:             
-               
+            else:
+
                 # Add to queue
                 if queue_type == QueueType.NORMAL:
                     self.normal_queue.append(task_item)
@@ -76,6 +78,7 @@ class MapTaskQueueManager:
                     self.preview_queue.append(task_item)
 
                 return ProcessingStatus.IN_QUEUE.value
+
     @staticmethod
     def _wrapped_generate_map(config, task_id, shared_tasks, shared_tasks_lock, queue_lock, queue: ListProxy[Any], running_process_count: ValueProxy[int], max_process_count):
         try:
@@ -85,47 +88,53 @@ class MapTaskQueueManager:
                 shared_tasks[task_id] = {
                     **shared_tasks[task_id],
                     "status": ProcessingStatus.FINISHED.value,
-                    "process_running": False
+                    "process_running": False,
+                    "pid": None
                 }
 
         except Exception as e:
-            warnings.warn(f"Failed to process task (generate map) {task_id}: {str(e)}")
+            warnings.warn(
+                f"Failed to process task (generate map) {task_id}: {str(e)}")
             with shared_tasks_lock:
                 shared_tasks[task_id] = {
                     **shared_tasks[task_id],
                     "status": ProcessingStatus.FAILED.value,
                     "message": str(e),
-                    "process_running": False
+                    "process_running": False,
+                    "pid": None,
                 }
-                MapTaskQueueManager._clean_task_files(shared_tasks[task_id].get("files", []))
+                MapTaskQueueManager._clean_task_files(
+                    shared_tasks[task_id].get("files", []))
 
         finally:
             with queue_lock:
-                    running_process_count.value -= 1
-                    if queue and running_process_count.value < max_process_count:
-                        next_task = queue.pop(0)
-                        next_config = next_task["config"]
-                        next_task_id = next_task["task_id"]
-                        running_process_count.value += 1
-                        process = multiprocessing.Process(
-                            target=MapTaskQueueManager._wrapped_generate_map,
-                            args=(next_config, next_task_id, shared_tasks, shared_tasks_lock, queue_lock, queue, running_process_count, max_process_count)
-                        )
-                        process.start()
-                        with shared_tasks_lock:
-                            shared_tasks[next_task_id] = {
-                                **shared_tasks[next_task_id],
-                                "status": ProcessingStatus.STARTING.value,
-                                "pid": process.pid,
-                                "process_running": True
-                            } 
+                # start next task if any
+                running_process_count.value -= 1
+                if queue and running_process_count.value < max_process_count:
+                    next_task = queue.pop(0)
+                    next_config = next_task["config"]
+                    next_task_id = next_task["task_id"]
+                    running_process_count.value += 1
+                    process = multiprocessing.Process(
+                        target=MapTaskQueueManager._wrapped_generate_map,
+                        args=(next_config, next_task_id, shared_tasks, shared_tasks_lock,
+                              queue_lock, queue, running_process_count, max_process_count)
+                    )
+                    process.start()
+                    with shared_tasks_lock:
+                        shared_tasks[next_task_id] = {
+                            **shared_tasks[next_task_id],
+                            "status": ProcessingStatus.STARTING.value,
+                            "pid": process.pid,
+                            "process_running": True
+                        }
 
     def _start_task_process(self, task_item, shared_tasks, shared_tasks_lock):
-        """Start a process """
+        """Start a process that is not in the queue"""
         config = task_item["config"]
         task_id = task_item["task_id"]
         queue_type = task_item["queue_type"]
-        if(queue_type == QueueType.NORMAL):
+        if (queue_type == QueueType.NORMAL):
             process_count = self.running_normal_processes
             max_process_count = self.max_normal_tasks
             queue = self.normal_queue
@@ -135,7 +144,8 @@ class MapTaskQueueManager:
             queue = self.preview_queue
         process = multiprocessing.Process(
             target=self._wrapped_generate_map,
-            args=(config, task_id, shared_tasks, shared_tasks_lock, self.queue_lock, queue, process_count, max_process_count)
+            args=(config, task_id, shared_tasks, shared_tasks_lock,
+                  self.queue_lock, queue, process_count, max_process_count)
         )
 
         process.start()
@@ -204,8 +214,14 @@ class MapTaskQueueManager:
 
                     MapTaskQueueManager._clean_task_files(
                         shared_tasks[task_id]["files"])
-                    
-                    
+                    shared_tasks[task_id] = {
+                        **shared_tasks[task_id],
+                        "status": ProcessingStatus.CANCELLED.value,
+                        'process_running': False,
+                        'pid': None,
+                        "files": []
+                    }
+                     # start next task if any
                     if queue_type == QueueType.NORMAL:
                         self.running_normal_processes.value -= 1
                         # Start new normal task
@@ -223,33 +239,26 @@ class MapTaskQueueManager:
                             self._start_task_process(
                                 next_task, shared_tasks, shared_tasks_lock)
                     return True
-                
+
                 if task_id in shared_tasks:
                     MapTaskQueueManager._clean_task_files(
                         shared_tasks[task_id]['files'])
                     shared_tasks[task_id] = {
-                            **shared_tasks[task_id],
-                            "status": ProcessingStatus.CANCELLED.value,
-                            "files": []
-                            }
+                        **shared_tasks[task_id],
+                        "status": ProcessingStatus.CANCELLED.value,
+                        "files": [],
+                    }
                     return True
             return False
 
-            
-    @staticmethod
-    def _clean_task_files(files_list):
-        for file_path in files_list:
-            Utils.remove_file(file_path)
-
     def clear_queue(self, shared_tasks, shared_tasks_lock):
-        """Clear tasks from both queues"""
+        """Clear tasks with files from queues. Cleared tasks will have status CANCELLED"""
         with self.queue_lock:
             # Update status for all tasks in both queues
             with shared_tasks_lock:
                 for task in self.normal_queue:
                     task_id = task["task_id"]
                     if task_id in shared_tasks:
-                        # Clean up files
                         MapTaskQueueManager._clean_task_files(
                             shared_tasks[task_id].get("files", []))
                         shared_tasks[task_id] = {
@@ -261,7 +270,6 @@ class MapTaskQueueManager:
                 for task in self.preview_queue:
                     task_id = task["task_id"]
                     if task_id in shared_tasks:
-                        # Clean up files
                         MapTaskQueueManager._clean_task_files(
                             shared_tasks[task_id].get("files", []))
                         shared_tasks[task_id] = {
@@ -272,21 +280,7 @@ class MapTaskQueueManager:
             self.normal_queue = []
             self.preview_queue = []
 
-    def get_queue_size(self, queue_type=None):
-        """Get the number of tasks in the specified queue or total in all queues"""
-        with self.queue_lock:
-            if queue_type == QueueType.NORMAL:
-                return len(self.normal_queue)
-            elif queue_type == QueueType.PREVIEW:
-                return len(self.preview_queue)
-            else:
-                return len(self.normal_queue) + len(self.preview_queue)
-
-    def get_running_processes_count(self, queue_type=None):
-        """Get the current number of running processes"""
-        if queue_type == QueueType.NORMAL:
-            return self.running_normal_processes.value
-        elif queue_type == QueueType.PREVIEW:
-            return self.running_preview_processes.value
-        else:
-            return self.running_normal_processes.value + self.running_preview_processes.value
+    @staticmethod
+    def _clean_task_files(files_list):
+        for file_path in files_list:
+            Utils.remove_file(file_path)

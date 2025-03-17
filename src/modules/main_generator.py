@@ -189,20 +189,16 @@ def generate_map(config: dict[MapConfigKeys, any], task_id: str, shared_dict: di
         
     remove_osm_after_load = False if OSM_OUTPUT_FOLDER_FILE_NAME is not None else True
     map_area_gdf = config[MapConfigKeys.MAP_AREA.value]
-    try:
-        osm_data_preprocessor = OsmDataPreprocessor(
-            config[MapConfigKeys.OSM_FILES.value], OSM_TMP_FILE_FOLDER, task_id, OSM_OUTPUT_FOLDER_FILE_NAME)
-        with lock:
-            shared_dict[task_id] = {
-                **shared_dict[task_id],  # Keep the existing keys and values
-                'files': [*shared_dict[task_id]['files'], osm_data_preprocessor.osm_output_file],
-            }
-        osm_file = osm_data_preprocessor.extract_areas(
-            config[MapConfigKeys.MAP_AREA.value], CRS_OSM)
-    except:
-        warnings.warn("Error while extracting area from osm file.")
-        # set status to error and return
-        return
+
+    osm_data_preprocessor = OsmDataPreprocessor(
+        config[MapConfigKeys.OSM_FILES.value], OSM_TMP_FILE_FOLDER, task_id, OSM_OUTPUT_FOLDER_FILE_NAME)
+    with lock:
+        shared_dict[task_id] = {
+            **shared_dict[task_id],  # Keep the existing keys and values
+            'files': [*shared_dict[task_id]['files'], osm_data_preprocessor.osm_output_file],
+        }
+    osm_file = osm_data_preprocessor.extract_areas(
+        config[MapConfigKeys.MAP_AREA.value], CRS_OSM)
 
     # ------------Working in display CRS------------
     wanted_categories, styles_size_edits = ReceivedStructureProcessor.transform_to_backend_structures(

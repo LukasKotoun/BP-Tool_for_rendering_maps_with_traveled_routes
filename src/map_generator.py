@@ -20,9 +20,7 @@ from modules.plotter import Plotter
 from modules.gpx_manager import GpxManager
 from modules.received_structure_processor import ReceivedStructureProcessor
 from modules.task_queue_manager import MapTaskQueueManager
-import os
 from multiprocessing import Lock
-import shutil
 
 shared_tasks = multiprocessing.Manager().dict()
 shared_tasks_lock = Lock()
@@ -129,16 +127,14 @@ def generate_map_normal(gpxs: Optional[List[UploadFile]] = File(None),
     gpxs_gdf = GpxManager.load_to_gdf_from_memory(gpxs, config.gpxs_categories, CRS_DISPLAY)
 
     map_generator_config = {
+        MapConfigKeys.OSM_FILES.value: osm_files,
         MapConfigKeys.MAP_AREA.value: map_area_gdf,
         MapConfigKeys.GPXS.value: gpxs_gdf,
         MapConfigKeys.MAP_OUTER_AREA.value: None,
         MapConfigKeys.MAP_AREA_BOUNDARY.value: boundary_map_area_gdf,
         MapConfigKeys.MAP_SCALING_FACTOR.value: map_scaling_factor,
         MapConfigKeys.PAPER_DIMENSION_MM.value: paper_dimensions_mm,
-        MapConfigKeys.OSM_FILES.value: osm_files,
         MapConfigKeys.PEAKS_FILTER_RADIUS.value: peaks_filter_radius,
-
-        # from FE - checked
         MapConfigKeys.MIN_PLACE_POPULATION.value: config.min_place_population,
         MapConfigKeys.MAP_THEME.value: config.map_theme,
         MapConfigKeys.PLOT_BRIDGES.value: config.plot_bridges,
@@ -151,7 +147,7 @@ def generate_map_normal(gpxs: Optional[List[UploadFile]] = File(None),
 
     status = task_queue_manager.add_task(
         map_generator_config, task_id, shared_tasks, shared_tasks_lock, QueueType.NORMAL)
-    print(task_queue_manager.get_queue_size())
+    
     return {"message": "Map is generating", "task_id": task_id, "status": status}
 
 
@@ -211,12 +207,12 @@ def preview_map_endpoint(gpxs: Optional[List[UploadFile]] = File(None),
 
     # config for map generator
     map_generator_config = {
+        MapConfigKeys.OSM_FILES.value: osm_files,
         MapConfigKeys.MAP_AREA.value: preview_map_area_gdf,
         MapConfigKeys.MAP_AREA_BOUNDARY.value: boundary_map_area_gdf,
         MapConfigKeys.MAP_OUTER_AREA.value: map_area_gdf,
         MapConfigKeys.MAP_SCALING_FACTOR.value: map_scaling_factor,
         MapConfigKeys.PAPER_DIMENSION_MM.value: preview_paper_dimensions_mm,
-        MapConfigKeys.OSM_FILES.value: osm_files,
         MapConfigKeys.PEAKS_FILTER_RADIUS.value: peaks_filter_radius,
         MapConfigKeys.MIN_PLACE_POPULATION.value: config.min_place_population,
         MapConfigKeys.MAP_THEME.value: config.map_theme,
@@ -226,13 +222,10 @@ def preview_map_endpoint(gpxs: Optional[List[UploadFile]] = File(None),
         MapConfigKeys.STYLES_ZOOM_LEVELS.value: styles_zoom_levels,
         MapConfigKeys.GPXS_STYLES.value: gpxs_styles,
         MapConfigKeys.GPXS.value: gpxs_gdf,
-
     }
     task_id: str = uuid7str()
-
     status = task_queue_manager.add_task(
         map_generator_config, task_id, shared_tasks, shared_tasks_lock, QueueType.PREVIEW)
-    print(task_queue_manager.get_queue_size())
 
     return {"message": "Map preview is generating", "task_id": task_id, "status": status}
 
@@ -276,9 +269,13 @@ def shutdown_cleanup():
     """
     print("Shutting down server...")
     task_queue_manager.clear_queue(shared_tasks, shared_tasks_lock)
-    for task_id, task in shared_tasks.items():
-        print(f"Terminating task {task_id}, {task}")
-        task_queue_manager.terminate_task(task_id, shared_tasks, shared_tasks_lock)
-        print(f"Terminated {task_id}")
-        with shared_tasks_lock:
-            shared_tasks.pop(task_id)
+    for task_id in shared_tasks.keys():
+        try:
+            print(f"Terminating task {task_id}, {shared_tasks[task_id]}")
+            task_queue_manager.terminate_task(task_id, shared_tasks, shared_tasks_lock)
+            print(f"Terminated {task_id}")
+            with shared_tasks_lock:
+                shared_tasks.pop(task_id)
+        except Exception as e:
+            print(f"Error terminating task {task_id}: {e}")
+            
