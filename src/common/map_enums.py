@@ -18,7 +18,21 @@ class ProcessingStatus(Enum):
     FILE_SAVING = "file_saving"
     FINISHED = "finished"
 
+class SharedDictKeys(Enum):
+    FILES = "files"
+    STATUS = "status"
+    PROCESS_RUNNING = "process_running"
+    PID = "pid"
+    IS_PREVIEW = "is_preview"
+    MESSAGE = "message"
     
+class TaskQueueKeys(Enum):
+    CONFIG = "config"
+    QUEUE_TYPE = "queue_type"
+    TASK_ID = "task_id"
+    
+
+
 class QueueType(Enum):
     NORMAL = "normal"
     PREVIEW = "preview"
@@ -100,6 +114,8 @@ class MapThemeVariable(Enum):
     AREAS_STYLES_SCALE = "AREAS_STYLES_SCALE"
     TEXT_BB_EXPAND_PERCENT = "TEXT_BB_EXPAND_PERCENT"
     MARKER_BB_EXPAND_PERCENT = "MARKER_BB_EXPAND_PERCENT"
+    TEXT_WRAP_NAMES_LENGTH = "TEXT_WRAP_NAMES_LENGTH"
+    TEXT_BOUNDS_OVERFLOW_THRESHOLD = "TEXT_BOUNDS_OVERFLOW_THRESHOLD"
 
 class TextPositions(Enum):  
     TOP = "TOP"

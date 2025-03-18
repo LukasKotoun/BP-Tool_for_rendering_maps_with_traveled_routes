@@ -3,7 +3,7 @@ import uuid
 from typing import Any
 
 from config import *
-from common.map_enums import ProcessingStatus
+from common.map_enums import ProcessingStatus, SharedDictKeys
 from modules.gdf_utils import GdfUtils
 from modules.utils import Utils
 from modules.osm_data_parser import OsmDataParser
@@ -180,23 +180,23 @@ def calc_preview(map_area_gdf, paper_dimensions_mm, fit_paper_size, preview_map_
     return map_scaling_factor, preview_map_area_gdf, map_area_gdf, map_scale
 
 
-def generate_map(config: dict[MapConfigKeys, any], task_id: str, shared_dict: dict[Any, Any], lock) -> None:
+def generate_map(config: dict[MapConfigKeys, any], task_id: str, shared_dict: dict[str, Any], lock) -> None:
     with lock:
         shared_dict[task_id] = {
             **shared_dict[task_id],  # Keep the existing keys and values
-            'status': ProcessingStatus.EXTRACTING.value
+            SharedDictKeys.STATUS.value: ProcessingStatus.EXTRACTING.value
         }
         
-    remove_osm_after_load = False if OSM_OUTPUT_FOLDER_FILE_NAME is not None else True
     map_area_gdf = config[MapConfigKeys.MAP_AREA.value]
 
     osm_data_preprocessor = OsmDataPreprocessor(
-        config[MapConfigKeys.OSM_FILES.value], OSM_TMP_FILE_FOLDER, task_id, OSM_OUTPUT_FOLDER_FILE_NAME)
+        config[MapConfigKeys.OSM_FILES.value], OSM_TMP_FILE_FOLDER, task_id, shared_dict, lock)
     with lock:
         shared_dict[task_id] = {
             **shared_dict[task_id],  # Keep the existing keys and values
-            'files': [*shared_dict[task_id]['files'], osm_data_preprocessor.osm_output_file],
+             SharedDictKeys.FILES.value: [*shared_dict[task_id][SharedDictKeys.FILES.value], osm_data_preprocessor.osm_output_file],
         }
+        
     osm_file = osm_data_preprocessor.extract_areas(
         config[MapConfigKeys.MAP_AREA.value], CRS_OSM)
 
@@ -210,7 +210,7 @@ def generate_map(config: dict[MapConfigKeys, any], task_id: str, shared_dict: di
     with lock:
         shared_dict[task_id] = {
             **shared_dict[task_id],  # Keep the existing keys and values
-            'status': ProcessingStatus.LOADING.value
+            SharedDictKeys.STATUS.value: ProcessingStatus.LOADING.value
         }
     # get categories that are in wanted and also should be loaded from areas
     wanted_nodes_from_area = {
@@ -230,20 +230,18 @@ def generate_map(config: dict[MapConfigKeys, any], task_id: str, shared_dict: di
 
     nodes_gdf, ways_gdf, areas_gdf = osm_file_parser.create_gdf(
         osm_file, CRS_OSM, CRS_DISPLAY)
-    print(shared_dict[task_id])
-    if (remove_osm_after_load):
-        Utils.remove_file(osm_file)
-        shared_dict[task_id] = {
-                **shared_dict[task_id],
-                'files': [file for file in shared_dict[task_id]['files'] if file != osm_file],
-            }
-    print(shared_dict[task_id])
+    
+    Utils.remove_file(osm_file)
+    shared_dict[task_id] = {
+            **shared_dict[task_id],
+            SharedDictKeys.FILES.value: [file for file in shared_dict[task_id][SharedDictKeys.FILES.value] if file != osm_file],
+        }
 
     # ------------gpxs------------
     with lock:
         shared_dict[task_id] = {
             **shared_dict[task_id],  # Keep the existing keys and values
-            'status': ProcessingStatus.FILTERING.value
+            SharedDictKeys.STATUS.value: ProcessingStatus.FILTERING.value
         }
 
     gpxs_gdf = config[MapConfigKeys.GPXS.value]
@@ -275,8 +273,8 @@ def generate_map(config: dict[MapConfigKeys, any], task_id: str, shared_dict: di
     coast_gdf, ways_gdf = GdfUtils.filter_rows(
         ways_gdf, {'natural': 'coastline'}, compl=True)
     bg_gdf = GdfUtils.create_background_gdf(
-        map_area_gdf, coast_gdf, map_theme['variables'][MapThemeVariable.WATER_COLOR],
-        map_theme['variables'][MapThemeVariable.LAND_COLOR])
+        map_area_gdf, coast_gdf, map_theme['variables'][MapThemeVariable.WATER_COLOR.value],
+        map_theme['variables'][MapThemeVariable.LAND_COLOR.value])
 
     # prepare styles
     process_bridges_and_tunnels(ways_gdf, config[MapConfigKeys.PLOT_BRIDGES.value],
@@ -284,12 +282,11 @@ def generate_map(config: dict[MapConfigKeys, any], task_id: str, shared_dict: di
     with lock:
         shared_dict[task_id] = {
             **shared_dict[task_id],  # Keep the existing keys and values
-            'status': ProcessingStatus.STYLING.value
+            SharedDictKeys.STATUS.value: ProcessingStatus.STYLING.value
         }
     ways_gdf = GdfUtils.merge_lines_gdf(ways_gdf, [])
 
     # assing zoom specific styles
-    # eight function - style
     gpxs_styles = StyleManager.convert_from_dynamic(
         map_theme['styles']['gpxs'], config[MapConfigKeys.STYLES_ZOOM_LEVELS.value]['general'])
     nodes_styles = StyleManager.convert_from_dynamic(
@@ -306,13 +303,13 @@ def generate_map(config: dict[MapConfigKeys, any], task_id: str, shared_dict: di
 
     map_scaling_factor = config[MapConfigKeys.MAP_SCALING_FACTOR.value]
     StyleManager.scale_styles(
-        gpxs_styles, map_theme['variables'][MapThemeVariable.GPXS_STYLES_SCALE], map_scaling_factor)
+        gpxs_styles, map_theme['variables'][MapThemeVariable.GPXS_STYLES_SCALE.value], map_scaling_factor)
     StyleManager.scale_styles(
-        nodes_styles, map_theme['variables'][MapThemeVariable.NODES_STYLES_SCALE], map_scaling_factor)
+        nodes_styles, map_theme['variables'][MapThemeVariable.NODES_STYLES_SCALE.value], map_scaling_factor)
     StyleManager.scale_styles(
-        ways_styles, map_theme['variables'][MapThemeVariable.WAYS_STYLES_SCALE], map_scaling_factor)
+        ways_styles, map_theme['variables'][MapThemeVariable.WAYS_STYLES_SCALE.value], map_scaling_factor)
     StyleManager.scale_styles(
-        areas_styles, map_theme['variables'][MapThemeVariable.AREAS_STYLES_SCALE], map_scaling_factor)
+        areas_styles, map_theme['variables'][MapThemeVariable.AREAS_STYLES_SCALE.value], map_scaling_factor)
 
     StyleManager.assign_styles(gpxs_gdf, gpxs_styles)
     StyleManager.assign_styles(
@@ -326,16 +323,15 @@ def generate_map(config: dict[MapConfigKeys, any], task_id: str, shared_dict: di
     with lock:
         shared_dict[task_id] = {
             **shared_dict[task_id],  # Keep the existing keys and values
-            'status': ProcessingStatus.PREPARING_FOR_PLOTTING.value
+            SharedDictKeys.STATUS.value: ProcessingStatus.PREPARING_FOR_PLOTTING.value
         }
-    # ninth - prepare/edit styled columns
+        
     gdfs_prepare_styled_columns(gpxs_gdf, nodes_gdf, ways_gdf,
                                 areas_gdf, base_config)
 
     # ------------filter nodes by min req------------
     nodes_gdf = GdfUtils.check_filter_nodes_min_req(nodes_gdf)
 
-    # 10 function - sort
     areas_gdf['area_size'] = areas_gdf.geometry.area
     bg_gdf['area_size'] = bg_gdf.area
     # -----sort-----
@@ -352,9 +348,8 @@ def generate_map(config: dict[MapConfigKeys, any], task_id: str, shared_dict: di
     GdfUtils.sort_gdf_by_columns(
         areas_gdf, [Style.ZINDEX.value], ascending=True, na_position='first', stable=True)
 
-    # 11 function - plot
     # ------------plot------------
-    area_over_ways_filter = map_theme['variables'][MapThemeVariable.AREAS_OVER_WAYS_FILTER]
+    area_over_ways_filter = map_theme['variables'][MapThemeVariable.AREAS_OVER_WAYS_FILTER.value]
     areas_over_normal_ways, areas_gdf = GdfUtils.filter_rows(
         areas_gdf,  area_over_ways_filter[0], compl=True)
     areas_as_ways = GdfUtils.filter_rows(
@@ -363,16 +358,17 @@ def generate_map(config: dict[MapConfigKeys, any], task_id: str, shared_dict: di
         ways_gdf = GdfUtils.combine_gdfs([ways_gdf, areas_as_ways])
 
     plotter = Plotter(map_area_gdf, config[MapConfigKeys.PAPER_DIMENSION_MM.value],
-                      map_scaling_factor, TEXT_BOUNDS_OVERFLOW_THRESHOLD, TEXT_WRAP_NAMES_LEN,
+                      map_scaling_factor, map_theme['variables'][MapThemeVariable.TEXT_BOUNDS_OVERFLOW_THRESHOLD.value],
+                      map_theme['variables'][MapThemeVariable.TEXT_WRAP_NAMES_LENGTH.value],
                       config[MapConfigKeys.MAP_OUTER_AREA.value],
-                      map_theme['variables'][MapThemeVariable.TEXT_BB_EXPAND_PERCENT],
-                      map_theme['variables'][MapThemeVariable.MARKER_BB_EXPAND_PERCENT])
+                      map_theme['variables'][MapThemeVariable.TEXT_BB_EXPAND_PERCENT.value],
+                      map_theme['variables'][MapThemeVariable.MARKER_BB_EXPAND_PERCENT.value])
     plotter.init(
-        map_theme['variables'][MapThemeVariable.LAND_COLOR], bg_gdf)
+        map_theme['variables'][MapThemeVariable.LAND_COLOR.value], bg_gdf)
     with lock:
         shared_dict[task_id] = {
             **shared_dict[task_id],  # Keep the existing keys and values
-            'status': ProcessingStatus.AREAS_PLOTTING.value
+            SharedDictKeys.STATUS.value: ProcessingStatus.AREAS_PLOTTING.value
         }
     plotter.areas(areas_gdf)
     del areas_gdf
@@ -382,7 +378,7 @@ def generate_map(config: dict[MapConfigKeys, any], task_id: str, shared_dict: di
     with lock:
         shared_dict[task_id] = {
             **shared_dict[task_id],  # Keep the existing keys and values
-            'status': ProcessingStatus.WAYS_PLOTTING.value
+            SharedDictKeys.STATUS.value: ProcessingStatus.WAYS_PLOTTING.value
         }
     plotter.ways(ways_gdf)
     del ways_gdf
@@ -390,7 +386,7 @@ def generate_map(config: dict[MapConfigKeys, any], task_id: str, shared_dict: di
     with lock:
         shared_dict[task_id] = {
             **shared_dict[task_id],  # Keep the existing keys and values
-            'status': ProcessingStatus.GPXS_PLOTTING.value
+            SharedDictKeys.STATUS.value: ProcessingStatus.GPXS_PLOTTING.value
         }
     plotter.gpxs(gpxs_gdf)
     plotter.clip()
@@ -399,27 +395,25 @@ def generate_map(config: dict[MapConfigKeys, any], task_id: str, shared_dict: di
     with lock:
         shared_dict[task_id] = {
             **shared_dict[task_id],  # Keep the existing keys and values
-            'status': ProcessingStatus.NODES_PLOTTING.value
+            SharedDictKeys.STATUS.value: ProcessingStatus.NODES_PLOTTING.value
         }
 
     plotter.nodes(nodes_gdf, TEXT_WRAP_NAMES_LEN)
     del nodes_gdf
 
-    if (OUTPUT_PDF_FOLDER_FILE_NAME is None):
-        if not os.path.exists(OUTPUT_PDF_FOLDER):
-            os.makedirs(OUTPUT_PDF_FOLDER)
-        folder = OUTPUT_PDF_FOLDER
-        if (OUTPUT_PDF_FOLDER[-1] != '/'):
-            folder += OUTPUT_PDF_FOLDER + '/'
-        pdf_name = f'{folder}map_{task_id}.pdf'
-    else:
-        pdf_name = OUTPUT_PDF_FOLDER_FILE_NAME
+   
+    if not os.path.exists(OUTPUT_PDF_FOLDER):
+        os.makedirs(OUTPUT_PDF_FOLDER)
+    folder = OUTPUT_PDF_FOLDER
+    if (OUTPUT_PDF_FOLDER[-1] != '/'):
+        folder += OUTPUT_PDF_FOLDER + '/'
+    pdf_name = f'{folder}map_{task_id}.pdf'
 
     with lock:
         shared_dict[task_id] = {
             **shared_dict[task_id],
-            'files': [*shared_dict[task_id]['files'], pdf_name],
-            'status':  ProcessingStatus.FILE_SAVING.value
+            SharedDictKeys.FILES.value: [*shared_dict[task_id][SharedDictKeys.FILES.value], pdf_name],
+            SharedDictKeys.STATUS.value:  ProcessingStatus.FILE_SAVING.value
         }
     plotter.generate_pdf(pdf_name)
 

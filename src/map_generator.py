@@ -1,3 +1,4 @@
+from multiprocessing.managers import DictProxy
 import warnings
 
 import multiprocessing
@@ -5,7 +6,7 @@ from uuid_extensions import uuid7str
 from fastapi import FastAPI, File, UploadFile, Form
 from fastapi.middleware.cors import CORSMiddleware
 import json
-from typing import List, Optional
+from typing import List, Optional, Any
 import time
 from config import *
 from common.map_enums import ProcessingStatus
@@ -22,13 +23,12 @@ from modules.received_structure_processor import ReceivedStructureProcessor
 from modules.task_queue_manager import MapTaskQueueManager
 from multiprocessing import Lock
 
-shared_tasks = multiprocessing.Manager().dict()
+shared_tasks: DictProxy[str, Any] = multiprocessing.Manager().dict()
 shared_tasks_lock = Lock()
 
 task_queue_manager = MapTaskQueueManager(max_normal_tasks=MAX_CONCURRENT_TASKS_NORMAL,
                                          max_preview_tasks=MAX_CONCURRENT_TASKS_PREVIEW,
                                          gpx_tmp_folder=GPX_TMP_FOLDER, gpx_crs=CRS_DISPLAY)
-
 server_app = FastAPI()
 server_app.add_middleware(
     CORSMiddleware,
@@ -144,7 +144,6 @@ def generate_map_normal(gpxs: Optional[List[UploadFile]] = File(None),
         MapConfigKeys.GPXS_STYLES.value: gpxs_styles,
     }
     task_id: str = uuid7str()
-
     status = task_queue_manager.add_task(
         map_generator_config, task_id, shared_tasks, shared_tasks_lock, QueueType.NORMAL)
     
@@ -268,14 +267,11 @@ def shutdown_cleanup():
     Cleanup any running processes and tmp files on server shutdown.
     """
     print("Shutting down server...")
-    task_queue_manager.clear_queue(shared_tasks, shared_tasks_lock)
+    task_queue_manager.clean_queue(shared_tasks, shared_tasks_lock)
     for task_id in shared_tasks.keys():
         try:
             print(f"Terminating task {task_id}, {shared_tasks[task_id]}")
-            task_queue_manager.terminate_task(task_id, shared_tasks, shared_tasks_lock)
+            task_queue_manager.terminate_task(task_id, shared_tasks, shared_tasks_lock, True)
             print(f"Terminated {task_id}")
-            with shared_tasks_lock:
-                shared_tasks.pop(task_id)
         except Exception as e:
             print(f"Error terminating task {task_id}: {e}")
-            

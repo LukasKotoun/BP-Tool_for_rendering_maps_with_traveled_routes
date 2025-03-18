@@ -19,6 +19,9 @@ AREAS_OVER_WAYS_FILTER = ([{'highway': ['pedestrian', 'footway']}, {'amenity': [
 
 DEFAULT_FONTS = ['Arial Unicode MS', 'DejaVu Sans']
 
+TEXT_WRAP_NAMES_LENGTH = 15  # len or 0/None if not wrap (15 default)
+TEXT_BOUNDS_OVERFLOW_THRESHOLD = 0.97
+
 WATER_COLOR_ZOOM_8_10 = "#9fc4e2"
 WATER_COLOR_ZOOM_1_7 = "#9abfdc"
 
@@ -933,15 +936,17 @@ MAPYCZ_BASE_OSM_CONFIG = BASE_OSM_CONFIG.copy()
 # check what to do with gpx styles
 MAPYCZ_STYLE: dict[str, dict[str, any]] = {
     "variables": {
-        MapThemeVariable.GPXS_STYLES_SCALE: GPXS_STYLES_SCALE,
-        MapThemeVariable.NODES_STYLES_SCALE: NODES_STYLES_SCALE,
-        MapThemeVariable.WAYS_STYLES_SCALE: WAYS_STYLES_SCALE,
-        MapThemeVariable.AREAS_STYLES_SCALE: AREAS_STYLES_SCALE,
-        MapThemeVariable.WATER_COLOR: WATER_COLOR,
-        MapThemeVariable.LAND_COLOR: LAND_COLOR,
-        MapThemeVariable.AREAS_OVER_WAYS_FILTER: AREAS_OVER_WAYS_FILTER,
-        MapThemeVariable.TEXT_BB_EXPAND_PERCENT: TEXT_EXPAND_PERCENT,
-        MapThemeVariable.MARKER_BB_EXPAND_PERCENT: MARKER_EXPAND_PERCENT,
+        MapThemeVariable.GPXS_STYLES_SCALE.value: GPXS_STYLES_SCALE,
+        MapThemeVariable.NODES_STYLES_SCALE.value: NODES_STYLES_SCALE,
+        MapThemeVariable.WAYS_STYLES_SCALE.value: WAYS_STYLES_SCALE,
+        MapThemeVariable.AREAS_STYLES_SCALE.value: AREAS_STYLES_SCALE,
+        MapThemeVariable.WATER_COLOR.value: WATER_COLOR,
+        MapThemeVariable.LAND_COLOR.value: LAND_COLOR,
+        MapThemeVariable.AREAS_OVER_WAYS_FILTER.value: AREAS_OVER_WAYS_FILTER,
+        MapThemeVariable.TEXT_BB_EXPAND_PERCENT.value: TEXT_EXPAND_PERCENT,
+        MapThemeVariable.MARKER_BB_EXPAND_PERCENT.value: MARKER_EXPAND_PERCENT,
+        MapThemeVariable.TEXT_BOUNDS_OVERFLOW_THRESHOLD.value: TEXT_BOUNDS_OVERFLOW_THRESHOLD,
+        MapThemeVariable.TEXT_WRAP_NAMES_LENGTH.value: TEXT_WRAP_NAMES_LENGTH,
     },
     "styles": {
         'gpxs': GPXS_STYLES,
