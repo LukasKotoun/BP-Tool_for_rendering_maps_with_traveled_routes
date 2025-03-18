@@ -13,7 +13,6 @@ from modules.plotter import Plotter
 from modules.gpx_manager import GpxManager
 from modules.received_structure_processor import ReceivedStructureProcessor
 import os
-from datetime import datetime
 
 
 def get_map_area_gdf(wanted_areas_to_display, boundary=False):
@@ -157,16 +156,20 @@ def gdfs_prepare_styled_columns(gpxs_gdf, nodes_gdf, ways_gdf, areas_gdf, config
 
 
 def calc_preview(map_area_gdf, paper_dimensions_mm, fit_paper_size, preview_map_area_gdf, preview_paper_dimensions_mm):
-
-    map_area_dimensions = GdfUtils.get_dimensions_gdf(map_area_gdf)
-
+    # calc scaling factor always from expanded are on paper - to get correct sizes of scaled objects
     if (fit_paper_size):
         map_area_gdf = GdfUtils.expand_gdf_area_fitPaperSize(
             map_area_gdf, paper_dimensions_mm)
         map_area_dimensions = GdfUtils.get_dimensions_gdf(
             map_area_gdf)
-    map_scaling_factor = Utils.calc_map_scaling_factor(
-        map_area_dimensions, paper_dimensions_mm)
+        map_scaling_factor = Utils.calc_map_scaling_factor(
+            map_area_dimensions, paper_dimensions_mm)
+    else:
+        map_area_dimensions = GdfUtils.get_dimensions_gdf(map_area_gdf)
+        expanded_map_area_dimensions = GdfUtils.get_dimensions_gdf(GdfUtils.expand_gdf_area_fitPaperSize(
+            map_area_gdf, paper_dimensions_mm))
+        map_scaling_factor = Utils.calc_map_scaling_factor(expanded_map_area_dimensions,
+                                                        paper_dimensions_mm)
     # calc bounds so area_zoom_preview will be 1 and will fill whole paper
     paper_fill_bounds = Utils.calc_bounds_to_fill_paper_with_ratio(preview_map_area_gdf.union_all().centroid,
                                                                    preview_paper_dimensions_mm, map_area_dimensions,

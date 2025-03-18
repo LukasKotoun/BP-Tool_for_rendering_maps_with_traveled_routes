@@ -1,6 +1,7 @@
 from common.map_enums import Style
 from common.custom_types import RowsConditions, RowsConditionsAND
 from typing import Dict, List, Union, Any, Optional, Callable
+from common.api_base_models import PaperDimensionsModel, ZoomLevelsModel
 
 # todo add functions to check for color and linestyle validity
 
@@ -283,12 +284,22 @@ class ReceivedStructureProcessor:
         return [mapping_dict[file] for file in osm_files]
 
     @staticmethod
-    def validate_and_convert_paper_dimension(paper_dimensions: list[float, float]) -> tuple[float, float]:
-        if len(paper_dimensions) != 2:
-            raise ValueError("Paper dimensions must have exactly 2 values")
-        if not all(isinstance(num, (int, float)) and num >= 1 for num in paper_dimensions):
-            raise ValueError("Paper dimensions must have only numbers")
-        return tuple(paper_dimensions)
+    def convert_paper_dimension(paper_dimensions: PaperDimensionsModel, allow_one_dimension_only=False) -> tuple[float, float]:
+        """Validate and convert the paper dimensions - must be previously validated to int or float or None"""
+        if (allow_one_dimension_only):
+            if (paper_dimensions.width is None and paper_dimensions.height is None):
+                raise ValueError("Both paper dimensions cannot be None")
+        else:
+            if (paper_dimensions.width is None or paper_dimensions.height is None):
+                raise ValueError("Both paper dimensions must be provided")
+            
+        return (paper_dimensions.width, paper_dimensions.height)
+
+    @staticmethod
+    def validate_wanted_orientation(orientation: str, valid_orientations: str) -> str:
+        if orientation not in valid_orientations:
+            raise ValueError("Invalid wanted orientation")
+        return orientation
 
     @staticmethod
     def validate_zoom_levels(data: dict, level_validation: dict[str, tuple[type, bool, Callable]]) -> bool:

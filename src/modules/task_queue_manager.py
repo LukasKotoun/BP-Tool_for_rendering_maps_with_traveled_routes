@@ -10,6 +10,7 @@ from common.map_enums import QueueType, ProcessingStatus, MapConfigKeys, SharedD
 from modules.main_generator import generate_map
 from modules.utils import Utils
 from modules.gpx_manager import GpxManager
+import psutil
 
 
 class MapTaskQueueManager:
@@ -139,7 +140,7 @@ class MapTaskQueueManager:
                     if task_id in shared_tasks:
                         MapTaskQueueManager._clean_task_files(
                             shared_tasks[task_id][SharedDictKeys.FILES.value])
-                        if(delete_from_shared):
+                        if (delete_from_shared):
                             shared_tasks.pop(task_id)
                         else:
                             shared_tasks[task_id] = {
@@ -154,22 +155,34 @@ class MapTaskQueueManager:
                     pid = shared_tasks[task_id][SharedDictKeys.PID.value]
                     is_preview = shared_tasks[task_id][SharedDictKeys.IS_PREVIEW.value]
                     queue_type = QueueType.PREVIEW if is_preview else QueueType.NORMAL
-                    try:
-                        if pid:
-                            os.kill(pid, signal.SIGTERM)
-                    except:
-                        warnings.warn(
-                            f"Failed to terminate process {pid} for task {task_id} using SIGTERM")
+
+                    if (pid):
+                        process = psutil.Process(pid)
+                        for child in process.children(recursive=True):
+                            try:
+                                child.terminate()
+                            except:
+                                warnings.warn(
+                                    f"Failed to terminate child process {child.pid} for task {task_id} using SIGTERM")
+                                try:
+                                    child.kill()
+                                except:
+                                    warnings.warn(
+                                        f"Failed to terminate child process for task {task_id} using SIGKILL")
                         try:
-                            if (pid):
-                                os.kill(pid, signal.SIGKILL)
+                            process.terminate()
                         except:
                             warnings.warn(
-                                f"Failed to terminate process {pid} for task {task_id} using SIGKILL")
+                                f"Failed to terminate process {pid} for task {task_id} using SIGTERM")
+                            try:
+                                process.kill()
+                            except:
+                                warnings.warn(
+                                    f"Failed to terminate process for task {task_id} using SIGKILL")
 
                     MapTaskQueueManager._clean_task_files(
                         shared_tasks[task_id][SharedDictKeys.FILES.value])
-                    if(delete_from_shared):
+                    if (delete_from_shared):
                         shared_tasks.pop(task_id)
                     else:
                         shared_tasks[task_id] = {
@@ -179,6 +192,7 @@ class MapTaskQueueManager:
                             SharedDictKeys.PID.value: None,
                             SharedDictKeys.FILES.value: []
                         }
+
                      # start next task if any
                     if queue_type == QueueType.NORMAL:
                         self.running_normal_processes.value -= 1
@@ -201,8 +215,8 @@ class MapTaskQueueManager:
                 if task_id in shared_tasks:
                     MapTaskQueueManager._clean_task_files(
                         shared_tasks[task_id][SharedDictKeys.FILES.value])
-                    if(delete_from_shared):
-                        shared_tasks.pop(task_id)   
+                    if (delete_from_shared):
+                        shared_tasks.pop(task_id)
                     else:
                         shared_tasks[task_id] = {
                             **shared_tasks[task_id],
@@ -268,7 +282,6 @@ class MapTaskQueueManager:
                     SharedDictKeys.PID.value: None,
                 }
 
-
         finally:
             with queue_lock:
                 # start next task if any
@@ -291,7 +304,7 @@ class MapTaskQueueManager:
                             SharedDictKeys.PID.value: process.pid,
                             SharedDictKeys.PROCESS_RUNNING.value: True
                         }
-    
+
     @staticmethod
     def _clean_task_files(files_list):
         for file_path in files_list:

@@ -265,6 +265,6 @@ class PaperSize(Enum):
 
 
 class MapOrientation(Enum):
-    AUTOMATIC = "AUTOMATIC"
-    LANDSCAPE = "LANDSCAPE"
-    PORTRAIT = "PORTRAIT"
+    AUTOMATIC = "automatic"
+    LANDSCAPE = "landscape"
+    PORTRAIT = "portrait"

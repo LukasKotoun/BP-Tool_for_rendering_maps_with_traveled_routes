@@ -51,7 +51,7 @@ class OsmDataPreprocessor:
             '-o', osm_output_file
         ]
         try:
-            subprocess.run(command, check=True)
+            pd = subprocess.run(command, check=True)
         except Exception as e:
             Utils.remove_file(temp_geojson_path)
             with self.lock:

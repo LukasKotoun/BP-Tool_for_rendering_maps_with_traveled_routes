@@ -3,10 +3,11 @@ import matplotlib.font_manager as fm
 from matplotlib.colors import is_color_like
 
 from common.custom_types import UnwantedTags, WantedArea, WantedCategories
-from common.map_enums import Style, ColorMode, PaperSize, MapOrientation, MarkersCodes, MapThemeVariable, BaseConfigKeys, MapConfigKeys, MarkerPosition, QueueType
+from common.map_enums import Style, ColorMode, PaperSize, MapOrientation, MarkersCodes, MapThemeVariable, BaseConfigKeys, MapConfigKeys, MarkerPosition, QueueType, SharedDictKeys
+import datetime
 
 MAX_CONCURRENT_TASKS_NORMAL = 2
-MAX_CONCURRENT_TASKS_PREVIEW = 1
+MAX_CONCURRENT_TASKS_PREVIEW = 3
 
 OSM_AVAILABLE_FILES = {
     'cz': '../osm_files/cz.osm.pbf',
@@ -319,8 +320,7 @@ MANDATORY_WAYS = {
 #     # 'highway': {'pedestrian', 'footway'}, # zoom 6
 # }
 
-GPX_FOLDER: str = '../gpxs/brno'
-
+JWT_EXPIRATION_TIME = datetime.timedelta(days=2)
 
 # --------------------------------------------------------------constants--------------------------------------------------------------# world 3857
 CRS_OSM = "EPSG:4326"  # WGS84 - World Geodetic System 1984 - unit - degrees
@@ -364,9 +364,10 @@ GPX_CATEGORY_COLUMN = 'category'
 GPX_NORMAL_COLUMNS = [GPX_FILE_COLUMN, GPX_CATEGORY_COLUMN]
 GPX_GENERAL_KEYS = ['general']
 
-
+ALLOWED_WANTED_PAPER_ORIENTATIONS = [MapOrientation.AUTOMATIC.value, MapOrientation.LANDSCAPE.value, MapOrientation.PORTRAIT.value]
 MIN_WIDTH = 0.05
 MIN_TEXT_WIDTH = 0.1
+
 # key, (types, required)
 REQ_AREA_DICT_KEYS = {"area": (str | list, True, None), "plot": (bool, True, None), "category": (
     int, False, lambda v: 0 <= v), "width": (int | float, False, lambda v: MIN_WIDTH <= v)}
@@ -498,3 +499,5 @@ STYLES = {
     "mapycz": (MAPYCZ_STYLE, MAPYCZ_BASE_OSM_CONFIG),
 }
 DEFAULT_STYLE = (MAPYCZ_STYLE, MAPYCZ_BASE_OSM_CONFIG)
+
+JWT_ALGORITHM = "HS256"
