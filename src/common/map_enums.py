@@ -24,7 +24,6 @@ class SharedDictKeys(Enum):
     PROCESS_RUNNING = "process_running"
     PID = "pid"
     IS_PREVIEW = "is_preview"
-    MESSAGE = "message"
     
 class TaskQueueKeys(Enum):
     CONFIG = "config"

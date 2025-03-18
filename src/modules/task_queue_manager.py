@@ -42,7 +42,6 @@ class MapTaskQueueManager:
                 SharedDictKeys.STATUS.value: ProcessingStatus.IN_QUEUE.value,
                 SharedDictKeys.FILES.value: [],
                 SharedDictKeys.PROCESS_RUNNING.value: False,
-                SharedDictKeys.MESSAGE.value: "",
                 SharedDictKeys.PID.value: None,
                 SharedDictKeys.IS_PREVIEW.value: queue_type == QueueType.PREVIEW
             }
@@ -62,7 +61,6 @@ class MapTaskQueueManager:
                         SharedDictKeys.STATUS.value: ProcessingStatus.STARTING.value,
                         SharedDictKeys.FILES.value: [],
                         SharedDictKeys.PROCESS_RUNNING.value: False,
-                        SharedDictKeys.MESSAGE.value: "",
                         SharedDictKeys.PID.value: None,
                         SharedDictKeys.IS_PREVIEW.value: queue_type == QueueType.PREVIEW
                     }
@@ -155,30 +153,35 @@ class MapTaskQueueManager:
                     pid = shared_tasks[task_id][SharedDictKeys.PID.value]
                     is_preview = shared_tasks[task_id][SharedDictKeys.IS_PREVIEW.value]
                     queue_type = QueueType.PREVIEW if is_preview else QueueType.NORMAL
-
-                    if (pid):
+                    # need to handle carefully -> can drop whole server
+                    if (pid is not None):
                         process = psutil.Process(pid)
-                        for child in process.children(recursive=True):
-                            try:
-                                child.terminate()
-                            except:
-                                warnings.warn(
-                                    f"Failed to terminate child process {child.pid} for task {task_id} using SIGTERM")
+                        if (process is not None and process.is_running()):
+                            for child in process.children(recursive=True):
                                 try:
-                                    child.kill()
+                                    if(child.is_running()):
+                                        child.terminate()
                                 except:
                                     warnings.warn(
-                                        f"Failed to terminate child process for task {task_id} using SIGKILL")
-                        try:
-                            process.terminate()
-                        except:
-                            warnings.warn(
-                                f"Failed to terminate process {pid} for task {task_id} using SIGTERM")
+                                        f"Failed to terminate child process {child.pid} for task {task_id} using SIGTERM")
+                                    try:
+                                        if(child.is_running()):
+                                            child.kill()
+                                    except:
+                                        warnings.warn(
+                                            f"Failed to terminate child process for task {task_id} using SIGKILL")
                             try:
-                                process.kill()
+                                if(process.is_running()):
+                                    process.terminate()
                             except:
                                 warnings.warn(
-                                    f"Failed to terminate process for task {task_id} using SIGKILL")
+                                    f"Failed to terminate process {pid} for task {task_id} using SIGTERM")
+                                try:
+                                    if(process.is_running()):
+                                        process.kill()
+                                except:
+                                    warnings.warn(
+                                        f"Failed to terminate process for task {task_id} using SIGKILL")
 
                     MapTaskQueueManager._clean_task_files(
                         shared_tasks[task_id][SharedDictKeys.FILES.value])
@@ -277,7 +280,6 @@ class MapTaskQueueManager:
                     **shared_tasks[task_id],
                     SharedDictKeys.FILES.value: [],
                     SharedDictKeys.STATUS.value: ProcessingStatus.FAILED.value,
-                    SharedDictKeys.MESSAGE.value: str(e),
                     SharedDictKeys.PROCESS_RUNNING.value: False,
                     SharedDictKeys.PID.value: None,
                 }
