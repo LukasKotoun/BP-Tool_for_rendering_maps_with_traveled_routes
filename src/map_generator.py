@@ -1,18 +1,19 @@
-from multiprocessing.managers import DictProxy
 import warnings
 
+from fastapi import FastAPI, File, UploadFile, Form, HTTPException, status, Depends, Response
+from multiprocessing.managers import DictProxy
 import multiprocessing
-from uuid_extensions import uuid7str
-from fastapi import FastAPI, File, UploadFile, Form, HTTPException, status, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer
+from fastapi.responses import StreamingResponse
+from uuid_extensions import uuid7str
 
 import json
 from typing import List, Optional, Any
 import time
 from config import *
 from common.map_enums import ProcessingStatus
-from modules.main_generator import generate_map, calc_preview, get_map_area_gdf
+from modules.main_generator import generate_map, calc_preview, get_map_area_gdf, plot_map_borders
 from common.api_base_models import *
 from modules.gdf_utils import GdfUtils
 from modules.utils import Utils
@@ -21,7 +22,7 @@ from modules.osm_data_parser import OsmDataParser
 from modules.style_assigner import StyleManager
 from modules.gpx_manager import GpxManager
 from modules.received_structure_processor import ReceivedStructureProcessor
-from modules.task_queue_manager import MapTaskQueueManager
+from modules.task_manager import TaskManager
 from multiprocessing import Lock
 import os
 
@@ -41,21 +42,20 @@ server_app.add_middleware(
 )
 
 
-shared_tasks: DictProxy[str, Any] = multiprocessing.Manager().dict()
-shared_tasks_lock = Lock()
 
-task_queue_manager = MapTaskQueueManager(max_normal_tasks=MAX_CONCURRENT_TASKS_NORMAL,
+task_queue_manager = TaskManager(max_normal_tasks=MAX_CONCURRENT_TASKS_NORMAL,
                                          max_preview_tasks=MAX_CONCURRENT_TASKS_PREVIEW,
                                          gpx_tmp_folder=GPX_TMP_FOLDER, gpx_crs=CRS_DISPLAY)
 
-
+# endpoints helpers
 def decode_task_id_from_JWT(token: str = Depends(oauth2_scheme)):
     payload = Utils.decode_jwt(token, JWT_ALGORITHM, SECRET_KEY)
     task_id = payload.get("task_id")
     if task_id is None:
-        raise HTTPException(status_code=401, detail="Invalid token")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
     return task_id
 
+# endpoints
 
 @server_app.get("/available_osm_files", response_model=AvailableOsmFilesResponseModel)
 def available_osm_files():
@@ -81,7 +81,7 @@ def get_paper_dimensions(config: PaperDimensionsConfigModel):
         given_smaller_paper_dimension = config.given_smaller_paper_dimension
     except Exception as e:
         raise HTTPException(
-            status_code=400, detail=f"Error in config validation: {e}")
+            status_code=status.HTTP_400_BAD_REQUEST, detail=f"Error in config validation: {e}")
 
     # ------------get paper dimension (size and orientation)------------
     map_area_dimensions = GdfUtils.get_dimensions_gdf(map_area_gdf)
@@ -89,6 +89,50 @@ def get_paper_dimensions(config: PaperDimensionsConfigModel):
                                                         given_smaller_paper_dimension, wanted_orientation)
 
     return {"width": paper_dimensions_mm[0], "height": paper_dimensions_mm[1]}
+
+@server_app.post("/generate_map_borders")
+def generate_map_borders(config: MapBorderConfigModel):
+    try:
+        paper_dimensions_mm = ReceivedStructureProcessor.convert_paper_dimension(
+            config.paper_dimensions, False)
+        map_area = ReceivedStructureProcessor.validate_and_convert_areas_strucutre(
+            config.map_area, REQ_AREA_DICT_KEYS, key_with_area="area")
+        map_area_gdf, boundary_map_area_gdf = get_map_area_gdf(
+            map_area, True)
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Error in config validation: {e}")
+
+    if (config.fit_paper_size):
+        map_area_gdf = GdfUtils.expand_gdf_area_fitPaperSize(
+            map_area_gdf, paper_dimensions_mm)
+        map_area_dimensions = GdfUtils.get_dimensions_gdf(map_area_gdf)
+        if (config.fit_paper_size_bounds_plot):
+            boundary_map_area_gdf = GdfUtils.combine_gdfs(
+                [boundary_map_area_gdf, map_area_gdf.copy()])
+    file_id = uuid7str()
+    file_path = plot_map_borders(file_id, map_area_gdf, boundary_map_area_gdf, paper_dimensions_mm)
+    if(file_path is None or not os.path.isfile(file_path)):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Error white generating borders")
+    
+    def iterfile():
+        # stream file and delete after completion
+        try:
+            #https://stackoverflow.com/questions/73550398/how-to-download-a-large-file-using-fastapi
+            with open(file_path, 'rb') as f:
+                while chunk := f.read(FILE_DOWNLOAD_CHUNK_SIZE):
+                    yield chunk
+            # delete file after successful streaming
+            Utils.remove_file(file_path)
+        except Exception as e:
+            print(f"Error during file streaming: {str(e)}")
+
+    return StreamingResponse(
+        iterfile(),
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename=map.pdf"}
+    )
+
+    
 
 
 @server_app.post("/zoom_level", response_model=ZoomLevelResponseModel)
@@ -104,7 +148,7 @@ def get_zoom_level(config: ZoomLevelConfigModel):
 
     except Exception as e:
         raise HTTPException(
-            status_code=400, detail=f"Error in config validation: {e}")
+            status_code=status.HTTP_400_BAD_REQUEST, detail=f"Error in config validation: {e}")
 
     expanded_map_area_dimensions = GdfUtils.get_dimensions_gdf(GdfUtils.expand_gdf_area_fitPaperSize(
         map_area_gdf, paper_dimensions_mm))
@@ -139,8 +183,7 @@ def generate_map_normal(gpxs: Optional[List[UploadFile]] = File(None),
         map_area_gdf, boundary_map_area_gdf = get_map_area_gdf(
             map_area, True)
     except Exception as e:
-        raise HTTPException(
-            status_code=400, detail=f"Error in config validation: {e}")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Error in config validation: {e}")
 
     # calc needed values before storing in front - are different for normal and preview
     # ------------get paper dimension (size and orientation)------------
@@ -188,14 +231,15 @@ def generate_map_normal(gpxs: Optional[List[UploadFile]] = File(None),
         MapConfigKeys.STYLES_ZOOM_LEVELS.value: styles_zoom_levels,
         MapConfigKeys.GPXS_STYLES.value: gpxs_styles,
     }
-    task_id: str = uuid7str()
+    task_status, task_id = task_queue_manager.add_task(
+        map_generator_config, QueueType.NORMAL)
+    if(task_id is None or task_status == ProcessingStatus.FAILED.value):
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Cannot start task")
+        
     access_token = Utils.create_access_token(
         data={"task_id": task_id}, expires_delta=JWT_EXPIRATION_TIME, algorithm=JWT_ALGORITHM, secret_key=SECRET_KEY
     )
-    status = task_queue_manager.add_task(
-        map_generator_config, task_id, shared_tasks, shared_tasks_lock, QueueType.NORMAL)
-
-    return {"message": "Map is generating", "token": access_token, "status": status}
+    return {"message": "Map is generating", "token": access_token, "status": task_status}
 
 
 @server_app.post("/generate-map-preview", response_model=GeneratorResponseStatusModel)
@@ -236,7 +280,7 @@ def generate_preview_map(gpxs: Optional[List[UploadFile]] = File(None),
 
     except Exception as e:
         raise HTTPException(
-            status_code=400, detail=f"Error in config validation: {e}")
+            status_code=status.HTTP_400_BAD_REQUEST, detail=f"Error in config validation: {e}")
     # area - big area with all settings
     # preview_area - area to display
     # calc needed values before storing in front - are different for normal and preview
@@ -271,59 +315,76 @@ def generate_preview_map(gpxs: Optional[List[UploadFile]] = File(None),
         MapConfigKeys.GPXS_STYLES.value: gpxs_styles,
         MapConfigKeys.GPXS.value: gpxs_gdf,
     }
-    task_id: str = uuid7str()
+    task_status, task_id = task_queue_manager.add_task(
+        map_generator_config, task_id, QueueType.PREVIEW)
+    
+    if(task_id is None or task_status == ProcessingStatus.FAILED.value):
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Cannot start task")
+        
     access_token = Utils.create_access_token(
         data={"task_id": task_id}, expires_delta=JWT_EXPIRATION_TIME, algorithm=JWT_ALGORITHM, secret_key=SECRET_KEY
     )
 
-    status = task_queue_manager.add_task(
-        map_generator_config, task_id, shared_tasks, shared_tasks_lock, QueueType.PREVIEW)
-
-    return {"message": "Map preview is generating", "token": access_token, "status": status}
-
+    return {"message": "Map preview is generating", "token": access_token, "status": task_status}
 
 @server_app.get("/task_status", response_model=StatusResponseModel)
 def get_task_status(task_id: str = Depends(decode_task_id_from_JWT)):
     """
     Get the status of a specific task from id in token.
     """
-    if (task_id in shared_tasks):
-        return {"status": shared_tasks[task_id][SharedDictKeys.STATUS.value]}
+    task_info = task_queue_manager.get_task_info(task_id)
+    if (task_info is not None):
+        return {"status": task_info[SharedDictKeys.STATUS.value]}
     else:
-        raise HTTPException(status_code=404, detail="Task not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
 
-
-@server_app.get("/terminate_task", response_model=MessageResponseModel)
+@server_app.delete("/terminate_task", response_model=MessageResponseModel)
 def terminate_task(task_id: str = Depends(decode_task_id_from_JWT)):
     """
-    Get the status of a specific task from id in token.
+    Terminate task from id in token.
     """
-    if (task_id in shared_tasks):
-        terminated = task_queue_manager.terminate_task(
-            task_id, shared_tasks, shared_tasks_lock, True)
-        if (terminated):
-            return {"message": "Task terminated successfully"}
-        else:
-            raise HTTPException(
-                status_code=404, detail="Cannot terminate task - task not found")
+    terminated = task_queue_manager.delete_task(task_id)
+    if (terminated):
+        return {"message": "Task terminated successfully"}
     else:
-        raise HTTPException(status_code=404, detail="Task not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Cannot terminate task - task not found")
+   
+@server_app.get("/download_map")
+def get_map_file(task_id: str = Depends(decode_task_id_from_JWT)):
+    task_info = task_queue_manager.get_task_info(task_id)
+    if (task_info is None):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
+    if (task_info[SharedDictKeys.STATUS.value] != ProcessingStatus.COMPLETED.value):
+        raise HTTPException(status_code=status.HTTP_425_TOO_EARLY, detail="Task not completed yet")
+    file_path = None
+    for file in task_info[SharedDictKeys.FILES.value]:
+        if file.endswith(".pdf"):
+            file_path = file
+            break
+    if(file_path is None or not os.path.isfile(file_path)):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
+    
+    def iterfile():
+        # stream file and delete after completion
+        try:
+            #https://stackoverflow.com/questions/73550398/how-to-download-a-large-file-using-fastapi
+            with open(file_path, 'rb') as f:
+                while chunk := f.read(FILE_DOWNLOAD_CHUNK_SIZE):
+                    yield chunk
+            # delete file after successful streaming
+            delete_status = task_queue_manager.delete_task(task_id)
+            if(not delete_status):
+                warnings.warn("Error: cannot remove task")
+        except Exception as e:
+            print(f"Error during file streaming: {str(e)}")
 
-# @server_app.get("/stop_task/{job_id}")
-# def get_task_status(job_id: str):
-#     """
-#     Get the status of a specific task.
-#     """
-#     if job_id in tasks:
-#         return {"job_id": job_id, "status": tasks[job_id]}
-#     else:
-#         return {"error": "Job not found"}
+    return StreamingResponse(
+        iterfile(),
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename=map.pdf"}
+    )
 
-
-# @server_app.get("/get_map/{job_id}")
-# def get_task_status(job_id: str):
-#     # find in shared_tasks or folder
-#     pass
 
 
 @server_app.on_event("shutdown")
@@ -332,12 +393,4 @@ def shutdown_cleanup():
     Cleanup any running processes and tmp files on server shutdown.
     """
     print("Shutting down server...")
-    task_queue_manager.clean_queue(shared_tasks, shared_tasks_lock)
-    for task_id in shared_tasks.keys():
-        try:
-            print(f"Terminating task {task_id}, {shared_tasks[task_id]}")
-            task_queue_manager.terminate_task(
-                task_id, shared_tasks, shared_tasks_lock, True)
-            print(f"Terminated {task_id}")
-        except Exception as e:
-            print(f"Error terminating task {task_id}: {e}")
+    task_queue_manager.delete_all_tasks()

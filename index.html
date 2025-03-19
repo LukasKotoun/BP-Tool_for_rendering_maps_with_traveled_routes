@@ -5,32 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Send Data with File</title>
   <script>
-    // Function to send data with a file
-    async function sendData() {
-      // Create a FormData object to send data and file
-      const formData = new FormData();
-
-      // Create a JavaScript object for the data
-     
-
-      // Convert the data object to a JSON string and append it to FormData
-
-      // Get the file input element and select the first file
-      const fileInput = document.getElementById("fileInput");
-      const fileInput1 = document.getElementById("fileInput1");
-      const file = fileInput.files[0];  // Get the first file selected
-      const file1 = fileInput1.files[0];  // Get the first file selected
-
-    // formData.append('gpxs', [file, file]);
-    if(file != null){
-        formData.append('gpxs', file);
-
-    }else{
-    }
- 
-      formData.append('config', 
-      JSON.stringify({
-        "osm_files": ['trebic', 'brno' ,'cz' ],
+    data =   JSON.stringify({
+        "osm_files": ['trebic', 'cz' ],
         // "map_area":[{"area": "Třebíč, Česko",
         //  "plot": false}, {"area": "Trnava, Česko", "plot":false},
         //  {"area":"Horní vilémovice, Česko", "plot": false, 'category':0}],
@@ -47,7 +23,7 @@
         "gpxs_categories": {},
         "map_theme": "mapycz",
         "min_place_population": 0,
-        "peaks_filter_sensitivity":0,
+        "peaks_filter_sensitivity":2.5,
         'gpxs_styles':{
           'file_name':{},
           'category':{},
@@ -73,86 +49,36 @@
           "general": 5
         },
      
-      }
-      ));
-      // formData.append('config', 
-      // JSON.stringify({
-      //   "osm_files": ['trebic'],
-      //   // "map_area":[{"area": "Třebíč, Česko",
-      //   //  "plot": false}, {"area": "Trnava, Česko", "plot":false},
-      //   //  {"area":"Horní vilémovice, Česko", "plot": false, 'category':0}],
-      //   "map_area":[{"area": "Třebíč, Česko",
-      //    "plot": true, 'category': 0, 'width': 1}],
-      //   "map_preview_area":[{"area": "Třebíč, Česko",
-      //    "plot": true ,'category': 0, 'width': 1}, {"area": "Brno, Česko", "plot":true, 'category': 0, 'width': 1}],
-      //    "paper_dimensions":{'height': 210, 'width': 410},
-      //   "paper_preview_dimensions": {'width': 100, 'height': 100},
-      //   "fit_paper_size": false,
-      //   "fit_paper_size_bounds_plot": false,
-      //   "plot_bridges": false,
-      //   "plot_tunnels": false,
-      //   "gpxs_categories": {},
-      //   "map_theme": "mapycz",
-      //   "min_place_population": 0,
-      //   "peaks_filter_sensitivity":0,
-      //   'gpxs_styles':{
-      //     'file_name':{},
-      //     'category':{},
-      //     'general':{'color': "red", 'marker_layer_position': "under_text",
-      //       'start_marker': "mpl_start", 'finish_marker':"fa_finish"
-      //     }
-      //   },
-      //   'wanted_categories_and_styles_edit':{
-      //     'nodes':{
-      //       'natural': {'peak':{}},
-      //     },
-      //     'ways':{
-      //       'highway':{
-      //         'primary': {},
-      //         'secondary': {},
-      //       }},
-      //     'areas':{},
-      //   },
-      //   'styles_zoom_levels':{
-      //     "nodes": 5,
-      //     "ways": 5,
-      //     "areas": 5,
-      //     "general": 5
-      //   },
-     
-      // }
-      // ));
+      })
+    // Function to send data with a file
+    async function sendDataPrev() {
+      // Create a FormData object to send data and file
+      const formData = new FormData();
 
-      // Send the data using the fetch API to FastAPI endpoint
+      // Create a JavaScript object for the data
+     
+
+      // Convert the data object to a JSON string and append it to FormData
+
+      // Get the file input element and select the first file
+      const fileInput = document.getElementById("fileInput");
+      const file = fileInput.files[0];  // Get the first file selected
+
+    // formData.append('gpxs', [file, file]);
+    if(file != null){
+        formData.append('gpxs', file);
+    }else{
+    }
+ 
+      formData.append('config', 
+      data
+      );
+ 
       try {
-        // const response = await fetch('http://localhost:8000/zoom_level/', {
-        // const response = await fetch('http://localhost:8000/paper_dimensions/', {
-        // const response = await fetch('http://localhost:8000/generate-map-normal/', {
+
         const response = await fetch('http://localhost:8000/generate-map-preview/', {
           method: 'POST',
-    //zoom
-    // body: JSON.stringify({
-    //     "map_area":[{"area": "Třebíč, Česko",
-    //     "plot": false}, {"area": "Trnava, Česko", "plot":false},
-    //     {"area":"Horní vilémovice, Česko", "plot": false, 'category':0}],
-    //     "paper_dimensions": {'width': 297, 'height': 210},
-    //     "fit_paper_size": true,
-    //   }),
-    //   headers: {
-    //     'Content-Type': 'application/json',
-    //   },
-      //paper
-      //     body: JSON.stringify({
-      //   "map_area":[{"area": "Česko",
-      //   "plot": false}, {"area": "Trnava, Česko", "plot":false},
-      //   {"area":"Horní vilémovice, Česko", "plot": false, 'category':0}],
-      //   "paper_dimensions": {'width': 270, 'height': null},
-      //   "given_smaller_paper_dimension": false,
-      //   "wanted_orientation": "automatic",
-      // }),
-        //     headers: {
-      //   'Content-Type': 'application/json',
-      // },
+
 
        body: formData,
     
@@ -167,6 +93,105 @@
         console.error('Error:', error);
       }
     }
+
+    // Function to send data with a file
+    async function sendDataNormal() {
+      // Create a FormData object to send data and file
+      const formData = new FormData();
+
+      const fileInput = document.getElementById("fileInput");
+      const file = fileInput.files[0];  // Get the first file selected
+
+    // formData.append('gpxs', [file, file]);
+    if(file != null){
+        formData.append('gpxs', file);
+    }else{
+    }
+ 
+      formData.append('config', 
+      data
+      );
+
+      try {
+        const response = await fetch('http://localhost:8000/generate-map-normal/', {
+          method: 'POST',
+
+       body: formData,
+    
+        });
+
+        // Parse the JSON response from FastAPI
+        const result = await response.json();
+        token = result['token']
+        // Log the result to the console
+        console.log('Response:', result);
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    }
+
+    async function sendDataPaper() {
+      // Send the data using the fetch API to FastAPI endpoint
+      try {
+        const response = await fetch('http://localhost:8000/paper_dimensions/', {
+          method: 'POST',
+          
+          body: JSON.stringify({
+        "map_area":[{"area": "Česko",
+        "plot": false}, {"area": "Trnava, Česko", "plot":false},
+        {"area":"Horní vilémovice, Česko", "plot": false, 'category':0}],
+        "paper_dimensions": {'width': 270, 'height': null},
+        "given_smaller_paper_dimension": false,
+        "wanted_orientation": "automatic",
+      }),
+            headers: {
+        'Content-Type': 'application/json',
+      },
+
+    
+        });
+
+        // Parse the JSON response from FastAPI
+        const result = await response.json();
+        // Log the result to the console
+        console.log('Response:', result);
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    }
+
+    async function sendDataZoom() {
+      try {
+        const response = await fetch('http://localhost:8000/zoom_level/', {
+          method: 'POST',
+    //zoom
+    body: JSON.stringify({
+        "map_area":[{"area": "Třebíč, Česko",
+        "plot": false}, {"area": "Trnava, Česko", "plot":false},
+        {"area":"Horní vilémovice, Česko", "plot": false, 'category':0}],
+        "paper_dimensions": {'width': 297, 'height': 210},
+        "fit_paper_size": true,
+      }),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      //paper
+     
+
+    
+        });
+
+        // Parse the JSON response from FastAPI
+        const result = await response.json();
+        // Log the result to the console
+        console.log('Response:', result);
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    }
+
+
+
     async function get() {
       try {
         const response = await fetch('http://localhost:8000/task_status/', {
@@ -188,21 +213,140 @@
     async function terminate() {
       try {
         const response = await fetch('http://localhost:8000/terminate_task/', {
+          method: 'DELETE',
           headers: {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
             },
+
         });
 
         // Parse the JSON response from FastAPI
         const result = await response.json();
-
+        
         // Log the result to the console
         console.log('Response:', result);
       } catch (error) {
         console.error('Error:', error);
       }
     }
+
+    async function download_map() {
+      try {
+        const response = await fetch('http://localhost:8000/download_map/', {
+          method: 'GET',
+          headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+
+        });
+
+        // check for error response
+        if (!response.ok) {
+          console.log('Response:', result);
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        // Parse the JSON response from FastAPI
+        const blob = await response.blob();
+        // Create a URL for the blob
+        const url = window.URL.createObjectURL(blob);
+        
+        // Create a temporary anchor element
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = "map.pdf";
+        
+        // Add to the DOM and trigger the download
+        document.body.appendChild(a);
+        a.click();
+        
+        // Clean up
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        
+        // Update status
+        if (statusElement) {
+            statusElement.textContent = 'Download complete!';
+        }
+        // Log the result to the console
+        console.log('Response:', result);
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    }
+
+    async function get_map_borders() {
+      
+
+     
+      try {
+        const response = await fetch('http://localhost:8000/generate_map_borders/', {
+          method: 'POST',
+          body: JSON.stringify({       
+          "map_area":[
+          //   {"area": "Česko",
+          // "plot": true, 'category': 0, 'width': 1},
+          // {"area": "Německo",
+          // "plot": false, 'category': 0, 'width': 1}, {"area": "Rakousko", "plot":true, 'category': 0, 'width': 1},
+          {"area": "Rusko", "plot":true, 'category': 0, 'width': 1}
+        ],
+          "paper_dimensions":{'height': 2000, 'width': 3050},
+          "fit_paper_size": false,
+          "fit_paper_size_bounds_plot": true,
+        }),
+        //   body: JSON.stringify({       
+        //   "map_area":[{"area": "Česko",
+        //   "plot": true, 'category': 0, 'width': 1},
+        //   {"area": "Třebíč, Česko",
+        //   "plot": false, 'category': 0, 'width': 1}, {"area": "Brno, Česko", "plot":true, 'category': 0, 'width': 1}],
+        //   "paper_dimensions":{'height': 200, 'width': 350},
+        //   "fit_paper_size": false,
+        //   "fit_paper_size_bounds_plot": true,
+        // }),
+          headers: {
+          'Content-Type': 'application/json',
+        },
+        });
+
+        // check for error response
+        if (!response.ok) {
+          console.log('Response:', result);
+
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        // Parse the JSON response from FastAPI
+        const blob = await response.blob();
+        // Create a URL for the blob
+        const url = window.URL.createObjectURL(blob);
+        
+        // Create a temporary anchor element
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = "map.pdf";
+        
+        // Add to the DOM and trigger the download
+        document.body.appendChild(a);
+        a.click();
+        
+        // Clean up
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        
+        // Update status
+        if (statusElement) {
+            statusElement.textContent = 'Download complete!';
+        }
+        // Log the result to the console
+        console.log('Response:', result);
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    }
+
+
   </script>
 </head>
 <body>
@@ -211,13 +355,16 @@
 
   <!-- File input for selecting the file -->
   <input type="file" id="fileInput" />
-  
-  <input type="file" id="fileInput1" />
-  
+    
   <!-- Button to trigger the sendData function -->
-  <button onclick="sendData()">Send Data</button>
-  <button onclick="get()"> get</button>
-  <button onclick="terminate()"> terminate</button>
+  <button onclick="sendDataNormal()">Generovat normal</button>
+  <button onclick="sendDataPrev()">Generovat nahled</button>
+  <button onclick="sendDataZoom()">zoom</button>
+  <button onclick="sendDataPaper()">papir</button>
+  <button onclick="get()"> Status generování</button>
+  <button onclick="terminate()"> Ukončit</button>
+  <button onclick="download_map()"> Stáhnout</button>
+  <button onclick="get_map_borders()"> okraje</button>
 
 </body>
 </html>

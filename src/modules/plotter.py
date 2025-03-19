@@ -34,7 +34,7 @@ class Plotter:
     GPX_UNDER_TEXT_ZORDER = 2
     GPX_ABOVE_TEXT_ZORDER = 4
 
-    def __init__(self, requred_area_gdf: GeoDataFrame, paper_dimensions_mm: DimensionsTuple, map_scaling_factor: float,
+    def __init__(self, requred_area_gdf: GeoDataFrame, paper_dimensions_mm: DimensionsTuple,
                  point_bounds_overflow_threshold: float, text_wrap_len: int, outer_reqired_area_gdf: GeoDataFrame | None = None,
                  text_expand_percent: int = 5, marker_expand_percent: int = 5):
         self.reqired_area_gdf: GeoDataFrame = requred_area_gdf
@@ -45,7 +45,6 @@ class Plotter:
 
         self.outer_reqired_area_gdf = outer_reqired_area_gdf
         self.paper_dimensions_mm = paper_dimensions_mm
-        self.map_scaling_factor: float = map_scaling_factor
         self.text_wrap_len = text_wrap_len
         self.point_bounds_overflow_threshold = point_bounds_overflow_threshold
         self.markers_above_id = 0

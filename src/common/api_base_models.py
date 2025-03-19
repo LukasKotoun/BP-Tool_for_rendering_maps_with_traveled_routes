@@ -62,6 +62,13 @@ class ZoomLevelConfigModel(BaseModel):
     paper_dimensions: PaperDimensionsModel
     fit_paper_size: Optional[bool] = False
 
+class MapBorderConfigModel(BaseModel):
+    map_area: Any
+    paper_dimensions: PaperDimensionsModel
+    fit_paper_size: Optional[bool] = False
+    fit_paper_size_bounds_plot: Optional[bool] = False
+
+
 class GeneratorResponseStatusModel(BaseModel):
     token: str | None = None
     status: str = 'failed'  # started|queued|processing|completed|failed
@@ -85,3 +92,4 @@ class StatusResponseModel(BaseModel):
 
 class MessageResponseModel(BaseModel):
     message: str
+

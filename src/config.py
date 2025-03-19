@@ -8,7 +8,7 @@ import datetime
 
 MAX_CONCURRENT_TASKS_NORMAL = 2
 MAX_CONCURRENT_TASKS_PREVIEW = 3
-
+FILE_DOWNLOAD_CHUNK_SIZE  = 1024 * 1024 # 1MB
 OSM_AVAILABLE_FILES = {
     'cz': '../osm_files/cz.osm.pbf',
     'brno': '../osm_files/brno.osm.pbf',

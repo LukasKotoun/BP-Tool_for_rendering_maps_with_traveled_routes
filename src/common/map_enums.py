@@ -2,7 +2,6 @@ from enum import Enum
 from typing import Literal
 
 class ProcessingStatus(Enum):
-    CANCELLED = "cancelled"
     FAILED = "failed"
     STARTING = "starting"
     IN_QUEUE = "in_queue"
@@ -16,7 +15,7 @@ class ProcessingStatus(Enum):
     NODES_PLOTTING = "nodes_plotting"
     GPXS_PLOTTING = "gpxs_plotting"
     FILE_SAVING = "file_saving"
-    FINISHED = "finished"
+    COMPLETED = "COMPLETED"
 
 class SharedDictKeys(Enum):
     FILES = "files"

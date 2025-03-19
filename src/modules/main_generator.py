@@ -183,13 +183,31 @@ def calc_preview(map_area_gdf, paper_dimensions_mm, fit_paper_size, preview_map_
     return map_scaling_factor, preview_map_area_gdf, map_area_gdf, map_scale
 
 
-def generate_map(config: dict[MapConfigKeys, any], task_id: str, shared_dict: dict[str, Any], lock) -> None:
+def plot_map_borders(file_id, map_area_gdf, boundary_map_area_gdf, paper_dimension_mm):
+    plotter = Plotter(map_area_gdf, paper_dimension_mm,
+                       0, 0, None, 0, 0)
+    
+    plotter.init('#FFFFFF', None)
+    
+    plotter.area_boundary(boundary_map_area_gdf,
+                          color="black")
+    plotter.clip()
+
+    if not os.path.exists(OUTPUT_PDF_FOLDER):
+        os.makedirs(OUTPUT_PDF_FOLDER)
+    folder = OUTPUT_PDF_FOLDER
+    if (OUTPUT_PDF_FOLDER[-1] != '/'):
+        folder += OUTPUT_PDF_FOLDER + '/'
+    pdf_name = f'{folder}bounds_{file_id}.pdf'
+    plotter.generate_pdf(pdf_name)
+    return pdf_name
+
+def generate_map(config: dict[MapConfigKeys, any], task_id: str, shared_dict: dict[str, Any], lock) -> None:    
     with lock:
         shared_dict[task_id] = {
             **shared_dict[task_id],  # Keep the existing keys and values
             SharedDictKeys.STATUS.value: ProcessingStatus.EXTRACTING.value
         }
-        
     map_area_gdf = config[MapConfigKeys.MAP_AREA.value]
 
     osm_data_preprocessor = OsmDataPreprocessor(
@@ -234,17 +252,13 @@ def generate_map(config: dict[MapConfigKeys, any], task_id: str, shared_dict: di
     nodes_gdf, ways_gdf, areas_gdf = osm_file_parser.create_gdf(
         osm_file, CRS_OSM, CRS_DISPLAY)
     
-    Utils.remove_file(osm_file)
-    shared_dict[task_id] = {
-            **shared_dict[task_id],
-            SharedDictKeys.FILES.value: [file for file in shared_dict[task_id][SharedDictKeys.FILES.value] if file != osm_file],
-        }
-
     # ------------gpxs------------
+    Utils.remove_file(osm_file)
     with lock:
         shared_dict[task_id] = {
             **shared_dict[task_id],  # Keep the existing keys and values
-            SharedDictKeys.STATUS.value: ProcessingStatus.FILTERING.value
+            SharedDictKeys.STATUS.value: ProcessingStatus.FILTERING.value,
+            SharedDictKeys.FILES.value: [file for file in shared_dict[task_id][SharedDictKeys.FILES.value] if file != osm_file],
         }
 
     gpxs_gdf = config[MapConfigKeys.GPXS.value]
@@ -361,7 +375,7 @@ def generate_map(config: dict[MapConfigKeys, any], task_id: str, shared_dict: di
         ways_gdf = GdfUtils.combine_gdfs([ways_gdf, areas_as_ways])
 
     plotter = Plotter(map_area_gdf, config[MapConfigKeys.PAPER_DIMENSION_MM.value],
-                      map_scaling_factor, map_theme['variables'][MapThemeVariable.TEXT_BOUNDS_OVERFLOW_THRESHOLD.value],
+                      map_theme['variables'][MapThemeVariable.TEXT_BOUNDS_OVERFLOW_THRESHOLD.value],
                       map_theme['variables'][MapThemeVariable.TEXT_WRAP_NAMES_LENGTH.value],
                       config[MapConfigKeys.MAP_OUTER_AREA.value],
                       map_theme['variables'][MapThemeVariable.TEXT_BB_EXPAND_PERCENT.value],
