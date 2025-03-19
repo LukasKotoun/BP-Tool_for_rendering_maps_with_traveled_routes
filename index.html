@@ -110,7 +110,9 @@
 
         // Parse the JSON response from FastAPI
         const result = await response.json();
-        token = result['token']
+        if (result['token'] != undefined){
+          token = result['token']
+        }
         // Log the result to the console
         console.log('Response:', result);
       } catch (error) {
@@ -146,7 +148,9 @@
 
         // Parse the JSON response from FastAPI
         const result = await response.json();
-        token = result['token']
+        if (result['token'] != undefined){
+          token = result['token']
+        }
         // Log the result to the console
         console.log('Response:', result);
       } catch (error) {

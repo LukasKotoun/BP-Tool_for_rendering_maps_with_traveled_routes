@@ -13,6 +13,7 @@ from modules.utils import Utils
 from modules.gpx_manager import GpxManager
 import psutil
 
+
 class TaskManager:
     def __init__(self, max_normal_tasks, max_preview_tasks, gpx_tmp_folder, gpx_crs):
         self.max_normal_tasks = max_normal_tasks
@@ -28,11 +29,11 @@ class TaskManager:
             'i', 0)
         self.running_preview_processes: ValueProxy[int] = self.manager.Value(
             'i', 0)
-
+        # use list instead of queue for better deletion performance (will need to create new front in every termiantion)
         self.normal_queue: ListProxy[Any] = self.manager.list()
         self.preview_queue = self.manager.list()
-        # need to use multiprocessing.Lock() instead of manager.Lock() 
-        # manager.lock will not free lock after process that aquire it is terminated 
+        # need to use multiprocessing.Lock() instead of manager.Lock()
+        # manager.lock will not free lock after process that aquire it is terminated
         self.shared_tasks_lock = multiprocessing.Lock()
         self.queue_lock = multiprocessing.Lock()
 
@@ -58,7 +59,7 @@ class TaskManager:
                 # Start the process directly
                 pid = self.__start_task_process(
                     task_item)
-                if(pid is None):
+                if (pid is None):
                     return ProcessingStatus.FAILED.value, None
                 with self.shared_tasks_lock:
                     self.shared_tasks[task_id] = {
@@ -107,6 +108,7 @@ class TaskManager:
 
         process.start()
         return process.pid
+
     def delete_task(self, task_id):
         """Delete a task whether it's in queue, running in paralel process or completed and clean up files if needed"""
         with self.shared_tasks_lock:
@@ -115,14 +117,14 @@ class TaskManager:
             else:
                 task_info = self.shared_tasks[task_id]
             # check if task is completed stats wont be updating
-            if(task_info[SharedDictKeys.STATUS.value] == ProcessingStatus.COMPLETED.value):
+            if (task_info[SharedDictKeys.STATUS.value] == ProcessingStatus.COMPLETED.value):
                 TaskManager._clean_task_files(
                     task_info[SharedDictKeys.FILES.value])
                 self.shared_tasks.pop(task_id)
                 return True
-        
+
         # check if task is in queue
-        if(task_info[SharedDictKeys.STATUS.value] == ProcessingStatus.IN_QUEUE.value):       
+        if (task_info[SharedDictKeys.STATUS.value] == ProcessingStatus.IN_QUEUE.value):
             queue_type = QueueType.PREVIEW if task_info[
                 SharedDictKeys.IS_PREVIEW.value] else QueueType.NORMAL
             with self.queue_lock:
@@ -130,15 +132,23 @@ class TaskManager:
                 if (queue_type == QueueType.PREVIEW):
                     for i, task in enumerate(self.preview_queue):
                         if task[TaskQueueKeys.TASK_ID.value] == task_id:
-                            self.preview_queue.remove(task)
-                            removed_from_queue = True
+                            try:
+                                del self.preview_queue[i]
+                                removed_from_queue = True
+                            except:
+                                warnings.warn(
+                                    f"Failed to delete task {task_id} from preview queue")
                             break
 
                 elif (queue_type == QueueType.NORMAL):
                     for i, task in enumerate(self.normal_queue):
                         if task[TaskQueueKeys.TASK_ID.value] == task_id:
-                            self.normal_queue.remove(task)
-                            removed_from_queue = True
+                            try:
+                                del self.normal_queue[i]
+                                removed_from_queue = True
+                            except:
+                                warnings.warn(
+                                    f"Failed to delete task {task_id} from normal queue")
                             break
             # found in queue -> delete and clean files
             if removed_from_queue:
@@ -148,21 +158,22 @@ class TaskManager:
                             self.shared_tasks[task_id][SharedDictKeys.FILES.value])
                         self.shared_tasks.pop(task_id)
                 return True
-            
+
         # task is in other state
         can_start_next = False
         queue_type = None
         # lock so that it dont terminate task if that task is using the shared_tasks dict
         with self.shared_tasks_lock:
             # check again - shared_tasks might have been updated - prevent errors in extarcting task self.shared_tasks[task_id]
-            if(task_id not in self.shared_tasks):
+            if (task_id not in self.shared_tasks):
                 return False
             task_info = self.shared_tasks[task_id]
             # check if task is running and terminate it
             if task_info[SharedDictKeys.PROCESS_RUNNING.value]:
                 # terminate running process
                 pid = task_info[SharedDictKeys.PID.value]
-                queue_type = QueueType.PREVIEW if task_info[SharedDictKeys.IS_PREVIEW.value] else QueueType.NORMAL
+                queue_type = QueueType.PREVIEW if task_info[
+                    SharedDictKeys.IS_PREVIEW.value] else QueueType.NORMAL
                 can_start_next = True
                 # need to handle carefully -> can drop whole server
                 if (pid is not None):
@@ -192,14 +203,14 @@ class TaskManager:
                                     process.kill()
                             except:
                                 warnings.warn(
-                                    f"Failed to terminate process for task {task_id} using SIGKILL")          
-            # clean files and remove task from shared_tasks if in other state           
+                                    f"Failed to terminate process for task {task_id} using SIGKILL")
+            # clean files and remove task from shared_tasks if in other state
             TaskManager._clean_task_files(
                 task_info[SharedDictKeys.FILES.value])
             self.shared_tasks.pop(task_id)
 
         # check if previous task was running so that we can try to start next task
-        if(can_start_next and queue_type is not None):
+        if (can_start_next and queue_type is not None):
             with self.queue_lock:
                 next_task = None
                 if queue_type == QueueType.NORMAL:
@@ -207,7 +218,7 @@ class TaskManager:
                     # Start new normal task
                     if self.normal_queue and self.running_normal_processes.value < self.max_normal_tasks:
                         next_task = self.normal_queue.pop(0)
-                        self.running_normal_processes.value += 1                            
+                        self.running_normal_processes.value += 1
                 else:
                     self.running_preview_processes.value -= 1
                     # Start new preview task
@@ -215,20 +226,21 @@ class TaskManager:
                         next_task = self.preview_queue.pop(0)
                         self.running_preview_processes.value += 1
                 # next task found -> start it
-                if(next_task is not None):
+                if (next_task is not None):
                     pid = self.__start_task_process(
                         next_task)
-                    if(pid is not None):
+                    if (pid is not None):
                         with self.shared_tasks_lock:
                             self.shared_tasks[next_task[TaskQueueKeys.TASK_ID.value]] = {
                                 SharedDictKeys.STATUS.value: ProcessingStatus.STARTING.value,
                                 SharedDictKeys.FILES.value: [],
                                 SharedDictKeys.PROCESS_RUNNING.value: True,
                                 SharedDictKeys.PID.value: pid,
-                                SharedDictKeys.IS_PREVIEW.value: queue_type == QueueType.PREVIEW # must be same as previous task 
+                                # must be same as previous task
+                                SharedDictKeys.IS_PREVIEW.value: queue_type == QueueType.PREVIEW
                             }
         return True
-            
+
     def clear_queues(self):
         """Clear tasks with files from queues. Cleared tasks will be removed from shared_tasks"""
         with self.queue_lock:
@@ -251,7 +263,6 @@ class TaskManager:
             self.normal_queue = []
             self.preview_queue = []
 
-            
     def delete_all_tasks(self):
         """Delete all tasks in both queues and processing"""
         self.clear_queues()
@@ -280,7 +291,7 @@ class TaskManager:
         """Get length of preview queue"""
         with self.queue_lock:
             return len(self.preview_queue)
-    
+
     @staticmethod
     def _wrapped_generate_map(config, task_id, shared_tasks, shared_tasks_lock, queue_lock, queue: ListProxy[Any], running_process_count: ValueProxy[int], max_process_count):
         try:
@@ -334,5 +345,3 @@ class TaskManager:
     def _clean_task_files(files_list):
         for file_path in files_list:
             Utils.remove_file(file_path)
-
-        
