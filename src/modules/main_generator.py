@@ -193,11 +193,8 @@ def plot_map_borders(file_id, map_area_gdf, boundary_map_area_gdf, paper_dimensi
                           color="black")
     plotter.clip()
 
-    if not os.path.exists(OUTPUT_PDF_FOLDER):
-        os.makedirs(OUTPUT_PDF_FOLDER)
-    folder = OUTPUT_PDF_FOLDER
-    if (OUTPUT_PDF_FOLDER[-1] != '/'):
-        folder += OUTPUT_PDF_FOLDER + '/'
+    folder = Utils.ensure_dir_exists(OUTPUT_PDF_FOLDER)
+        
     pdf_name = f'{folder}bounds_{file_id}.pdf'
     plotter.generate_pdf(pdf_name)
     return pdf_name
@@ -418,12 +415,8 @@ def generate_map(config: dict[MapConfigKeys, any], task_id: str, shared_dict: di
     plotter.nodes(nodes_gdf, TEXT_WRAP_NAMES_LEN)
     del nodes_gdf
 
-   
-    if not os.path.exists(OUTPUT_PDF_FOLDER):
-        os.makedirs(OUTPUT_PDF_FOLDER)
-    folder = OUTPUT_PDF_FOLDER
-    if (OUTPUT_PDF_FOLDER[-1] != '/'):
-        folder += OUTPUT_PDF_FOLDER + '/'
+    folder = Utils.ensure_dir_exists(OUTPUT_PDF_FOLDER)
+
     pdf_name = f'{folder}map_{task_id}.pdf'
 
     with lock:

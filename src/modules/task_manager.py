@@ -33,7 +33,6 @@ class TaskManager:
         self.preview_queue = self.manager.list()
         # need to use multiprocessing.Lock() instead of manager.Lock() 
         # manager.lock will not free lock after process that aquire it is terminated 
-        # self.shared_tasks_lock = self.manager.Lock()
         self.shared_tasks_lock = multiprocessing.Lock()
         self.queue_lock = multiprocessing.Lock()
 

@@ -330,7 +330,17 @@ class Utils:
         return result
 
     @staticmethod
-    def remove_file(file_path):
+    def ensure_dir_exists(dir_path: str):
+        if(dir_path is None):
+            return ""
+        if(dir_path[-1] != '/'):
+            dir_path += '/'
+        if not os.path.exists(dir_path):
+            os.makedirs(dir_path)
+        return dir_path
+    
+    @staticmethod
+    def remove_file(file_path: str):
         try:
             if os.path.exists(file_path) and os.path.isfile(file_path):
                 os.remove(file_path)

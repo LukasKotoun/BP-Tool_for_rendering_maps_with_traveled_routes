@@ -5,18 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Send Data with File</title>
   <script>
+    AREA = [{"area": "Horní vilémovice, Česko",
+    "plot": true, 'category': 0, 'width': 1}]
+    // AREA = [{'area':[[15.8096936,48.6459956], [15.8232333, 48.6460311], [15.8232550, 48.6397219], [15.8097686, 48.6397503]], "plot": false}]
+    FIT_PAPER = true
+    PAPER_DIM = {'height': 297, 'width': 210}
     data =   JSON.stringify({
-        "osm_files": ['trebic', 'cz' ],
+        "osm_files": ['cz'],
         // "map_area":[{"area": "Třebíč, Česko",
         //  "plot": false}, {"area": "Trnava, Česko", "plot":false},
         //  {"area":"Horní vilémovice, Česko", "plot": false, 'category':0}],
-        "map_area":[{"area": "Česko",
-         "plot": true, 'category': 0, 'width': 1}],
-        "map_preview_area":[{"area": "Třebíč, Česko",
-         "plot": true ,'category': 0, 'width': 1}, {"area": "Brno, Česko", "plot":true, 'category': 0, 'width': 1}],
-         "paper_dimensions":{'height': 200, 'width': 1100},
+        "map_area":AREA,
+        // "map_preview_area":[{"area": "Třebíč, Česko",
+        //  "plot": true ,'category': 0, 'width': 1}],
+         "paper_dimensions":PAPER_DIM,
         "paper_preview_dimensions": {'width': 100, 'height': 100},
-        "fit_paper_size": false,
+        "fit_paper_size": FIT_PAPER,
         "fit_paper_size_bounds_plot": false,
         "plot_bridges": false,
         "plot_tunnels": false,
@@ -33,20 +37,40 @@
         },
         'wanted_categories_and_styles_edit':{
           'nodes':{
-            'natural': {'peak':{}},
+          'place': {'city':{}, 'town':{}, 'village':{}, 'suburb':{}, 'neighbourhood':{}, 'locality':{}},
+          'natural': {'peak':{}},
+          'man_made': {'tower':{}},
+          'historic': {'castle':{}},
           },
           'ways':{
-            'highway':{
-              'primary': {},
-              'secondary': {},
-            }},
-          'areas':{},
+            'highway': {'motorway':{}, 'trunk':{}, 'primary':{}, 'secondary':{}, 'tertiary':{},
+             'motorway_link':{}, 'trunk_link':{}, 'primary_link':{}, 'secondary_link':{}, 'tertiary_link':{}, 'residential':{}, 'unclassified':{}, 'service':{},
+                    'pedestrian':{}, 'cycleway':{}, 'raceway':{}, 'steps':{}, 'footway':{}, 'track':{}, 'path':{}},
+              'railway': {'rail':{}, 'light_rail':{}, "monorail":{}, 'miniature':{}, 'subway':{}, 'funicular':{}},
+              'aeroway': {'runway':{}, 'taxiway':{}},
+              'aerialway': {'cable_car':{}, 'gondola':{}, 'chair_lift':{}, 'mixed_lift':{}, 't-bar':{}, 'j-bar':{}, 'platter':{}, 'rope_tow':{}, 'magic_carpet':{}, 'zip_line':{}, 'goods':{}},
+              'barrier': {'city_wall':{}, 'wall':{}, 'cable_barrier':{}},
+              'waterway': {'river':{}, 'canal':{}, 'stream':{}, 'drain':{}, 'ditch':{}},
+              'route': {'ferry':{}},
+          },
+          'areas':{
+              'landuse': {'farmland':{}, 'forest':{}, 'residential':{}, 'commercial':{}, 'retail':{}, 'industrial':{}, 'allotments':{}, 'meadow':{},
+                    'grass':{}, 'landfill':{}, 'cemetery':{}, 'vineyard':{}, 'orchard':{}, 'garages':{}, 'quarry':{}, 'recreation_ground':{}},
+              'leisure': {'park':{}, 'garden':{}, 'pitch':{}, 'golf_course':{}, 'playground':{}, 'sports_centre':{}, 'swimming_pool':{}},
+              'natural': {'wood':{}, 'water':{}, 'scrub':{}, 'heath':{}, 'grassland':{}, 'beach':{}, 'sand':{}},
+              'amenity': {'motorcycle_parking':{}, 'parking':{}, 'grave_yard':{}, 'school':{}, 'university':{}, 'college':{},
+               'kindergarten':{}, 'bus_station':{}, 'hospital':{}, 'clinic':{}, 'place_of_worship':{}},
+              'boundary': {'national_park':{}},
+              'building': {},
+              'aeroway': {'aerodrome':{}},
+              'highway': {'pedestrian':{}, 'footway':{}},
+          },
         },
         'styles_zoom_levels':{
-          "nodes": 5,
-          "ways": 5,
-          "areas": 5,
-          "general": 5
+          "nodes": 7,
+          "ways": 7,
+          "areas": 7,
+          "general": 7
         },
      
       })
@@ -137,10 +161,8 @@
           method: 'POST',
           
           body: JSON.stringify({
-        "map_area":[{"area": "Česko",
-        "plot": false}, {"area": "Trnava, Česko", "plot":false},
-        {"area":"Horní vilémovice, Česko", "plot": false, 'category':0}],
-        "paper_dimensions": {'width': 270, 'height': null},
+        "map_area":AREA,
+        "paper_dimensions": PAPER_DIM,
         "given_smaller_paper_dimension": false,
         "wanted_orientation": "automatic",
       }),
@@ -166,11 +188,9 @@
           method: 'POST',
     //zoom
     body: JSON.stringify({
-        "map_area":[{"area": "Třebíč, Česko",
-        "plot": false}, {"area": "Trnava, Česko", "plot":false},
-        {"area":"Horní vilémovice, Česko", "plot": false, 'category':0}],
-        "paper_dimensions": {'width': 297, 'height': 210},
-        "fit_paper_size": true,
+        "map_area":AREA,
+        "paper_dimensions":PAPER_DIM,
+        "fit_paper_size": FIT_PAPER,
       }),
       headers: {
         'Content-Type': 'application/json',

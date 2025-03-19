@@ -13,7 +13,7 @@ from typing import List, Optional, Any
 import time
 from config import *
 from common.map_enums import ProcessingStatus
-from modules.main_generator import generate_map, calc_preview, get_map_area_gdf, plot_map_borders
+from modules.main_generator import calc_preview, get_map_area_gdf, plot_map_borders
 from common.api_base_models import *
 from modules.gdf_utils import GdfUtils
 from modules.utils import Utils
@@ -132,7 +132,6 @@ def generate_map_borders(config: MapBorderConfigModel):
         headers={"Content-Disposition": f"attachment; filename=map.pdf"}
     )
 
-    
 
 
 @server_app.post("/zoom_level", response_model=ZoomLevelResponseModel)
@@ -155,7 +154,7 @@ def get_zoom_level(config: ZoomLevelConfigModel):
     map_scaling_factor = Utils.calc_map_scaling_factor(expanded_map_area_dimensions,
                                                        paper_dimensions_mm)
     zoom_level = Utils.get_zoom_level(
-        map_scaling_factor, ZOOM_MAPPING, 0.3)
+        map_scaling_factor, ZOOM_MAPPING, 0.2)
     return {"zoom_level": zoom_level}
 
 
@@ -316,7 +315,7 @@ def generate_preview_map(gpxs: Optional[List[UploadFile]] = File(None),
         MapConfigKeys.GPXS.value: gpxs_gdf,
     }
     task_status, task_id = task_queue_manager.add_task(
-        map_generator_config, task_id, QueueType.PREVIEW)
+        map_generator_config, QueueType.PREVIEW)
     
     if(task_id is None or task_status == ProcessingStatus.FAILED.value):
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Cannot start task")
