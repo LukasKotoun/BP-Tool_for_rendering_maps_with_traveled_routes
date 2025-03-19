@@ -270,7 +270,17 @@ class TaskManager:
                 return self.shared_tasks[task_id]
             else:
                 return None
-            
+
+    def get_normal_queue_length(self) -> int:
+        """Get length of normal queue"""
+        with self.queue_lock:
+            return len(self.normal_queue)
+
+    def get_preview_queue_length(self) -> int:
+        """Get length of preview queue"""
+        with self.queue_lock:
+            return len(self.preview_queue)
+    
     @staticmethod
     def _wrapped_generate_map(config, task_id, shared_tasks, shared_tasks_lock, queue_lock, queue: ListProxy[Any], running_process_count: ValueProxy[int], max_process_count):
         try:
@@ -324,3 +334,5 @@ class TaskManager:
     def _clean_task_files(files_list):
         for file_path in files_list:
             Utils.remove_file(file_path)
+
+        

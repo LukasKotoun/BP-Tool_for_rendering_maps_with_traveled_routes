@@ -43,7 +43,7 @@ server_app.add_middleware(
 
 
 
-task_queue_manager = TaskManager(max_normal_tasks=MAX_CONCURRENT_TASKS_NORMAL,
+task_manager = TaskManager(max_normal_tasks=MAX_CONCURRENT_TASKS_NORMAL,
                                          max_preview_tasks=MAX_CONCURRENT_TASKS_PREVIEW,
                                          gpx_tmp_folder=GPX_TMP_FOLDER, gpx_crs=CRS_DISPLAY)
 
@@ -161,6 +161,9 @@ def get_zoom_level(config: ZoomLevelConfigModel):
 @server_app.post("/generate-map-normal", response_model=GeneratorResponseStatusModel)
 def generate_map_normal(gpxs: Optional[List[UploadFile]] = File(None),
                         config: str = Form(...)):
+    if(task_manager.get_normal_queue_length() >= MAX_QUEUE_SIZE_NORMAL):
+        raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="Server is busy, try again later")
+        
     # validate
     try:
         config: MapGeneratorConfigModel = MapGeneratorConfigModel(
@@ -230,7 +233,7 @@ def generate_map_normal(gpxs: Optional[List[UploadFile]] = File(None),
         MapConfigKeys.STYLES_ZOOM_LEVELS.value: styles_zoom_levels,
         MapConfigKeys.GPXS_STYLES.value: gpxs_styles,
     }
-    task_status, task_id = task_queue_manager.add_task(
+    task_status, task_id = task_manager.add_task(
         map_generator_config, QueueType.NORMAL)
     if(task_id is None or task_status == ProcessingStatus.FAILED.value):
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Cannot start task")
@@ -244,6 +247,9 @@ def generate_map_normal(gpxs: Optional[List[UploadFile]] = File(None),
 @server_app.post("/generate-map-preview", response_model=GeneratorResponseStatusModel)
 def generate_preview_map(gpxs: Optional[List[UploadFile]] = File(None),
                          config: str = Form(...)):
+    if(task_manager.get_preview_queue_length() >= MAX_QUEUE_SIZE_PREVIEW):
+            raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="Server is busy, try again later")
+            
     # Validate
     try:
         config: MapGeneratorPreviewConfigModel = MapGeneratorPreviewConfigModel(
@@ -314,7 +320,7 @@ def generate_preview_map(gpxs: Optional[List[UploadFile]] = File(None),
         MapConfigKeys.GPXS_STYLES.value: gpxs_styles,
         MapConfigKeys.GPXS.value: gpxs_gdf,
     }
-    task_status, task_id = task_queue_manager.add_task(
+    task_status, task_id = task_manager.add_task(
         map_generator_config, QueueType.PREVIEW)
     
     if(task_id is None or task_status == ProcessingStatus.FAILED.value):
@@ -331,7 +337,7 @@ def get_task_status(task_id: str = Depends(decode_task_id_from_JWT)):
     """
     Get the status of a specific task from id in token.
     """
-    task_info = task_queue_manager.get_task_info(task_id)
+    task_info = task_manager.get_task_info(task_id)
     if (task_info is not None):
         return {"status": task_info[SharedDictKeys.STATUS.value]}
     else:
@@ -342,7 +348,7 @@ def terminate_task(task_id: str = Depends(decode_task_id_from_JWT)):
     """
     Terminate task from id in token.
     """
-    terminated = task_queue_manager.delete_task(task_id)
+    terminated = task_manager.delete_task(task_id)
     if (terminated):
         return {"message": "Task terminated successfully"}
     else:
@@ -351,7 +357,7 @@ def terminate_task(task_id: str = Depends(decode_task_id_from_JWT)):
    
 @server_app.get("/download_map")
 def get_map_file(task_id: str = Depends(decode_task_id_from_JWT)):
-    task_info = task_queue_manager.get_task_info(task_id)
+    task_info = task_manager.get_task_info(task_id)
     if (task_info is None):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
     if (task_info[SharedDictKeys.STATUS.value] != ProcessingStatus.COMPLETED.value):
@@ -372,7 +378,7 @@ def get_map_file(task_id: str = Depends(decode_task_id_from_JWT)):
                 while chunk := f.read(FILE_DOWNLOAD_CHUNK_SIZE):
                     yield chunk
             # delete file after successful streaming
-            delete_status = task_queue_manager.delete_task(task_id)
+            delete_status = task_manager.delete_task(task_id)
             if(not delete_status):
                 warnings.warn("Error: cannot remove task")
         except Exception as e:
@@ -392,4 +398,4 @@ def shutdown_cleanup():
     Cleanup any running processes and tmp files on server shutdown.
     """
     print("Shutting down server...")
-    task_queue_manager.delete_all_tasks()
+    task_manager.delete_all_tasks()
