@@ -1,10 +1,17 @@
 import warnings
 import matplotlib.font_manager as fm
 from matplotlib.colors import is_color_like
-
-from common.custom_types import UnwantedTags, WantedArea, WantedCategories
-from common.map_enums import Style, ColorMode, PaperSize, MapOrientation, MarkersCodes, MapThemeVariable, BaseConfigKeys, MapConfigKeys, MarkerPosition, QueueType, SharedDictKeys
+from dotenv import load_dotenv
 import datetime
+import os
+from fastapi.security import OAuth2PasswordBearer
+
+from common.custom_types import WantedAreas, WantedCategories
+from common.map_enums import Style, MapOrientation, MarkersCodes, BaseConfigKeys, MarkerPosition
+load_dotenv()
+
+SECRET_KEY = os.getenv("SECRET_KEY", "dev_key")
+OAUTH2_SCHEME = OAuth2PasswordBearer(tokenUrl="token")
 
 MAX_CONCURRENT_TASKS_NORMAL = 2
 MAX_CONCURRENT_TASKS_PREVIEW = 3
@@ -30,126 +37,126 @@ OUTPUT_PDF_FOLDER: str = '../pdfs/'
 
 GPX_TMP_FOLDER = '../gpx_files/tmp/'
 
-# AREA: WantedArea = [(-18.14143,65.68868),(-18.08538,65.68868),(-18.08538,65.67783),(-18.14143,65.67783)] #island
-# AREA: WantedArea = [(6.94872,4.84293),(6.99314,4.84293),(6.99314,4.81603),(6.94872,4.81603)] #afrika
-# AREA: WantedArea = [(13.2198495,-8.8130580),(13.2614774,-8.8139062),(13.2616062,-8.8439302),(13.2181329,-8.8424460)] #angola - mesto 5km
-# AREA: WantedArea = [{"area":[(13.2020960,-8.7766815),(13.2020370,-8.8766827),(13.3099288, -8.8775122), (13.3082471,-8.7782667)], "plot":False}] # angola- 11.85 - z14 - square
+# AREA: WantedAreas = [(-18.14143,65.68868),(-18.08538,65.68868),(-18.08538,65.67783),(-18.14143,65.67783)] #island
+# AREA: WantedAreas = [(6.94872,4.84293),(6.99314,4.84293),(6.99314,4.81603),(6.94872,4.81603)] #afrika
+# AREA: WantedAreas = [(13.2198495,-8.8130580),(13.2614774,-8.8139062),(13.2616062,-8.8439302),(13.2181329,-8.8424460)] #angola - mesto 5km
+# AREA: WantedAreas = [{"area":[(13.2020960,-8.7766815),(13.2020370,-8.8766827),(13.3099288, -8.8775122), (13.3082471,-8.7782667)], "plot":False}] # angola- 11.85 - z14 - square
 
-# AREA: WantedArea = [{"area": [(34.6899078,31.3465564),(34.9503222,31.3504081),(34.9544419, 31.2019328), (34.6962633,31.2104486)], "plot":False}] # israel
+# AREA: WantedAreas = [{"area": [(34.6899078,31.3465564),(34.9503222,31.3504081),(34.9544419, 31.2019328), (34.6962633,31.2104486)], "plot":False}] # israel
 
-# AREA: WantedArea = [{"area": [(13.0140862,-8.8831442),(13.1660763,-8.8819132),(13.1667146, -9.0826624), (13.0159664,-9.0781028)],
+# AREA: WantedAreas = [{"area": [(13.0140862,-8.8831442),(13.1660763,-8.8819132),(13.1667146, -9.0826624), (13.0159664,-9.0781028)],
 #                      "plot": False, "category": 0, "width": 1}] # angol- ostrovy test
-# AREA: WantedArea = [(15.7937669,49.251 1294),(15.7940459,49.1851468),(15.9009507, 49.1847962), (15.9003445,49.2499564)] # tr - 7.8 - z14 - square
+# AREA: WantedAreas = [(15.7937669,49.251 1294),(15.7940459,49.1851468),(15.9009507, 49.1847962), (15.9003445,49.2499564)] # tr - 7.8 - z14 - square
 
 # viden zoo - chodnik a ikony - rchod
-# AREA: WantedArea = [{'area':[(16.2985736,48.1866714), (16.3121350, 48.1865714), (16.3120706, 48.1803122), (16.2985736, 48.1803981)], "plot":False}] # zoom 10/17
+# AREA: WantedAreas = [{'area':[(16.2985736,48.1866714), (16.3121350, 48.1865714), (16.3120706, 48.1803122), (16.2985736, 48.1803981)], "plot":False}] # zoom 10/17
 
 # rakousko - cestičky -rcest
-# AREA: WantedArea = [{'area':[(16.0627306,48.0580592), (16.0897244, 48.0580592), (16.0897244, 48.0453939), (16.0626878, 48.0454514)], "plot":False}] # zoom 9/16
+# AREA: WantedAreas = [{'area':[(16.0627306,48.0580592), (16.0897244, 48.0580592), (16.0897244, 48.0453939), (16.0626878, 48.0454514)], "plot":False}] # zoom 9/16
 
 # rakousko - cestičky u koní -rkon
-# AREA: WantedArea = [{'area': [(15.9759536,48.0569747), (16.0298253, 48.0564572), (16.0299514, 48.0315206), (15.9758781, 48.0318936)], "plot":False}] # zoom 8/15
+# AREA: WantedAreas = [{'area': [(15.9759536,48.0569747), (16.0298253, 48.0564572), (16.0299514, 48.0315206), (15.9758781, 48.0318936)], "plot":False}] # zoom 8/15
 
 # rakousko - dalince konce a trunk - rtrunk
-# AREA: WantedArea = [{'area': [(16.7637897,48.6661533), (16.5724411, 48.6708094), (16.5820542, 48.7711483), (16.7701950, 48.7706958)], "plot":False}] # zoom 8/15
+# AREA: WantedAreas = [{'area': [(16.7637897,48.6661533), (16.5724411, 48.6708094), (16.5820542, 48.7711483), (16.7701950, 48.7706958)], "plot":False}] # zoom 8/15
 
 # rakousko - dalince konce a trunk - rnpark
-# AREA: WantedArea = [{'area': [(16.6840794, 47.8736964), (16.9535233, 47.8754153), (16.9468556, 47.7549778), (16.6704806, 47.7522078)], "plot":False}] # zoom 8/15
+# AREA: WantedAreas = [{'area': [(16.6840794, 47.8736964), (16.9535233, 47.8754153), (16.9468556, 47.7549778), (16.6704806, 47.7522078)], "plot":False}] # zoom 8/15
 
 # rakousko - invalidní oblast - rinvalid
-# AREA: WantedArea = [{'area': [(16.3351344, 48.2143981), (16.3379578, 48.2144222), (16.3377272, 48.2127386), (16.3351631, 48.2128781)], "plot":False}] # zoom 8/15
+# AREA: WantedAreas = [{'area': [(16.3351344, 48.2143981), (16.3379578, 48.2144222), (16.3377272, 48.2127386), (16.3351631, 48.2128781)], "plot":False}] # zoom 8/15
 
 
 # slovensko - aminety grave - skgrave
-# AREA: WantedArea = [{'area': [(17.5622753,48.2370358), (17.5805572, 48.2372431), (17.5798706, 48.2319261), (17.5622325, 48.2326694)], "plot":False}] # zoom 8/15
+# AREA: WantedAreas = [{'area': [(17.5622753,48.2370358), (17.5805572, 48.2372431), (17.5798706, 48.2319261), (17.5622325, 48.2326694)], "plot":False}] # zoom 8/15
 
 # slovensko - cesty/tunel - pathtunel -skprimlink
-# AREA: WantedArea = [{'area': [(17.0829244,48.1368075), (17.11670941, 48.1362819), (17.1167183,48.1188031), (17.0824389, 48.1203419)], "plot":False}] # zoom 8/15
+# AREA: WantedAreas = [{'area': [(17.0829244,48.1368075), (17.11670941, 48.1362819), (17.1167183,48.1188031), (17.0824389, 48.1203419)], "plot":False}] # zoom 8/15
 
 # slovensko - cesty/tunel - pathtunel -skseclink
-# AREA: WantedArea = [{'area': [(17.0684572,48.1268372), (17.1043628, 48.1272075), (17.1034186,48.1060056), (17.0688289, 48.1074958)], "plot":False}] # zoom 8/15
+# AREA: WantedAreas = [{'area': [(17.0684572,48.1268372), (17.1043628, 48.1272075), (17.1034186,48.1060056), (17.0688289, 48.1074958)], "plot":False}] # zoom 8/15
 
 # slovensko - cesty/tunel - pathtunel -skptunl
-# AREA: WantedArea = [{'area': [(16.9703950,48.2047167), ( 17.0168581, 48.2045317), (17.0169011, 48.1791842), (16.9623128, 48.1794417)], "plot":False}] # zoom 8/15
+# AREA: WantedAreas = [{'area': [(16.9703950,48.2047167), ( 17.0168581, 48.2045317), (17.0169011, 48.1791842), (16.9623128, 48.1794417)], "plot":False}] # zoom 8/15
 
 # slovensko - cyklotrasa asfalt/non asfalt- pathtunel u koní -skptunl
 
 # slovensko - lanovky - sklan
-# AREA: WantedArea = [{'area': [(18.9836906,49.2351414), (19.1019653, 49.2350294), (19.1017936, 49.1852375), (18.9838622, 49.1870325)], "plot":False}] # zoom
+# AREA: WantedAreas = [{'area': [(18.9836906,49.2351414), (19.1019653, 49.2350294), (19.1017936, 49.1852375), (18.9838622, 49.1870325)], "plot":False}] # zoom
 
 # slovensko - letiste - sklet
-# AREA: WantedArea = [{'area': [(17.1374492,48.1955133), (17.2557239, 48.1951700), (17.2557239, 48.1444531), (17.1377925, 48.1452547)], "plot":False}] # zoom
+# AREA: WantedAreas = [{'area': [(17.1374492,48.1955133), (17.2557239, 48.1951700), (17.2557239, 48.1444531), (17.1377925, 48.1452547)], "plot":False}] # zoom
 
 # slovensko - bratislava centrum  - skbr
-# AREA: WantedArea = [{'area': [(17.0797297, 48.1649183), (17.1410558, 48.1642600), (17.1413133, 48.1383769), (17.0762106, 48.1384056)], "plot": False}]  # zoom
+# AREA: WantedAreas = [{'area': [(17.0797297, 48.1649183), (17.1410558, 48.1642600), (17.1413133, 48.1383769), (17.0762106, 48.1384056)], "plot": False}]  # zoom
 
 # slovensko - voj prostor  - skvoj
-# AREA: WantedArea = [{'area': [(17.0325058,48.6691606), (17.6252633, 48.6856314), (17.6225169, 48.1661969), (17.0031625, 48.1808503)], "plot":False}] # zoom
+# AREA: WantedAreas = [{'area': [(17.0325058,48.6691606), (17.6252633, 48.6856314), (17.6225169, 48.1661969), (17.0031625, 48.1808503)], "plot":False}] # zoom
 
 # slovensko - bratislava nakup a landuse others  - sknak
-# AREA: WantedArea = [{'area': [(16.9756656,48.1968728), (16.9761267, 48.2213817), (17.0408431, 48.2214961), (17.0408431, 48.1953561)], "plot":False}] # zoom
+# AREA: WantedAreas = [{'area': [(16.9756656,48.1968728), (16.9761267, 48.2213817), (17.0408431, 48.2214961), (17.0408431, 48.1953561)], "plot":False}] # zoom
 
 # slovensko - bratislava area way  - skareaway
-# AREA: WantedArea = [{'area': [(17.1848258,48.1529047), (17.2031475, 48.1531017), (17.2038558, 48.1396642), (17.1842006, 48.1394925)], "plot":False}] # zoom
+# AREA: WantedAreas = [{'area': [(17.1848258,48.1529047), (17.2031475, 48.1531017), (17.2038558, 48.1396642), (17.1842006, 48.1394925)], "plot":False}] # zoom
 
 # slovensko - potok, reka, kanal, silnice 1,2,3 a dalnice, zelecnice, residental,
 # service, footway
 # industrial zona - skways
-# AREA: WantedArea = [{'area': [(16.8529242,48.4770300), (17.2031475, 48.4733883), (17.1986503, 48.3386914), (16.8525808, 48.3382350)], "plot":False}] # zoom
+# AREA: WantedAreas = [{'area': [(16.8529242,48.4770300), (17.2031475, 48.4733883), (17.1986503, 48.3386914), (16.8525808, 48.3382350)], "plot":False}] # zoom
 
 
 # nemecko - funicular tunnel a railway tunnel - gefun
-# AREA: WantedArea = [{'area': [(8.6807722,49.4195719), (8.7399353, 49.4195644), (8.7400211, 49.3951311), (8.6807550, 49.3952708)], "plot":False}] # zoom
+# AREA: WantedAreas = [{'area': [(8.6807722,49.4195719), (8.7399353, 49.4195644), (8.7400211, 49.3951311), (8.6807550, 49.3952708)], "plot":False}] # zoom
 
 
 # rozhledna - baliny
-# AREA: WantedArea = [{"area": "Baliny, Česko", "plot": True, "category": 0, "width": None}]
+# AREA: WantedAreas = [{"area": "Baliny, Česko", "plot": True, "category": 0, "width": None}]
 
 
 # zricenina - rokstejn - Brtnice
-# AREA: WantedArea = [{"area": "Brtnice, Česko", "plot": True, "category": 0, "width": None}]
+# AREA: WantedAreas = [{"area": "Brtnice, Česko", "plot": True, "category": 0, "width": None}]
 
 
 # zoom testing
-# AREA: WantedArea = [{'area':[(15.8096936,48.6459956), (15.8232333, 48.6460311), (15.8232550, 48.6397219), (15.8097686, 48.6397503)], "plot": False}] # zoom 10/17 - 0.19673458447026707
-# AREA: WantedArea = [{'area':[(15.8036264,48.6490436), (15.8307706, 48.6489869), (15.8307706, 48.6363825), (15.8035836, 48.6365244)], "plot": False}] # zoom 9/16 - 0.0981350054744773
-# AREA: WantedArea = [{'area':[(15.8408317, 48.6556897), (15.7863853, 48.6557486), (15.7865139, 48.6306536), (15.8407161, 48.6304267)], "plot": False}] # zoom 8/15 - 0.049002255315964124
-# AREA: WantedArea = [{'area':[(15.7568897,48.6700053), (15.8648558, 48.6704314), (15.8651992, 48.6197892), (15.7563658, 48.6202431)], "plot": False}] # zoom 7/14 - 0.024514500087610937
-# AREA: WantedArea = [{'area':[(15.7034756,48.6941575), (15.9206889, 48.6941186), (15.9198775, 48.5926164), (15.7030222, 48.5936264)], "plot": False}] # zoom 6/13 - 0.012257255675006467
-# AREA: WantedArea = [{'area':[(15.5986414,48.7535425), (16.0311167, 48.7533311), (16.0307733, 48.5528361), (15.5975000, 48.5544269)], "plot": False}] # zoom 5/12 - 0.0061528912374338475
-# AREA: WantedArea = [{'area':[(15.3856592,48.8443469), (16.2499850, 48.8453725), (16.2499850, 48.4415864), (15.3854983, 48.4465967)], "plot": False}] # zoom 4/11 - 0.0030862202898378687
-# AREA: WantedArea = [{'area':[(14.8355758,49.0061161), (16.5771717,49.0046311), (16.5799181, 48.2009656), (14.8385853, 48.2055419)], "plot": False}] # zoom 3/10 - 0.001529514243755352
-# AREA: WantedArea = [{'area':[(14.0269703,49.4851617), (17.5151294,49.4833772), (17.5096361,47.8731517), (14.0297167, 47.8786783], "plot": False}] # zoom 2/9 - 0.000764872334474359
-# AREA: WantedArea = [{'area':[(12.4551956,50.4569714), (19.4047778,50.4934189), (19.3992847, 47.2727942), (12.4284594, 47.3100528)], "plot": False}] # zoom 1/8 - 0.0003824361562733402
+# AREA: WantedAreas = [{'area':[(15.8096936,48.6459956), (15.8232333, 48.6460311), (15.8232550, 48.6397219), (15.8097686, 48.6397503)], "plot": False}] # zoom 10/17 - 0.19673458447026707
+# AREA: WantedAreas = [{'area':[(15.8036264,48.6490436), (15.8307706, 48.6489869), (15.8307706, 48.6363825), (15.8035836, 48.6365244)], "plot": False}] # zoom 9/16 - 0.0981350054744773
+# AREA: WantedAreas = [{'area':[(15.8408317, 48.6556897), (15.7863853, 48.6557486), (15.7865139, 48.6306536), (15.8407161, 48.6304267)], "plot": False}] # zoom 8/15 - 0.049002255315964124
+# AREA: WantedAreas = [{'area':[(15.7568897,48.6700053), (15.8648558, 48.6704314), (15.8651992, 48.6197892), (15.7563658, 48.6202431)], "plot": False}] # zoom 7/14 - 0.024514500087610937
+# AREA: WantedAreas = [{'area':[(15.7034756,48.6941575), (15.9206889, 48.6941186), (15.9198775, 48.5926164), (15.7030222, 48.5936264)], "plot": False}] # zoom 6/13 - 0.012257255675006467
+# AREA: WantedAreas = [{'area':[(15.5986414,48.7535425), (16.0311167, 48.7533311), (16.0307733, 48.5528361), (15.5975000, 48.5544269)], "plot": False}] # zoom 5/12 - 0.0061528912374338475
+# AREA: WantedAreas = [{'area':[(15.3856592,48.8443469), (16.2499850, 48.8453725), (16.2499850, 48.4415864), (15.3854983, 48.4465967)], "plot": False}] # zoom 4/11 - 0.0030862202898378687
+# AREA: WantedAreas = [{'area':[(14.8355758,49.0061161), (16.5771717,49.0046311), (16.5799181, 48.2009656), (14.8385853, 48.2055419)], "plot": False}] # zoom 3/10 - 0.001529514243755352
+# AREA: WantedAreas = [{'area':[(14.0269703,49.4851617), (17.5151294,49.4833772), (17.5096361,47.8731517), (14.0297167, 47.8786783], "plot": False}] # zoom 2/9 - 0.000764872334474359
+# AREA: WantedAreas = [{'area':[(12.4551956,50.4569714), (19.4047778,50.4934189), (19.3992847, 47.2727942), (12.4284594, 47.3100528)], "plot": False}] # zoom 1/8 - 0.0003824361562733402
 
 # AREA = []
-# AREA: WantedArea = [{"area": "Česko", "plot": True, "category": 0, "width": 1}]
+# AREA: WantedAreas = [{"area": "Česko", "plot": True, "category": 0, "width": 1}]
 
-# AREA: WantedArea = [{"area": "4", "plot": True, "category": 5, "width": None}]
-# AREA: WantedArea = [{"area": "Baliny, Česko", "plot": True, "category": 0, "width": None}]
-# AREA: WantedArea =[{"area": "Jihomoravský kraj, Česko", "plot": True, "category": 2, "width": 1},
+# AREA: WantedAreas = [{"area": "4", "plot": True, "category": 5, "width": None}]
+# AREA: WantedAreas = [{"area": "Baliny, Česko", "plot": True, "category": 0, "width": None}]
+# AREA: WantedAreas =[{"area": "Jihomoravský kraj, Česko", "plot": True, "category": 2, "width": 1},
 #                     {"area": "Praha, Česko", "plot": True, "category": 1, "width": 1},
 #                     {"area": "Trebic, Česko", "plot": True, "category": 1, "width": 1}]
-# AREA: WantedArea = [{"area": "Třebíč, Česko", "plot": True, "category": 2, "width": 1},
+# AREA: WantedAreas = [{"area": "Třebíč, Česko", "plot": True, "category": 2, "width": 1},
 #                     {"area": "Brno, Česko", "plot": True, "category": 1, "width": 1}]
 
-# AREA: WantedArea = [{"area": "Třebíč, Česko", "plot": False, "category": 1, "width": 1},
+# AREA: WantedAreas = [{"area": "Třebíč, Česko", "plot": False, "category": 1, "width": 1},
 #                     {"area": "Trnava, Vysočina, Česko", "plot": False, "category": 1, "width": 1},
 #                     {"area": "Horní Vilémovice, Česko", "plot": False, "category": 1, "width": 1}]
-# AREA: WantedArea = [{"area": "Jaroměřice nad rokytnou, Česko", "plot": True, "category": 0, "width": 1}]
-# AREA: WantedArea = [{"area": "Jihomoravský kraj, Česko", "plot": True, "category": 1, "width": 1},
+# AREA: WantedAreas = [{"area": "Jaroměřice nad rokytnou, Česko", "plot": True, "category": 0, "width": 1}]
+# AREA: WantedAreas = [{"area": "Jihomoravský kraj, Česko", "plot": True, "category": 1, "width": 1},
 #                     {"area": "Kraj Vysočina, Česko", "plot": True, "category": 1, "width": 1},
 #                     {"area": "Třebíč, Česko", "plot": False, "category": 0, "width": 1}]
-# AREA: WantedArea = [{"area": "Německo", "plot": True, "category": 1, "width": 1},
+# AREA: WantedAreas = [{"area": "Německo", "plot": True, "category": 1, "width": 1},
 # {"area": "Lucembursko", "plot": True, "category": 2, "width": 1}]
 
-# AREA: WantedArea = ["Kraj Vysočina, Česko"]
-# AREA: WantedArea = ["Jihomoravský kraj, Česko"]
-# AREA: WantedArea = ["Česko"]
-# AREA: WantedArea = ["Okřešice, Česko"]
-# AREA: WantedArea = ["Třebíč, Česko"]
-# AREA: WantedArea = ["Okres Třebíč, Česko", "Třebíč, Česko", "Okres Jihlava, Česko"]
-# AREA: WantedArea = ["Texas, USA"]
+# AREA: WantedAreas = ["Kraj Vysočina, Česko"]
+# AREA: WantedAreas = ["Jihomoravský kraj, Česko"]
+# AREA: WantedAreas = ["Česko"]
+# AREA: WantedAreas = ["Okřešice, Česko"]
+# AREA: WantedAreas = ["Třebíč, Česko"]
+# AREA: WantedAreas = ["Okres Třebíč, Česko", "Třebíč, Česko", "Okres Jihlava, Česko"]
+# AREA: WantedAreas = ["Texas, USA"]
 
 # set own dimensions. If one is left as 'None' it will be automaticaly calculated using area size
 # PAPER_DIMENSIONS = (1100, None)
@@ -159,10 +166,6 @@ GPX_TMP_FOLDER = '../gpx_files/tmp/'
 
 
 
-# text general
-TEXT_WRAP_NAMES_LEN = 15  # len or 0/None if not wrap (15 default)
-TEXT_BOUNDS_OVERFLOW_THRESHOLD = 0.97
-# if allow is false set threashold (0-1) how much of text must be inside
 
 
 # is calc as 2.5 * scale * 10 where scale is mm:m so scale * 10 is 1 cm

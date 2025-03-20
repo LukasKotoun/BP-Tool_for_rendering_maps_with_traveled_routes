@@ -1,4 +1,5 @@
 import warnings
+
 import matplotlib
 matplotlib.use("Agg") # use non-interactive backend - for processing in not main process
 import matplotlib.pyplot as plt
@@ -7,10 +8,9 @@ from matplotlib.lines import Line2D
 from matplotlib.text import Text, Annotation
 from matplotlib.transforms import Bbox
 import pandas as pd
-from geopandas import GeoDataFrame, GeoSeries
+from geopandas import GeoDataFrame
 from shapely import MultiPolygon
-from shapely.geometry import Point, LineString, MultiLineString, Polygon
-from matplotlib.patheffects import withSimplePatchShadow
+from shapely.geometry import  LineString, MultiLineString, Polygon
 
 from common.custom_types import DimensionsTuple, MarkerRow, MarkerOneAnotationRow, MarkerTwoAnotationRow, TextRow
 from common.map_enums import Style, MinPlot, TextPositions, WorldSides, MarkerPosition
@@ -407,7 +407,7 @@ class Plotter:
                 row, store_bbox, text_zorder=text_zorder, marker_zorder=marker_zorder)
 
     @time_measurement("nodePlot")
-    def nodes(self, nodes_gdf: GeoDataFrame, wrap_len: int | None):
+    def nodes(self, nodes_gdf: GeoDataFrame):
         if (nodes_gdf.empty):
             return
         # groups sorted from biggest to smallest zindex

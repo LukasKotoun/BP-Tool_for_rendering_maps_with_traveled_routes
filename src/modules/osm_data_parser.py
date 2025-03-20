@@ -1,11 +1,9 @@
-import warnings
-
 import osmium
 import geopandas as gpd
 from osmium.osm.types import TagList, Node, Way, Area
 
 from modules.gdf_utils import GdfUtils
-from common.custom_types import WantedCategories, UnwantedTags
+from common.custom_types import WantedCategories
 from common.common_helpers import time_measurement
 
 class OsmDataParser():

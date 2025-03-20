@@ -5,8 +5,8 @@ from geopandas import GeoDataFrame
 from modules.gdf_utils import GdfUtils
 
 from modules.utils import Utils
-from common.map_enums import Style, ColorMode
-from common.custom_types import FeaturesCategoriesStyles, WantedCategories, FeatureStyles, FeaturesCategoryStyle, ElementStyles
+from common.map_enums import Style
+from common.custom_types import ElementStyles
 
 
 class StyleManager:

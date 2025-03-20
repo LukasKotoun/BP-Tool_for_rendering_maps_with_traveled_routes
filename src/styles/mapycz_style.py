@@ -1,4 +1,4 @@
-from common.custom_types import ElementStyles, FeatureStyles
+from common.custom_types import ElementStyles
 from common.map_enums import Style, TextPositions, MinPlot, MarkerPosition, MarkersCodes, LineCupStyles, MapThemeVariable, BaseConfigKeys
 from config import font_awesome_prop, material_design_prop, BASE_OSM_CONFIG
 from modules.utils import Utils
@@ -11,7 +11,7 @@ Ploting is turned off by setting color to None with few exceptions.
 # ------------styles--------------
 
 # (filer for split from areas, filter for ploting)
-AREAS_OVER_WAYS_FILTER = ([{'highway': ['pedestrian', 'footway']}, {'amenity': ['parking', 'motorcycle_parking']}],
+AREAS_WITH_WAYS_FILTER = ([{'highway': ['pedestrian', 'footway']}, {'amenity': ['parking', 'motorcycle_parking']}],
                           [{'highway': ['pedestrian', 'footway'], 'area': 'yes'},
                            {'highway': ['pedestrian', 'footway'],
                                'place': ['square']},
@@ -779,7 +779,6 @@ AREAS_STYLES_SCALE = [Style.WIDTH.value]
 
 
 landuse_styles_area: ElementStyles = [
-
     ({'landuse': ['vineyard', 'orchard']}, {Style.COLOR.value: '#e1ebbe'}),
 
     ({'landuse': ['basin', 'salt_pond']}, {Style.COLOR.value: WATER_COLOR_ZOOM_1_7},
@@ -933,7 +932,8 @@ AREAS_STYLES: ElementStyles = [
 ]
 
 MAPYCZ_BASE_OSM_CONFIG = BASE_OSM_CONFIG.copy()
-# check what to do with gpx styles
+# MAPYCZ_BASE_OSM_CONFIG.update({#     "variables": {}) Can overwrite base config for specific map style
+
 MAPYCZ_STYLE: dict[str, dict[str, any]] = {
     "variables": {
         MapThemeVariable.GPXS_STYLES_SCALE.value: GPXS_STYLES_SCALE,
@@ -942,7 +942,7 @@ MAPYCZ_STYLE: dict[str, dict[str, any]] = {
         MapThemeVariable.AREAS_STYLES_SCALE.value: AREAS_STYLES_SCALE,
         MapThemeVariable.WATER_COLOR.value: WATER_COLOR,
         MapThemeVariable.LAND_COLOR.value: LAND_COLOR,
-        MapThemeVariable.AREAS_OVER_WAYS_FILTER.value: AREAS_OVER_WAYS_FILTER,
+        MapThemeVariable.AREAS_WITH_WAYS_FILTER.value: AREAS_WITH_WAYS_FILTER,
         MapThemeVariable.TEXT_BB_EXPAND_PERCENT.value: TEXT_EXPAND_PERCENT,
         MapThemeVariable.MARKER_BB_EXPAND_PERCENT.value: MARKER_EXPAND_PERCENT,
         MapThemeVariable.TEXT_BOUNDS_OVERFLOW_THRESHOLD.value: TEXT_BOUNDS_OVERFLOW_THRESHOLD,

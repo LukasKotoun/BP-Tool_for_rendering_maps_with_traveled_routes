@@ -1,36 +1,22 @@
-import warnings
-
-from fastapi import FastAPI, File, UploadFile, Form, HTTPException, status, Depends, Response
-from multiprocessing.managers import DictProxy
+import os
 import multiprocessing
+import json
+import warnings
+from fastapi import FastAPI, File, UploadFile, Form, HTTPException, status, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.security import OAuth2PasswordBearer
 from fastapi.responses import StreamingResponse
 from uuid_extensions import uuid7str
-
-import json
 from typing import List, Optional, Any
-import time
+
 from config import *
-from common.map_enums import ProcessingStatus
-from modules.main_generator import calc_preview, get_map_area_gdf, plot_map_borders
 from common.api_base_models import *
+from common.map_enums import MapConfigKeys, QueueType, SharedDictKeys, ProcessingStatus
+from modules.main_generator import calc_preview, get_map_area_gdf, plot_map_borders
 from modules.gdf_utils import GdfUtils
 from modules.utils import Utils
-from modules.osm_data_preprocessor import OsmDataPreprocessor
-from modules.osm_data_parser import OsmDataParser
-from modules.style_assigner import StyleManager
 from modules.gpx_manager import GpxManager
 from modules.received_structure_processor import ReceivedStructureProcessor
 from modules.task_manager import TaskManager
-from multiprocessing import Lock
-import os
-
-from dotenv import load_dotenv
-load_dotenv()
-
-SECRET_KEY = os.getenv("SECRET_KEY", "dev_key")
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 server_app = FastAPI()
 server_app.add_middleware(
@@ -41,14 +27,12 @@ server_app.add_middleware(
     allow_headers=["*"],
 )
 
-
-
 task_manager = TaskManager(max_normal_tasks=MAX_CONCURRENT_TASKS_NORMAL,
                                          max_preview_tasks=MAX_CONCURRENT_TASKS_PREVIEW,
-                                         gpx_tmp_folder=GPX_TMP_FOLDER, gpx_crs=CRS_DISPLAY)
+                                         gpx_tmp_folder=GPX_TMP_FOLDER)
 
 # endpoints helpers
-def decode_task_id_from_JWT(token: str = Depends(oauth2_scheme)):
+def decode_task_id_from_JWT(token: str = Depends(OAUTH2_SCHEME)):
     payload = Utils.decode_jwt(token, JWT_ALGORITHM, SECRET_KEY)
     task_id = payload.get("task_id")
     if task_id is None:
@@ -234,7 +218,7 @@ def generate_map_normal(gpxs: Optional[List[UploadFile]] = File(None),
         MapConfigKeys.GPXS_STYLES.value: gpxs_styles,
     }
     task_status, task_id = task_manager.add_task(
-        map_generator_config, QueueType.NORMAL)
+        map_generator_config, QueueType.NORMAL.value)
     if(task_id is None or task_status == ProcessingStatus.FAILED.value):
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Cannot start task")
         
@@ -321,7 +305,7 @@ def generate_preview_map(gpxs: Optional[List[UploadFile]] = File(None),
         MapConfigKeys.GPXS.value: gpxs_gdf,
     }
     task_status, task_id = task_manager.add_task(
-        map_generator_config, QueueType.PREVIEW)
+        map_generator_config, QueueType.PREVIEW.value)
     
     if(task_id is None or task_status == ProcessingStatus.FAILED.value):
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Cannot start task")

@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from typing import Any, Dict, List, Optional
-from fastapi import FastAPI, File, UploadFile
+
 from common.map_enums import MapOrientation
 
 

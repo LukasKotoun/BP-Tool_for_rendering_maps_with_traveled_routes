@@ -1,21 +1,20 @@
 import warnings
 
+import pandas as pd
 import geopandas as gpd
 from geopandas import GeoDataFrame
-import pandas as pd
-import osmnx as ox
 import numpy as np
-from shapely.geometry import Polygon, MultiLineString, LineString, Point
+import osmnx as ox
 from osmium import FileProcessor
+from shapely.geometry import Polygon, MultiLineString, LineString, Point
 from shapely.ops import split
 from scipy.spatial import cKDTree
 
-from modules.utils import Utils
 from config import CRS_DISPLAY
+from modules.utils import Utils
 from modules.geom_utils import GeomUtils
 from common.map_enums import WorldSides, Style, MinPlot
-from common.custom_types import BoundsDict, DimensionsTuple, WantedAreas, RowsConditions, RowsConditionsAND, WantedArea
-from common.common_helpers import time_measurement
+from common.custom_types import BoundsDict, DimensionsTuple, WantedAreas, RowsConditions, RowsConditionsAND
 
 
 
@@ -313,7 +312,6 @@ class GdfUtils:
             else:
                 gdf[column] = value
 
-    @time_measurement("mergeLines")
     @staticmethod
     def merge_lines_gdf(gdf: GeoDataFrame, columns_ignore: list[str | Style] = []) -> GeoDataFrame:
         """Merge lines in GeoDataFrame to one line if they have same values in columns (except columns in columns_ignore).
@@ -518,8 +516,7 @@ class GdfUtils:
         return GdfUtils.return_filtered(gdf, gdf.geom_type.isin(["Polygon", "MultiPolygon"]), compl=compl, neg=neg)
 
     @staticmethod
-    @time_measurement("filter")
-    def check_filter_nodes_min_req(nodes_gdf: GeoDataFrame) -> GeoDataFrame:
+    def filter_nodes_min_req(nodes_gdf: GeoDataFrame) -> GeoDataFrame:
         nodes_gdf = GdfUtils.filter_rows(nodes_gdf, [{Style.MARKER.value: ''},
                                                      {Style.TEXT1.value: ''},
                                                      {Style.TEXT2.value: ''}])
@@ -562,7 +559,6 @@ class GdfUtils:
         return gdf.groupby(group_cols, dropna=dropna, observed=True, sort=sort)
 
     @staticmethod
-    @time_measurement("prominence")
     def filter_peaks(nodes_gdf: GeoDataFrame, radius: float):
         """
         Filter only most significant peaks in given radius.
@@ -593,20 +589,20 @@ class GdfUtils:
         # Build a spatial tree for efficient neighbor lookup
         tree = cKDTree(coords)
 
-        # Boolean array to mark whether each peak is prominent
-        is_prominent = pd.Series(index=peaks.index, dtype=bool)
+        # Boolean array to mark whether each peak is important
+        is_important = pd.Series(index=peaks.index, dtype=bool)
         # For each peak, query neighbors within the specified radius
         for point_i, (coord, elev) in enumerate(zip(coords, elevations)):
-            # Find indices of nearby peaks - make bigger until there are some peaks
+            # Find indices of nearby peaks
             nearby_point_i = tree.query_ball_point(coord, r=radius)
             nearby_point_i.remove(point_i)
-            # Check for any higher peak with a small elevation gap
+            # Check for any higher peak
             for nearby_point in nearby_point_i:
                 if elevations[nearby_point] > elev:
-                    is_prominent.at[point_i] = False
+                    is_important.at[point_i] = False
                     break
 
-        peaks = peaks[is_prominent]
+        peaks = peaks[is_important]
         return GdfUtils.combine_gdfs([peaks, rest])
 
     @staticmethod

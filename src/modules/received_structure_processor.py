@@ -1,10 +1,8 @@
+from typing import Dict, List, Union, Any, Callable
+
 from common.map_enums import Style
-from common.custom_types import RowsConditions, RowsConditionsAND
-from typing import Dict, List, Union, Any, Optional, Callable
-from common.api_base_models import PaperDimensionsModel, ZoomLevelsModel
-
-# todo add functions to check for color and linestyle validity
-
+from common.custom_types import RowsConditionsAND
+from common.api_base_models import PaperDimensionsModel
 
 class ReceivedStructureProcessor:
 
@@ -302,7 +300,7 @@ class ReceivedStructureProcessor:
         return orientation
 
     @staticmethod
-    def validate_zoom_levels(data: dict, level_validation: dict[str, tuple[type, bool, Callable]]) -> bool:
+    def validate_zoom_levels(data: dict[str, int], level_validation: dict[str, tuple[type, bool, Callable]]) -> bool:
         if (not ReceivedStructureProcessor.check_dict_values_and_types(data, level_validation)):
             raise ValueError(f"Invalid zoom level")
         return True

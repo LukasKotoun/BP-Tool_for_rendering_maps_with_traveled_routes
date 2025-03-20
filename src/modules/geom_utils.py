@@ -1,14 +1,12 @@
 import math
 
 import numpy as np
-import shapely.geometry as sg
 from shapely.geometry import Point, LineString, MultiLineString, Polygon, MultiPolygon, GeometryCollection
 from shapely.ops import unary_union, linemerge
 from pyproj import Geod
 
 from common.map_enums import WorldSides
-from common.custom_types import BoundsDict, DimensionsTuple
-from common.common_helpers import time_measurement
+from common.custom_types import BoundsDict
 class GeomUtils:
     
     @staticmethod

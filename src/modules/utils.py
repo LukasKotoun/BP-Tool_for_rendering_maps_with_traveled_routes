@@ -1,24 +1,19 @@
-import math
+import os
 import warnings
+import math
 import jwt
 import rtree
 import textwrap
 import pandas as pd
-import os
-from fastapi import HTTPException, status, Depends
+from fastapi import HTTPException, status
 import datetime
 from shapely import geometry
 from shapely.geometry import Point
 from matplotlib.transforms import Bbox
-from fastapi.security import OAuth2PasswordBearer
 
 from modules.geom_utils import GeomUtils
-from common.custom_types import DimensionsTuple, OptDimensionsTuple, BoundsDict, FeaturesCategoryStyle
-from common.map_enums import Style, MapOrientation, PaperSize, WorldSides
-
-from common.common_helpers import time_measurement
-
-
+from common.custom_types import DimensionsTuple, OptDimensionsTuple, BoundsDict
+from common.map_enums import MapOrientation, WorldSides
 
 
 class Utils:
@@ -336,7 +331,7 @@ class Utils:
         if(dir_path[-1] != '/'):
             dir_path += '/'
         if not os.path.exists(dir_path):
-            os.makedirs(dir_path)
+            os.makedirs(dir_path, exist_ok=True)
         return dir_path
     
     @staticmethod
@@ -346,7 +341,13 @@ class Utils:
                 os.remove(file_path)
         except Exception as e:
             warnings.warn(f"Error cleaning up file {file_path}: {str(e)}")
-
+            
+    @staticmethod
+    def remove_files(files_list: list[str]):
+        """Delete files in list"""
+        for file_path in files_list:
+            Utils.remove_file(file_path)
+            
     @staticmethod
     def extract_original_name(file_name, task_id):  # -> Any:
         prefix = task_id + '_'
