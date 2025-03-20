@@ -5,8 +5,8 @@ from geopandas import GeoDataFrame
 from modules.gdf_utils import GdfUtils
 
 from modules.utils import Utils
-from common.map_enums import Style, ColorMode
-from common.custom_types import FeaturesCategoriesStyles, WantedCategories, FeatureStyles, FeaturesCategoryStyle, ElementStyles
+from common.map_enums import Style
+from common.custom_types import ElementStyles
 
 
 class StyleManager:
@@ -86,6 +86,8 @@ class StyleManager:
     @staticmethod
     def scale_styles(all_styles: ElementStyles, styles_to_scale: list[str], map_scaling_factor: float):
         styles_to_scale = set(styles_to_scale)
+        if(not styles_to_scale):
+            return
         for filter, styles_dict in all_styles:
             for key in styles_dict.keys() & styles_to_scale:
                 styles_dict[key] *= map_scaling_factor

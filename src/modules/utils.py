@@ -1,23 +1,25 @@
+import os
+import warnings
 import math
-
+import jwt
 import rtree
 import textwrap
 import pandas as pd
+from fastapi import HTTPException, status
+import datetime
 from shapely import geometry
 from shapely.geometry import Point
 from matplotlib.transforms import Bbox
 
 from modules.geom_utils import GeomUtils
-from common.custom_types import DimensionsTuple, OptDimensionsTuple, BoundsDict, FeaturesCategoryStyle
-from common.map_enums import Style, MapOrientation, PaperSize, WorldSides
-
-from common.common_helpers import time_measurement
+from common.custom_types import DimensionsTuple, OptDimensionsTuple, BoundsDict
+from common.map_enums import MapOrientation, WorldSides
 
 
 class Utils:
     @staticmethod
     def set_orientation(tuple: DimensionsTuple, wanted_orientation: MapOrientation) -> DimensionsTuple:
-        if (wanted_orientation == MapOrientation.LANDSCAPE):
+        if (wanted_orientation == MapOrientation.LANDSCAPE.value):
             return tuple if tuple[0] > tuple[1] else tuple[::-1]
         # portrait
         return tuple if tuple[0] < tuple[1] else tuple[::-1]
@@ -29,12 +31,12 @@ class Utils:
             # given paper size is smaller get map smaller side (coresponding size)
             # if map orientation is landscape smaller size is height
             coresponding_map_side: float = map_dimensions[
-                1] if map_orientaion == MapOrientation.LANDSCAPE else map_dimensions[0]
+                1] if map_orientaion == MapOrientation.LANDSCAPE.value else map_dimensions[0]
         else:
             # given paper size is bigger get map bigger side (coresponding size)
             # if map orientation is landscape bigger size is width
             coresponding_map_side: float = map_dimensions[
-                0] if map_orientaion == MapOrientation.LANDSCAPE else map_dimensions[1]
+                0] if map_orientaion == MapOrientation.LANDSCAPE.value else map_dimensions[1]
 
         other_map_side: float = map_dimensions[1] if math.isclose(
             coresponding_map_side, map_dimensions[0]) else map_dimensions[0]
@@ -49,13 +51,13 @@ class Utils:
 
     @staticmethod
     def adjust_paper_dimensions(map_dimensions: DimensionsTuple,
-                                paper_dimensions: OptDimensionsTuple = PaperSize.A4.dimensions,
+                                paper_dimensions: OptDimensionsTuple,
                                 given_smaller_paper_side: bool = True,
-                                wanted_orientation=MapOrientation.AUTOMATIC) -> DimensionsTuple:
+                                wanted_orientation=MapOrientation.AUTOMATIC.value) -> DimensionsTuple:
         if map_dimensions[0] >= map_dimensions[1]:
-            map_orientaion: MapOrientation = MapOrientation.LANDSCAPE
+            map_orientaion: MapOrientation = MapOrientation.LANDSCAPE.value
         else:
-            map_orientaion: MapOrientation = MapOrientation.PORTRAIT
+            map_orientaion: MapOrientation = MapOrientation.PORTRAIT.value
 
         if (paper_dimensions.count(None) == 1):
             paper_dimensions = Utils.resolve_paper_dimensions(
@@ -63,50 +65,13 @@ class Utils:
         elif (paper_dimensions.count(None) > 1):
             raise ValueError("Only one paper dimension can be None")
 
-        if (wanted_orientation in [MapOrientation.LANDSCAPE, MapOrientation.PORTRAIT]):
+        if (wanted_orientation in [MapOrientation.LANDSCAPE.value, MapOrientation.PORTRAIT.value]):
             paper_dimensions = Utils.set_orientation(
                 paper_dimensions, wanted_orientation)
         else:
             paper_dimensions = Utils.set_orientation(
                 paper_dimensions, map_orientaion)
         return paper_dimensions
-
-    @staticmethod
-    def calc_zoom_for_smaller_area(bigger_area_dim: DimensionsTuple, bigger_area_pdf_dim: DimensionsTuple,
-                                   smaller_area_dim: DimensionsTuple,
-                                   smaller_area_pdf_dim: DimensionsTuple) -> DimensionsTuple:
-        """Calculate ares ratio relative to pdf size coresponding to areas.
-
-            Calculate the ratio of width and length between the smaller and larger area
-            based on their ratio to the corresponding dimensions of the PDF to which they are to be rendered.
-            Useful for calculcating how should be smaller area in preview zoomed 
-
-        Args:
-            bigger_area_dim (DimensionsTuple): (width, height)
-            bigger_area_pdf_dim (DimensionsTuple): (width, height)
-            smaller_area_dim (DimensionsTuple): (width, height)
-            smaller_area_pdf_dim (DimensionsTuple): (width, height)
-
-        Returns:
-            DimensionsTuple: relative ratio area dimension (width, height) 
-            if is <1 bigger area will have smaller detail - need unzoom in smaler area
-            if is >1 bigger area will have bigger detail - need zoom in smaler area
-        """
-
-        # calc level of detail - bigger number => can have more details
-        bigger_area_detail_level = Utils.calc_ratios(
-            bigger_area_pdf_dim, bigger_area_dim)
-        # calc level of detail - bigger number => can have more details
-        smaller_area_detail_level = Utils.calc_ratios(
-            smaller_area_pdf_dim, smaller_area_dim)
-
-        # if bigger area have bigger detail level than smaller area => need zoom (to increase detail for preview)  on smaller area
-        # if smaller area have bigger detail level than bigger area => need unzoom (to decrease detail for preview) on smaller area
-        width_zoom = bigger_area_detail_level[0] / smaller_area_detail_level[0]
-        height_zoom = bigger_area_detail_level[1] / \
-            smaller_area_detail_level[1]
-
-        return width_zoom, height_zoom
 
     @staticmethod
     def calc_ratios(area1: DimensionsTuple, area2: DimensionsTuple) -> DimensionsTuple:
@@ -144,7 +109,7 @@ class Utils:
         """
         pdf_to_area_ratio_bigger = Utils.calc_ratios(
             bigger_area_dim, bigger_pdf_dim)
-        # Calc from eqation  = bigger_area_dim / bigger_pdf_dim
+        # Calc from eqation (must have same aspects) -> bigger_area_dim (in M) / bigger_pdf_dim ==  area_dim(M) /pdf_dim
         #  bigger_area_dim (in M)/ bigger_pdf_dim ==  area_dim(M) /pdf_dim => areaDim(M) == bigger_area_dim (in M)/bigger_pdf_dim*pdf_dim =>
         #  => areaDim(M) == pdf_to_area_ratio_bigger * pdf_dim
         new_width = pdf_dim[0] * pdf_to_area_ratio_bigger[0]
@@ -176,7 +141,7 @@ class Utils:
         current_aspect_ratio = width / height
 
         if current_aspect_ratio < paper_aspect_ratio:
-            # Current aspect have shorther width to height ratio than paper => adjust width
+            # Current aspect have shorther (smaller) width to height ratio than paper => adjust width
             # Expand width
             # w/h == pw/ph => w = h * (pw/ph)
             new_width = height * paper_aspect_ratio
@@ -184,7 +149,7 @@ class Utils:
             area_bounds[WorldSides.WEST.value] -= width_diff
             area_bounds[WorldSides.EAST.value] += width_diff
         else:
-            # Current aspect have longer width to height ratio than paper => adjust height
+            # Current aspect have longer (bigger) width to height ratio than paper => adjust height
             # Expand height
             # w/h == pw/ph => h = w / (pw/ph)
             new_height = width / paper_aspect_ratio
@@ -299,7 +264,7 @@ class Utils:
         }
 
     @staticmethod
-    def get_value(row, column_name: str, default_value: any = None):
+    def get_name_tuple_value(row, column_name: str, default_value: any = None):
         value = getattr(row, column_name, None)
         if pd.isna(value):
             return default_value
@@ -308,11 +273,6 @@ class Utils:
     @staticmethod
     def is_bbox_valid(bbox: Bbox):
         return bbox is not None and bbox.x0 < bbox.x1 and bbox.y0 < bbox.y1
-
-    @staticmethod
-    def add_bbox_to_list_and_index(bbox: Bbox, bbox_list: list[Bbox], idx: rtree.index.Index):
-        bbox_list.append(bbox)
-        idx.insert(len(bbox_list)-1, bbox.extents)  # Use the list index as ID
 
     @staticmethod
     def check_bbox_position(bbox_to_overlap: Bbox, bbox_to_overflow: Bbox, bbox_index: rtree.index.Index | None,
@@ -363,3 +323,59 @@ class Utils:
             result[dict_key] = {key: cumulative, **extra_dict}
 
         return result
+
+    @staticmethod
+    def ensure_dir_exists(dir_path: str):
+        if(dir_path is None):
+            return ""
+        if(dir_path[-1] != '/'):
+            dir_path += '/'
+        if not os.path.exists(dir_path):
+            os.makedirs(dir_path, exist_ok=True)
+        return dir_path
+    
+    @staticmethod
+    def remove_file(file_path: str):
+        try:
+            if os.path.exists(file_path) and os.path.isfile(file_path):
+                os.remove(file_path)
+        except Exception as e:
+            warnings.warn(f"Error cleaning up file {file_path}: {str(e)}")
+            
+    @staticmethod
+    def remove_files(files_list: list[str]):
+        """Delete files in list"""
+        for file_path in files_list:
+            Utils.remove_file(file_path)
+            
+    @staticmethod
+    def extract_original_name(file_name, task_id):  # -> Any:
+        prefix = task_id + '_'
+        if file_name.startswith(prefix):
+            return file_name[len(prefix):]
+        return file_name
+
+    @staticmethod
+    def create_access_token(data: dict, expires_delta: datetime.timedelta, algorithm: str, secret_key: str):
+        to_encode = data.copy()
+        expire = datetime.datetime.utcnow() + expires_delta
+        to_encode.update({"exp": expire})
+        encoded_jwt = jwt.encode(to_encode, secret_key, algorithm=algorithm)
+        return encoded_jwt
+
+    @staticmethod
+    def decode_jwt(token, algorithm: str, secret_key: str):
+        try:
+            payload = jwt.decode(token, secret_key, algorithms=[algorithm])
+            return payload
+        except jwt.ExpiredSignatureError:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Token expired",
+            )
+        except jwt.InvalidTokenError:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid token",
+            )
+

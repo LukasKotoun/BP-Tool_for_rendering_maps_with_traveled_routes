@@ -1,4 +1,4 @@
-from common.custom_types import ElementStyles, FeatureStyles
+from common.custom_types import ElementStyles
 from common.map_enums import Style, TextPositions, MinPlot, MarkerPosition, MarkersCodes, LineCupStyles, MapThemeVariable, BaseConfigKeys
 from config import font_awesome_prop, material_design_prop, BASE_OSM_CONFIG
 from modules.utils import Utils
@@ -11,13 +11,16 @@ Ploting is turned off by setting color to None with few exceptions.
 # ------------styles--------------
 
 # (filer for split from areas, filter for ploting)
-AREAS_OVER_WAYS_FILTER = ([{'highway': ['pedestrian', 'footway']}, {'amenity': ['parking', 'motorcycle_parking']}],
+AREAS_WITH_WAYS_FILTER = ([{'highway': ['pedestrian', 'footway']}, {'amenity': ['parking', 'motorcycle_parking']}],
                           [{'highway': ['pedestrian', 'footway'], 'area': 'yes'},
                            {'highway': ['pedestrian', 'footway'],
                                'place': ['square']},
                            {'amenity': ['parking', 'motorcycle_parking']}])
 
 DEFAULT_FONTS = ['Arial Unicode MS', 'DejaVu Sans']
+
+TEXT_WRAP_NAMES_LENGTH = 15  # len or 0/None if not wrap (15 default)
+TEXT_BOUNDS_OVERFLOW_THRESHOLD = 0.97
 
 WATER_COLOR_ZOOM_8_10 = "#9fc4e2"
 WATER_COLOR_ZOOM_1_7 = "#9abfdc"
@@ -43,6 +46,8 @@ TEXT_EXPAND_PERCENT = 5
 MARKER_EXPAND_PERCENT = 5
 
 WATER_COLOR = {"1-7": WATER_COLOR_ZOOM_1_7, "8-10": WATER_COLOR_ZOOM_8_10}
+
+
 LAND_COLOR = '#f1f0e5'
 
 RESERVATION_EDGE_CUMULATIVE_SIZE = Utils.cumulative_zoom_size_multiplier(
@@ -64,38 +69,28 @@ SPECIAL_WAYS_CUMULATIVE_SIZE = Utils.cumulative_zoom_size_multiplier({
     Style.WIDTH.value)
 
 # -------------------gpx-------------------
-# root_files_styles: ElementStyles = [
-#     ({'fileName': 'Grilovačka.gpx'}, {Style.COLOR.value: "Red"}),
-# ]
 
-# folders_styles: ElementStyles = [
-#     ({'folder': 'pěšky'}, {Style.COLOR.value: "Blue"}),
-#     ({'folder': 'Kolo testování'}, {Style.WIDTH.value: 1, Style.ALPHA.value: 0.7}),
-#     ({'folder': 'Kolo'}, {Style.COLOR.value: "Purple"}),
-# ]
-# non scaled styles - relative to paper size (not polygons)
 GPXS_STYLES_SCALE = []
 gpxs_styles_default: ElementStyles = [
-    ({'fileName': ''}, {}),
-    ({'folder': ''}, {}),
-    ([], {Style.COLOR.value: 'Red', Style.WIDTH.value: 1.3,
-          Style.ALPHA.value: 0.7,  Style.ZINDEX.value: 0, Style.LINESTYLE.value: "-",
-          #   Style.START_MARKER.value: MarkersCodes.MPL_START_ICON.value,
-          Style.START_MARKER_WIDTH.value: 2, Style.START_MARKER_EDGE_RATIO.value: 0.1,
-          Style.START_MARKER_COLOR.value: "#18ac0d", Style.START_MARKER_EDGE_COLOR.value: "#FFFFFF", Style.START_MARKER_ALPHA.value: 1.0,
+    ([], {
+        Style.COLOR.value: 'Red', Style.WIDTH.value: 1.3,
+        Style.ALPHA.value: 0.7, Style.ZINDEX.value: 0, Style.EDGE_ALPHA.value: 0.7,
+        Style.EDGE_COLOR.value: None, Style.EDGE_WIDTH_RATIO.value: 0.15,
+        Style.EDGE_LINESTYLE.value: "-", Style.EDGE_CAPSTYLE.value: LineCupStyles.BUTT.value,
+        Style.LINESTYLE.value: "-", Style.LINE_CAPSTYLE.value: LineCupStyles.ROUND.value,
 
-          #   Style.FINISH_MARKER.value: "\uf11e",MarkersCodes.FA_FINISH_ICON.value,
+        Style.START_MARKER_WIDTH.value: 5, Style.START_MARKER_EDGE_RATIO.value: 0.1,
+        Style.START_MARKER_COLOR.value: "#18ac0d", Style.START_MARKER_EDGE_COLOR.value: "#FFFFFF", Style.START_MARKER_ALPHA.value: 1.0,
 
-          Style.FINISH_MARKER_HORIZONTAL_ALIGN.value: "left", Style.FINISH_MARKER_VERTICAL_ALIGN.value: "bottom",
-          Style.FINISH_MARKER_WIDTH.value: 12, Style.FINISH_MARKER_EDGE_RATIO.value: 0.1,
-          Style.FINISH_MARKER_COLOR.value: "#000000", Style.FINISH_MARKER_EDGE_COLOR.value: "#FFFFFF", Style.FINISH_MARKER_ALPHA.value: 1.0,
-          Style.FINISH_MARKER_FONT_PROPERTIES.value: font_awesome_prop,
-          Style.GPX_ABOVE_TEXT.value: False, Style.MARKER_LAYER_POSITION.value: MarkerPosition.UNDER_TEXT_OVERLAP
-          })
+        Style.FINISH_MARKER_WIDTH.value: 5, Style.FINISH_MARKER_EDGE_RATIO.value: 0.1,
+        Style.FINISH_MARKER_COLOR.value: "#000000", Style.FINISH_MARKER_EDGE_COLOR.value: "#FFFFFF", Style.FINISH_MARKER_ALPHA.value: 1.0,
+        
+        Style.GPX_ABOVE_TEXT.value: False, Style.MARKER_LAYER_POSITION.value: MarkerPosition.UNDER_TEXT_OVERLAP.value
+    })
 ]
 
 GPXS_STYLES: ElementStyles = [
-    # *folders_styles,  # folder must be first - folder have only some byt file name have all
+    # *folders_styles,  # folder must be first - folder have only some byt file name have all - file name will have only some
     # *root_files_styles,
     *gpxs_styles_default,
 ]
@@ -179,7 +174,7 @@ natural_styles_nodes: ElementStyles = [
         # text
         Style.TEXT_WEIGHT.value: 'heavy', Style.TEXT_STYLE.value: 'italic', Style.TEXT_FONT_SIZE.value: 6,
         Style.TEXT_COLOR.value: "#443833", Style.TEXT_OUTLINE_COLOR.value: '#FFFFFF',
-        Style.TEXT1_POSITIONS.value: [TextPositions.TOP], Style.TEXT2_POSITIONS.value: [TextPositions.BOTTOM],
+        Style.TEXT1_POSITIONS.value: [TextPositions.TOP.value], Style.TEXT2_POSITIONS.value: [TextPositions.BOTTOM.value],
         Style.TEXT_OUTLINE_WIDTH_RATIO.value: 0.3, Style.TEXT_WRAP_LEN.value: 20
     })
 ]
@@ -193,11 +188,11 @@ icons_above_styles_nodes: ElementStyles = [
         Style.EDGE_WIDTH_RATIO.value: 0.15,
         # text
         Style.TEXT_COLOR.value: "#8c7359", Style.TEXT_OUTLINE_COLOR.value: '#FFFFFF', Style.TEXT_FONT_SIZE.value: 5,
-        Style.TEXT1_POSITIONS.value: [TextPositions.BOTTOM], Style.TEXT_OUTLINE_WIDTH_RATIO.value: 0.2,
+        Style.TEXT1_POSITIONS.value: [TextPositions.BOTTOM.value], Style.TEXT_OUTLINE_WIDTH_RATIO.value: 0.2,
         Style.TEXT_WRAP_LEN.value: 20
     }, {
-        "6-10": {Style.MARKER_LAYER_POSITION.value: MarkerPosition.ABOVE_NORMAL},
-        "1-5": {Style.MARKER_LAYER_POSITION.value: MarkerPosition.UNDER_TEXT_OVERLAP}
+        "6-10": {Style.MARKER_LAYER_POSITION.value: MarkerPosition.ABOVE_NORMAL.value},
+        "1-5": {Style.MARKER_LAYER_POSITION.value: MarkerPosition.UNDER_TEXT_OVERLAP.value}
     }),
 
     ({'historic': ['castle']}, {
@@ -209,11 +204,11 @@ icons_above_styles_nodes: ElementStyles = [
         # text
         Style.TEXT_FONT_SIZE.value: 5,
         Style.TEXT_COLOR.value: "#8c7359", Style.TEXT_OUTLINE_COLOR.value: '#FFFFFF',
-        Style.TEXT1_POSITIONS.value: [TextPositions.BOTTOM], Style.TEXT_OUTLINE_WIDTH_RATIO.value: 0.2,
+        Style.TEXT1_POSITIONS.value: [TextPositions.BOTTOM.value], Style.TEXT_OUTLINE_WIDTH_RATIO.value: 0.2,
         Style.TEXT_WRAP_LEN.value: 20
     }, {
-        "6-10": {Style.MARKER_LAYER_POSITION.value: MarkerPosition.NORMAL},
-        "1-5": {Style.MARKER_LAYER_POSITION.value: MarkerPosition.UNDER_TEXT_OVERLAP}
+        "6-10": {Style.MARKER_LAYER_POSITION.value: MarkerPosition.NORMAL.value},
+        "1-5": {Style.MARKER_LAYER_POSITION.value: MarkerPosition.UNDER_TEXT_OVERLAP.value}
     })
 ]
 
@@ -225,7 +220,7 @@ nodes_styles_default: ElementStyles = [
         Style.TEXT_OUTLINE_WIDTH_RATIO.value: 0.2, Style.MIN_PLOT_REQ.value: MinPlot.TEXT1.value,
         Style.TEXT_COLOR.value: "#000000", Style.TEXT_OUTLINE_COLOR.value: '#FFFFFF',
         Style.TEXT1_POSITIONS.value: [
-            TextPositions.TOP, TextPositions.BOTTOM, TextPositions.RIGHT]
+            TextPositions.TOP.value, TextPositions.BOTTOM.value, TextPositions.RIGHT.value]
     }),
     ([], {
         Style.ALPHA.value: 1, Style.EDGE_ALPHA.value: 1,
@@ -502,6 +497,13 @@ highway_styles_special_and_paths: ElementStyles = [
 ]
 
 
+railway_remove_on_zoom: ElementStyles = [
+    ({'railway': ['rail', 'disused', 'light_rail', "monorail", "subway"],
+      'service': ['crossover', 'siding', 'spur', 'yard']}, {
+    }, {}, {
+        "1-6": {Style.COLOR.value: None, Style.EDGE_COLOR.value: None}})
+]
+
 railway_styles_bridges_overwrite: ElementStyles = [
     ({'railway': ['funicular', 'subway'], 'bridge': ''}, {
         Style.BRIDGE_EDGE_COLOR.value: None, Style.BRIDGE_COLOR.value: None
@@ -747,6 +749,7 @@ ways_styles_default: ElementStyles = [
 
 
 WAYS_STYLES: ElementStyles = [
+    *railway_remove_on_zoom,
     *railway_styles_bridges_overwrite,
     *railway_styles_tunnels,
     *railway_styles_service,
@@ -776,8 +779,6 @@ AREAS_STYLES_SCALE = [Style.WIDTH.value]
 
 
 landuse_styles_area: ElementStyles = [
-
-    ({'landuse': 'farmland'}, {Style.COLOR.value: None}),
     ({'landuse': ['vineyard', 'orchard']}, {Style.COLOR.value: '#e1ebbe'}),
 
     ({'landuse': ['basin', 'salt_pond']}, {Style.COLOR.value: WATER_COLOR_ZOOM_1_7},
@@ -856,9 +857,8 @@ natural_styles_area: ElementStyles = [
         "8-10": {Style.COLOR.value: GREEN_AREA_COLOR_ZOOM_8_10}
     }),
 
-    ({'natural': ['water', 'bay']}, {Style.COLOR.value: WATER_COLOR_ZOOM_1_7},
+    ({'natural': 'water'}, {Style.COLOR.value: WATER_COLOR_ZOOM_1_7},
      {"8-10": {Style.COLOR.value: WATER_COLOR_ZOOM_8_10}}),
-    ({'natural': ['beach', 'sand']}, {Style.COLOR.value: None}),
 ]
 
 amenity_styles_area: ElementStyles = [
@@ -901,15 +901,15 @@ area_styles_default: ElementStyles = [
         Style.EDGE_LINESTYLE.value: '-'
     }),
 
-    ({'natural': ''}, {Style.COLOR.value: None}),
-    ({'landuse': ''},  {Style.COLOR.value: None}),
-    ({'leisure': ''}, {Style.COLOR.value: None}),
+    # ({'natural': ''}, {Style.COLOR.value: None}),
+    # ({'landuse': ''},  {Style.COLOR.value: None}),
+    # ({'leisure': ''}, {Style.COLOR.value: None}),
 
     ({'aeroway': ''}, {Style.COLOR.value: INDUSTRIAL_AREA_COLOR_ZOOM_5_6}),
     ({'building': ''}, {Style.COLOR.value: '#e1d4bb'},
      {"7": {Style.COLOR.value: RESIDENTAL_AREA_COLOR_ZOOM_7},
       "1-6": {Style.COLOR.value: RESIDENTAL_AREA_COLOR_ZOOM_1_6}}),
-    
+
     ({'amenity': ''}, {Style.COLOR.value: RESIDENTAL_AREA_COLOR_ZOOM_8_10},
      {"7": {Style.COLOR.value: RESIDENTAL_AREA_COLOR_ZOOM_7},
       "1-6": {Style.COLOR.value: RESIDENTAL_AREA_COLOR_ZOOM_1_6}}),
@@ -932,18 +932,21 @@ AREAS_STYLES: ElementStyles = [
 ]
 
 MAPYCZ_BASE_OSM_CONFIG = BASE_OSM_CONFIG.copy()
-# check what to do with gpx styles
+# MAPYCZ_BASE_OSM_CONFIG.update({#     "variables": {}) Can overwrite base config for specific map style
+
 MAPYCZ_STYLE: dict[str, dict[str, any]] = {
     "variables": {
-        MapThemeVariable.GPXS_STYLES_SCALE: GPXS_STYLES_SCALE,
-        MapThemeVariable.NODES_STYLES_SCALE: NODES_STYLES_SCALE,
-        MapThemeVariable.WAYS_STYLES_SCALE: WAYS_STYLES_SCALE,
-        MapThemeVariable.AREAS_STYLES_SCALE: AREAS_STYLES_SCALE,
-        MapThemeVariable.WATER_COLOR: WATER_COLOR,
-        MapThemeVariable.LAND_COLOR: LAND_COLOR,
-        MapThemeVariable.AREAS_OVER_WAYS_FILTER: AREAS_OVER_WAYS_FILTER,
-        MapThemeVariable.TEXT_BB_EXPAND_PERCENT: TEXT_EXPAND_PERCENT,
-        MapThemeVariable.MARKER_BB_EXPAND_PERCENT: MARKER_EXPAND_PERCENT,
+        MapThemeVariable.GPXS_STYLES_SCALE.value: GPXS_STYLES_SCALE,
+        MapThemeVariable.NODES_STYLES_SCALE.value: NODES_STYLES_SCALE,
+        MapThemeVariable.WAYS_STYLES_SCALE.value: WAYS_STYLES_SCALE,
+        MapThemeVariable.AREAS_STYLES_SCALE.value: AREAS_STYLES_SCALE,
+        MapThemeVariable.WATER_COLOR.value: WATER_COLOR,
+        MapThemeVariable.LAND_COLOR.value: LAND_COLOR,
+        MapThemeVariable.AREAS_WITH_WAYS_FILTER.value: AREAS_WITH_WAYS_FILTER,
+        MapThemeVariable.TEXT_BB_EXPAND_PERCENT.value: TEXT_EXPAND_PERCENT,
+        MapThemeVariable.MARKER_BB_EXPAND_PERCENT.value: MARKER_EXPAND_PERCENT,
+        MapThemeVariable.TEXT_BOUNDS_OVERFLOW_THRESHOLD.value: TEXT_BOUNDS_OVERFLOW_THRESHOLD,
+        MapThemeVariable.TEXT_WRAP_NAMES_LENGTH.value: TEXT_WRAP_NAMES_LENGTH,
     },
     "styles": {
         'gpxs': GPXS_STYLES,

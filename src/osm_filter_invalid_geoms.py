@@ -1,12 +1,12 @@
+import os
+import sys
 import osmium
-from shapely import wkt
-from typing import Callable
-from osmium.osm.types import TagList, Node, Way, Area
-from shapely.geometry import Point, LineString, Polygon
 import subprocess
 import tempfile
-import sys
-import os
+from shapely import wkt
+from typing import Callable
+from osmium.osm.types import  Way, Area
+from shapely.geometry import Point, LineString, Polygon
 
 
 class ValidGeometryFilter(osmium.SimpleHandler):
@@ -78,7 +78,8 @@ def remove_ids(input_file_path: str, output_file_path: str, ways_ids: list[int],
         raise Exception(
             f"Cannot remove osm file id (error: {e}), check if osmium command line tool is installed")
     finally:
-        os.remove(tmp_filename)
+        if(os.path.exists(tmp_filename)):
+            os.remove(tmp_filename)
 
 
 if __name__ == "__main__":

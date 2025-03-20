@@ -1,5 +1,44 @@
 from enum import Enum
 from typing import Literal
+
+class ProcessingStatus(Enum):
+    FAILED = "failed"
+    STARTING = "starting"
+    IN_QUEUE = "in_queue"
+    EXTRACTING = "extracting"
+    LOADING = "loading"
+    FILTERING = "filtering"
+    STYLING = "styling"
+    PREPARING_FOR_PLOTTING = "preparing_for_plotting"
+    AREAS_PLOTTING = "areas_plotting"
+    WAYS_PLOTTING = "ways_plotting"
+    NODES_PLOTTING = "nodes_plotting"
+    GPXS_PLOTTING = "gpxs_plotting"
+    FILE_SAVING = "file_saving"
+    COMPLETED = "COMPLETED"
+
+class SharedDictKeys(Enum):
+    FILES = "files"
+    STATUS = "status"
+    PROCESS_RUNNING = "process_running"
+    PID = "pid"
+    IS_PREVIEW = "is_preview"
+    
+class TaskQueueKeys(Enum):
+    CONFIG = "config"
+    QUEUE_TYPE = "queue_type"
+    TASK_ID = "task_id"
+    
+
+
+class QueueType(Enum):
+    NORMAL = "normal"
+    PREVIEW = "preview"
+
+class GpxColumns(Enum):
+    FILE_NAME = "file_name"
+    CATEGORY = "category"
+
 class ColorMode(Enum):
     DEFAULT = "DEFAULT"
     SINGLE = "SINGLE"
@@ -13,14 +52,36 @@ class LineCupStyles(Enum):
 
 class MarkersCodes(Enum):
     FA_TOWER_OBSERVATION = "\ue586"
+    #gpx
     FA_FINISH_ICON = '\uf11e'
     
     MU_CASTLE = "\ueaad"
     MPL_TRIANGLE = '^'
-
+    #gpx
     MPL_CIRCLE_MARKER = 'o'
-    
 
+    
+class MapConfigKeys(Enum):
+    MAP_AREA = "map_area" 
+    MAP_AREA_BOUNDARY = "map_area_boundary"
+    MAP_OUTER_AREA = "map_outer_area"
+    PEAKS_FILTER_RADIUS = "peaks_filter_radius" # 0 is for no filter
+    MIN_PLACE_POPULATION = "min_place_population" # 0 is for no filter
+    MAP_SCALING_FACTOR = "map_scaling_factor"
+    PLOT_BRIDGES = "plot_bridges"
+    PLOT_TUNNELS = "plot_tunnels"
+    OSM_FILES = "osm_files" # checked
+    PAPER_DIMENSION_MM = "paper_dimension_mm"
+    WANTED_CATEGORIES_AND_STYLES_CHANGES = "wanted_categories" # 'nodes', 'nodes_from_area, 'ways', 'areas'
+    UNWANTED_CATEGORIES = "unwanted_categories" # 'nodes', 'ways', 'areas'
+    STYLES_ZOOM_LEVELS = "styles_zoom_levels" # 'nodes', 'ways', 'areas', 'general'
+    MAP_THEME = "map_theme"
+    GPXS = "gpxs"
+    GPXS_STYLES = "gpxs_styles"
+
+    PEAKS_FILTER_SENSITIVITY = "peaks_filter_sensitivity" # 0 is for no filter
+    
+    
 class MinPlot(Enum):  # minimum parts that node must have. If not whole node object is removed
     MARKER_TEXT1_TEXT2 = "MARKER_TEXT1_TEXT2"
     MARKER_TEXT1_OR_TEXT2 = "MARKER_TEXT1_OR_TEXT2"
@@ -38,10 +99,12 @@ class BaseConfigKeys(Enum):
     DERIVATE_COLUMNS = 'DERIVATE_COLUMNS'
     DONT_CATEGORIZE = 'DONT_CATEGORIZE'
 
+
+
 class MapThemeVariable(Enum):
     WATER_COLOR = "WATER_COLOR"
     LAND_COLOR = "LAND_COLOR"
-    AREAS_OVER_WAYS_FILTER = "AREAS_OVER_WAYS_FILTER"
+    AREAS_WITH_WAYS_FILTER = "AREAS_WITH_WAYS_FILTER"
     WAYS_WITHOUT_CROSSING_FILTER = "WAYS_WITHOUT_CROSSING_FILTER"
     GPXS_STYLES_SCALE = "GPXS_STYLES_SCALE"
     NODES_STYLES_SCALE = "NODES_STYLES_SCALE"
@@ -49,6 +112,8 @@ class MapThemeVariable(Enum):
     AREAS_STYLES_SCALE = "AREAS_STYLES_SCALE"
     TEXT_BB_EXPAND_PERCENT = "TEXT_BB_EXPAND_PERCENT"
     MARKER_BB_EXPAND_PERCENT = "MARKER_BB_EXPAND_PERCENT"
+    TEXT_WRAP_NAMES_LENGTH = "TEXT_WRAP_NAMES_LENGTH"
+    TEXT_BOUNDS_OVERFLOW_THRESHOLD = "TEXT_BOUNDS_OVERFLOW_THRESHOLD"
 
 class TextPositions(Enum):  
     TOP = "TOP"
@@ -104,7 +169,7 @@ class Style(Enum):
     GPX_ABOVE_TEXT = "GPX_ABOVE_TEXT"
         #start
     START_MARKER = "START_MARKER"
-    START_MARKER_WIDTH = "Style.START_MARKER_WIDTH"
+    START_MARKER_WIDTH = "START_MARKER_WIDTH"
     START_MARKER_EDGE_RATIO = "START_MARKER_EDGE_RATIO"
     START_MARKER_COLOR = "START_MARKER_COLOR"
     START_MARKER_EDGE_COLOR = "START_MARKER_EDGE_COLOR"
@@ -115,7 +180,7 @@ class Style(Enum):
     
         #finish
     FINISH_MARKER = "FINISH_MARKER"
-    FINISH_MARKER_WIDTH = "Style.FINISH_MARKER_WIDTH"
+    FINISH_MARKER_WIDTH = "FINISH_MARKER_WIDTH"
     FINISH_MARKER_EDGE_RATIO = "FINISH_MARKER_EDGE_RATIO"
     FINISH_MARKER_COLOR = "FINISH_MARKER_COLOR"
     FINISH_MARKER_EDGE_COLOR = "FINISH_MARKER_EDGE_COLOR"
@@ -198,6 +263,6 @@ class PaperSize(Enum):
 
 
 class MapOrientation(Enum):
-    AUTOMATIC = "AUTOMATIC"
-    LANDSCAPE = "LANDSCAPE"
-    PORTRAIT = "PORTRAIT"
+    AUTOMATIC = "automatic"
+    LANDSCAPE = "landscape"
+    PORTRAIT = "portrait"

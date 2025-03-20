@@ -1,57 +1,49 @@
-import os
 import warnings
-import unicodedata
 
-import pandas as pd
 import geopandas as gpd
+from fastapi import UploadFile
+
 from modules.gdf_utils import GdfUtils
+from common.map_enums import GpxColumns
 
 
 class GpxManager:
-    def __init__(self, gpx_folder: str, toCrs: str):
-        self.gpx_folder: str = gpx_folder
-        self.gpxs_gdf = GdfUtils.create_empty_gdf(None, ['geometry', 'fileName', 'folder'])
-        self.parse_gpxs_gdf(toCrs)
 
-    def parse_gpxs_gdf(self, toCrs: int) -> gpd.GeoDataFrame:
+    @staticmethod
+    def get_empty_gpx_gdf() -> gpd.GeoDataFrame:
+        return GdfUtils.create_empty_gdf(
+            None, ['geometry', GpxColumns.FILE_NAME.value, GpxColumns.CATEGORY.value])
+        
+   
+    @staticmethod
+    def load_to_gdf_from_memory(gpx_files: list[UploadFile], category_mapping: dict[str, str], toCrs: str) -> gpd.GeoDataFrame:
         gpx_list: list[gpd.GeoDataFrame] = []
-
-        for root, dirs, files in os.walk(self.gpx_folder):
-            for file in files:
-                if not file.endswith('.gpx'):
-                    continue
-                # get file path with name of last folder before file
-                file_path: str = os.path.join(root, file)
-                relative_path: str = os.path.relpath(root, self.gpx_folder)
-                last_folder: str = os.path.basename(
-                    relative_path) if relative_path != "." else None
-
+        if(gpx_files is None):
+            return GdfUtils.create_empty_gdf(
+                None, ['geometry', GpxColumns.FILE_NAME.value, GpxColumns.CATEGORY.value])
+            
+        for file in gpx_files:
+            try:
+                buffer = file.file.read()
                 gpx_gdf: gpd.GeoDataFrame = (
-                    gpd.read_file(file_path, layer='tracks'))
-                gpx_gdf['fileName'] = unicodedata.normalize('NFC',file)
-                gpx_gdf['folder'] = unicodedata.normalize('NFC', last_folder) if last_folder else None
-                gpx_list.append(gpx_gdf.to_crs(toCrs))
-
+                    gpd.read_file(buffer, layer='tracks'))
+                file.file.close()
+            except Exception as e:
+                warnings.warn(f"Error reading file {file.filename}: {e}")
+                continue
+            gpx_gdf[GpxColumns.FILE_NAME.value] = file.filename
+            gpx_gdf[GpxColumns.CATEGORY.value] = category_mapping[file.filename] if file.filename in category_mapping else None
+            gpx_list.append(gpx_gdf.to_crs(toCrs))
+            
         if (gpx_list):
-            # GdfUtils.combine_gdfs
-            self.gpxs_gdf = GdfUtils.combine_gdfs(gpx_list)
+            gpxs_gdf = GdfUtils.combine_gdfs(gpx_list)
+            GdfUtils.remove_columns(gpxs_gdf, ['geometry', GpxColumns.FILE_NAME.value, GpxColumns.CATEGORY.value], neg=True)
+            GdfUtils.change_columns_to_categorical(
+                gpxs_gdf, [GpxColumns.CATEGORY.name])
+            return gpxs_gdf
         else:
-            warnings.warn(f"No GPX files found in {self.gpx_folder}")
-
-    def get_gpxs_gdf(self, inCrs: str = None) -> gpd.GeoDataFrame:
-        # if (self.gpxs_gdf.empty):
-        #     return self.gpxs_gdf
-
-        GdfUtils.change_columns_to_categorical(
-            self.gpxs_gdf, ['fileName', 'folder'])
-        if (inCrs is None):
-            return self.gpxs_gdf
-        else:
-            return GdfUtils.change_crs(self.gpxs_gdf, inCrs)
-
-    def get_gpxs_gdf_splited(self, inCrs: str = None) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]:
-
-        GdfUtils.change_columns_to_categorical(
-            self.gpxs_gdf, ['fileName', 'folder'])
-        return GdfUtils.filter_rows(self.gpxs_gdf, {'folder': ''}, neg = True, compl=True)
-     
+            gpxs_gdf = GdfUtils.create_empty_gdf(
+                None, ['geometry', GpxColumns.FILE_NAME.value, GpxColumns.CATEGORY.value])
+            GdfUtils.change_columns_to_categorical(
+                gpxs_gdf, [GpxColumns.CATEGORY.name])
+            return gpxs_gdf

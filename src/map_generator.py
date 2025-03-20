@@ -1,461 +1,385 @@
+import os
+import multiprocessing
+import json
 import warnings
+from fastapi import FastAPI, File, UploadFile, Form, HTTPException, status, Depends
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
+from uuid_extensions import uuid7str
+from typing import List, Optional, Any
 
 from config import *
+from common.api_base_models import *
+from common.map_enums import MapConfigKeys, QueueType, SharedDictKeys, ProcessingStatus
+from modules.main_generator import calc_preview, get_map_area_gdf, plot_map_borders
 from modules.gdf_utils import GdfUtils
 from modules.utils import Utils
-from modules.osm_data_preprocessor import OsmDataPreprocessor
-from modules.osm_data_parser import OsmDataParser
-from modules.style_assigner import StyleManager
-from modules.plotter import Plotter
 from modules.gpx_manager import GpxManager
 from modules.received_structure_processor import ReceivedStructureProcessor
-import os
-import shutil
+from modules.task_manager import TaskManager
 
-from common.common_helpers import time_measurement
+server_app = FastAPI()
+server_app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
+task_manager = TaskManager(max_normal_tasks=MAX_CONCURRENT_TASKS_NORMAL,
+                                         max_preview_tasks=MAX_CONCURRENT_TASKS_PREVIEW,
+                                         gpx_tmp_folder=GPX_TMP_FOLDER)
 
-def process_bridges_and_tunnels(gdf, want_bridges: bool, want_tunnels: bool):
-    GdfUtils.change_columns_to_numeric(gdf, ['layer'])
-    GdfUtils.fill_nan_values(gdf, ['layer'], 0)
-    gdf['layer'] = gdf.get('layer', 0)
+# endpoints helpers
+def decode_task_id_from_JWT(token: str = Depends(OAUTH2_SCHEME)):
+    payload = Utils.decode_jwt(token, JWT_ALGORITHM, SECRET_KEY)
+    task_id = payload.get("task_id")
+    if task_id is None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+    return task_id
 
-    # set layer to 0 if there is no bridge or tunnel
-    gdf.loc[GdfUtils.get_rows_filter(
-        gdf, {'tunnel': '~', 'bridge': '~'}), 'layer'] = 0
-    if (not want_bridges and not want_tunnels):
-        gdf['layer'] = 0
-        GdfUtils.remove_columns(gdf, ['bridge', 'tunnel'])
-    elif (not want_bridges):
-        if ('layer' in gdf):
-            # set layer to 0 in bridges - as normal ways
-            gdf.loc[GdfUtils.get_rows_filter(
-                gdf, {'bridge': ''}), 'layer'] = 0
-        GdfUtils.remove_columns(gdf, ['bridge'])
-    elif (not want_tunnels):
-        if ('layer' in gdf):
-            # set layer to 0 in tunnels - as normal ways
-            gdf.loc[GdfUtils.get_rows_filter(
-                gdf, {'tunnel': ''}), 'layer'] = 0
-        GdfUtils.remove_columns(gdf, ['tunnel'])
-    return
+# endpoints
+
+@server_app.get("/available_osm_files", response_model=AvailableOsmFilesResponseModel)
+def available_osm_files():
+    return {"osm_files": OSM_AVAILABLE_FILES.keys()}
 
 
-def gdfs_convert_loaded_columns(gpxs_gdf, nodes_gdf, ways_gdf, areas_gdf, config):
-    GdfUtils.change_columns_to_numeric(
-        nodes_gdf, config['nodes'][BaseConfigKeys.NUMERIC_COLUMNS])
-    GdfUtils.convert_numeric_columns_int(
-        nodes_gdf, config['nodes'][BaseConfigKeys.ROUND_COLUMNS])
-
-    GdfUtils.change_columns_to_numeric(
-        ways_gdf, config['ways'][BaseConfigKeys.NUMERIC_COLUMNS])
-    GdfUtils.convert_numeric_columns_int(
-        ways_gdf, config['ways'][BaseConfigKeys.ROUND_COLUMNS])
-
-    GdfUtils.change_columns_to_numeric(
-        areas_gdf, config['areas'][BaseConfigKeys.NUMERIC_COLUMNS])
-    GdfUtils.convert_numeric_columns_int(
-        areas_gdf, config['areas'][BaseConfigKeys.ROUND_COLUMNS])
+@server_app.get("/available_map_themes", response_model=AvailableMapThemesResponseModel)
+def available_map_themes():
+    return {"map_themes": STYLES.keys()}
 
 
-def gdfs_prepare_styled_columns(gpxs_gdf, nodes_gdf, ways_gdf, areas_gdf, map_scaling_factor, config):
-    # ----gpx----
-    # gpx - is needed in this? will be setted in FE?
-
-    GdfUtils.create_derivated_columns(gpxs_gdf, Style.EDGE_WIDTH.value, Style.WIDTH.value, [
-                                      Style.EDGE_WIDTH_RATIO.value])
-    GdfUtils.create_derivated_columns(gpxs_gdf, Style.START_MARKER_EDGE_WIDTH.value, Style.START_MARKER_WIDTH.value, [
-                                      Style.START_MARKER_EDGE_RATIO.value])
-    GdfUtils.create_derivated_columns(gpxs_gdf, Style.FINISH_MARKER_EDGE_WIDTH.value, Style.FINISH_MARKER_WIDTH.value, [
-                                      Style.FINISH_MARKER_EDGE_RATIO.value])
-
-    GdfUtils.remove_columns(gpxs_gdf, [Style.START_MARKER_EDGE_RATIO.value, Style.FINISH_MARKER_EDGE_RATIO.value,
-                                       Style.EDGE_WIDTH_RATIO.value])
-
-    # ----nodes----
-    # set base width - scale by muplitpliers and object scaling factor
-    GdfUtils.fill_nan_values(nodes_gdf, [Style.ZINDEX.value], 0)
-
-    GdfUtils.multiply_column_gdf(nodes_gdf, Style.WIDTH.value, [
-        Style.FE_WIDTH_SCALE.value], None)
-    GdfUtils.multiply_column_gdf(nodes_gdf, Style.TEXT_FONT_SIZE.value, [
-                                 Style.FE_TEXT_FONT_SIZE_SCALE.value], None)
-    # text outline
-    GdfUtils.create_derivated_columns(nodes_gdf, Style.TEXT_OUTLINE_WIDTH.value, Style.TEXT_FONT_SIZE.value, [
-                                      Style.TEXT_OUTLINE_WIDTH_RATIO.value])
-
-    # edge - MARKER size and ways width
-    GdfUtils.create_derivated_columns(nodes_gdf, Style.EDGE_WIDTH.value, Style.WIDTH.value, [
-                                      # ?? maybe remove ...
-                                      Style.EDGE_WIDTH_RATIO.value])
-    old_column_remove = []
-    for filter, new_column, old_column, fill in config['nodes'][BaseConfigKeys.DERIVATE_COLUMNS]:
-        GdfUtils.create_derivated_columns(
-            nodes_gdf, new_column, old_column, filter=filter, fill=fill)
-        old_column_remove.append(old_column)
-
-    GdfUtils.remove_columns(nodes_gdf, [Style.FE_WIDTH_SCALE.value, Style.FE_TEXT_FONT_SIZE_SCALE.value,
-                                        Style.EDGE_WIDTH_RATIO.value, Style.TEXT_OUTLINE_WIDTH_RATIO.value, *old_column_remove])
-
-    # ----ways----
-    GdfUtils.fill_nan_values(ways_gdf, [Style.ZINDEX.value], 0)
-
-    GdfUtils.multiply_column_gdf(ways_gdf, Style.WIDTH.value, [
-        # if i will be creationg function with continues width scaling than multiply only by FEwidthscale
-        Style.FE_WIDTH_SCALE.value])
-
-    GdfUtils.create_derivated_columns(ways_gdf, Style.EDGE_WIDTH.value, Style.WIDTH.value, [
-        Style.EDGE_WIDTH_RATIO.value])
-    GdfUtils.create_derivated_columns(ways_gdf, Style.EDGE_WIDTH_DASHED_CONNECT.value, Style.EDGE_WIDTH_DASHED_CONNECT_RATIO.value, [
-        Style.WIDTH.value])
-    GdfUtils.create_derivated_columns(ways_gdf, Style.BRIDGE_WIDTH.value, Style.WIDTH.value, [     # calc bridge size only for bridges
-                                      Style.BRIDGE_WIDTH_RATIO.value], {'bridge': ''})
-    GdfUtils.create_derivated_columns(ways_gdf, Style.BRIDGE_EDGE_WIDTH.value, Style.BRIDGE_WIDTH.value, [
-                                      Style.BRIDGE_EDGE_WIDTH_RATIO.value], {'bridge': ''})
-
-    old_column_remove = []
-    for filter, new_column, old_column, fill in config['ways'][BaseConfigKeys.DERIVATE_COLUMNS]:
-        GdfUtils.create_derivated_columns(
-            ways_gdf, new_column, old_column, filter=filter, fill=fill)
-        old_column_remove.append(old_column)
-    GdfUtils.remove_columns(ways_gdf, [Style.FE_WIDTH_SCALE.value, Style.EDGE_WIDTH_RATIO.value, Style.EDGE_WIDTH_DASHED_CONNECT_RATIO.value,
-                                       Style.BRIDGE_WIDTH_RATIO.value, Style.BRIDGE_EDGE_WIDTH_RATIO.value, *old_column_remove])
-
-    # ----areas----
-    GdfUtils.fill_nan_values(areas_gdf, [Style.ZINDEX.value], 0)
-
-    GdfUtils.multiply_column_gdf(areas_gdf, Style.WIDTH.value, [
-        Style.FE_WIDTH_SCALE.value])
-
-    GdfUtils.create_derivated_columns(areas_gdf, Style.EDGE_WIDTH.value, Style.WIDTH.value, [
-                                      Style.EDGE_WIDTH_RATIO.value])
-    old_column_remove = []
-    for filter, new_column, old_column, fill in config['areas'][BaseConfigKeys.DERIVATE_COLUMNS]:
-        GdfUtils.create_derivated_columns(
-            areas_gdf, new_column, old_column, filter=filter, fill=fill)
-        old_column_remove.append(old_column)
-
-    GdfUtils.remove_columns(areas_gdf, [Style.FE_WIDTH_SCALE.value,
-                                        Style.EDGE_WIDTH_RATIO.value, *old_column_remove])
-
-
-def calc_preview(map_area_gdf, paper_dimensions_mm):
-    """
-        NOTE: using constants from config file
-    Args:
-        map_area_gdf (_type_): _description_
-        paper_dimensions_mm (_type_): _description_
-
-    Returns:
-        _type_: _description_
-    """
-    wanted_outer_areas_to_display = ReceivedStructureProcessor.validate_and_convert_areas_strucutre(
-        OUTER_AREA, allowed_keys_and_types=REQ_AREA_DICT_KEYS, key_with_area="area")
-    outer_map_area_gdf = GdfUtils.get_whole_area_gdf(
-        wanted_outer_areas_to_display, 'area', CRS_OSM, CRS_DISPLAY)
-    outer_map_area_gdf = GdfUtils.combine_rows_gdf(outer_map_area_gdf)
-    outer_map_area_dimensions = GdfUtils.get_dimensions_gdf(outer_map_area_gdf)
-    # map in meters for calc automatic orientation and same pdf sides proportions
-    outer_paper_dimensions_mm = Utils.adjust_paper_dimensions(outer_map_area_dimensions, OUTER_PAPER_DIMENSIONS,
-                                                              OUTER_GIVEN_SMALLER_PAPER_DIMENSION,
-                                                              OUTER_WANTED_ORIENTATION)
-    if (OUTER_FIT_PAPER_SIZE):
-        outer_map_area_gdf = GdfUtils.expand_gdf_area_fitPaperSize(
-            outer_map_area_gdf, outer_paper_dimensions_mm)
-        outer_map_area_dimensions = GdfUtils.get_dimensions_gdf(
-            outer_map_area_gdf)
-        # for testing - should be same as normal area after preview calc
-    # outer map scale
-        # outer_map_area_bounds = GdfUtils.get_bounds_gdf(GdfUtils.change_crs(outer_map_area_gdf, CRS_OSM)) # real scale cacl
-        # map_scale = Utils.get_scale(outer_map_area_bounds, outer_paper_dimensions_mm)
-    map_scaling_factor = Utils.calc_map_scaling_factor(
-        outer_map_area_dimensions, outer_paper_dimensions_mm)
-    # calc map factor for creating automatic array with wanted elements - for preview area (without area_zoom_preview)
-    # ?? to doc - need because it will clip by required area - and that will be some big area in not clipping (cant use only first approach)
-    # ?? req area je potom velká jako pdf stránka (přes celou stránku) a ne jako puvodně chtěná oblast a tedy by k žádnému zaříznutí nedošlo
-    # map_area_gdf = needs to be in display cords
-    # calc bounds so area_zoom_preview will be 1 and will fill whole paper
-    paper_fill_bounds = Utils.calc_bounds_to_fill_paper_with_ratio(map_area_gdf.union_all().centroid,
-                                                                   paper_dimensions_mm, outer_map_area_dimensions,
-                                                                   outer_paper_dimensions_mm)
-    # area will be changing -> create copy for bounds plotting
-    map_area_gdf = GdfUtils.create_gdf_from_bounds(
-        paper_fill_bounds, CRS_DISPLAY)
-
-    return map_scaling_factor, map_area_gdf, outer_map_area_gdf
-
-# will get all as normal area - only preview endpoint will be different
-
-
-def zoom_level_endpoint(area: WantedArea, paper_dimensions_mm):
-    map_area_gdf = GdfUtils.get_whole_area_gdf(
-        area, 'area', CRS_OSM, CRS_DISPLAY)
-    map_area_gdf = GdfUtils.combine_rows_gdf(map_area_gdf)
+@server_app.post("/paper_dimensions", response_model=PaperDimensionResponseModel)
+def get_paper_dimensions(config: PaperDimensionsConfigModel):
+    try:
+        map_area = ReceivedStructureProcessor.validate_and_convert_areas_strucutre(
+            config.map_area, REQ_AREA_DICT_KEYS, key_with_area="area")
+        map_area_gdf = get_map_area_gdf(
+            map_area, False)
+        paper_dimensions = ReceivedStructureProcessor.convert_paper_dimension(
+            config.paper_dimensions, True)
+        wanted_orientation = ReceivedStructureProcessor.validate_wanted_orientation(
+            config.wanted_orientation, ALLOWED_WANTED_PAPER_ORIENTATIONS)
+        given_smaller_paper_dimension = config.given_smaller_paper_dimension
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=f"Error in config validation: {e}")
 
     # ------------get paper dimension (size and orientation)------------
     map_area_dimensions = GdfUtils.get_dimensions_gdf(map_area_gdf)
-    paper_dimensions_mm = Utils.adjust_paper_dimensions(map_area_dimensions, paper_dimensions_mm,
-                                                        GIVEN_SMALLER_PAPER_DIMENSION, WANTED_ORIENTATION)
+    paper_dimensions_mm = Utils.adjust_paper_dimensions(map_area_dimensions, paper_dimensions,
+                                                        given_smaller_paper_dimension, wanted_orientation)
 
-    if (FIT_PAPER_SIZE):
+    return {"width": paper_dimensions_mm[0], "height": paper_dimensions_mm[1]}
+
+@server_app.post("/generate_map_borders")
+def generate_map_borders(config: MapBorderConfigModel):
+    try:
+        paper_dimensions_mm = ReceivedStructureProcessor.convert_paper_dimension(
+            config.paper_dimensions, False)
+        map_area = ReceivedStructureProcessor.validate_and_convert_areas_strucutre(
+            config.map_area, REQ_AREA_DICT_KEYS, key_with_area="area")
+        map_area_gdf, boundary_map_area_gdf = get_map_area_gdf(
+            map_area, True)
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Error in config validation: {e}")
+
+    if (config.fit_paper_size):
         map_area_gdf = GdfUtils.expand_gdf_area_fitPaperSize(
             map_area_gdf, paper_dimensions_mm)
         map_area_dimensions = GdfUtils.get_dimensions_gdf(map_area_gdf)
+        if (config.fit_paper_size_bounds_plot):
+            boundary_map_area_gdf = GdfUtils.combine_gdfs(
+                [boundary_map_area_gdf, map_area_gdf.copy()])
+    file_id = uuid7str()
+    file_path = plot_map_borders(file_id, map_area_gdf, boundary_map_area_gdf, paper_dimensions_mm)
+    if(file_path is None or not os.path.isfile(file_path)):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Error white generating borders")
+    
+    def iterfile():
+        # stream file and delete after completion
+        try:
+            #https://stackoverflow.com/questions/73550398/how-to-download-a-large-file-using-fastapi
+            with open(file_path, 'rb') as f:
+                while chunk := f.read(FILE_DOWNLOAD_CHUNK_SIZE):
+                    yield chunk
+            # delete file after successful streaming
+            Utils.remove_file(file_path)
+        except Exception as e:
+            print(f"Error during file streaming: {str(e)}")
 
-    map_scaling_factor = Utils.calc_map_scaling_factor(map_area_dimensions,
+    return StreamingResponse(
+        iterfile(),
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename=map.pdf"}
+    )
+
+
+
+@server_app.post("/zoom_level", response_model=ZoomLevelResponseModel)
+def get_zoom_level(config: ZoomLevelConfigModel):
+    try:
+        map_area = ReceivedStructureProcessor.validate_and_convert_areas_strucutre(
+            config.map_area, REQ_AREA_DICT_KEYS, key_with_area="area")
+        map_area_gdf = get_map_area_gdf(
+            map_area, False)
+        paper_dimensions_mm = ReceivedStructureProcessor.convert_paper_dimension(
+            config.paper_dimensions, False)
+        fit_paper_size = config.fit_paper_size
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=f"Error in config validation: {e}")
+
+    expanded_map_area_dimensions = GdfUtils.get_dimensions_gdf(GdfUtils.expand_gdf_area_fitPaperSize(
+        map_area_gdf, paper_dimensions_mm))
+    map_scaling_factor = Utils.calc_map_scaling_factor(expanded_map_area_dimensions,
                                                        paper_dimensions_mm)
-
     zoom_level = Utils.get_zoom_level(
-        map_scaling_factor, ZOOM_MAPPING, 0.3)
-    print(map_scaling_factor, zoom_level)
+        map_scaling_factor, ZOOM_MAPPING, 0.2)
+    return {"zoom_level": zoom_level}
 
 
-@time_measurement("main")
-def main() -> None:
-    # one function
-    remove_extracted_output_file = (
-        OUTPUT_PDF_NAME == None and OSM_WANT_EXTRACT_AREA)
-    # convert and validate formats from FE - and handle exceptions
-    wanted_areas_to_display = ReceivedStructureProcessor.validate_and_convert_areas_strucutre(
-        AREA, allowed_keys_and_types=REQ_AREA_DICT_KEYS, key_with_area="area")
-    map_theme, base_config = STYLES.get(MAP_STYLE_THEME, DEFAULT_STYLE)
+@server_app.post("/generate-map-normal", response_model=GeneratorResponseStatusModel)
+def generate_map_normal(gpxs: Optional[List[UploadFile]] = File(None),
+                        config: str = Form(...)):
+    if(task_manager.get_normal_queue_length() >= MAX_QUEUE_SIZE_NORMAL):
+        raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="Server is busy, try again later")
+        
+    # validate
+    try:
+        config: MapGeneratorConfigModel = MapGeneratorConfigModel(
+            **json.loads(config))
+        osm_files = ReceivedStructureProcessor.validate_and_convert_osm_files(
+            config.osm_files, OSM_AVAILABLE_FILES)
+        ReceivedStructureProcessor.validate_zoom_levels(
+            config.styles_zoom_levels.dict(), ZOOM_STYLE_LEVELS_VALIDATION)
+        styles_zoom_levels = config.styles_zoom_levels.dict()
+        paper_dimensions_mm = ReceivedStructureProcessor.convert_paper_dimension(
+            config.paper_dimensions, False)
+        ReceivedStructureProcessor.validate_wanted_elements_and_styles(
+            config.wanted_categories_and_styles_edit, ALLOWED_WANTED_ELEMENTS_STRUCTURE, FE_EDIT_STYLES_VALIDATION)
+        gpxs_styles = ReceivedStructureProcessor.validate_and_convert_gpx_styles(
+            config.gpxs_styles, GPX_NORMAL_COLUMNS, GPX_GENERAL_KEYS, GPX_STYLES_VALIDATION, GPX_STYLES_MAPPING)
 
-    # second function
-    # if are for preview is not specified, use whole area
-    if (WANT_PREVIEW and AREA == None):
-        # will not happen in preview
-        map_area_gdf = GdfUtils.get_whole_area_gdf(
-            OUTER_AREA, 'area', CRS_OSM, CRS_DISPLAY)
-    else:
-        map_area_gdf = GdfUtils.get_whole_area_gdf(
-            wanted_areas_to_display, 'area', CRS_OSM, CRS_DISPLAY)
+        map_area = ReceivedStructureProcessor.validate_and_convert_areas_strucutre(
+            config.map_area, REQ_AREA_DICT_KEYS, key_with_area="area")
+        map_area_gdf, boundary_map_area_gdf = get_map_area_gdf(
+            map_area, True)
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Error in config validation: {e}")
 
-    # ------------store bounds to plot and combine area rows in gdf to 1 row------------
-    # store only areas for ploting with category and width
-    boundary_map_area_gdf = GdfUtils.get_areas_borders_gdf(
-        GdfUtils.filter_rows(map_area_gdf, {'plot': True, 'width': ''}), 'category')
-    boundary_map_area_gdf = GdfUtils.map_gdf_column_names(
-        boundary_map_area_gdf, REQ_AREAS_MAPPING_DICT)
-    GdfUtils.remove_columns(boundary_map_area_gdf, [
-                            boundary_map_area_gdf.geometry.name, *REQ_AREAS_MAPPING_DICT.values()], True)
-
-    map_area_gdf = GdfUtils.combine_rows_gdf(map_area_gdf)
-
-    # third function - scalingfactor, maparea, ooutermaparea, scale, zoomlevel
+    # calc needed values before storing in front - are different for normal and preview
     # ------------get paper dimension (size and orientation)------------
-    map_area_dimensions = GdfUtils.get_dimensions_gdf(map_area_gdf)
-    paper_dimensions_mm = Utils.adjust_paper_dimensions(map_area_dimensions, PAPER_DIMENSIONS,
-                                                        GIVEN_SMALLER_PAPER_DIMENSION, WANTED_ORIENTATION)
-
-    if (WANT_PREVIEW):
-        # one endpoint
-        (map_scaling_factor,
-            map_area_gdf, outer_map_area_gdf) = calc_preview(map_area_gdf, paper_dimensions_mm)
-    else:
-        # another endpoint
-        if (FIT_PAPER_SIZE):
-            map_area_gdf = GdfUtils.expand_gdf_area_fitPaperSize(
-                map_area_gdf, paper_dimensions_mm)
-            map_area_dimensions = GdfUtils.get_dimensions_gdf(map_area_gdf)
-
-            if (FIT_PAPER_SIZE_BOUNDS_PLOT):
-                boundary_map_area_gdf = GdfUtils.combine_gdfs(
-                    [boundary_map_area_gdf, map_area_gdf.copy()])
-        outer_map_area_gdf = None
-
+        # calc scaling factor always from expanded are on paper - to get correct sizes of scaled objects
+    if (config.fit_paper_size):
+        map_area_gdf = GdfUtils.expand_gdf_area_fitPaperSize(
+            map_area_gdf, paper_dimensions_mm)
+        map_area_dimensions = GdfUtils.get_dimensions_gdf(map_area_gdf)
         map_scaling_factor = Utils.calc_map_scaling_factor(map_area_dimensions,
                                                            paper_dimensions_mm)
+        if (config.fit_paper_size_bounds_plot):
+            boundary_map_area_gdf = GdfUtils.combine_gdfs(
+                [boundary_map_area_gdf, map_area_gdf.copy()])
+    else:
+        expanded_map_area_dimensions = GdfUtils.get_dimensions_gdf(GdfUtils.expand_gdf_area_fitPaperSize(
+            map_area_gdf, paper_dimensions_mm))
+        map_scaling_factor = Utils.calc_map_scaling_factor(expanded_map_area_dimensions,
+                                                           paper_dimensions_mm)
+
     map_scale = Utils.get_scale(GdfUtils.get_bounds_gdf(
         GdfUtils.change_crs(map_area_gdf, CRS_OSM)), paper_dimensions_mm)
-    # zoom level to endpoint specific - always from that biger area
-    zoom_level = Utils.get_zoom_level(
-        map_scaling_factor, ZOOM_MAPPING, 0.3)
-    print(paper_dimensions_mm, map_scaling_factor, zoom_level)
-    # zoom_level_endpoint(OUTER_AREA if WANT_PREVIEW == True else wanted_areas_to_display,
-    #                     OUTER_PAPER_DIMENSIONS if WANT_PREVIEW == True else PAPER_DIMENSIONS)
 
-    # fifth function - parse osm file and get gdfs and than remove osm file
-    # ------------get elements from osm file------------
-    remove_osm_after_load = False
-    try:
-        if (OSM_WANT_EXTRACT_AREA):
-            if not shutil.which('osmium'):
-                warnings.warn("osmium is NOT installed")
-                return
-            remove_osm_after_load = True if OSM_OUTPUT_FILE_NAME is None else False
-
-            osm_data_preprocessor = OsmDataPreprocessor(
-                OSM_INPUT_FILE_NAMES, OSM_TMP_FILE_FOLDER, OSM_OUTPUT_FILE_NAME)
-            osm_file_name = osm_data_preprocessor.extract_areas(
-                map_area_gdf, CRS_OSM)
-        else:
-            osm_file_name = OSM_INPUT_FILE_NAMES[0]
-    except:
-        warnings.warn("Error while extracting area from osm file.")
-        # pass err to fe
-        return
-    # ------------Working in display CRS------------
     map_area_gdf = GdfUtils.change_crs(map_area_gdf, CRS_DISPLAY)
     boundary_map_area_gdf = GdfUtils.change_crs(
         boundary_map_area_gdf, CRS_DISPLAY)
-    # prepare style dict
+    peaks_filter_radius = map_scale * 10 * config.peaks_filter_sensitivity
 
-    # ------------osm file loading------------
-    osm_file_parser = OsmDataParser(
-        wanted_nodes, wanted_nodes_from_area, wanted_ways, wanted_areas,
-        unwanted_nodes_tags, unwanted_ways_tags, unwanted_areas_tags,
-        nodes_additional_columns=base_config['nodes'][BaseConfigKeys.ADDITIONAL_COLUMNS],
-        ways_additional_columns=base_config['ways'][BaseConfigKeys.ADDITIONAL_COLUMNS],
-        areas_additional_columns=base_config['areas'][BaseConfigKeys.ADDITIONAL_COLUMNS]
+    gpxs_gdf = GpxManager.load_to_gdf_from_memory(
+        gpxs, config.gpxs_categories, CRS_DISPLAY)
+
+    map_generator_config = {
+        MapConfigKeys.OSM_FILES.value: osm_files,
+        MapConfigKeys.MAP_AREA.value: map_area_gdf,
+        MapConfigKeys.GPXS.value: gpxs_gdf,
+        MapConfigKeys.MAP_OUTER_AREA.value: None,
+        MapConfigKeys.MAP_AREA_BOUNDARY.value: boundary_map_area_gdf,
+        MapConfigKeys.MAP_SCALING_FACTOR.value: map_scaling_factor,
+        MapConfigKeys.PAPER_DIMENSION_MM.value: paper_dimensions_mm,
+        MapConfigKeys.PEAKS_FILTER_RADIUS.value: peaks_filter_radius,
+        MapConfigKeys.MIN_PLACE_POPULATION.value: config.min_place_population,
+        MapConfigKeys.MAP_THEME.value: config.map_theme,
+        MapConfigKeys.PLOT_BRIDGES.value: config.plot_bridges,
+        MapConfigKeys.PLOT_TUNNELS.value: config.plot_tunnels,
+        MapConfigKeys.WANTED_CATEGORIES_AND_STYLES_CHANGES.value: config.wanted_categories_and_styles_edit,
+        MapConfigKeys.STYLES_ZOOM_LEVELS.value: styles_zoom_levels,
+        MapConfigKeys.GPXS_STYLES.value: gpxs_styles,
+    }
+    task_status, task_id = task_manager.add_task(
+        map_generator_config, QueueType.NORMAL.value)
+    if(task_id is None or task_status == ProcessingStatus.FAILED.value):
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Cannot start task")
+        
+    access_token = Utils.create_access_token(
+        data={"task_id": task_id}, expires_delta=JWT_EXPIRATION_TIME, algorithm=JWT_ALGORITHM, secret_key=SECRET_KEY
+    )
+    return {"message": "Map is generating", "token": access_token, "status": task_status}
+
+
+@server_app.post("/generate-map-preview", response_model=GeneratorResponseStatusModel)
+def generate_preview_map(gpxs: Optional[List[UploadFile]] = File(None),
+                         config: str = Form(...)):
+    if(task_manager.get_preview_queue_length() >= MAX_QUEUE_SIZE_PREVIEW):
+            raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="Server is busy, try again later")
+            
+    # Validate
+    try:
+        config: MapGeneratorPreviewConfigModel = MapGeneratorPreviewConfigModel(
+            **json.loads(config))
+        osm_files = ReceivedStructureProcessor.validate_and_convert_osm_files(
+            config.osm_files, OSM_AVAILABLE_FILES)
+
+        ReceivedStructureProcessor.validate_zoom_levels(
+            config.styles_zoom_levels.dict(), ZOOM_STYLE_LEVELS_VALIDATION)
+        styles_zoom_levels = config.styles_zoom_levels.dict()
+
+        paper_dimensions_mm = ReceivedStructureProcessor.convert_paper_dimension(
+            config.paper_dimensions, False)
+        preview_paper_dimensions_mm = ReceivedStructureProcessor.convert_paper_dimension(
+            config.paper_preview_dimensions, False)
+        ReceivedStructureProcessor.validate_wanted_elements_and_styles(
+            config.wanted_categories_and_styles_edit, ALLOWED_WANTED_ELEMENTS_STRUCTURE, FE_EDIT_STYLES_VALIDATION)
+
+        gpxs_styles = ReceivedStructureProcessor.validate_and_convert_gpx_styles(
+            config.gpxs_styles, GPX_NORMAL_COLUMNS, GPX_GENERAL_KEYS, GPX_STYLES_VALIDATION, GPX_STYLES_MAPPING)
+
+        map_area = ReceivedStructureProcessor.validate_and_convert_areas_strucutre(
+            config.map_area, REQ_AREA_DICT_KEYS, key_with_area="area")
+        map_area_gdf, boundary_map_area_gdf = get_map_area_gdf(
+            map_area, True)
+        if (config.map_preview_area is None):
+            map_preview_area_gdf = map_area_gdf.copy()
+        else:
+            map_preview_area = ReceivedStructureProcessor.validate_and_convert_areas_strucutre(
+                config.map_preview_area, allowed_keys_and_types=REQ_AREA_DICT_KEYS, key_with_area="area")
+            map_preview_area_gdf = get_map_area_gdf(
+                map_preview_area, False)
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=f"Error in config validation: {e}")
+    # area - big area with all settings
+    # preview_area - area to display
+    # calc needed values before storing in front - are different for normal and preview
+    (map_scaling_factor, map_preview_area_gdf, map_area_gdf,
+     map_scale) = calc_preview(map_area_gdf, paper_dimensions_mm, config.fit_paper_size, map_preview_area_gdf, preview_paper_dimensions_mm)
+
+    map_preview_area_gdf = GdfUtils.change_crs(
+        map_preview_area_gdf, CRS_DISPLAY)
+    boundary_map_area_gdf = GdfUtils.change_crs(
+        boundary_map_area_gdf, CRS_DISPLAY)
+
+    peaks_filter_radius = map_scale * 10 * config.peaks_filter_sensitivity
+
+    gpxs_gdf = GpxManager.load_to_gdf_from_memory(
+        gpxs, config.gpxs_categories, CRS_DISPLAY)
+
+    # config for map generator
+    map_generator_config = {
+        MapConfigKeys.OSM_FILES.value: osm_files,
+        MapConfigKeys.MAP_AREA.value: map_preview_area_gdf,
+        MapConfigKeys.MAP_AREA_BOUNDARY.value: boundary_map_area_gdf,
+        MapConfigKeys.MAP_OUTER_AREA.value: map_area_gdf,
+        MapConfigKeys.MAP_SCALING_FACTOR.value: map_scaling_factor,
+        MapConfigKeys.PAPER_DIMENSION_MM.value: preview_paper_dimensions_mm,
+        MapConfigKeys.PEAKS_FILTER_RADIUS.value: peaks_filter_radius,
+        MapConfigKeys.MIN_PLACE_POPULATION.value: config.min_place_population,
+        MapConfigKeys.MAP_THEME.value: config.map_theme,
+        MapConfigKeys.PLOT_BRIDGES.value: config.plot_bridges,
+        MapConfigKeys.PLOT_TUNNELS.value: config.plot_tunnels,
+        MapConfigKeys.WANTED_CATEGORIES_AND_STYLES_CHANGES.value: config.wanted_categories_and_styles_edit,
+        MapConfigKeys.STYLES_ZOOM_LEVELS.value: styles_zoom_levels,
+        MapConfigKeys.GPXS_STYLES.value: gpxs_styles,
+        MapConfigKeys.GPXS.value: gpxs_gdf,
+    }
+    task_status, task_id = task_manager.add_task(
+        map_generator_config, QueueType.PREVIEW.value)
+    
+    if(task_id is None or task_status == ProcessingStatus.FAILED.value):
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Cannot start task")
+        
+    access_token = Utils.create_access_token(
+        data={"task_id": task_id}, expires_delta=JWT_EXPIRATION_TIME, algorithm=JWT_ALGORITHM, secret_key=SECRET_KEY
     )
 
-    nodes_gdf, ways_gdf, areas_gdf = osm_file_parser.create_gdf(
-        osm_file_name, CRS_OSM, CRS_DISPLAY)
+    return {"message": "Map preview is generating", "token": access_token, "status": task_status}
 
-    if (remove_osm_after_load):
-        try:
-            os.remove(osm_file_name)
-        except:
-            warnings.warn("Error while removing osm file.")
-
-    # ------------gpxs------------
-    # from FE
-    gpx_manager = GpxManager(GPX_FOLDER, CRS_DISPLAY)
-    gpxs_gdf = gpx_manager.get_gpxs_gdf()
-
-    # sixth function - filter loaded data
-    if (outer_map_area_gdf is not None):
-        nodes_gdf = GdfUtils.get_rows_inside_area(
-            nodes_gdf, outer_map_area_gdf)
+@server_app.get("/task_status", response_model=StatusResponseModel)
+def get_task_status(task_id: str = Depends(decode_task_id_from_JWT)):
+    """
+    Get the status of a specific task from id in token.
+    """
+    task_info = task_manager.get_task_info(task_id)
+    if (task_info is not None):
+        return {"status": task_info[SharedDictKeys.STATUS.value]}
     else:
-        nodes_gdf = GdfUtils.get_rows_inside_area(
-            nodes_gdf, map_area_gdf)
-    gdfs_convert_loaded_columns(
-        gpxs_gdf, nodes_gdf, ways_gdf, areas_gdf, base_config)
-    for var_name, var_value in map_theme['variables'].items():
-        map_theme['variables'][var_name] = StyleManager.convert_variables_from_dynamic(
-            var_value, zoom_level)
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
 
-    # ------------prefiltering nodes by importance------------
-    if (PEAKS_FILTER_SENSITIVITY is not None):
-        # radius is 1cm on paper * sensitivity
-        nodes_gdf = GdfUtils.filter_peaks(
-            nodes_gdf, map_scale*10*PEAKS_FILTER_SENSITIVITY)
-    if (MIN_POPULATION is not None):
-        nodes_gdf = GdfUtils.filter_place_by_population(
-            nodes_gdf, PLACES_TO_FILTER_BY_POPULATION, MIN_POPULATION)
+@server_app.delete("/terminate_task", response_model=MessageResponseModel)
+def terminate_task(task_id: str = Depends(decode_task_id_from_JWT)):
+    """
+    Terminate task from id in token.
+    """
+    terminated = task_manager.delete_task(task_id)
+    if (terminated):
+        return {"message": "Task terminated successfully"}
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Cannot terminate task - task not found")
+   
+@server_app.get("/download_map")
+def get_map_file(task_id: str = Depends(decode_task_id_from_JWT)):
+    task_info = task_manager.get_task_info(task_id)
+    if (task_info is None):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
+    if (task_info[SharedDictKeys.STATUS.value] != ProcessingStatus.COMPLETED.value):
+        raise HTTPException(status_code=status.HTTP_425_TOO_EARLY, detail="Task not completed yet")
+    file_path = None
+    for file in task_info[SharedDictKeys.FILES.value]:
+        if file.endswith(".pdf"):
+            file_path = file
+            break
+    if(file_path is None or not os.path.isfile(file_path)):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
+    
+    def iterfile():
+        # stream file and delete after completion
+        try:
+            #https://stackoverflow.com/questions/73550398/how-to-download-a-large-file-using-fastapi
+            with open(file_path, 'rb') as f:
+                while chunk := f.read(FILE_DOWNLOAD_CHUNK_SIZE):
+                    yield chunk
+            # delete file after successful streaming
+            delete_status = task_manager.delete_task(task_id)
+            if(not delete_status):
+                warnings.warn("Error: cannot remove task")
+        except Exception as e:
+            print(f"Error during file streaming: {str(e)}")
 
-    # seven function - get bg gdf
-    # get coastline and determine where is land and where water
-    coast_gdf, ways_gdf = GdfUtils.filter_rows(
-        ways_gdf, {'natural': 'coastline'}, compl=True)
-    bg_gdf = GdfUtils.create_background_gdf(
-        map_area_gdf, coast_gdf, map_theme['variables'][MapThemeVariable.WATER_COLOR],
-        map_theme['variables'][MapThemeVariable.LAND_COLOR])
-
-    # prepare styles
-    process_bridges_and_tunnels(ways_gdf, PLOT_BRIDGES, PLOT_TUNNELS)
-
-    ways_gdf = GdfUtils.merge_lines_gdf(ways_gdf, [])
-    gpxs_gdf = GdfUtils.merge_lines_gdf(gpxs_gdf, [])
-    # assing zoom specific styles
-    # eight function - style
-    gpxs_styles = StyleManager.convert_from_dynamic(
-        map_theme['styles']['gpxs'], WAYS_STYLE_ZOOM_LEVEL)
-    nodes_styles = StyleManager.convert_from_dynamic(
-        map_theme['styles']['nodes'], NODES_STYLE_ZOOM_LEVEL)
-    ways_styles = StyleManager.convert_from_dynamic(
-        map_theme['styles']['ways'], WAYS_STYLE_ZOOM_LEVEL)
-    areas_styles = StyleManager.convert_from_dynamic(
-        map_theme['styles']['areas'], AREAS_STYLE_ZOOM_LEVEL)
-
-    if (map_theme['variables'][MapThemeVariable.GPXS_STYLES_SCALE]):
-        StyleManager.scale_styles(
-            gpxs_styles, map_theme['variables'][MapThemeVariable.GPXS_STYLES_SCALE], map_scaling_factor)
-    if (map_theme['variables'][MapThemeVariable.NODES_STYLES_SCALE]):
-        StyleManager.scale_styles(
-            nodes_styles, map_theme['variables'][MapThemeVariable.NODES_STYLES_SCALE], map_scaling_factor)
-    if (map_theme['variables'][MapThemeVariable.WAYS_STYLES_SCALE]):
-        StyleManager.scale_styles(
-            ways_styles, map_theme['variables'][MapThemeVariable.WAYS_STYLES_SCALE], map_scaling_factor)
-    if (map_theme['variables'][MapThemeVariable.AREAS_STYLES_SCALE]):
-        StyleManager.scale_styles(
-            areas_styles, map_theme['variables'][MapThemeVariable.AREAS_STYLES_SCALE], map_scaling_factor)
-    StyleManager.assign_styles(gpxs_gdf, gpxs_styles)
-    StyleManager.assign_styles(
-        nodes_gdf, nodes_styles, base_config['nodes'][BaseConfigKeys.DONT_CATEGORIZE])
-    StyleManager.assign_styles(
-        ways_gdf, ways_styles, base_config['ways'][BaseConfigKeys.DONT_CATEGORIZE])
-    StyleManager.assign_styles(
-        areas_gdf, areas_styles, base_config['areas'][BaseConfigKeys.DONT_CATEGORIZE])
-
-    # ------------scaling and column calc------------ - to function
-    # ninth - prepare/edit styled columns
-    gdfs_prepare_styled_columns(gpxs_gdf, nodes_gdf, ways_gdf,
-                                areas_gdf, map_scaling_factor, base_config)
-
-    # ------------filter nodes by min req------------
-    nodes_gdf = GdfUtils.check_filter_nodes_min_req(nodes_gdf)
-
-    # 10 function - sort
-    areas_gdf['area_size'] = areas_gdf.geometry.area
-    bg_gdf['area_size'] = bg_gdf.area
-    # -----sort-----
-    GdfUtils.sort_gdf_by_columns(
-        bg_gdf, ['area_size'], ascending=False, na_position='last')
-
-    # sort by population and ele - main sort is by zindex in plotter
-    GdfUtils.sort_gdf_by_columns(
-        nodes_gdf, ['population', 'prominence', 'ele'], ascending=False, na_position='last')
-
-    # first by area (from biggest to smallest) and then by zindex smallest to biggest
-    GdfUtils.sort_gdf_by_columns(
-        areas_gdf, ['area_size'], ascending=False, na_position='last')
-    GdfUtils.sort_gdf_by_columns(
-        areas_gdf, [Style.ZINDEX.value], ascending=True, na_position='first', stable=True)
-
-    # 11 function - plot
-    # ------------plot------------
-    # todo add checks for errors in plotting
-    area_over_ways_filter = map_theme['variables'][MapThemeVariable.AREAS_OVER_WAYS_FILTER]
-    areas_over_normal_ways, areas_gdf = GdfUtils.filter_rows(
-        areas_gdf,  area_over_ways_filter[0], compl=True)
-    areas_as_ways = GdfUtils.filter_rows(
-        areas_over_normal_ways, area_over_ways_filter[1])
-    if (not areas_as_ways.empty and not ways_gdf.empty):
-        ways_gdf = GdfUtils.combine_gdfs([ways_gdf, areas_as_ways])
-
-    plotter_settings = {"map_area_gdf": map_area_gdf, "paper_dimensions_mm": paper_dimensions_mm,
-                        "map_scaling_factor": map_scaling_factor, "text_bounds_overflow_threshold": TEXT_BOUNDS_OVERFLOW_THRESHOLD,
-                        "text_wrap_names_len": TEXT_WRAP_NAMES_LEN, "outer_map_area_gdf": outer_map_area_gdf,
-                        "map_bg_color": map_theme['variables'][MapThemeVariable.LAND_COLOR]}
-
-    plotter = Plotter(map_area_gdf, paper_dimensions_mm,
-                      map_scaling_factor, TEXT_BOUNDS_OVERFLOW_THRESHOLD, TEXT_WRAP_NAMES_LEN, outer_map_area_gdf,
-                      map_theme['variables'][MapThemeVariable.TEXT_BB_EXPAND_PERCENT],
-                      map_theme['variables'][MapThemeVariable.MARKER_BB_EXPAND_PERCENT])
-    plotter.init(
-        map_theme['variables'][MapThemeVariable.LAND_COLOR], bg_gdf)
-    plotter.areas(areas_gdf)
-    del areas_gdf
-    if (not boundary_map_area_gdf.empty):
-        plotter.area_boundary(boundary_map_area_gdf,
-                              color="black")
-
-    del boundary_map_area_gdf
-
-    plotter.ways(ways_gdf)
-    del ways_gdf
-    # must be before nodes
-    plotter.gpxs(gpxs_gdf)
-    plotter.clip()
-    del gpxs_gdf
-    plotter.nodes(nodes_gdf, TEXT_WRAP_NAMES_LEN)
-    del nodes_gdf
-
-    plotter.generate_pdf(OUTPUT_PDF_NAME)
-    # plotter.show_plot()
+    return StreamingResponse(
+        iterfile(),
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename=map.pdf"}
+    )
 
 
-if __name__ == "__main__":
-    main()
+
+@server_app.on_event("shutdown")
+def shutdown_cleanup():
+    """
+    Cleanup any running processes and tmp files on server shutdown.
+    """
+    print("Shutting down server...")
+    task_manager.delete_all_tasks()

@@ -1,14 +1,12 @@
 import math
 
 import numpy as np
-import shapely.geometry as sg
 from shapely.geometry import Point, LineString, MultiLineString, Polygon, MultiPolygon, GeometryCollection
 from shapely.ops import unary_union, linemerge
 from pyproj import Geod
 
 from common.map_enums import WorldSides
-from common.custom_types import BoundsDict, DimensionsTuple
-from common.common_helpers import time_measurement
+from common.custom_types import BoundsDict
 class GeomUtils:
     
     @staticmethod
@@ -18,7 +16,6 @@ class GeomUtils:
                 WorldSides.SOUTH.value: bounds[1],
                 WorldSides.EAST.value: bounds[2],
                 WorldSides.NORTH.value: bounds[3]}
-
 
     @staticmethod
     def create_polygon_from_bounds(area_bounds: BoundsDict) -> Polygon:
@@ -59,17 +56,13 @@ class GeomUtils:
                     print(f"linemerge failed on extracted lines: {e}")
                     return MultiLineString(lines)
         return unioned
-    #! not used
-    @staticmethod
-    def is_geometry_inside_bounds(area_bounds: BoundsDict, polygon: GeometryCollection) -> bool:
-        return GeomUtils.is_geometry_inside_geometry(GeomUtils.create_polygon_from_bounds(area_bounds), polygon)
 
     @staticmethod
     def is_geometry_inside_geometry(inner: GeometryCollection, outer: GeometryCollection) -> bool:
         return outer.contains(inner)
     
     @staticmethod
-    def transform_geometry_to_display(ax, geometry):
+    def transform_geometry_to_display_coords(ax, geometry):
         """
         Converts a Polygon or MultiPolygon to a new geometry in display (plot) coordinates
         

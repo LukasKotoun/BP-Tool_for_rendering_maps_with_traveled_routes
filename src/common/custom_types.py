@@ -1,17 +1,16 @@
-from common.map_enums import WorldSides, Style, TextPositions, MinPlot, MarkerPosition
 from typing import NamedTuple, Optional
 from collections import namedtuple
+
+from common.map_enums import WorldSides, Style, TextPositions, MinPlot, MarkerPosition
 
 BoundsDict = dict[WorldSides, float]
 DimensionsTuple = tuple[float, float]
 Point = tuple[float, float]
-WantedArea = str | list[Point] | list[str | list[Point]]
 
 
 WantedAreas = list[dict[str, bool | int | list[list[float]|Point] | str]]
 OptDimensionsTuple = tuple[float | None, float | None]
 WantedCategories = dict[str, set[str]]
-UnwantedTags = dict[str, any]
 FeatureStyles = dict[Style, str | int | float]
 FeaturesCategoryStyle = dict[str, FeatureStyles]
 FeaturesCategoriesStyles = dict[str,
