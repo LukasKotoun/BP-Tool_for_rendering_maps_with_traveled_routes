@@ -51,6 +51,9 @@ class MapGeneratorPreviewConfigModel(BaseModel):
     gpxs_styles: Optional[Any] = []
 
 
+class AreaExistenceConfigModel(BaseModel):
+    map_area: Any
+
 class PaperDimensionsConfigModel(BaseModel):
     map_area: Any
     paper_dimensions: PaperDimensionsModel

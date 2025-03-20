@@ -51,13 +51,31 @@ def available_map_themes():
     return {"map_themes": STYLES.keys()}
 
 
+@server_app.post("/validate_area", response_model=MessageResponseModel)
+def validate_area_existence(config: AreaExistenceConfigModel):
+    try:
+        map_area = ReceivedStructureProcessor.validate_and_convert_areas_strucutre(
+            config.map_area, REQ_AREA_DICT_KEYS, key_with_area="area")
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=f"Error in config validation: {e}")
+    #find area
+    try:
+        map_area_gdf = get_map_area_gdf(
+            map_area, False)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"Error in area finding: {e}")
+
+    return {"message": "Area exists"}
+
+
+
 @server_app.post("/paper_dimensions", response_model=PaperDimensionResponseModel)
 def get_paper_dimensions(config: PaperDimensionsConfigModel):
     try:
         map_area = ReceivedStructureProcessor.validate_and_convert_areas_strucutre(
             config.map_area, REQ_AREA_DICT_KEYS, key_with_area="area")
-        map_area_gdf = get_map_area_gdf(
-            map_area, False)
         paper_dimensions = ReceivedStructureProcessor.convert_paper_dimension(
             config.paper_dimensions, True)
         wanted_orientation = ReceivedStructureProcessor.validate_wanted_orientation(
@@ -66,7 +84,13 @@ def get_paper_dimensions(config: PaperDimensionsConfigModel):
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail=f"Error in config validation: {e}")
-
+    #find area
+    try:
+        map_area_gdf = get_map_area_gdf(
+            map_area, False)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"Error in area finding: {e}")
     # ------------get paper dimension (size and orientation)------------
     map_area_dimensions = GdfUtils.get_dimensions_gdf(map_area_gdf)
     paper_dimensions_mm = Utils.adjust_paper_dimensions(map_area_dimensions, paper_dimensions,
@@ -81,11 +105,16 @@ def generate_map_borders(config: MapBorderConfigModel):
             config.paper_dimensions, False)
         map_area = ReceivedStructureProcessor.validate_and_convert_areas_strucutre(
             config.map_area, REQ_AREA_DICT_KEYS, key_with_area="area")
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Error in config validation: {e}")
+    #find area
+    try:
         map_area_gdf, boundary_map_area_gdf = get_map_area_gdf(
             map_area, True)
     except Exception as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Error in config validation: {e}")
-
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"Error in area finding: {e}")
+        
     if (config.fit_paper_size):
         map_area_gdf = GdfUtils.expand_gdf_area_fitPaperSize(
             map_area_gdf, paper_dimensions_mm)
@@ -123,8 +152,7 @@ def get_zoom_level(config: ZoomLevelConfigModel):
     try:
         map_area = ReceivedStructureProcessor.validate_and_convert_areas_strucutre(
             config.map_area, REQ_AREA_DICT_KEYS, key_with_area="area")
-        map_area_gdf = get_map_area_gdf(
-            map_area, False)
+        
         paper_dimensions_mm = ReceivedStructureProcessor.convert_paper_dimension(
             config.paper_dimensions, False)
         fit_paper_size = config.fit_paper_size
@@ -132,7 +160,14 @@ def get_zoom_level(config: ZoomLevelConfigModel):
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail=f"Error in config validation: {e}")
-
+    #find area    
+    try:
+        map_area_gdf = get_map_area_gdf(
+            map_area, False)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"Error in area finding: {e}")
+        
     expanded_map_area_dimensions = GdfUtils.get_dimensions_gdf(GdfUtils.expand_gdf_area_fitPaperSize(
         map_area_gdf, paper_dimensions_mm))
     map_scaling_factor = Utils.calc_map_scaling_factor(expanded_map_area_dimensions,
@@ -166,11 +201,16 @@ def generate_map_normal(gpxs: Optional[List[UploadFile]] = File(None),
 
         map_area = ReceivedStructureProcessor.validate_and_convert_areas_strucutre(
             config.map_area, REQ_AREA_DICT_KEYS, key_with_area="area")
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Error in config validation: {e}")
+    #find area
+    try:
         map_area_gdf, boundary_map_area_gdf = get_map_area_gdf(
             map_area, True)
     except Exception as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Error in config validation: {e}")
-
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"Error in area finding: {e}")
+        
     # calc needed values before storing in front - are different for normal and preview
     # ------------get paper dimension (size and orientation)------------
         # calc scaling factor always from expanded are on paper - to get correct sizes of scaled objects
@@ -257,19 +297,30 @@ def generate_preview_map(gpxs: Optional[List[UploadFile]] = File(None),
 
         map_area = ReceivedStructureProcessor.validate_and_convert_areas_strucutre(
             config.map_area, REQ_AREA_DICT_KEYS, key_with_area="area")
-        map_area_gdf, boundary_map_area_gdf = get_map_area_gdf(
-            map_area, True)
-        if (config.map_preview_area is None):
-            map_preview_area_gdf = map_area_gdf.copy()
-        else:
+
+        if(config.map_preview_area is not None):
             map_preview_area = ReceivedStructureProcessor.validate_and_convert_areas_strucutre(
                 config.map_preview_area, allowed_keys_and_types=REQ_AREA_DICT_KEYS, key_with_area="area")
-            map_preview_area_gdf = get_map_area_gdf(
-                map_preview_area, False)
-
+        else:
+            map_preview_area = None
+      
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail=f"Error in config validation: {e}")
+    #find area
+    try:
+        map_area_gdf, boundary_map_area_gdf = get_map_area_gdf(
+            map_area, True)
+        if (map_preview_area is None):
+            map_preview_area_gdf = map_area_gdf.copy()
+        else:
+            map_preview_area_gdf = get_map_area_gdf(
+                map_preview_area, False)
+            
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"Error in area finding: {e}")
+        
     # area - big area with all settings
     # preview_area - area to display
     # calc needed values before storing in front - are different for normal and preview

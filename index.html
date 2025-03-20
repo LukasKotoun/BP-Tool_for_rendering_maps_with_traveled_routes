@@ -5,18 +5,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Send Data with File</title>
   <script>
+    token = null
     AREA = [{"area": "Horní vilémovice, Česko",
     "plot": true, 'category': 0, 'width': 1}]
     // AREA = [{'area':[[15.8096936,48.6459956], [15.8232333, 48.6460311], [15.8232550, 48.6397219], [15.8097686, 48.6397503]], "plot": false}]
     FIT_PAPER = true
     PAPER_DIM = {'height': 297, 'width': 210}
     data =   JSON.stringify({
-        "osm_files": ['cz'],
+        "osm_files": ['brno', 'trebic', 'cz'],
         // "map_area":[{"area": "Třebíč, Česko",
         //  "plot": false}, {"area": "Trnava, Česko", "plot":false},
         //  {"area":"Horní vilémovice, Česko", "plot": false, 'category':0}],
         "map_area":AREA,
-        // "map_preview_area":[{"area": "Třebíč, Česko",
+        // "map_preview_area":[{"area": "Třebísč, Česko",
         //  "plot": true ,'category': 0, 'width': 1}],
          "paper_dimensions":PAPER_DIM,
         "paper_preview_dimensions": {'width': 100, 'height': 100},
@@ -110,7 +111,7 @@
 
         // Parse the JSON response from FastAPI
         const result = await response.json();
-        if (result['token'] != undefined){
+        if (result['token'] != undefined && token == null){
           token = result['token']
         }
         // Log the result to the console
@@ -309,13 +310,7 @@
         const response = await fetch('http://localhost:8000/generate_map_borders/', {
           method: 'POST',
           body: JSON.stringify({       
-          "map_area":[
-          //   {"area": "Česko",
-          // "plot": true, 'category': 0, 'width': 1},
-          // {"area": "Německo",
-          // "plot": false, 'category': 0, 'width': 1}, {"area": "Rakousko", "plot":true, 'category': 0, 'width': 1},
-          {"area": "Rusko", "plot":true, 'category': 0, 'width': 1}
-        ],
+          "map_area":AREA,
           "paper_dimensions":{'height': 2000, 'width': 3050},
           "fit_paper_size": false,
           "fit_paper_size_bounds_plot": true,
@@ -369,8 +364,71 @@
         console.error('Error:', error);
       }
     }
+    async function validate_area() {
+      try {
+        const response = await fetch('http://localhost:8000/validate_area/', {
+          method: 'POST',
+    //zoom
+    body: JSON.stringify({
+        "map_area":AREA,
+      }),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      //paper
+     
 
+    
+        });
 
+        // Parse the JSON response from FastAPI
+        const result = await response.json();
+        // Log the result to the console
+        console.log('Response:', result);
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    }
+    async function get_themes() {
+      try {
+        const response = await fetch('http://localhost:8000/available_map_themes/', {
+          method: 'GET',
+    //zoom
+    
+      //paper
+     
+
+    
+        });
+
+        // Parse the JSON response from FastAPI
+        const result = await response.json();
+        // Log the result to the console
+        console.log('Response:', result);
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    }
+    async function get_files() {
+      try {
+        const response = await fetch('http://localhost:8000/available_osm_files/', {
+          method: 'GET',
+    //zoom
+   
+      //paper
+     
+
+    
+        });
+
+        // Parse the JSON response from FastAPI
+        const result = await response.json();
+        // Log the result to the console
+        console.log('Response:', result);
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    }
   </script>
 </head>
 <body>
@@ -389,6 +447,9 @@
   <button onclick="terminate()"> Ukončit</button>
   <button onclick="download_map()"> Stáhnout</button>
   <button onclick="get_map_borders()"> okraje</button>
+  <button onclick="validate_area()"> kontrola oblasti</button>
+  <button onclick="get_themes()"> vzhledy</button>
+  <button onclick="get_files()"> soubory</button>
 
 </body>
 </html>
