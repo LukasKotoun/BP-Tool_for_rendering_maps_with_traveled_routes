@@ -20,7 +20,7 @@ def get_map_area_gdf(wanted_areas_to_display, boundary=False):
     if (boundary):
         # ------------store bounds to plot and combine area rows in gdf to 1 row------------
         boundary_map_area_gdf = GdfUtils.get_areas_borders_gdf(
-            GdfUtils.filter_rows(map_area_gdf, {'plot': True, 'width': ''}), 'category')
+            GdfUtils.filter_rows(map_area_gdf, {'plot': True, 'width': ''}), 'group')
         boundary_map_area_gdf = GdfUtils.map_gdf_column_names(
             boundary_map_area_gdf, REQ_AREAS_KEYS_MAPPING_DICT)
         GdfUtils.remove_columns(boundary_map_area_gdf, [

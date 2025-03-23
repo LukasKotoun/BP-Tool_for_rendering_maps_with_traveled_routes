@@ -366,8 +366,8 @@ MARKERS_UCODE_MAPPING: dict[str, str] = {
 }
 
 GPX_FILE_COLUMN = 'file_name'
-GPX_CATEGORY_COLUMN = 'category'
-GPX_NORMAL_COLUMNS = [GPX_FILE_COLUMN, GPX_CATEGORY_COLUMN]
+GPX_GROUP_COLUMN = 'group'
+GPX_NORMAL_COLUMNS = [GPX_FILE_COLUMN, GPX_GROUP_COLUMN]
 GPX_GENERAL_KEYS = ['general']
 
 ALLOWED_WANTED_PAPER_ORIENTATIONS = [MapOrientation.AUTOMATIC.value, MapOrientation.LANDSCAPE.value, MapOrientation.PORTRAIT.value]
@@ -379,7 +379,7 @@ FIT_PAPER_VALIDATION = {"fit": (bool, True, None), "plot": (bool, True, None),
                         "width": (int | float, False, lambda v: MIN_WIDTH <= v)}
 
 # key, (types, required)
-REQ_AREA_DICT_KEYS = {"area": (str | list, True, None), "plot": (bool, True, None), "category": (
+REQ_AREA_DICT_KEYS = {"area": (str | list, True, None), "plot": (bool, True, None), "group": (
     int, False, lambda v: 0 <= v), "width": (int | float, False, lambda v: MIN_WIDTH <= v)}
 REQ_AREAS_KEYS_MAPPING_DICT = {"width": Style.WIDTH.value}
 

@@ -6,8 +6,8 @@
     <title>Send Data with File</title>
     <script>
       token = null
-      AREA = [{ area: "Horní vilémovice, Česko", plot: true, category: 0, width: 1 }]
-      // AREA = [{'area':[[15.8096936,48.6459956], [15.8232333, 48.6460311], [15.8232550, 48.6397219], [15.8097686, 48.6397503]], "plot": false}]
+      // AREA = [{ area: "Horní vilémovice, Česko", plot: true, category: 0, width: 1 }]
+      AREA = [{'area':[[15.8096936,48.6459956], [15.8232333, 48.6460311], [15.8232550, 48.6397219], [15.8097686, 48.6397503]], "plot": false}]
       FIT_PAPER = {fit: true, plot: false, width:8 }
       PAPER_DIM = { height: 297, width: 210 }
       data = JSON.stringify({
@@ -21,7 +21,6 @@
         paper_dimensions: PAPER_DIM,
         paper_preview_dimensions: { width: 100, height: 100 },
         fit_paper_size: FIT_PAPER,
-        fit_paper_size_bounds_plot: false,
         plot_bridges: false,
         plot_tunnels: false,
         gpxs_categories: {},
@@ -30,7 +29,7 @@
         peaks_filter_sensitivity: 2.5,
         gpxs_styles: {
           file_name: {},
-          category: {},
+          group: {},
           general: { color: "red", marker_layer_position: "under_text", start_marker: "mpl_start", finish_marker: "fa_finish" }
         },
         wanted_categories_and_styles_edit: {
@@ -213,7 +212,7 @@
 
             body: JSON.stringify({
               map_area: AREA,
-              paper_dimensions: PAPER_DIM,
+              paper_dimensions: {width: 2000, height: undefined},
               given_smaller_paper_dimension: false,
               wanted_orientation: "automatic"
             }),
