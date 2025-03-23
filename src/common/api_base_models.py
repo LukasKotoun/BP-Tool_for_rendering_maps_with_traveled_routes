@@ -9,7 +9,12 @@ class ZoomLevelsModel(BaseModel):
     ways: int
     areas: int
     general: int
-    
+
+class FitPaperSizeModel(BaseModel):
+    fit: Optional[bool] = False
+    plot: Optional[bool] = False
+    width: Optional[float|int] = None
+
 class PaperDimensionsModel(BaseModel):
     width: float | int | None
     height: float | int | None
@@ -19,8 +24,7 @@ class MapGeneratorConfigModel(BaseModel):
     paper_dimensions: PaperDimensionsModel
     map_preview_area: Optional[Any] = None
     paper_preview_dimensions: Optional[PaperDimensionsModel] = None
-    fit_paper_size: Optional[bool] = False
-    fit_paper_size_bounds_plot: Optional[bool] = False
+    fit_paper_size: FitPaperSizeModel
     osm_files: List[str]
     min_place_population: Optional[int|float] = None
     peaks_filter_sensitivity: Optional[int|float] = None
@@ -38,8 +42,8 @@ class MapGeneratorPreviewConfigModel(BaseModel):
     paper_dimensions: PaperDimensionsModel
     map_preview_area: Optional[Any] = None
     paper_preview_dimensions: PaperDimensionsModel
-    fit_paper_size: Optional[bool] = False
-    fit_paper_size_bounds_plot: Optional[bool] = False
+    fit_paper_size: FitPaperSizeModel
+
     min_place_population: Optional[int|float] = None
     peaks_filter_sensitivity: Optional[int|float] = None
     map_theme: Optional[str] = ""
@@ -63,13 +67,17 @@ class PaperDimensionsConfigModel(BaseModel):
 class ZoomLevelConfigModel(BaseModel):
     map_area: Any
     paper_dimensions: PaperDimensionsModel
-    fit_paper_size: Optional[bool] = False
+
+class PaperDimensionsZoomLevelConfigModel(BaseModel):
+    map_area: Any
+    paper_dimensions: PaperDimensionsModel
+    given_smaller_paper_dimension: Optional[bool] = True
+    wanted_orientation: Optional[str] = MapOrientation.AUTOMATIC.value
 
 class MapBorderConfigModel(BaseModel):
     map_area: Any
     paper_dimensions: PaperDimensionsModel
-    fit_paper_size: Optional[bool] = False
-    fit_paper_size_bounds_plot: Optional[bool] = False
+    fit_paper_size: FitPaperSizeModel
 
 
 class GeneratorResponseStatusModel(BaseModel):
@@ -83,6 +91,11 @@ class ZoomLevelResponseModel(BaseModel):
 class PaperDimensionResponseModel(BaseModel):
     width: float | int
     height: float | int
+
+class PaperDimensionsZoomLevelResponseModel(BaseModel):
+    width: float | int
+    height: float | int
+    zoom_level: int    
 
 class AvailableOsmFilesResponseModel(BaseModel):
     osm_files: List[str]

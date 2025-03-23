@@ -2,7 +2,7 @@ from typing import Dict, List, Union, Any, Callable
 
 from common.map_enums import Style
 from common.custom_types import RowsConditionsAND
-from common.api_base_models import PaperDimensionsModel
+from common.api_base_models import PaperDimensionsModel, FitPaperSizeModel
 
 class ReceivedStructureProcessor:
 
@@ -79,6 +79,10 @@ class ReceivedStructureProcessor:
         # Check types.
         for key, (expected_type, required, validation_func) in allowed_keys_and_types.items():
             if key in values_dict and expected_type is not None:
+                if(required and values_dict[key] is None):
+                    return False
+                if(not required and values_dict[key] is None):
+                    continue
                 if (not required):
                     expected_type = Union[expected_type, type(None)]
                 if not isinstance(values_dict[key], expected_type):
@@ -303,4 +307,12 @@ class ReceivedStructureProcessor:
     def validate_zoom_levels(data: dict[str, int], level_validation: dict[str, tuple[type, bool, Callable]]) -> bool:
         if (not ReceivedStructureProcessor.check_dict_values_and_types(data, level_validation)):
             raise ValueError(f"Invalid zoom level")
+        return True
+
+    @staticmethod
+    def validate_fit_paper(data: FitPaperSizeModel, fit_paper_validation: dict[str, tuple[type, bool, Callable]]) -> bool:
+        if (not ReceivedStructureProcessor.check_dict_values_and_types(data.dict(), fit_paper_validation)):
+            raise ValueError(f"Invalid zoom level")
+        if(data.plot and data.width is None):
+            raise ValueError("Width must be provided if plot is True")
         return True

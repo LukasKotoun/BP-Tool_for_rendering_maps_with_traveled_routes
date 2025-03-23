@@ -374,15 +374,19 @@ ALLOWED_WANTED_PAPER_ORIENTATIONS = [MapOrientation.AUTOMATIC.value, MapOrientat
 MIN_WIDTH = 0.05
 MIN_TEXT_WIDTH = 0.1
 
+
+FIT_PAPER_VALIDATION = {"fit": (bool, True, None), "plot": (bool, True, None),
+                        "width": (int | float, False, lambda v: MIN_WIDTH <= v)}
+
 # key, (types, required)
 REQ_AREA_DICT_KEYS = {"area": (str | list, True, None), "plot": (bool, True, None), "category": (
     int, False, lambda v: 0 <= v), "width": (int | float, False, lambda v: MIN_WIDTH <= v)}
 REQ_AREAS_KEYS_MAPPING_DICT = {"width": Style.WIDTH.value}
 
 FE_EDIT_STYLES_VALIDATION = {'width_scale': (float | int, False, lambda v: MIN_WIDTH <= v),
-                             "text_font_size_scale": (float | int, False, lambda v: MIN_TEXT_WIDTH <= v)}
+                             "text_scale": (float | int, False, lambda v: MIN_TEXT_WIDTH <= v)}
 FE_EDIT_STYLES_MAPPING = {"width_scale": (Style.FE_WIDTH_SCALE.value, None),
-                          "text_font_size_scale": (Style.FE_TEXT_FONT_SIZE_SCALE.value, None)}
+                          "text_scale": (Style.FE_TEXT_FONT_SIZE_SCALE.value, None)}
 FE_STYLES_ALLOWED_ELEMENTS = ['nodes', 'ways', 'areas']
 
 ZOOM_STYLE_LEVELS_VALIDATION = {"nodes": (int, True, lambda v: 1 <= v <= 10), "ways": (

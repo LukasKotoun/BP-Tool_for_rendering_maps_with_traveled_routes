@@ -98,6 +98,72 @@ def get_paper_dimensions(config: PaperDimensionsConfigModel):
 
     return {"width": paper_dimensions_mm[0], "height": paper_dimensions_mm[1]}
 
+@server_app.post("/zoom_level", response_model=ZoomLevelResponseModel)
+def get_zoom_level_endpoint(config: ZoomLevelConfigModel):
+    try:
+        map_area = ReceivedStructureProcessor.validate_and_convert_areas_strucutre(
+            config.map_area, REQ_AREA_DICT_KEYS, key_with_area="area")
+        
+        paper_dimensions_mm = ReceivedStructureProcessor.convert_paper_dimension(
+            config.paper_dimensions, False)
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=f"Error in config validation: {e}")
+    #find area    
+    try:
+        map_area_gdf = get_map_area_gdf(
+            map_area, False)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"Error in area finding: {e}")
+        
+    expanded_map_area_dimensions = GdfUtils.get_dimensions_gdf(GdfUtils.expand_gdf_area_fitPaperSize(
+        map_area_gdf, paper_dimensions_mm))
+    map_scaling_factor = Utils.calc_map_scaling_factor(expanded_map_area_dimensions,
+                                                       paper_dimensions_mm)
+    zoom_level = Utils.get_zoom_level(
+        map_scaling_factor, ZOOM_MAPPING, 0.2)
+    return {"zoom_level": zoom_level}
+
+
+@server_app.post("/paper_and_zoom", response_model=PaperDimensionsZoomLevelResponseModel)
+def get_zoom_and_paper(config: PaperDimensionsZoomLevelConfigModel):
+    try:
+        map_area = ReceivedStructureProcessor.validate_and_convert_areas_strucutre(
+            config.map_area, REQ_AREA_DICT_KEYS, key_with_area="area")
+        paper_dimensions = ReceivedStructureProcessor.convert_paper_dimension(
+            config.paper_dimensions, True)
+        ReceivedStructureProcessor.validate_wanted_orientation(
+            config.wanted_orientation, ALLOWED_WANTED_PAPER_ORIENTATIONS)
+        wanted_orientation = config.wanted_orientation
+        given_smaller_paper_dimension = config.given_smaller_paper_dimension
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=f"Error in config validation: {e}")
+    #find area    
+    try:
+        map_area_gdf = get_map_area_gdf(
+            map_area, False)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"Error in area finding: {e}")
+
+    #paper
+    map_area_dimensions = GdfUtils.get_dimensions_gdf(map_area_gdf)
+    paper_dimensions_mm = Utils.adjust_paper_dimensions(map_area_dimensions, paper_dimensions,
+                                                        given_smaller_paper_dimension, wanted_orientation)
+    #zoom
+    expanded_map_area_dimensions = GdfUtils.get_dimensions_gdf(GdfUtils.expand_gdf_area_fitPaperSize(
+        map_area_gdf, paper_dimensions_mm))
+    map_scaling_factor = Utils.calc_map_scaling_factor(expanded_map_area_dimensions,
+                                                       paper_dimensions_mm)
+    zoom_level = Utils.get_zoom_level(
+        map_scaling_factor, ZOOM_MAPPING, 0.2)
+    return {"width": paper_dimensions_mm[0], "height": paper_dimensions_mm[1], "zoom_level": zoom_level}
+
+
 @server_app.post("/generate_map_borders")
 def generate_map_borders(config: MapBorderConfigModel):
     try:
@@ -105,6 +171,8 @@ def generate_map_borders(config: MapBorderConfigModel):
             config.paper_dimensions, False)
         map_area = ReceivedStructureProcessor.validate_and_convert_areas_strucutre(
             config.map_area, REQ_AREA_DICT_KEYS, key_with_area="area")
+        ReceivedStructureProcessor.validate_fit_paper(config.fit_paper_size, FIT_PAPER_VALIDATION)
+
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Error in config validation: {e}")
     #find area
@@ -115,13 +183,16 @@ def generate_map_borders(config: MapBorderConfigModel):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail=f"Error in area finding: {e}")
         
-    if (config.fit_paper_size):
+    if (config.fit_paper_size.fit):
         map_area_gdf = GdfUtils.expand_gdf_area_fitPaperSize(
             map_area_gdf, paper_dimensions_mm)
         map_area_dimensions = GdfUtils.get_dimensions_gdf(map_area_gdf)
-        if (config.fit_paper_size_bounds_plot):
+        if (config.fit_paper_size.plot):
+            map_area_copy = map_area_gdf.copy()
+            map_area_copy[Style.WIDTH.value] = config.fit_paper_size.width
             boundary_map_area_gdf = GdfUtils.combine_gdfs(
-                [boundary_map_area_gdf, map_area_gdf.copy()])
+                [boundary_map_area_gdf, map_area_copy])
+
     file_id = uuid7str()
     file_path = plot_map_borders(file_id, map_area_gdf, boundary_map_area_gdf, paper_dimensions_mm)
     if(file_path is None or not os.path.isfile(file_path)):
@@ -147,34 +218,6 @@ def generate_map_borders(config: MapBorderConfigModel):
 
 
 
-@server_app.post("/zoom_level", response_model=ZoomLevelResponseModel)
-def get_zoom_level(config: ZoomLevelConfigModel):
-    try:
-        map_area = ReceivedStructureProcessor.validate_and_convert_areas_strucutre(
-            config.map_area, REQ_AREA_DICT_KEYS, key_with_area="area")
-        
-        paper_dimensions_mm = ReceivedStructureProcessor.convert_paper_dimension(
-            config.paper_dimensions, False)
-        fit_paper_size = config.fit_paper_size
-
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail=f"Error in config validation: {e}")
-    #find area    
-    try:
-        map_area_gdf = get_map_area_gdf(
-            map_area, False)
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=f"Error in area finding: {e}")
-        
-    expanded_map_area_dimensions = GdfUtils.get_dimensions_gdf(GdfUtils.expand_gdf_area_fitPaperSize(
-        map_area_gdf, paper_dimensions_mm))
-    map_scaling_factor = Utils.calc_map_scaling_factor(expanded_map_area_dimensions,
-                                                       paper_dimensions_mm)
-    zoom_level = Utils.get_zoom_level(
-        map_scaling_factor, ZOOM_MAPPING, 0.2)
-    return {"zoom_level": zoom_level}
 
 
 @server_app.post("/generate-map-normal", response_model=GeneratorResponseStatusModel)
@@ -198,6 +241,7 @@ def generate_map_normal(gpxs: Optional[List[UploadFile]] = File(None),
             config.wanted_categories_and_styles_edit, ALLOWED_WANTED_ELEMENTS_STRUCTURE, FE_EDIT_STYLES_VALIDATION)
         gpxs_styles = ReceivedStructureProcessor.validate_and_convert_gpx_styles(
             config.gpxs_styles, GPX_NORMAL_COLUMNS, GPX_GENERAL_KEYS, GPX_STYLES_VALIDATION, GPX_STYLES_MAPPING)
+        ReceivedStructureProcessor.validate_fit_paper(config.fit_paper_size, FIT_PAPER_VALIDATION)
 
         map_area = ReceivedStructureProcessor.validate_and_convert_areas_strucutre(
             config.map_area, REQ_AREA_DICT_KEYS, key_with_area="area")
@@ -214,15 +258,17 @@ def generate_map_normal(gpxs: Optional[List[UploadFile]] = File(None),
     # calc needed values before storing in front - are different for normal and preview
     # ------------get paper dimension (size and orientation)------------
         # calc scaling factor always from expanded are on paper - to get correct sizes of scaled objects
-    if (config.fit_paper_size):
+    if (config.fit_paper_size.fit):
         map_area_gdf = GdfUtils.expand_gdf_area_fitPaperSize(
             map_area_gdf, paper_dimensions_mm)
         map_area_dimensions = GdfUtils.get_dimensions_gdf(map_area_gdf)
         map_scaling_factor = Utils.calc_map_scaling_factor(map_area_dimensions,
                                                            paper_dimensions_mm)
-        if (config.fit_paper_size_bounds_plot):
+        if (config.fit_paper_size.plot):
+            map_area_copy = map_area_gdf.copy()
+            map_area_copy[Style.WIDTH.value] = config.fit_paper_size.width
             boundary_map_area_gdf = GdfUtils.combine_gdfs(
-                [boundary_map_area_gdf, map_area_gdf.copy()])
+                [boundary_map_area_gdf, map_area_copy])
     else:
         expanded_map_area_dimensions = GdfUtils.get_dimensions_gdf(GdfUtils.expand_gdf_area_fitPaperSize(
             map_area_gdf, paper_dimensions_mm))
@@ -291,12 +337,14 @@ def generate_preview_map(gpxs: Optional[List[UploadFile]] = File(None),
             config.paper_preview_dimensions, False)
         ReceivedStructureProcessor.validate_wanted_elements_and_styles(
             config.wanted_categories_and_styles_edit, ALLOWED_WANTED_ELEMENTS_STRUCTURE, FE_EDIT_STYLES_VALIDATION)
-
+        ReceivedStructureProcessor.validate_fit_paper(config.fit_paper_size, FIT_PAPER_VALIDATION)
+        
         gpxs_styles = ReceivedStructureProcessor.validate_and_convert_gpx_styles(
             config.gpxs_styles, GPX_NORMAL_COLUMNS, GPX_GENERAL_KEYS, GPX_STYLES_VALIDATION, GPX_STYLES_MAPPING)
 
         map_area = ReceivedStructureProcessor.validate_and_convert_areas_strucutre(
             config.map_area, REQ_AREA_DICT_KEYS, key_with_area="area")
+        
 
         if(config.map_preview_area is not None):
             map_preview_area = ReceivedStructureProcessor.validate_and_convert_areas_strucutre(
@@ -325,7 +373,7 @@ def generate_preview_map(gpxs: Optional[List[UploadFile]] = File(None),
     # preview_area - area to display
     # calc needed values before storing in front - are different for normal and preview
     (map_scaling_factor, map_preview_area_gdf, map_area_gdf,
-     map_scale) = calc_preview(map_area_gdf, paper_dimensions_mm, config.fit_paper_size, map_preview_area_gdf, preview_paper_dimensions_mm)
+     map_scale) = calc_preview(map_area_gdf, paper_dimensions_mm, config.fit_paper_size.fit, map_preview_area_gdf, preview_paper_dimensions_mm)
 
     map_preview_area_gdf = GdfUtils.change_crs(
         map_preview_area_gdf, CRS_DISPLAY)
