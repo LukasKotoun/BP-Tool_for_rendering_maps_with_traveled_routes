@@ -1,8 +1,8 @@
 from typing import Any
 
-from config import CRS_OSM, CRS_DISPLAY, REQ_AREAS_KEYS_MAPPING_DICT, OUTPUT_PDF_FOLDER, OSM_TMP_FILE_FOLDER, DEFAULT_STYLE, MANDATORY_WAYS
+from config import CRS_OSM, CRS_DISPLAY, OUTPUT_PDF_FOLDER, OSM_TMP_FILE_FOLDER, DEFAULT_STYLE, MANDATORY_WAYS
 from config import STYLES, FE_EDIT_STYLES_VALIDATION, FE_STYLES_ALLOWED_ELEMENTS, FE_EDIT_STYLES_MAPPING, NODES_ALSO_FROM_AREA
-from config import PLACES_TO_FILTER_BY_POPULATION
+from config import PLACES_TO_FILTER_BY_POPULATION, REQ_AREA_KEY_WITH_AREA, REQ_AREA_KEY_TO_GROUP_BY, REQ_AREA_KEY_WITH_BOOLEAN_PLOT
 from common.map_enums import ProcessingStatus, SharedDictKeys, BaseConfigKeys, MapConfigKeys, MapThemeVariable, Style
 from modules.gdf_utils import GdfUtils
 from modules.utils import Utils
@@ -15,18 +15,16 @@ from modules.received_structure_processor import ReceivedStructureProcessor
 
 def get_map_area_gdf(wanted_areas_to_display, boundary=False):
     map_area_gdf = GdfUtils.get_whole_area_gdf(
-        wanted_areas_to_display, 'area', CRS_OSM, CRS_DISPLAY)
+        wanted_areas_to_display, REQ_AREA_KEY_WITH_AREA, CRS_OSM, CRS_DISPLAY)
 
     if (boundary):
         # ------------store bounds to plot and combine area rows in gdf to 1 row------------
         boundary_map_area_gdf = GdfUtils.get_areas_borders_gdf(
-            GdfUtils.filter_rows(map_area_gdf, {'plot': True, 'width': ''}), 'group')
-        boundary_map_area_gdf = GdfUtils.map_gdf_column_names(
-            boundary_map_area_gdf, REQ_AREAS_KEYS_MAPPING_DICT)
+            GdfUtils.filter_rows(map_area_gdf, {REQ_AREA_KEY_WITH_BOOLEAN_PLOT: True, Style.WIDTH.value: ''}), REQ_AREA_KEY_TO_GROUP_BY)
         GdfUtils.remove_columns(boundary_map_area_gdf, [
-                                boundary_map_area_gdf.geometry.name, *REQ_AREAS_KEYS_MAPPING_DICT.values()], True)
+                                boundary_map_area_gdf.geometry.name, Style.WIDTH.value], True)
     GdfUtils.remove_columns(map_area_gdf, [
-                            map_area_gdf.geometry.name, *REQ_AREAS_KEYS_MAPPING_DICT.values()], True)
+                            map_area_gdf.geometry.name, Style.WIDTH.value], True)
     map_area_gdf = GdfUtils.combine_rows_gdf(map_area_gdf)
     if (boundary):
         return map_area_gdf, boundary_map_area_gdf
@@ -171,11 +169,11 @@ def calc_preview(map_area_gdf, paper_dimensions_mm, fit_paper_size, preview_map_
     return map_scaling_factor, preview_map_area_gdf, map_area_gdf, map_scale
 
 
-def plot_map_borders(file_id, map_area_gdf, boundary_map_area_gdf, paper_dimension_mm):
+def plot_map_borders(file_id, map_area_gdf, boundary_map_area_gdf, paper_dimension_mm, area_color):
     plotter = Plotter(map_area_gdf, paper_dimension_mm,
                       0, 0, None, 0, 0)
 
-    plotter.init('#FFFFFF', None)
+    plotter.init(area_color, None, convert_polygons=False)
 
     plotter.area_boundary(boundary_map_area_gdf,
                           color="black")

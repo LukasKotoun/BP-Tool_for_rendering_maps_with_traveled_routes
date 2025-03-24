@@ -31,6 +31,8 @@ task_manager = TaskManager(max_normal_tasks=MAX_CONCURRENT_TASKS_NORMAL,
                                          max_preview_tasks=MAX_CONCURRENT_TASKS_PREVIEW,
                                          gpx_tmp_folder=GPX_TMP_FOLDER)
 
+
+
 # endpoints helpers
 def decode_task_id_from_JWT(token: str = Depends(OAUTH2_SCHEME)):
     payload = Utils.decode_jwt(token, JWT_ALGORITHM, SECRET_KEY)
@@ -55,7 +57,7 @@ def available_map_themes():
 def validate_area_existence(config: AreaExistenceConfigModel):
     try:
         map_area = ReceivedStructureProcessor.validate_and_convert_areas_strucutre(
-            config.map_area, REQ_AREA_DICT_KEYS, key_with_area="area")
+            config.map_area, REQ_AREA_DICT_KEYS, REQ_AREAS_MAPPING_DICT, key_with_area=REQ_AREA_KEY_WITH_AREA)
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail=f"Error in config validation: {e}")
@@ -75,7 +77,7 @@ def validate_area_existence(config: AreaExistenceConfigModel):
 def get_paper_dimensions(config: PaperDimensionsConfigModel):
     try:
         map_area = ReceivedStructureProcessor.validate_and_convert_areas_strucutre(
-            config.map_area, REQ_AREA_DICT_KEYS, key_with_area="area")
+            config.map_area, REQ_AREA_DICT_KEYS, REQ_AREAS_MAPPING_DICT, key_with_area=REQ_AREA_KEY_WITH_AREA)
         paper_dimensions = ReceivedStructureProcessor.convert_paper_dimension(
             config.paper_dimensions, True)
         wanted_orientation = ReceivedStructureProcessor.validate_wanted_orientation(
@@ -102,7 +104,7 @@ def get_paper_dimensions(config: PaperDimensionsConfigModel):
 def get_zoom_level_endpoint(config: ZoomLevelConfigModel):
     try:
         map_area = ReceivedStructureProcessor.validate_and_convert_areas_strucutre(
-            config.map_area, REQ_AREA_DICT_KEYS, key_with_area="area")
+            config.map_area, REQ_AREA_DICT_KEYS, REQ_AREAS_MAPPING_DICT, key_with_area=REQ_AREA_KEY_WITH_AREA)
         
         paper_dimensions_mm = ReceivedStructureProcessor.convert_paper_dimension(
             config.paper_dimensions, False)
@@ -131,7 +133,7 @@ def get_zoom_level_endpoint(config: ZoomLevelConfigModel):
 def get_zoom_and_paper(config: PaperDimensionsZoomLevelConfigModel):
     try:
         map_area = ReceivedStructureProcessor.validate_and_convert_areas_strucutre(
-            config.map_area, REQ_AREA_DICT_KEYS, key_with_area="area")
+            config.map_area, REQ_AREA_DICT_KEYS, REQ_AREAS_MAPPING_DICT, key_with_area=REQ_AREA_KEY_WITH_AREA)
         paper_dimensions = ReceivedStructureProcessor.convert_paper_dimension(
             config.paper_dimensions, True)
         ReceivedStructureProcessor.validate_wanted_orientation(
@@ -170,7 +172,7 @@ def generate_map_borders(config: MapBorderConfigModel):
         paper_dimensions_mm = ReceivedStructureProcessor.convert_paper_dimension(
             config.paper_dimensions, False)
         map_area = ReceivedStructureProcessor.validate_and_convert_areas_strucutre(
-            config.map_area, REQ_AREA_DICT_KEYS, key_with_area="area")
+            config.map_area, REQ_AREA_DICT_KEYS, REQ_AREAS_MAPPING_DICT, key_with_area=REQ_AREA_KEY_WITH_AREA)
         ReceivedStructureProcessor.validate_fit_paper(config.fit_paper_size, FIT_PAPER_VALIDATION)
 
     except Exception as e:
@@ -186,15 +188,14 @@ def generate_map_borders(config: MapBorderConfigModel):
     if (config.fit_paper_size.fit):
         map_area_gdf = GdfUtils.expand_gdf_area_fitPaperSize(
             map_area_gdf, paper_dimensions_mm)
-        map_area_dimensions = GdfUtils.get_dimensions_gdf(map_area_gdf)
         if (config.fit_paper_size.plot):
             map_area_copy = map_area_gdf.copy()
-            map_area_copy[Style.WIDTH.value] = config.fit_paper_size.width
+            map_area_copy[Style.WIDTH.value] = FUNC_MM_TO_POINTS_CONVERSION(config.fit_paper_size.width)
             boundary_map_area_gdf = GdfUtils.combine_gdfs(
                 [boundary_map_area_gdf, map_area_copy])
-
+            
     file_id = uuid7str()
-    file_path = plot_map_borders(file_id, map_area_gdf, boundary_map_area_gdf, paper_dimensions_mm)
+    file_path = plot_map_borders(file_id, map_area_gdf, boundary_map_area_gdf, paper_dimensions_mm, "#f1f0e5")
     if(file_path is None or not os.path.isfile(file_path)):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Error white generating borders")
     
@@ -215,9 +216,6 @@ def generate_map_borders(config: MapBorderConfigModel):
         media_type="application/pdf",
         headers={"Content-Disposition": f"attachment; filename=map.pdf"}
     )
-
-
-
 
 
 @server_app.post("/generate-map-normal", response_model=GeneratorResponseStatusModel)
@@ -244,7 +242,7 @@ def generate_map_normal(gpxs: Optional[List[UploadFile]] = File(None),
         ReceivedStructureProcessor.validate_fit_paper(config.fit_paper_size, FIT_PAPER_VALIDATION)
 
         map_area = ReceivedStructureProcessor.validate_and_convert_areas_strucutre(
-            config.map_area, REQ_AREA_DICT_KEYS, key_with_area="area")
+            config.map_area, REQ_AREA_DICT_KEYS, REQ_AREAS_MAPPING_DICT, key_with_area=REQ_AREA_KEY_WITH_AREA)
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Error in config validation: {e}")
     #find area
@@ -266,7 +264,7 @@ def generate_map_normal(gpxs: Optional[List[UploadFile]] = File(None),
                                                            paper_dimensions_mm)
         if (config.fit_paper_size.plot):
             map_area_copy = map_area_gdf.copy()
-            map_area_copy[Style.WIDTH.value] = config.fit_paper_size.width
+            map_area_copy[Style.WIDTH.value] = FUNC_MM_TO_POINTS_CONVERSION(config.fit_paper_size.width)
             boundary_map_area_gdf = GdfUtils.combine_gdfs(
                 [boundary_map_area_gdf, map_area_copy])
     else:
@@ -343,12 +341,12 @@ def generate_preview_map(gpxs: Optional[List[UploadFile]] = File(None),
             config.gpxs_styles, GPX_NORMAL_COLUMNS, GPX_GENERAL_KEYS, GPX_STYLES_VALIDATION, GPX_STYLES_MAPPING)
 
         map_area = ReceivedStructureProcessor.validate_and_convert_areas_strucutre(
-            config.map_area, REQ_AREA_DICT_KEYS, key_with_area="area")
+            config.map_area, REQ_AREA_DICT_KEYS, REQ_AREAS_MAPPING_DICT, key_with_area=REQ_AREA_KEY_WITH_AREA)
         
 
         if(config.map_preview_area is not None):
             map_preview_area = ReceivedStructureProcessor.validate_and_convert_areas_strucutre(
-                config.map_preview_area, allowed_keys_and_types=REQ_AREA_DICT_KEYS, key_with_area="area")
+                config.map_preview_area, REQ_AREA_DICT_KEYS, REQ_AREAS_MAPPING_DICT, key_with_area=REQ_AREA_KEY_WITH_AREA)
         else:
             map_preview_area = None
       

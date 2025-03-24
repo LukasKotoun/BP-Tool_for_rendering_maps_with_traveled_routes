@@ -88,13 +88,14 @@ class GdfUtils:
     @staticmethod
     def get_areas_borders_gdf(gdf, combine_by):
         # Separate rows with category == (0 or None) and nonzero categories.
+        gdf[combine_by] = gdf.get(combine_by, 0)
         gdf_zero, gdf_nonzero = GdfUtils.filter_rows(
             gdf, {combine_by: [0, "~"]}, compl=True)
         if not gdf_nonzero.empty:
-            gdf_dissolved = gdf_nonzero.dissolve(by='category', as_index=False)
+            gdf_dissolved = gdf_nonzero.dissolve(by=combine_by, as_index=False)
         else:
             gdf_dissolved = gdf_nonzero.copy()
-
+        
         # Combine the dissolved nonzero rows with the category 0 rows.
         return GdfUtils.combine_gdfs([gdf_dissolved, gdf_zero])
 

@@ -92,7 +92,8 @@ class ReceivedStructureProcessor:
         return True
 
     @staticmethod
-    def validate_and_convert_areas_strucutre(areas_structures: list[dict], allowed_keys_and_types: dict[str, tuple[type, bool, Callable]], key_with_area):
+    def validate_and_convert_areas_strucutre(areas_structures: list[dict], allowed_keys_and_types: dict[str, tuple[type, bool, Callable]],
+                                             areas_mapping: dict[str, tuple[str, Callable, bool]], key_with_area) -> list[dict]:
         if not isinstance(areas_structures, list):
             raise ValueError("Input must be a list.")
 
@@ -104,7 +105,8 @@ class ReceivedStructureProcessor:
             if (not ReceivedStructureProcessor.check_dict_values_and_types(item, allowed_keys_and_types)):
                 raise ValueError(
                     "some keys are not allowed or have wrong types")
-
+            item = ReceivedStructureProcessor.map_dict(
+                                item, areas_mapping)
             new_item = item.copy()
 
             # Validate and convert the area.

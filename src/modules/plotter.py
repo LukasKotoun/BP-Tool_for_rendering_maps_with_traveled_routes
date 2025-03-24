@@ -52,7 +52,7 @@ class Plotter:
         self.markers_above_bbox_idx = rtree.index.Index()
         self.markers_and_texts_bbox_idx = rtree.index.Index()
 
-    def init(self, map_bg_color: str, bg_gdf: GeoDataFrame|None, area_zoom_preview: None | DimensionsTuple = None):
+    def init(self, map_bg_color: str, bg_gdf: GeoDataFrame|None, area_zoom_preview: None | DimensionsTuple = None, convert_polygons = True):
         self.fig, self.ax = plt.subplots(figsize=(self.paper_dimensions_mm[0]/self.MM_TO_INCH,
                                                   # convert mm to inch
                                                   self.paper_dimensions_mm[1]/self.MM_TO_INCH), dpi=50)
@@ -60,15 +60,18 @@ class Plotter:
             left=0, right=1, top=1, bottom=0)
         self.ax.axis('off')
         self.zoom()
+        self.reqired_area_gdf.plot(ax=self.ax, color=map_bg_color)
         if(bg_gdf is not None):
-            self.reqired_area_gdf.plot(ax=self.ax, color=map_bg_color)
             if (not bg_gdf.empty):
                 bg_gdf.plot(ax=self.ax, color=bg_gdf[Style.COLOR.value])
-
-        polygon_text_inside = GdfUtils.create_polygon_from_gdf(
-            self.reqired_area_gdf) if self.outer_reqired_area_gdf is None else GdfUtils.create_polygon_from_gdf(self.outer_reqired_area_gdf)
-        self.polygon_text_inside_display: Polygon | MultiPolygon = GeomUtils.transform_geometry_to_display_coords(
-            self.ax, polygon_text_inside)
+                
+        if(convert_polygons):
+            polygon_text_inside = GdfUtils.create_polygon_from_gdf(
+                self.reqired_area_gdf) if self.outer_reqired_area_gdf is None else GdfUtils.create_polygon_from_gdf(self.outer_reqired_area_gdf)
+            self.polygon_text_inside_display: Polygon | MultiPolygon = GeomUtils.transform_geometry_to_display_coords(
+                self.ax, polygon_text_inside)
+        else:
+            self.polygon_text_inside_display = None
         
     def __filter_invalid_texts(self, gdf):
         return GdfUtils.filter_rows(gdf, {Style.TEXT_FONT_SIZE.value: '', Style.TEXT_OUTLINE_WIDTH.value: '', Style.TEXT_COLOR.value: '',

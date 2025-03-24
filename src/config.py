@@ -371,17 +371,23 @@ GPX_NORMAL_COLUMNS = [GPX_FILE_COLUMN, GPX_GROUP_COLUMN]
 GPX_GENERAL_KEYS = ['general']
 
 ALLOWED_WANTED_PAPER_ORIENTATIONS = [MapOrientation.AUTOMATIC.value, MapOrientation.LANDSCAPE.value, MapOrientation.PORTRAIT.value]
-MIN_WIDTH = 0.05
+MIN_WIDTH = 0.045
 MIN_TEXT_WIDTH = 0.1
+MM_TO_INCH = 25.4
+MATPLOTLIB_POINTS_PER_INCH = 72
+FUNC_MM_TO_POINTS_CONVERSION = lambda v: v / MM_TO_INCH * MATPLOTLIB_POINTS_PER_INCH
 
-
+# is validated and not mapped
 FIT_PAPER_VALIDATION = {"fit": (bool, True, None), "plot": (bool, True, None),
                         "width": (int | float, False, lambda v: MIN_WIDTH <= v)}
 
+REQ_AREA_KEY_WITH_AREA = "area"
+REQ_AREA_KEY_WITH_BOOLEAN_PLOT = "plot"
+REQ_AREA_KEY_TO_GROUP_BY = "group"
 # key, (types, required)
 REQ_AREA_DICT_KEYS = {"area": (str | list, True, None), "plot": (bool, True, None), "group": (
     int, False, lambda v: 0 <= v), "width": (int | float, False, lambda v: MIN_WIDTH <= v)}
-REQ_AREAS_KEYS_MAPPING_DICT = {"width": Style.WIDTH.value}
+REQ_AREAS_MAPPING_DICT = {"width": (Style.WIDTH.value, FUNC_MM_TO_POINTS_CONVERSION)}
 
 FE_EDIT_STYLES_VALIDATION = {'width_scale': (float | int, False, lambda v: MIN_WIDTH <= v),
                              "text_scale": (float | int, False, lambda v: MIN_TEXT_WIDTH <= v)}
@@ -422,7 +428,7 @@ GPX_STYLES_VALIDATION = {
 
 GPX_STYLES_MAPPING = {
     'color': (Style.COLOR.value, None),
-    "width": (Style.WIDTH.value, None),
+    "width": (Style.WIDTH.value, FUNC_MM_TO_POINTS_CONVERSION),
     "alpha": (Style.ALPHA.value, None),
     "zindex": (Style.ZINDEX.value, None),
     "linestyle": (Style.LINESTYLE.value, lambda v: (0, (5, 5)) if v == '- -' else v),
@@ -434,13 +440,13 @@ GPX_STYLES_MAPPING = {
     "edge_capstyle": (Style.EDGE_CAPSTYLE.value, None),
     "gpx_above_text": (Style.GPX_ABOVE_TEXT.value, None),
     "start_marker": (None, lambda v: MARKERS_UCODE_MAPPING[v], True),
-    "start_marker_width": (Style.START_MARKER_WIDTH.value, None),
+    "start_marker_width": (Style.START_MARKER_WIDTH.value, FUNC_MM_TO_POINTS_CONVERSION),
     "start_marker_edge_ratio": (Style.START_MARKER_EDGE_RATIO.value, None),
     "start_marker_color": (Style.START_MARKER_COLOR.value, None),
     "start_marker_edge_color": (Style.START_MARKER_EDGE_COLOR.value, None),
     "start_marker_alpha": (Style.START_MARKER_ALPHA.value, None),
     "finish_marker": (None, lambda v: MARKERS_UCODE_MAPPING[v], True),
-    "finish_marker_width": (Style.FINISH_MARKER_WIDTH.value, None),
+    "finish_marker_width": (Style.FINISH_MARKER_WIDTH.value, FUNC_MM_TO_POINTS_CONVERSION),
     "finish_marker_edge_ratio": (Style.FINISH_MARKER_EDGE_RATIO.value, None),
     "finish_marker_color": (Style.FINISH_MARKER_COLOR.value, None),
     "finish_marker_edge_color": (Style.FINISH_MARKER_EDGE_COLOR.value, None),

@@ -54,23 +54,29 @@ class Utils:
                                 paper_dimensions: OptDimensionsTuple,
                                 given_smaller_paper_side: bool = True,
                                 wanted_orientation=MapOrientation.AUTOMATIC.value) -> DimensionsTuple:
-        if map_dimensions[0] >= map_dimensions[1]:
-            map_orientaion: MapOrientation = MapOrientation.LANDSCAPE.value
+        
+        if(wanted_orientation == MapOrientation.AUTOMATIC.value):
+            if map_dimensions[0] >= map_dimensions[1]:
+                map_orientaion: MapOrientation = MapOrientation.LANDSCAPE.value
+            else:
+                map_orientaion: MapOrientation = MapOrientation.PORTRAIT.value
         else:
-            map_orientaion: MapOrientation = MapOrientation.PORTRAIT.value
-
+              map_orientaion: MapOrientation = wanted_orientation
+              
         if (paper_dimensions.count(None) == 1):
             paper_dimensions = Utils.resolve_paper_dimensions(
                 map_dimensions, map_orientaion, paper_dimensions, given_smaller_paper_side)
         elif (paper_dimensions.count(None) > 1):
             raise ValueError("Only one paper dimension can be None")
-
-        if (wanted_orientation in [MapOrientation.LANDSCAPE.value, MapOrientation.PORTRAIT.value]):
-            paper_dimensions = Utils.set_orientation(
-                paper_dimensions, wanted_orientation)
-        else:
+        
+        # flip resolved orientation
+        if(wanted_orientation == MapOrientation.AUTOMATIC.value):
             paper_dimensions = Utils.set_orientation(
                 paper_dimensions, map_orientaion)
+        else:
+             paper_dimensions = Utils.set_orientation(
+                paper_dimensions, wanted_orientation)
+             
         return paper_dimensions
 
     @staticmethod

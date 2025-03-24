@@ -6,9 +6,9 @@
     <title>Send Data with File</title>
     <script>
       token = null
-      // AREA = [{ area: "Horní vilémovice, Česko", plot: true, category: 0, width: 1 }]
-      AREA = [{'area':[[15.8096936,48.6459956], [15.8232333, 48.6460311], [15.8232550, 48.6397219], [15.8097686, 48.6397503]], "plot": false}]
-      FIT_PAPER = {fit: true, plot: false, width:8 }
+      AREA = [{ area: "Česko", plot: true, group: 0, width: 0.5 }]
+      // AREA = [{'area':[[15.8096936,48.6459956], [15.8232333, 48.6460311], [15.8232550, 48.6397219], [15.8097686, 48.6397503]], "plot": true }]
+      FIT_PAPER = {fit: true, plot: true, width:8 }
       PAPER_DIM = { height: 297, width: 210 }
       data = JSON.stringify({
         osm_files: ["brno", "trebic", "cz"],
@@ -175,7 +175,6 @@
 
         const fileInput = document.getElementById("fileInput")
         const file = fileInput.files[0] // Get the first file selected
-        console.log(data)
 
         // formData.append('gpxs', [file, file]);
         if (file != null) {
@@ -370,8 +369,8 @@
             method: "POST",
             body: JSON.stringify({
               map_area: AREA,
-              paper_dimensions: { height: 2000, width: 3050 },
-              fit_paper_size: {fit:true, plot:true, width: 50},
+              paper_dimensions: { height: 400, width: 410 },
+              fit_paper_size: {fit:true, plot:true, width: 1.5},
             }),
             //   body: JSON.stringify({
             //   "map_area":[{"area": "Česko",
