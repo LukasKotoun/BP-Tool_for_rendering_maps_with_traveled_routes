@@ -18,6 +18,7 @@ export function resetPlotSettings(originalData: MapElementCategory): MapElementC
 export function mapValue(dict: Dictionary, value: string): string {    
     if(dict == undefined) return value;
     if(dict == null) return value;
+   
     return dict[value] ?? value;  // If value is found in dict, return the mapped value, otherwise return the original value
   }
 
@@ -84,8 +85,8 @@ export function transformStructure(data: MapElementCategory, keep_key: string, s
               continue
             }
             // Remove attributes with default value
-            if (category[propKey as keyof MapElementAttributes] !== scale_keys[propKey]) {
-              newCategory[propKey as keyof MapElementAttributesSend] = category[propKey as keyof MapElementAttributes] as number
+            if (category[propKey] !== scale_keys[propKey]) {
+              newCategory[propKey] = category[propKey]
             }
           }
 
@@ -112,8 +113,8 @@ export function transformStructure(data: MapElementCategory, keep_key: string, s
                   continue
                 }
                 // Remove scale attributes with value same as default
-                if (subcategory[propKey as keyof MapElementAttributes] !== scale_keys[propKey]) {
-                  newSubcategory[propKey as keyof MapElementAttributesSend] = subcategory[propKey as keyof MapElementAttributes] as number
+                if (subcategory[propKey] !== scale_keys[propKey]) {
+                  newSubcategory[propKey] = subcategory[propKey]
                 }
               }
               // at least one subcategory is valid

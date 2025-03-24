@@ -62,8 +62,8 @@
     return true;
   }
 
-  function changeGroupWidth(group: number, width: number): void {
-    if(group == null || group <= 0){
+  function changeGroupWidth(group: number | undefined, width: number | undefined): void {
+    if(group == null || group <= 0 || width == null){
       return;
     }
     $wantedAreas = $wantedAreas.map(area => 
@@ -72,7 +72,10 @@
   }
 
 
-  function getJoinedGroupWidth(group: number, myWidth: number, myId: number): number {
+  function getJoinedGroupWidth(group: number | undefined, myWidth: number | undefined, myId: number): number {
+    if(myWidth == null){
+      return defaultWidth;
+    }
     if(group == null || group <= 0){
       return myWidth
     }

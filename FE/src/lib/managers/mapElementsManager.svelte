@@ -1,13 +1,13 @@
 <script lang="ts"> 
     import { mapNodesElements, mapWaysElements, mapAreasElements, automaticZoomLevel, mapElementsZoomDesign, mapElementsWantedZoom } from '$lib/stores/mapStore';
     import { mapValue, updateWantedElements } from '$lib/utils/mapElementsUtils';
-    import { nodesKeysNamesMapping, nodesNamesMapping, waysKeysNamesMapping, waysNamesMapping,
-       areasKeysNamesMapping, areasNamesMapping, numberOfZoomLevels, wantedNodesUpdatesZooms,
+    import { nodesKeysNamesMappingCZ, nodesNamesMappingCZ, waysKeysNamesMappingCZ, waysNamesMappingCZ,
+       areasKeysNamesMappingCZ, areasNamesMappingCZ, numberOfZoomLevels, wantedNodesUpdatesZooms,
        wantedWaysUpdatesZooms, wantedAreasUpdatesZooms } from '$lib/constants';
     const multiplierMin = 0.1
     const multiplierMax = 4
     
-    function hasDirectPlot(obj: any): obj is PlotItem {
+    function hasDirectPlot(obj: any): obj is MapElementAttributes {
       return obj && typeof obj === 'object' && 'plot' in obj;
     }
 
@@ -15,7 +15,6 @@
       //set to false and iteriate while using
       for (let i =0; i<=zoomLevel; i++){
         console.log(wantedNodesUpdatesZooms[i])
-        updatePlotSettings
       }
     }
 
@@ -213,7 +212,7 @@
         <div class="ml-4 mr-4 mb-4 p-4 bg-gray-50 rounded-md shadow border-l-2">
           <div class="flex items-center mb-2">
             <!-- nodes with plot directly (without specific elements) -->
-            {#if hasDirectPlot(categoryValue)}
+            {#if hasDirectPlot(categoryValue) && hasDirectPlot($mapNodesElements[categoryKey])}
 
               <div class="inline-flex items-center cursor-pointer">
                   <input 
@@ -223,7 +222,7 @@
                   />
                 
               </div>
-              <h3 class="text-lg font-medium text-gray-1000 mr-3 ml-3">{mapValue(nodesKeysNamesMapping, categoryKey)}</h3>
+              <h3 class="text-lg font-medium text-gray-1000 mr-3 ml-3">{mapValue(nodesKeysNamesMappingCZ, categoryKey)}</h3>
 
               {#if categoryValue.plot && ('width_scale' in categoryValue || 'text_scale' in categoryValue)}
                 <div class="flex flex-wrap items-center ml-4">
@@ -263,7 +262,7 @@
 
           <!-- areas with specific elements (e.g place: city) -->
           {#if !hasDirectPlot(categoryValue)}
-          <h3 class="text-lg font-medium mb-3 ml-3">{mapValue(nodesKeysNamesMapping, categoryKey)}</h3>
+          <h3 class="text-lg font-medium mb-3 ml-3">{mapValue(nodesKeysNamesMappingCZ, categoryKey)}</h3>
           <div class="flex flex-wrap gap-2 ml-2 mb-3">
               {#each Object.entries(categoryValue) as [subKey, subValue]}
               {#if hasDirectPlot(subValue)}
@@ -274,7 +273,7 @@
                           class="h-5 w-5 rounded-lg"
                           bind:checked={$mapNodesElements[categoryKey][subKey].plot}
                         >
-                      <p class="text-sm ml-2">{mapValue(nodesNamesMapping[categoryKey], subKey)}</p>
+                      <p class="text-sm ml-2">{mapValue(nodesNamesMappingCZ[categoryKey], subKey)}</p>
                   </div>
                   
                   {#if subValue.plot}
@@ -326,7 +325,7 @@
         <div class="ml-4 mr-4 mb-4 p-4 bg-gray-50 rounded-md shadow border-l-2">
           <div class="flex items-center mb-2">
             <!-- ways with plot directly (without specific elements) -->
-            {#if hasDirectPlot(categoryValue)}
+            {#if hasDirectPlot(categoryValue) && hasDirectPlot($mapWaysElements[categoryKey])}
 
               <div class="inline-flex items-center cursor-pointer">
                   <input 
@@ -336,7 +335,7 @@
                   />
                 
               </div>
-              <h3 class="text-lg font-medium text-gray-1000 mr-3 ml-3">{mapValue(waysKeysNamesMapping, categoryKey)}</h3>
+              <h3 class="text-lg font-medium text-gray-1000 mr-3 ml-3">{mapValue(waysKeysNamesMappingCZ, categoryKey)}</h3>
 
               {#if categoryValue.plot && ('width_scale' in categoryValue || 'text_scale' in categoryValue)}
                 <div class="flex flex-wrap items-center ml-4">
@@ -375,7 +374,7 @@
           </div>
           <!-- ways with specific elements (e.g highway: primary) -->
           {#if !hasDirectPlot(categoryValue)}
-          <h3 class="text-lg font-medium mb-3 ml-3">{mapValue(waysKeysNamesMapping, categoryKey)}</h3>
+          <h3 class="text-lg font-medium mb-3 ml-3">{mapValue(waysKeysNamesMappingCZ, categoryKey)}</h3>
           <div class="flex flex-wrap gap-2 ml-2 mb-3">
               {#each Object.entries(categoryValue) as [subKey, subValue]}
               {#if hasDirectPlot(subValue)}
@@ -386,7 +385,7 @@
                           class="h-5 w-5 rounded-lg"
                           bind:checked={$mapWaysElements[categoryKey][subKey].plot}
                         >
-                      <p class="text-sm ml-2">{mapValue(waysNamesMapping[categoryKey], subKey)}</p>
+                      <p class="text-sm ml-2">{mapValue(waysNamesMappingCZ[categoryKey], subKey)}</p>
                   </div>
                   
                   {#if subValue.plot}
@@ -439,7 +438,7 @@
           <div class="flex items-center mb-2">
 
             <!-- areas with plot directly (without specific elements) -->
-            {#if hasDirectPlot(categoryValue)}
+            {#if hasDirectPlot(categoryValue) && hasDirectPlot($mapAreasElements[categoryKey])}
 
               <div class="inline-flex items-center cursor-pointer">
                   <input 
@@ -449,7 +448,7 @@
                   />
                 
               </div>
-              <h3 class="text-lg font-medium text-gray-1000 mr-3 ml-3">{mapValue(areasKeysNamesMapping, categoryKey)}</h3>
+              <h3 class="text-lg font-medium text-gray-1000 mr-3 ml-3">{mapValue(areasKeysNamesMappingCZ, categoryKey)}</h3>
 
               {#if categoryValue.plot && ('width_scale' in categoryValue || 'text_scale' in categoryValue)}
                 <div class="flex flex-wrap items-center ml-4">
@@ -489,7 +488,7 @@
 
           <!-- areas with specific elements (e.g landuse: farmland) -->
           {#if !hasDirectPlot(categoryValue)}
-          <h3 class="text-lg font-medium mb-3 ml-3">{mapValue(areasKeysNamesMapping, categoryKey)}</h3>
+          <h3 class="text-lg font-medium mb-3 ml-3">{mapValue(areasKeysNamesMappingCZ, categoryKey)}</h3>
           <div class="flex flex-wrap gap-2 ml-2 mb-3">
               {#each Object.entries(categoryValue) as [subKey, subValue]}
               {#if hasDirectPlot(subValue)}
@@ -500,7 +499,7 @@
                           class="h-5 w-5 rounded-lg"
                           bind:checked={$mapAreasElements[categoryKey][subKey].plot}
                         >
-                      <p class="text-sm ml-2">{mapValue(areasNamesMapping[categoryKey], subKey)}</p>
+                      <p class="text-sm ml-2">{mapValue(areasNamesMappingCZ[categoryKey], subKey)}</p>
                   </div>
                   
                   {#if subValue.plot}

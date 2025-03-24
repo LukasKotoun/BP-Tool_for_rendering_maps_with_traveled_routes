@@ -55,14 +55,14 @@ export const paperSizes = [
 
 
 
-  export const nodesKeysNamesMapping ={
+  export const nodesKeysNamesMappingCZ ={
     "place": "Místa",
     "natural": "Přírodní objekty",
     "man_made": "Umělé objekt",
     "historic": "Historické objekt"
   }
 
-  export const nodesNamesMapping = {
+  export const nodesNamesMappingCZ = {
     "place": {
         "city": "Velkoměsto",
         "town": "Město",
@@ -82,7 +82,7 @@ export const paperSizes = [
     }
   }
 
-  export const waysKeysNamesMapping ={
+  export const waysKeysNamesMappingCZ ={
     "highway": "Silnice",
     "railway": "Železnice",
     "aeroway": "Letiště",
@@ -91,7 +91,7 @@ export const paperSizes = [
     "waterway": "Vodní toky",
     "route": "Vodní trasy"
   }
-  export const waysNamesMapping = {
+  export const waysNamesMappingCZ = {
     "highway": {
         "motorway": "Dálnice",
         "trunk": "Silnice pro motorová vozidla",
@@ -156,7 +156,7 @@ export const paperSizes = [
     }
   }
 
-  export const areasKeysNamesMapping ={
+  export const areasKeysNamesMappingCZ ={
     "landuse": "Užitné pozemky",
     "leisure": "Volný čas",
     "natural": "Příroda",
@@ -167,7 +167,7 @@ export const paperSizes = [
     "highway": "Silnice (parkoviště a pěší zóny)"
   }
 
-  export const areasNamesMapping = {
+  export const areasNamesMappingCZ = {
     "landuse": {
         "farmland": "Zemědělská půda",
         "forest": "Les",
