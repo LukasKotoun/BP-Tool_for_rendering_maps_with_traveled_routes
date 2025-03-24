@@ -6,7 +6,7 @@
        wantedWaysUpdatesZooms, wantedAreasUpdatesZooms } from '$lib/constants';
     const multiplierMin = 0.1
     const multiplierMax = 4
-    
+    let displayedCategory = 'nodes'
     function hasDirectPlot(obj: any): obj is MapElementAttributes {
       return obj && typeof obj === 'object' && 'plot' in obj;
     }
@@ -18,6 +18,7 @@
         restartedData = updateWantedElements(restartedData, wantedNodesUpdatesZooms[i], 'plot')
       }
       $mapNodesElements = restartedData
+      displayedCategory = 'nodes' 
     }
 
     function setWaysForZoom(zoomLevel: number){
@@ -27,7 +28,7 @@
         restartedData = updateWantedElements(restartedData, wantedWaysUpdatesZooms[i], 'plot')
       }
       $mapWaysElements = restartedData
-
+      displayedCategory = 'ways'
     }
    
     function setAreasForZoom(zoomLevel: number){
@@ -36,6 +37,7 @@
         restartedData = updateWantedElements(restartedData, wantedAreasUpdatesZooms[i], 'plot')
       }
       $mapAreasElements = restartedData
+      displayedCategory = 'areas'
     }
 
     $:{
@@ -62,7 +64,7 @@
         <div class="flex flex-col">
           <p class="text-md font-medium mb-1">Úroveň detailu bodů</p>
           <select
-          class="border rounded p-2 w-40"
+          class="border rounded-sm p-2 w-40"
           bind:value={$mapElementsZoomDesign.nodes}
         >
           {#each Array.from({length: numberOfZoomLevels}, (_, i) => i+1) as zoomLevel}
@@ -78,7 +80,7 @@
         <div class="flex flex-col">
           <p class="text-md font-medium mb-1">Úroveň detailu cest</p>
           <select
-          class="border rounded p-2 w-40"
+          class="border rounded-sm p-2 w-40"
           bind:value={$mapElementsZoomDesign.ways}
         >
           {#each Array.from({length: numberOfZoomLevels}, (_, i) => i+1) as zoomLevel}
@@ -94,7 +96,7 @@
         <div class="flex flex-col">
           <p class="text-md font-medium mb-1">Úroveň detailu oblastí</p>
           <select
-          class="border rounded p-2 w-40"
+          class="border rounded-sm p-2 w-40"
           bind:value={$mapElementsZoomDesign.areas}
         >
           {#each Array.from({length: numberOfZoomLevels}, (_, i) => i+1) as zoomLevel}
@@ -109,7 +111,7 @@
         <div class="flex flex-col">
           <p class="text-md font-medium mb-1">Úroveň detail obecných prvků</p>
           <select
-          class="border rounded p-2 w-40"
+          class="border rounded-sm p-2 w-40"
           bind:value={$mapElementsZoomDesign.general}
         >
           {#each Array.from({length: numberOfZoomLevels}, (_, i) => i+1) as zoomLevel}
@@ -144,7 +146,7 @@
           <div class="flex flex-col">
             <p class="text-md font-medium mb-1">Výchozí body pro detail</p>
             <select
-            class="border rounded p-2 w-50"
+            class="border rounded-sm p-2 w-50"
             bind:value={$mapElementsWantedZoom.nodes}
             >
               {#each Array.from({length: numberOfZoomLevels}, (_, i) => i+1) as zoomLevel}
@@ -156,7 +158,7 @@
               {/each}
             </select>
             <button 
-            class="flex mt-4 justify-center bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
+            class="flex mt-4 justify-center bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-sm"
               on:click={() => setNodesForZoom($mapElementsWantedZoom.nodes)}
             >
             Nastavit výchozí body
@@ -167,7 +169,7 @@
           <div class="flex flex-col">
             <p class="text-md font-medium mb-1">Výchozí cesty pro detail</p>
             <select
-            class="border rounded p-2 w-50"
+            class="border rounded-sm p-2 w-50"
             bind:value={$mapElementsWantedZoom.ways}
             >
               {#each Array.from({length: numberOfZoomLevels}, (_, i) => i+1) as zoomLevel}
@@ -179,7 +181,7 @@
               {/each}
               </select>
               <button 
-              class="flex mt-4 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
+              class="flex mt-4 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-sm"
                 on:click={() => setWaysForZoom($mapElementsWantedZoom.ways)}
               >
               Nastavit výchozí cesty
@@ -188,7 +190,7 @@
           <div class="flex flex-col">
             <p class="text-md font-medium mb-1">Výchozí oblasti pro detail</p>
             <select
-            class="border rounded p-2 w-50"
+            class="border rounded-sm p-2 w-50"
             bind:value={$mapElementsWantedZoom.areas}
           >
             {#each Array.from({length: numberOfZoomLevels}, (_, i) => i+1) as zoomLevel}
@@ -200,7 +202,7 @@
             {/each}
           </select>
           <button 
-          class="flex mt-4 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
+          class="flex mt-4 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-sm"
             on:click={() => setAreasForZoom($mapElementsWantedZoom.areas)}
           >
             Nastavit výchozí oblasti
@@ -208,11 +210,32 @@
           </div> 
           </div>
     </div>
-
+    <div class="text-md text-center text-gray-500 border-b border-gray-200 dark:text-gray-400 dark:border-gray-700">
+      <div class="flex flex-wrap -mb-px">
+            <button 
+             class= { displayedCategory == "nodes" ? "inline-block p-4 text-black  border-b-2 border-blue-600 rounded-t-lg ":
+                    "inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300 "}
+                    on:click={() => displayedCategory = "nodes"}>
+                    Body (Ikony a texty)
+            </button>
+            <button  class= { displayedCategory == "ways" ? "inline-block p-4 text-black  border-b-2 border-blue-600 rounded-t-lg":
+                    "inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300 "}
+                    on:click={() => displayedCategory = "ways"}>
+                    Cesty
+            </button>
+            <button class= { displayedCategory == "areas" ? "inline-block p-4 text-black  border-b-2 border-blue-600 rounded-t-lg":
+                    "inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300 "}
+                    on:click={() => displayedCategory = "areas"}>
+                     Oblasti (Polygony)
+            </button>
+          
+       
+      </div>
+  </div>
+  {#if displayedCategory == "nodes"}
     <div class="space-y-4 rounded-lg bg-gray-100 mt-4 ">
-      <h2 class="p-2 text-xl font-bold">Body (Ikony a texty)</h2>
       {#each Object.entries($mapNodesElements) as [categoryKey, categoryValue], index}
-        <div class="ml-4 mr-4 mb-4 p-4 bg-gray-50 rounded-md shadow border-l-2">
+        <div class="ml-4 mr-4 mb-4 p-4 bg-gray-50 rounded-md shadow-sm border-l-2">
           <div class="flex items-center mb-2">
             <!-- nodes with plot directly (without specific elements) -->
             {#if hasDirectPlot(categoryValue) && hasDirectPlot($mapNodesElements[categoryKey])}
@@ -269,7 +292,7 @@
           <div class="flex flex-wrap gap-2 ml-2 mb-3">
               {#each Object.entries(categoryValue) as [subKey, subValue]}
               {#if hasDirectPlot(subValue)}
-                <div class="bg-white items-center rounded p-2 border border-gray-200 shadow-sm">
+                <div class="bg-white items-center rounded-sm p-2 border border-gray-200 shadow-xs">
                   <div class="flex justify-normal mb-1">
                         <input 
                           type="checkbox" 
@@ -320,12 +343,11 @@
         </div>
       {/each}
     </div>
-
+    {:else if displayedCategory == "ways"}
     <!-- WAYS -->
     <div class="space-y-4 rounded-lg bg-gray-100 mt-4 ">
-      <h2 class="p-2 text-xl font-bold">Cesty</h2>
       {#each Object.entries($mapWaysElements) as [categoryKey, categoryValue], index}
-        <div class="ml-4 mr-4 mb-4 p-4 bg-gray-50 rounded-md shadow border-l-2">
+        <div class="ml-4 mr-4 mb-4 p-4 bg-gray-50 rounded-md shadow-sm border-l-2">
           <div class="flex items-center mb-2">
             <!-- ways with plot directly (without specific elements) -->
             {#if hasDirectPlot(categoryValue) && hasDirectPlot($mapWaysElements[categoryKey])}
@@ -381,7 +403,7 @@
           <div class="flex flex-wrap gap-2 ml-2 mb-3">
               {#each Object.entries(categoryValue) as [subKey, subValue]}
               {#if hasDirectPlot(subValue)}
-                <div class="bg-white items-center rounded p-2 border border-gray-200 shadow-sm">
+                <div class="bg-white items-center rounded-sm p-2 border border-gray-200 shadow-xs">
                   <div class="flex justify-normal mb-1">
                         <input 
                           type="checkbox" 
@@ -432,12 +454,11 @@
         </div>
       {/each}
     </div>
-
+    {:else}
     <!-- AREAS -->
     <div class="space-y-4 rounded-lg bg-gray-100 mt-4 ">
-      <h2 class="p-2 text-xl font-bold">Oblasti (Polygony)</h2>
       {#each Object.entries($mapAreasElements) as [categoryKey, categoryValue], index}
-        <div class="ml-4 mr-4 mb-4 p-4 bg-gray-50 rounded-md shadow border-l-2">
+        <div class="ml-4 mr-4 mb-4 p-4 bg-gray-50 rounded-md shadow-sm border-l-2">
           <div class="flex items-center mb-2">
 
             <!-- areas with plot directly (without specific elements) -->
@@ -495,7 +516,7 @@
           <div class="flex flex-wrap gap-2 ml-2 mb-3">
               {#each Object.entries(categoryValue) as [subKey, subValue]}
               {#if hasDirectPlot(subValue)}
-                <div class="bg-white items-center rounded p-2 border border-gray-200 shadow-sm">
+                <div class="bg-white items-center rounded-sm p-2 border border-gray-200 shadow-xs">
                   <div class="flex justify-normal mb-1">
                         <input 
                           type="checkbox" 
@@ -546,4 +567,5 @@
         </div>
       {/each}
     </div>
+  {/if}
   </div>

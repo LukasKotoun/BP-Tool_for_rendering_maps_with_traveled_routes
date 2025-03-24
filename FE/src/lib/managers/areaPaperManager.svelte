@@ -275,7 +275,7 @@ const selectAreaSuggestion = (newAreaValue: string, id: number): void => {
             <p class="text-sm font-medium mb-1">Oblast</p>
             <input
               type="text" 
-              class="border rounded p-2 w-60"
+              class="border rounded-sm p-2 w-60"
               bind:value={area.area}
               on:keyup={() => {
                 if(area.area.includes(';')) {
@@ -288,7 +288,7 @@ const selectAreaSuggestion = (newAreaValue: string, id: number): void => {
             />
           
             {#if areaSuggestions[area.id]?.length > 0}
-                  <div class="relative top-full left-0 w-60 mt-1 bg-white border rounded shadow-lg z-10 max-h-60 overflow-y-auto">
+                  <div class="relative top-full left-0 w-60 mt-1 bg-white border rounded-sm shadow-lg z-10 max-h-60 overflow-y-auto">
                     {#each areaSuggestions[area.id] as displayName}
                       <div 
                       role="button"
@@ -329,7 +329,7 @@ const selectAreaSuggestion = (newAreaValue: string, id: number): void => {
               <p class="text-sm font-medium mb-1">Šířka ohraničení (v mm)</p>
               <input 
                 type="number" 
-                class="border rounded p-2 w-20"
+                class="border rounded-sm p-2 w-20"
                 on:change={()=> changeGroupWidth(area?.group, area.width)}
                 min="0.05"
                 step="0.1"
@@ -342,7 +342,7 @@ const selectAreaSuggestion = (newAreaValue: string, id: number): void => {
             <div class="flex flex-col">
               <p class="text-sm font-medium mb-1">Skupina oblastí</p>
               <select
-                class="border rounded p-2 w-40"
+                class="border rounded-sm p-2 w-40"
                 bind:value={area.group}
                 on:change={()=>  area.width = getJoinedGroupWidth(area?.group, area.width, area.id)}
               >
@@ -374,7 +374,7 @@ const selectAreaSuggestion = (newAreaValue: string, id: number): void => {
     {/each}
     <div class="p-4">
       <button 
-      class="flex items-center bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
+      class="flex items-center bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-sm"
         on:click={addArea}
       >
         Přidat další oblast
@@ -407,7 +407,7 @@ const selectAreaSuggestion = (newAreaValue: string, id: number): void => {
         <p class="text-sm font-medium mb-1">Šířka ohraničení (v mm)</p>
               <input 
                 type="number" 
-                class="border rounded p-2 w-20"
+                class="border rounded-sm p-2 w-20"
                 min="0.05"
                 step="0.1"
                 bind:value={$fitPaperSize.width} 
@@ -438,7 +438,7 @@ const selectAreaSuggestion = (newAreaValue: string, id: number): void => {
       <p class="text-sm font-medium mb-1">Šířka (v mm)</p>
       <input
         type="number"
-        class="border rounded p-2 w-20"
+        class="border rounded-sm p-2 w-20"
         bind:value={$paperDimensionRequest.width}
         min="10"
         step="10"
@@ -448,7 +448,7 @@ const selectAreaSuggestion = (newAreaValue: string, id: number): void => {
       <p class="text-sm font-medium mb-1">Výška (v mm)</p>
         <input
         type="number"
-        class="border rounded p-2 w-20"
+        class="border rounded-sm p-2 w-20"
         bind:value={$paperDimensionRequest.height}
         min="10"
         step="10"
@@ -457,7 +457,7 @@ const selectAreaSuggestion = (newAreaValue: string, id: number): void => {
     <div class="flex flex-col">
       <p class="text-sm font-medium mb-1">Orientace papíru</p>
       <select
-        class="border rounded p-2 w-40"
+        class="border rounded-sm p-2 w-40"
         bind:value={$paperDimensionRequest.orientation}
       >
         <option value="automatic">Automatická</option>
@@ -481,7 +481,7 @@ const selectAreaSuggestion = (newAreaValue: string, id: number): void => {
   </div>
     <div class="p-4 flex justify-end">
         <button 
-        class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded ml-4"
+        class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-sm ml-4"
         class:bg-gray-500={settingArea}
         class:hover:bg-gray-600={settingArea}
         on:click={getPaperAndZoom}
@@ -501,7 +501,7 @@ const selectAreaSuggestion = (newAreaValue: string, id: number): void => {
     <div class = "flex justify-end">
       {#if $paperDimension.width > 0 && $paperDimension.height > 0}
       <button 
-        class="text-white px-4 py-2 rounded ml-4 mt-4"
+        class="text-white px-4 py-2 rounded-sm ml-4 mt-4"
         class:bg-green-500={!gettingMapBorders}
         class:hover:bg-green-600={!gettingMapBorders}
         class:bg-gray-500={gettingMapBorders}
