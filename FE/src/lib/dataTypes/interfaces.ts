@@ -31,6 +31,47 @@ interface FitPaperSize {
   width?: number;
 }
 
+interface MapElementsZoomDesign {
+  general: number;
+  nodes: number;
+  ways: number;
+  areas: number;
+}
+
+interface MapElementsWanted {
+  nodes: number;
+  ways: number;
+  areas: number;
+}
+
+interface MapElementAttributes {
+  plot: boolean;
+  width_scale?: number;
+  text_scale?: number;
+}
+
+interface MapElementCategory {
+  [key: string]: MapElementAttributes | MapElementCategory;
+}
+
+
+interface MapElementAttributesSend  {
+  width_scale?: number;
+  text_scale?: number;
+}
+
+interface MapElementCategorySend {
+  [key: string]: MapElementAttributesSend | MapElementCategorySend;
+}
+
+interface MapElementUpdateRules {
+  [key: string]: string[] | boolean;
+}
+
+type Dictionary = {
+  [key: string]: string; // Define the dictionary as an object with string keys and string values
+};
+
 interface NominatimResult {
   place_id: number;
   licence: string;

@@ -62,6 +62,33 @@
     return true;
   }
 
+  function changeGroupWidth(group: number, width: number): void {
+    if(group == null || group <= 0){
+      return;
+    }
+    $wantedAreas = $wantedAreas.map(area => 
+      area.group != null && area.group > 0 && area.group === group ? { ...area, width: width } : area
+      );
+  }
+
+
+  function getJoinedGroupWidth(group: number, myWidth: number, myId: number): number {
+    if(group == null || group <= 0){
+      return myWidth
+    }
+    const groupAreas = $wantedAreas.filter(area => area.group === group);
+    if(groupAreas.length === 0){
+      return myWidth;
+    }
+    for (let area of groupAreas)
+    {
+      if(area.id !== myId){
+        return area.width ?? myWidth;
+      }
+    } 
+    return myWidth;
+  }
+
 
   function getPaperAndZoom() {
     let parsedAreas
@@ -81,7 +108,6 @@
       alert("Chyba při zpracování souřadnic oblastí");
       return;
     }
-      console.log(parsedAreas)
       settingArea = true
       api.post("/paper_and_zoom", {
         map_area: parsedAreas,
@@ -98,24 +124,20 @@
         $paperDimension.width = response.data.width;
         $automaticZoomLevel = response.data.zoom_level;
         settingArea = false
-      }).catch(error => {
-        console.log(error)
-        if(error.response?.status === 400){
+      }).catch(e => {
+        console.error(e)
+        if(e.response?.status === 400){
           alert("Některé zadané oblasti nemají správný formát")
         }
-        else if(error.response?.status === 404){
+        else if(e.response?.status === 404){
           alert("Některou se zadaných oblastí se nepodařilo nalézt")
         }
         else{
           alert("Nastala chyba při zpracování požadavku, zkuste to znovu za chvíli")
         }
-        console.error(error);
         settingArea = false
       });
 }
-
-
-
 
 
 async function getMapBorders() {
@@ -168,18 +190,17 @@ async function getMapBorders() {
         window.URL.revokeObjectURL(url);
         document.body.removeChild(link);
         gettingMapBorders = false
-      }).catch(error => {
-        console.log(error)
-        if(error.response?.status === 400){
+      }).catch(e => {
+        if(e.response?.status === 400){
           alert("Některé zadané oblasti nemají správný formát")
         }
-        else if(error.response?.status === 404){
+        else if(e.response?.status === 404){
           alert("Některou se zadaných oblastí se nepodařilo nalézt")
         }
         else{
           alert("Nastala chyba při zpracování požadavku, zkuste to znovu za chvíli")
         }
-        console.error(error);
+        console.error(e);
         gettingMapBorders = false
       });
 
@@ -199,7 +220,7 @@ const searchAreaWhisper = async (query: string, id: number): Promise<void> => {
       featureType: 'country, state, city, settlement',  
       q: query,
       namedetails: 0,
-      limit: 10,
+      limit: 5,
     },     
       headers: {
           'Accept-Language': 'cs-CZ'
@@ -216,19 +237,19 @@ const searchAreaWhisper = async (query: string, id: number): Promise<void> => {
         areaSuggestions[id] = data.map(item => item.display_name);
       }
       gettingSuggestions = false;
-    }).catch(error => {
+    }).catch(e => {
       gettingSuggestions = false;
       alert("Chyba při získávání nápovědy")
-      console.log(error);
+      console.log(e);
       areaSuggestions[id] = [];
     });
 }
 
-let debounce = (query: string, id: number) => {
+let debounceSearchArea = (query: string, id: number) => {
     clearTimeout(debounceTimeout);
     debounceTimeout = setTimeout(() => {
       searchAreaWhisper(query, id)
-    }, 300);
+    }, 200);
    }
 
 const selectAreaSuggestion = (newAreaValue: string, id: number): void => {
@@ -253,7 +274,14 @@ const selectAreaSuggestion = (newAreaValue: string, id: number): void => {
               type="text" 
               class="border rounded p-2 w-60"
               bind:value={area.area}
-              on:keyup={() => debounce(area.area, area.id)}
+              on:keyup={() => {
+                if(area.area.includes(';')) {
+                    areaSuggestions[area.id] = [];
+                    areaSuggestions = [...areaSuggestions];
+                } else{
+                  debounceSearchArea(area.area, area.id)}
+                }
+              }
             />
           
             {#if areaSuggestions[area.id]?.length > 0}
@@ -299,7 +327,7 @@ const selectAreaSuggestion = (newAreaValue: string, id: number): void => {
               <input 
                 type="number" 
                 class="border rounded p-2 w-20"
-                
+                on:change={()=> changeGroupWidth(area?.group, area.width)}
                 min="0.05"
                 step="0.1"
                 bind:value={area.width} 
@@ -313,6 +341,7 @@ const selectAreaSuggestion = (newAreaValue: string, id: number): void => {
               <select
                 class="border rounded p-2 w-40"
                 bind:value={area.group}
+                on:change={()=>  area.width = getJoinedGroupWidth(area?.group, area.width, area.id)}
               >
                 <option value={0}>Žádná</option>
                 {#each Array.from({length: numberOfAreaPlots($wantedAreas)}, (_, i) => i) as group}
@@ -477,7 +506,7 @@ const selectAreaSuggestion = (newAreaValue: string, id: number): void => {
         on:click={getMapBorders}
         disabled={gettingMapBorders}
       >
-        Prohlédnou oblasti
+        Prohlédnou okraje oblastí <br>(vytvořit PDF)
     </button>
     {/if}
     

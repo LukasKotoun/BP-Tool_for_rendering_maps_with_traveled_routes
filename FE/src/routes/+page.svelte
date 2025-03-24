@@ -6,3 +6,4 @@
 
 
 <AreaPaperManager/>
+ <MapElementsManager/>

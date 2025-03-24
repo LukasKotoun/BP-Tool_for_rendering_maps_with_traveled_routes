@@ -8,3 +8,373 @@ export const paperSizes = [
     { label: "A5 (297 × 148 mm)", value: JSON.stringify({ height: 148, width: 210 }) },
     { label: "A6 (148 × 105 mm)", value: JSON.stringify({ height: 105, width: 148 }) },
   ];
+
+  export const numberOfZoomLevels = 10
+
+  export const wantedNodesUpdatesZooms =
+  {
+    1:{"asd":"asd"},
+    2:{},
+    3:{"asd":"d"},
+    4:{},
+    5:{"asd":"asdd"},
+    6:{"asd":"f"},
+    7:{"asd":"asgd"},
+    8:{},
+    9:{},
+    10:{}
+  }
+
+  export const wantedWaysUpdatesZooms =
+  {
+    1:{},
+    2:{},
+    3:{},
+    4:{},
+    5:{},
+    6:{},
+    7:{},
+    8:{},
+    9:{},
+    10:{}
+  }
+
+  export const wantedAreasUpdatesZooms =
+  {
+    1:{},
+    2:{},
+    3:{},
+    4:{},
+    5:{},
+    6:{},
+    7:{},
+    8:{},
+    9:{},
+    10:{}
+  }
+
+
+
+  export const nodesKeysNamesMapping ={
+    "place": "Místa",
+    "natural": "Přírodní objekty",
+    "man_made": "Umělé objekt",
+    "historic": "Historické objekt"
+  }
+
+  export const nodesNamesMapping = {
+    "place": {
+        "city": "Velkoměsto",
+        "town": "Město",
+        "village": "Vesnice",
+        "suburb": "Městská část",
+        "neighbourhood": "Menší městská část",
+        "locality": "Lokalita"
+    },
+    "natural": {
+        "peak": "Vrchol (Hora, Kopec)"
+    },
+    "man_made": {
+        "tower": "Rozhledna"
+    },
+    "historic": {
+        "castle": "Hrad"
+    }
+  }
+
+  export const waysKeysNamesMapping ={
+    "highway": "Silnice",
+    "railway": "Železnice",
+    "aeroway": "Letiště",
+    "aerialway": "Lanovky",
+    "barrier": "Bariéry",
+    "waterway": "Vodní toky",
+    "route": "Vodní trasy"
+  }
+  export const waysNamesMapping = {
+    "highway": {
+        "motorway": "Dálnice",
+        "trunk": "Silnice pro motorová vozidla",
+        "primary": "Silnice I. třídy",
+        "secondary": "Silnice II. třídy",
+        "tertiary": "Silnice III. třídy",
+        "motorway_link": "Nájezd na dálnici",
+        "trunk_link": "Nájezd na silnici pro motorová vozidla",
+        "primary_link": "Nájezd na silnici I. třídy",
+        "secondary_link": "Nájezd na silnici II. třídy",
+        "tertiary_link": "Nájezd na silnici III. třídy",
+        "residential": "Místní komunikace",
+        "unclassified": "Neklasifikovaná silnice",
+        "service": "Přístupová cesta",
+        "pedestrian": "Pěší zóna",
+        "cycleway": "Cyklostezka",
+        "raceway": "Závodní dráha",
+        "steps": "Schodiště",
+        "footway": "Chodník",
+        "track": "Pěšina (track)",
+        "path": "Pěšinka (path)"
+    },
+    "railway": {
+        "rail": "Železnice",
+        "light_rail": "Lehká železnice",
+        "monorail": "Jednokolejná železnice",
+        "miniature": "Modelová železnice",
+        "subway": "Metro",
+        "funicular": "Lanovka"
+    },
+    "aeroway": {
+        "runway": "Vzletová dráha",
+        "taxiway": "Přijezdová dráha"
+    },
+    "aerialway": {
+        "cable_car": "Velká kabinová",
+        "gondola": "Kabinková",
+        "chair_lift": "Sedačková",
+        "mixed_lift": "Smíšená",
+        "t-bar": "Kotva",
+        "j-bar": "J-kotva",
+        "platter": "Puma",
+        "rope_tow": "Lanovka",
+        "magic_carpet": "Kobercová lanovka",
+        "zip_line": "Ziplin",
+        "goods": "Nákladní lanovka"
+    },
+    "barrier": {
+        "city_wall": "Městská hradba",
+        "wall": "Zeď",
+        "cable_barrier": "Ochranná bariéra"
+    },
+    "waterway": {
+        "river": "Řeka",
+        "canal": "Kanál",
+        "stream": "Potok",
+        "drain": "Odtok",
+        "ditch": "Příkop"
+    },
+    "route": {
+        "ferry": "Trajekt"
+    }
+  }
+
+  export const areasKeysNamesMapping ={
+    "landuse": "Užitné pozemky",
+    "leisure": "Volný čas",
+    "natural": "Příroda",
+    "amenity": "Vybavení",
+    "boundary": "Ohraničení oblastí",
+    "building": "Budovy",
+    "aeroway": "Letiště",
+    "highway": "Silnice (parkoviště a pěší zóny)"
+  }
+
+  export const areasNamesMapping = {
+    "landuse": {
+        "farmland": "Zemědělská půda",
+        "forest": "Les",
+        "residential": "Obytná zóna",
+        "commercial": "Komerční zóna",
+        "retail": "Obchodní zóna",
+        "industrial": "Průmyslová zóna",
+        "allotments": "Zahrádkářská kolonie",
+        "meadow": "Louka",
+        "grass": "Tráva",
+        "landfill": "Skládka",
+        "cemetery": "Hřbitov",
+        "vineyard": "Vinice",
+        "orchard": "Sad",
+        "garages": "Garáže",
+        "quarry": "Lom",
+        "recreation_ground": "Rekreační plocha"
+    }, 
+    "leisure": {
+        "park": "Park",
+        "garden": "Zahrada",
+        "pitch": "Hřiště",
+        "golf_course": "Golfové hřiště",
+        "playground": "Dětské hřiště",
+        "sports_centre": "Sportovní centrum",
+        "swimming_pool": "Bazén"
+    },
+    "natural": {
+        "wood": "Neudržovaný les",
+        "water": "Vodní plocha",
+        "scrub": "Keře",
+        "heath": "Vřesoviště",
+        "grassland": "Travnatá plocha",
+        "beach": "Pláž",
+        "sand": "Písek"
+    },
+    "amenity": {
+        "motorcycle_parking": "Parkoviště pro motocykly",
+        "parking": "Parkoviště",
+        "grave_yard": "Hřbitov",
+        "school": "Škola",
+        "university": "Univerzita",
+        "college": "Kolej",
+        "kindergarten": "Mateřská škola",
+        "bus_station": "Autobusové nádraží",
+        "hospital": "Nemocnice",
+        "clinic": "Klinika",
+        "place_of_worship": "Místo k modlitbě"
+    },
+    "boundary": {
+        "national_park": "Národní park"
+    },
+    "building": "Stavba",
+    "aeroway": {
+        "aerodrome": "Letiště"
+    },
+    "highway": {
+        "pedestrian": "Pěší zóna",
+        "footway": "Chodník"
+    }
+  }
+
+  export const nodesMapElements = {
+    "place": {
+        "city": {"plot": false, "width_scale": 1, "text_scale": 1},
+        "town": {"plot": false, "width_scale": 1, "text_scale": 1},
+        "village": {"plot": false, "width_scale": 1, "text_scale": 1},
+        "suburb": {"plot": false, "text_scale": 1},
+        "neighbourhood": {"plot": false, "text_scale": 1},
+        "locality": {"plot": false, "text_scale": 1}
+    },
+    "natural": {
+        "peak": {"plot": false, "width_scale": 1, "text_scale": 1}
+    },
+    "man_made": {
+        "tower": {"plot": false, "width_scale": 1, "text_scale": 1}
+    },
+    "historic": {
+        "castle": {"plot": false, "width_scale": 1, "text_scale": 1}
+    }
+  }
+
+export const waysMapElements = {
+    "highway": {
+        "motorway": {"plot": false, "width_scale": 1},
+        "trunk": {"plot": false, "width_scale": 1},
+        "primary": {"plot": false, "width_scale": 1},
+        "secondary": {"plot": false, "width_scale": 1},
+        "tertiary": {"plot": false, "width_scale": 1},
+        "motorway_link": {"plot": false, "width_scale": 1},
+        "trunk_link": {"plot": false, "width_scale": 1},
+        "primary_link": {"plot": false, "width_scale": 1},
+        "secondary_link": {"plot": false, "width_scale": 1},
+        "tertiary_link": {"plot": false, "width_scale": 1},
+        "residential": {"plot": false, "width_scale": 1},
+        "unclassified": {"plot": false, "width_scale": 1},
+        "service": {"plot": false, "width_scale": 1},
+        "pedestrian": {"plot": false, "width_scale": 1},
+        "cycleway": {"plot": false, "width_scale": 1},
+        "raceway": {"plot": false, "width_scale": 1},
+        "steps": {"plot": false, "width_scale": 1},
+        "footway": {"plot": false, "width_scale": 1},
+        "track": {"plot": false, "width_scale": 1},
+        "path": {"plot": false, "width_scale": 1}
+    },
+    "railway": {
+        "rail": {"plot": false, "width_scale": 1},
+        "light_rail": {"plot": false, "width_scale": 1},
+        "monorail": {"plot": false, "width_scale": 1},
+        "miniature": {"plot": false, "width_scale": 1},
+        "subway": {"plot": false, "width_scale": 1},
+        "funicular": {"plot": false, "width_scale": 1}
+    },
+    "aeroway": {
+        "runway": {"plot": false, "width_scale": 1},
+        "taxiway": {"plot": false, "width_scale": 1}
+    },
+    "aerialway": {
+        "cable_car": {"plot": false, "width_scale": 1},
+        "gondola": {"plot": false, "width_scale": 1},
+        "chair_lift": {"plot": false, "width_scale": 1},
+        "mixed_lift": {"plot": false, "width_scale": 1},
+        "t-bar": {"plot": false, "width_scale": 1},
+        "j-bar": {"plot": false, "width_scale": 1},
+        "platter": {"plot": false, "width_scale": 1},
+        "rope_tow": {"plot": false, "width_scale": 1},
+        "magic_carpet": {"plot": false, "width_scale": 1},
+        "zip_line": {"plot": false, "width_scale": 1},
+        "goods": {"plot": false, "width_scale": 1}
+    },
+    "barrier": {
+        "city_wall": {"plot": false, "width_scale": 1},
+        "wall": {"plot": false, "width_scale": 1},
+        "cable_barrier": {"plot": false, "width_scale": 1}
+    },
+    "waterway": {
+        "river": {"plot": false, "width_scale": 1},
+        "canal": {"plot": false, "width_scale": 1},
+        "stream": {"plot": false, "width_scale": 1},
+        "drain": {"plot": false, "width_scale": 1},
+        "ditch": {"plot": false, "width_scale": 1}
+    },
+    "route": {
+        "ferry": {"plot": false, "width_scale": 1}
+    }
+    
+  }
+
+  export const areasMapElements = {
+    "landuse": {
+        "farmland": {"plot": false },
+        "forest": {"plot": false },
+        "residential": {"plot": false },
+        "commercial": {"plot": false },
+        "retail": {"plot": false },
+        "industrial": {"plot": false },
+        "allotments": {"plot": false },
+        "meadow": {"plot": false },
+        "grass": {"plot": false },
+        "landfill": {"plot": false },
+        "cemetery": {"plot": false, "width_scale": 1},
+        "vineyard": {"plot": false},
+        "orchard": {"plot": false},
+        "garages": {"plot": false},
+        "quarry": {"plot": false},
+        "recreation_ground": {"plot": false}
+    },
+    "leisure": {
+        "park": {"plot": false},
+        "garden": {"plot": false},
+        "pitch": {"plot": false, "width_scale": 1},
+        "golf_course": {"plot": false, "width_scale": 1},
+        "playground": {"plot": false, "width_scale": 1},
+        "sports_centre": {"plot": false, "width_scale": 1},
+        "swimming_pool": {"plot": false}
+    },
+    "natural": {
+        "wood": {"plot": false},
+        "water": {"plot": false},
+        "scrub": {"plot": false},
+        "heath": {"plot": false},
+        "grassland": {"plot": false},
+        "beach": {"plot": false},
+        "sand": {"plot": false}
+    },
+    "amenity": {
+        "motorcycle_parking": {"plot": false},
+        "parking": {"plot": false},
+        "grave_yard": {"plot": false, "width_scale": 1},
+        "school": {"plot": false},
+        "university": {"plot": false},
+        "college": {"plot": false},
+        "kindergarten": {"plot": false},
+        "bus_station": {"plot": false},
+        "hospital": {"plot": false},
+        "clinic": {"plot": false},
+        "place_of_worship": {"plot": false}
+    },
+    "boundary": {
+        "national_park": {"plot": false, "width_scale": 1}
+    },
+    "building": {"plot": false, "width_scale": 1},
+    "aeroway": {
+        "aerodrome": {"plot": false}
+    },
+    "highway": {
+        "pedestrian": {"plot": false, "width_scale": 1},
+        "footway": {"plot": false, "width_scale": 1}
+    }
+  }
