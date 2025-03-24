@@ -1,19 +1,25 @@
 
 
-export function resetPlotSettings(originalData: MapElementCategory): MapElementCategory{
-    let dataToUpdate = JSON.parse(JSON.stringify(originalData)) as MapElementCategory
-
-    for (const categoryKey in dataToUpdate) {
-        if (typeof dataToUpdate[categoryKey] === "object") {
-          if ('plot' in dataToUpdate[categoryKey]) {
-            (dataToUpdate[categoryKey] as MapElementAttributes).plot = false;
+export function resetPlotSettings(originalData: MapElementCategory, bool_key_to_reset: string): MapElementCategory{
+      const result: MapElementCategory = JSON.parse(JSON.stringify(originalData));
+    
+      function processElement(element: MapElementCategory | MapElementAttributes) {
+        if (bool_key_to_reset in element) {
+          (element as MapElementAttributes)[bool_key_to_reset] = false;
+        }
+    
+        // Recursively process nested elements
+        for (const key in element) {
+          const child = element[key];
+          if (typeof child === 'object') {
+            processElement(child);
           }
-          // Recursively call the function for nested categories
-          resetPlotSettings(dataToUpdate[categoryKey] as MapElementCategory);
         }
       }
-      return dataToUpdate
-}
+      processElement(result);
+      return result;
+    }
+
 
 export function mapValue(dict: Dictionary, value: string): string {    
     if(dict == undefined) return value;

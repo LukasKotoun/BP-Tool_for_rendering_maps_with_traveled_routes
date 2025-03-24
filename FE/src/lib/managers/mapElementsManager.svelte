@@ -1,6 +1,6 @@
 <script lang="ts"> 
     import { mapNodesElements, mapWaysElements, mapAreasElements, automaticZoomLevel, mapElementsZoomDesign, mapElementsWantedZoom } from '$lib/stores/mapStore';
-    import { mapValue, updateWantedElements } from '$lib/utils/mapElementsUtils';
+    import { mapValue, updateWantedElements, resetPlotSettings } from '$lib/utils/mapElementsUtils';
     import { nodesKeysNamesMappingCZ, nodesNamesMappingCZ, waysKeysNamesMappingCZ, waysNamesMappingCZ,
        areasKeysNamesMappingCZ, areasNamesMappingCZ, numberOfZoomLevels, wantedNodesUpdatesZooms,
        wantedWaysUpdatesZooms, wantedAreasUpdatesZooms } from '$lib/constants';
@@ -12,22 +12,30 @@
     }
 
     function setNodesForZoom(zoomLevel: number){
-      //set to false and iteriate while using
+      let restartedData = resetPlotSettings($mapNodesElements, 'plot')
+      //set to false and iteratativ add default while using
       for (let i =0; i<=zoomLevel; i++){
-        console.log(wantedNodesUpdatesZooms[i])
+        restartedData = updateWantedElements(restartedData, wantedNodesUpdatesZooms[i], 'plot')
       }
+      $mapNodesElements = restartedData
     }
 
-    function setAreasForZoom(zoomLevel: number){
+    function setWaysForZoom(zoomLevel: number){
+      let restartedData = resetPlotSettings($mapWaysElements, 'plot')
+
       for (let i =0; i<=zoomLevel; i++){
-        console.log(wantedNodesUpdatesZooms[i])
+        restartedData = updateWantedElements(restartedData, wantedWaysUpdatesZooms[i], 'plot')
       }
+      $mapWaysElements = restartedData
+
     }
    
-    function setWaysForZoom(zoomLevel: number){
+    function setAreasForZoom(zoomLevel: number){
+      let restartedData = resetPlotSettings($mapAreasElements, 'plot')
       for (let i =0; i<=zoomLevel; i++){
-        console.log(wantedNodesUpdatesZooms[i])
+        restartedData = updateWantedElements(restartedData, wantedAreasUpdatesZooms[i], 'plot')
       }
+      $mapAreasElements = restartedData
     }
 
     $:{
@@ -134,9 +142,9 @@
       <h2 class="p-2 text-xl font-bold">Automatické nastavení zobrazených mapových prvků na základě úrovně přiblížení</h2>
         <div class="p-4 flex flex-wrap gap-4 items-end">
           <div class="flex flex-col">
-            <p class="text-md font-medium mb-1">Body pro detail</p>
+            <p class="text-md font-medium mb-1">Výchozí body pro detail</p>
             <select
-            class="border rounded p-2 w-40"
+            class="border rounded p-2 w-50"
             bind:value={$mapElementsWantedZoom.nodes}
             >
               {#each Array.from({length: numberOfZoomLevels}, (_, i) => i+1) as zoomLevel}
@@ -147,20 +155,19 @@
                 {/if}
               {/each}
             </select>
+            <button 
+            class="flex mt-4 justify-center bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
+              on:click={() => setNodesForZoom($mapElementsWantedZoom.nodes)}
+            >
+            Nastavit výchozí body
+            </button>
           </div>
 
+        
           <div class="flex flex-col">
-          <button 
-          class="flex mt-4 justify-center bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
-            on:click={() => setNodesForZoom($mapElementsWantedZoom.nodes)}
-          >
-          Určit body
-          </button>
-          </div>
-          <div class="flex flex-col">
-            <p class="text-md font-medium mb-1">Cesty pro detail</p>
+            <p class="text-md font-medium mb-1">Výchozí cesty pro detail</p>
             <select
-            class="border rounded p-2 w-40"
+            class="border rounded p-2 w-50"
             bind:value={$mapElementsWantedZoom.ways}
             >
               {#each Array.from({length: numberOfZoomLevels}, (_, i) => i+1) as zoomLevel}
@@ -171,20 +178,17 @@
                 {/if}
               {/each}
               </select>
-              </div>
-              <div class="flex flex-col">
-
               <button 
-              class="flex mt-4  bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
+              class="flex mt-4 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
                 on:click={() => setWaysForZoom($mapElementsWantedZoom.ways)}
               >
-              Určit cesty
+              Nastavit výchozí cesty
               </button>
           </div>
           <div class="flex flex-col">
-            <p class="text-md font-medium mb-1">Oblasti pro detail</p>
+            <p class="text-md font-medium mb-1">Výchozí oblasti pro detail</p>
             <select
-            class="border rounded p-2 w-40"
+            class="border rounded p-2 w-50"
             bind:value={$mapElementsWantedZoom.areas}
           >
             {#each Array.from({length: numberOfZoomLevels}, (_, i) => i+1) as zoomLevel}
@@ -195,14 +199,13 @@
               {/if}
             {/each}
           </select>
-          </div>  <div class="flex flex-col items-end">
           <button 
-              class="flex mt-4 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
-                on:click={() => setAreasForZoom($mapElementsWantedZoom.areas)}
-              >
-                Určit oblasti
-              </button>
-            </div>
+          class="flex mt-4 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
+            on:click={() => setAreasForZoom($mapElementsWantedZoom.areas)}
+          >
+            Nastavit výchozí oblasti
+          </button>
+          </div> 
           </div>
     </div>
 
