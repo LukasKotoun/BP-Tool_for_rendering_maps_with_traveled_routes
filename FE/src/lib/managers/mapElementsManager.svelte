@@ -1,15 +1,30 @@
 <script lang="ts"> 
-    import { mapNodesElements, mapWaysElements, mapAreasElements, automaticZoomLevel, mapElementsZoomDesign, mapElementsWantedZoom } from '$lib/stores/mapStore';
+    import { mapNodesElements, mapWaysElements, mapAreasElements, automaticZoomLevel, mapElementsZoomDesign,
+       mapElementsWantedZoom, peaksFilterSensitivity, minPopulationFilter, wantPlotBridges, wantPlotTunnels,
+       wantedMapTheme } from '$lib/stores/mapStore';
     import { mapValue, updateWantedElements, resetPlotSettings } from '$lib/utils/mapElementsUtils';
     import { nodesKeysNamesMappingCZ, nodesNamesMappingCZ, waysKeysNamesMappingCZ, waysNamesMappingCZ,
        areasKeysNamesMappingCZ, areasNamesMappingCZ, numberOfZoomLevels, wantedNodesUpdatesZooms,
        wantedWaysUpdatesZooms, wantedAreasUpdatesZooms } from '$lib/constants';
+  import { onMount } from 'svelte'
+  import api from '$lib/axios.config'
     const multiplierMin = 0.1
     const multiplierMax = 4
     let displayedCategory = 'nodes'
     function hasDirectPlot(obj: any): obj is MapElementAttributes {
       return obj && typeof obj === 'object' && 'plot' in obj;
     }
+
+    //always available map theme is mapycz
+    let avilableMapThemes: string[] = ["mapycz"]
+    onMount(() => {
+      api.get('/available_map_themes').then((response) => {
+        avilableMapThemes = response.data.map_themes
+      }).catch((error) => {
+        alert('Nepodařilo se načíst dostupné mapové podklady - nastaven výchozí podklad mapycz')
+        console.log(error)
+      })
+    })
 
     function setNodesForZoom(zoomLevel: number){
       let restartedData = resetPlotSettings($mapNodesElements, 'plot')
@@ -18,6 +33,25 @@
         restartedData = updateWantedElements(restartedData, wantedNodesUpdatesZooms[i], 'plot')
       }
       $mapNodesElements = restartedData
+      $peaksFilterSensitivity = 2.5
+      switch(zoomLevel){
+        case 7:
+          $minPopulationFilter = 250
+          break
+        case 6:
+          $minPopulationFilter = 500
+          break
+        case 5:
+        case 4:
+        case 3:
+        case 2:
+        case 1:
+          $minPopulationFilter = 750
+          break
+        default:
+        $minPopulationFilter = 0
+          break
+      }
       displayedCategory = 'nodes' 
     }
 
@@ -28,6 +62,19 @@
         restartedData = updateWantedElements(restartedData, wantedWaysUpdatesZooms[i], 'plot')
       }
       $mapWaysElements = restartedData
+      $wantPlotTunnels = true
+      switch(zoomLevel){
+        case 10:
+        case 9:
+        case 8:
+        case 7:
+        case 6:
+          $wantPlotBridges = true
+          break
+        default:
+          $wantPlotBridges = false
+          break
+      }
       displayedCategory = 'ways'
     }
    
@@ -41,6 +88,11 @@
     }
 
     $:{
+      $mapElementsZoomDesign
+     
+    }
+
+    $:{
       $automaticZoomLevel
       $mapElementsZoomDesign.nodes = $automaticZoomLevel
       $mapElementsZoomDesign.ways = $automaticZoomLevel
@@ -50,8 +102,6 @@
       $mapElementsWantedZoom.ways = $automaticZoomLevel
       $mapElementsWantedZoom.areas = $automaticZoomLevel
     }
-
-
   </script>
 
    <div class="container mx-auto p-4">
@@ -59,8 +109,18 @@
     <div class="space-y-4 rounded-lg bg-gray-100 ">
       <h2 class="p-2 text-xl font-bold">Vzhled mapových prvků na základě úrovně přiblížení (detailu)</h2>
       <div class="p-4 flex flex-wrap gap-4 items-start">
-       
 
+        <div class="flex flex-col">
+          <p class="text-md font-medium mb-1">Styly mapového podkladu</p>
+          <select
+          class="border rounded-sm p-2 w-40"
+          bind:value={$wantedMapTheme}
+        >
+          {#each avilableMapThemes as map_themes}
+            <option value={map_themes}>{map_themes}</option>
+          {/each}
+        </select>
+        </div>    
         <div class="flex flex-col">
           <p class="text-md font-medium mb-1">Úroveň detailu bodů</p>
           <select
@@ -109,7 +169,7 @@
         </select>
         </div>
         <div class="flex flex-col">
-          <p class="text-md font-medium mb-1">Úroveň detail obecných prvků</p>
+          <p class="text-md font-medium mb-1">Úroveň detailu obecných prvků</p>
           <select
           class="border rounded-sm p-2 w-40"
           bind:value={$mapElementsZoomDesign.general}
@@ -125,20 +185,6 @@
         </div>
       </div>
       </div>
-      
-      
-
-    <div class="space-y-4 rounded-lg bg-gray-100 mt-4">
-      <h2 class="p-2 text-xl font-bold">Filtr některých bodů (odstranění nevyhovujících)</h2>
-        <div class="p-4 flex flex-wrap gap-10 items-start">
-          <div class="flex flex-col">
-            <p class="text-sm font-medium mb-1">Minimální počet obyvatel vesnic, měst, velkoměst</p>
-          </div>
-          <div class="flex flex-col">
-            <p class="text-sm font-medium mb-1">Citlivost filtru na důležitost výškových bodů</p>
-          </div>
-        </div>
-    </div>
 
     <div class="space-y-4 rounded-lg bg-gray-100 mt-4">
       <h2 class="p-2 text-xl font-bold">Automatické nastavení zobrazených mapových prvků na základě úrovně přiblížení</h2>
@@ -165,7 +211,6 @@
             </button>
           </div>
 
-        
           <div class="flex flex-col">
             <p class="text-md font-medium mb-1">Výchozí cesty pro detail</p>
             <select
@@ -234,6 +279,39 @@
   </div>
   {#if displayedCategory == "nodes"}
     <div class="space-y-4 rounded-lg bg-gray-100 mt-4 ">
+      <div class="ml-4 mr-4 mb-4 p-4 bg-gray-50 rounded-md shadow-sm border-l-2">
+        <h3 class="text-lg font-medium mb-3 ml-3">Obecné nastavení (odstranění některých bodů dle podmínek)</h3>
+        <div class="flex flex-wrap gap-2 ml-2 mb-3">
+          <div class="bg-white items-center rounded-sm p-2 border border-gray-200 shadow-xs">
+            <div class="flex flex-col space-y-1 ml-4">
+              <p class="text-sm mr-6">Minimální počet obyvatel vesnic, měst, velkoměst</p>
+              <div class="flex mr-6">
+                <input
+                type="number"
+                class="border rounded-sm p-2 w-40"
+                bind:value={$minPopulationFilter}/>
+              </div> 
+            </div>
+          </div>
+          <div class="bg-white items-center rounded-sm p-2 border border-gray-200 shadow-xs">
+            <div class="flex flex-col space-y-1 ml-4">
+              <p class="text-sm mr-6">Citlivost filtru na důležitost výškových bodů</p>
+              <div class="flex  items-center mr-6">
+                <input
+                type="range"
+                min="0"
+                max="7"
+                step="0.1"
+                bind:value={$peaksFilterSensitivity}
+                class="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+              <p class="text-sm text-gray-600 ml-4 w-6 text-right">{$peaksFilterSensitivity}</p>
+              </div> 
+            </div>
+          </div>
+        </div>
+      </div>
+      
       {#each Object.entries($mapNodesElements) as [categoryKey, categoryValue], index}
         <div class="ml-4 mr-4 mb-4 p-4 bg-gray-50 rounded-md shadow-sm border-l-2">
           <div class="flex items-center mb-2">
@@ -261,7 +339,7 @@
                           max={multiplierMax}
                           step="0.1" 
                           bind:value={$mapNodesElements[categoryKey].width_scale} 
-                          class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                          class="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                       <p class="text-xs ml-1 w-6 text-right">{categoryValue.width_scale}</p>
                     </div>
@@ -276,9 +354,9 @@
                           max={multiplierMax} 
                           step="0.1" 
                           bind:value={$mapNodesElements[categoryKey].text_scale}
-                          class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                          class="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                      <span class="text-xs ml-1 w-6 text-right">{categoryValue.text_scale}</span>
+                      <p class="text-xs ml-1 w-6 text-right">{categoryValue.text_scale}</p>
                     </div>
                   {/if}
                 </div>
@@ -313,7 +391,7 @@
                               max={multiplierMax}  
                               step="0.1" 
                               bind:value={$mapNodesElements[categoryKey][subKey].width_scale}
-                              class="h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                              class="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                           <p class="text-xs text-gray-600 ml-1 mr-1 w-6 text-right">{subValue.width_scale}</p>
                         </div>
@@ -346,6 +424,32 @@
     {:else if displayedCategory == "ways"}
     <!-- WAYS -->
     <div class="space-y-4 rounded-lg bg-gray-100 mt-4 ">
+      <div class="ml-4 mr-4 mb-4 p-4 bg-gray-50 rounded-md shadow-sm border-l-2">
+        <h3 class="text-lg font-medium mb-3 ml-3">Obecné nastavení</h3>
+        <div class="flex flex-wrap gap-2 ml-2 mb-3">
+          <div class="bg-white items-center rounded-sm p-2 border border-gray-200 shadow-xs">
+            <div class="flex justify-normal mb-1">
+              <input 
+                type="checkbox" 
+                class="h-5 w-5 rounded-lg"
+                bind:checked={$wantPlotBridges}
+              >
+            <p class="text-sm ml-2">Vyznačit mosty</p>
+            </div> 
+          </div>
+          <div class="bg-white items-center rounded-sm p-2 border border-gray-200 shadow-xs">
+            <div class="flex justify-normal mb-1">
+              <input 
+                type="checkbox" 
+                class="h-5 w-5 rounded-lg"
+                bind:checked={$wantPlotTunnels}
+              >
+            <p class="text-sm ml-2">Vyznačit tunely</p>
+            </div> 
+          </div>
+        </div>
+      </div>
+
       {#each Object.entries($mapWaysElements) as [categoryKey, categoryValue], index}
         <div class="ml-4 mr-4 mb-4 p-4 bg-gray-50 rounded-md shadow-sm border-l-2">
           <div class="flex items-center mb-2">
@@ -373,7 +477,7 @@
                           max={multiplierMax}
                           step="0.1" 
                           bind:value={$mapWaysElements[categoryKey].width_scale} 
-                          class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                          class="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                       <p class="text-xs ml-1 w-6 text-right">{categoryValue.width_scale}</p>
                     </div>
@@ -388,9 +492,9 @@
                           max={multiplierMax} 
                           step="0.1" 
                           bind:value={$mapWaysElements[categoryKey].text_scale}
-                          class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                          class="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                      <span class="text-xs ml-1 w-6 text-right">{categoryValue.text_scale}</span>
+                      <p class="text-xs ml-1 w-6 text-right">{categoryValue.text_scale}</p>
                     </div>
                   {/if}
                 </div>
@@ -424,7 +528,7 @@
                               max={multiplierMax}  
                               step="0.1" 
                               bind:value={$mapWaysElements[categoryKey][subKey].width_scale}
-                              class="h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                              class="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                           <p class="text-xs text-gray-600 ml-1 mr-1 w-6 text-right">{subValue.width_scale}</p>
                         </div>
@@ -485,7 +589,7 @@
                           max={multiplierMax}
                           step="0.1" 
                           bind:value={$mapAreasElements[categoryKey].width_scale} 
-                          class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                          class="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                       <p class="text-xs ml-1 w-6 text-right">{categoryValue.width_scale}</p>
                     </div>
@@ -500,9 +604,9 @@
                           max={multiplierMax} 
                           step="0.1" 
                           bind:value={$mapAreasElements[categoryKey].text_scale}
-                          class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                          class="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                      <span class="text-xs ml-1 w-6 text-right">{categoryValue.text_scale}</span>
+                      <p class="text-xs ml-1 w-6 text-right">{categoryValue.text_scale}</p>
                     </div>
                   {/if}
                 </div>
@@ -537,7 +641,7 @@
                               max={multiplierMax}  
                               step="0.1" 
                               bind:value={$mapAreasElements[categoryKey][subKey].width_scale}
-                              class="h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                              class="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                           <p class="text-xs text-gray-600 ml-1 mr-1 w-6 text-right">{subValue.width_scale}</p>
                         </div>

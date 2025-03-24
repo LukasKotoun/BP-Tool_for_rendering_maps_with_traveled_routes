@@ -16,21 +16,33 @@ export const paperDimensionRequest = writable<PaperDimensionRequest>({
 
 export const automaticZoomLevel = writable<number>(undefined);
 
+export const wantPlotTunnels = writable<boolean>(true);
+
+export const wantPlotBridges = writable<boolean>(false);
+
+export const peaksFilterSensitivity = writable<number>(2.5);
+
+export const minPopulationFilter = writable<number>(0);
+
+
 export const mapNodesElements = writable<MapElementCategory>(nodesMapElements)
 
 export const mapWaysElements = writable<MapElementCategory>(waysMapElements)
 
 export const mapAreasElements = writable<MapElementCategory>(areasMapElements)
 
+// default always available theme
+export const wantedMapTheme = writable<string>("mapycz")
+
 export const mapElementsZoomDesign = writable<MapElementsZoomDesign>({
-  general: 5,
-  nodes: 5,
-  ways: 5,
-  areas: 5,
+  general: 1,
+  nodes: 1,
+  ways: 1,
+  areas: 1,
 })
 
 export const mapElementsWantedZoom = writable<MapElementsWanted>({
-  nodes: 5,
-  ways: 5,
-  areas: 5,
+  nodes: 1,
+  ways: 1,
+  areas: 1,
 })
