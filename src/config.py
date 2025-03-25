@@ -244,12 +244,12 @@ except:
 
 # mapping tuple - new key, new value (function), bool - extract - as new keys are added to dict
 MARKERS_UCODE_MAPPING: dict[str, str] = {
-    "fa_finish": {Style.FINISH_MARKER.value: MarkersCodes.FA_FINISH_ICON.value, 
+    "finish": {Style.FINISH_MARKER.value: MarkersCodes.FA_FINISH_ICON.value, 
                   Style.FINISH_MARKER_FONT_PROPERTIES.value: font_awesome_prop, 
                   Style.FINISH_MARKER_VERTICAL_ALIGN.value: 'bottom',
                   Style.FINISH_MARKER_HORIZONTAL_ALIGN.value: 'left'},
     
-    "mpl_start": {Style.START_MARKER.value: MarkersCodes.MPL_CIRCLE_MARKER.value, 
+    "start": {Style.START_MARKER.value: MarkersCodes.MPL_CIRCLE_MARKER.value, 
                   Style.START_MARKER_FONT_PROPERTIES.value: None,
                   Style.START_MARKER_VERTICAL_ALIGN.value: None,
                   Style.START_MARKER_HORIZONTAL_ALIGN.value: None}
@@ -261,25 +261,25 @@ GPX_NORMAL_COLUMNS = [GPX_FILE_COLUMN, GPX_GROUP_COLUMN]
 GPX_GENERAL_KEYS = ['general']
 
 ALLOWED_WANTED_PAPER_ORIENTATIONS = [MapOrientation.AUTOMATIC.value, MapOrientation.LANDSCAPE.value, MapOrientation.PORTRAIT.value]
-MIN_WIDTH = 0.045
+MIN_WIDTH_POINTS = 0.1
 MIN_TEXT_WIDTH = 0.1
 MM_TO_INCH = 25.4
 MATPLOTLIB_POINTS_PER_INCH = 72
-FUNC_MM_TO_POINTS_CONVERSION = lambda v: v / MM_TO_INCH * MATPLOTLIB_POINTS_PER_INCH
+FUNC_MM_TO_POINTS_CONVERSION = lambda v: max(v / MM_TO_INCH * MATPLOTLIB_POINTS_PER_INCH, MIN_WIDTH_POINTS)
 
 # is validated and not mapped
 FIT_PAPER_VALIDATION = {"fit": (bool, True, None), "plot": (bool, True, None),
-                        "width": (int | float, False, lambda v: MIN_WIDTH <= v)}
+                        "width": (int | float, False)}
 
 REQ_AREA_KEY_WITH_AREA = "area"
 REQ_AREA_KEY_WITH_BOOLEAN_PLOT = "plot"
 REQ_AREA_KEY_TO_GROUP_BY = "group"
 # key, (types, required)
 REQ_AREA_DICT_KEYS = {"area": (str | list, True, None), "plot": (bool, True, None), "group": (
-    int, False, lambda v: 0 <= v), "width": (int | float, False, lambda v: MIN_WIDTH <= v)}
+    int, False, lambda v: 0 <= v), "width": (int | float, False)}
 REQ_AREAS_MAPPING_DICT = {"width": (Style.WIDTH.value, FUNC_MM_TO_POINTS_CONVERSION)}
 
-FE_EDIT_STYLES_VALIDATION = {'width_scale': (float | int, False, lambda v: MIN_WIDTH <= v),
+FE_EDIT_STYLES_VALIDATION = {'width_scale': (float | int, False),
                              "text_scale": (float | int, False, lambda v: MIN_TEXT_WIDTH <= v)}
 FE_EDIT_STYLES_MAPPING = {"width_scale": (Style.FE_WIDTH_SCALE.value, None),
                           "text_scale": (Style.FE_TEXT_FONT_SIZE_SCALE.value, None)}
@@ -290,7 +290,7 @@ ZOOM_STYLE_LEVELS_VALIDATION = {"nodes": (int, True, lambda v: 1 <= v <= 10), "w
 
 GPX_STYLES_VALIDATION = {
     "color": (str, False, lambda v: is_color_like(v)),
-    "width": (int | float, False, lambda v: MIN_WIDTH <= v),
+    "width": (int | float, False),
     "alpha": (float|int, False, lambda v: 0 <= v <= 1),
     "zindex": (int, False, lambda v: 0 <= v),
     "linestyle": (str, False, lambda v: v in ['-', '--', '- -']),
@@ -302,13 +302,13 @@ GPX_STYLES_VALIDATION = {
     "edge_capstyle": (str, False, lambda v: v in ['round', 'butt', 'projecting']),
     "gpx_above_text": (bool, False, None),
     "start_marker": (str, False, lambda v: v in MARKERS_UCODE_MAPPING.keys()),
-    "start_marker_width": (int|float, False, lambda v: MIN_WIDTH <= v),
+    "start_marker_width": (int|float, False),
     "start_marker_edge_ratio": (int|float, False, lambda v: 0 <= v),
     "start_marker_color": (str, False, lambda v: is_color_like(v)),
     "start_marker_edge_color": (str, False, lambda v: is_color_like(v)),
     "start_marker_alpha": (int|float, False, lambda v: 0 <= v <= 1),
     "finish_marker": (str, False, lambda v: v in MARKERS_UCODE_MAPPING.keys()),
-    "finish_marker_width": (int|float, False, lambda v: MIN_WIDTH <= v),
+    "finish_marker_width": (int|float, False),
     "finish_marker_edge_ratio": (int|float, False, lambda v: 0 <= v),
     "finish_marker_color": (str, False, lambda v: is_color_like(v)),
     "finish_marker_edge_color": (str, False, lambda v: is_color_like(v)),

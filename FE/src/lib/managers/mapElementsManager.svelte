@@ -273,13 +273,11 @@
                     on:click={() => displayedCategory = "areas"}>
                      Oblasti (Polygony)
             </button>
-          
-       
       </div>
   </div>
   {#if displayedCategory == "nodes"}
-    <div class="space-y-4 rounded-lg bg-gray-100 mt-4 ">
-      <div class="ml-4 mr-4 mb-4 p-4 bg-gray-50 rounded-md shadow-sm border-l-2">
+    <div class="space-y-4 rounded-lg p-4 bg-gray-100 mt-4 ">
+      <div class="bg-gray-50 p-4 rounded-md shadow-sm border-l-2">
         <h3 class="text-lg font-medium mb-3 ml-3">Obecné nastavení (odstranění některých bodů dle podmínek)</h3>
         <div class="flex flex-wrap gap-2 ml-2 mb-3">
           <div class="bg-white items-center rounded-sm p-2 border border-gray-200 shadow-xs">
@@ -313,7 +311,7 @@
       </div>
       
       {#each Object.entries($mapNodesElements) as [categoryKey, categoryValue], index}
-        <div class="ml-4 mr-4 mb-4 p-4 bg-gray-50 rounded-md shadow-sm border-l-2">
+        <div class="p-4 bg-gray-50 rounded-md shadow-sm border-l-2">
           <div class="flex items-center mb-2">
             <!-- nodes with plot directly (without specific elements) -->
             {#if hasDirectPlot(categoryValue) && hasDirectPlot($mapNodesElements[categoryKey])}
@@ -423,8 +421,8 @@
     </div>
     {:else if displayedCategory == "ways"}
     <!-- WAYS -->
-    <div class="space-y-4 rounded-lg bg-gray-100 mt-4 ">
-      <div class="ml-4 mr-4 mb-4 p-4 bg-gray-50 rounded-md shadow-sm border-l-2">
+    <div class="space-y-4 p-4 rounded-lg bg-gray-100 mt-4 ">
+      <div class="bg-gray-50 p-4 rounded-md shadow-sm border-l-2">
         <h3 class="text-lg font-medium mb-3 ml-3">Obecné nastavení</h3>
         <div class="flex flex-wrap gap-2 ml-2 mb-3">
           <div class="bg-white items-center rounded-sm p-2 border border-gray-200 shadow-xs">
@@ -451,7 +449,7 @@
       </div>
 
       {#each Object.entries($mapWaysElements) as [categoryKey, categoryValue], index}
-        <div class="ml-4 mr-4 mb-4 p-4 bg-gray-50 rounded-md shadow-sm border-l-2">
+        <div class="p-4 bg-gray-50 rounded-md shadow-sm border-l-2">
           <div class="flex items-center mb-2">
             <!-- ways with plot directly (without specific elements) -->
             {#if hasDirectPlot(categoryValue) && hasDirectPlot($mapWaysElements[categoryKey])}
@@ -560,9 +558,9 @@
     </div>
     {:else}
     <!-- AREAS -->
-    <div class="space-y-4 rounded-lg bg-gray-100 mt-4 ">
+    <div class="space-y-4 p-4 rounded-lg bg-gray-100 mt-4 ">
       {#each Object.entries($mapAreasElements) as [categoryKey, categoryValue], index}
-        <div class="ml-4 mr-4 mb-4 p-4 bg-gray-50 rounded-md shadow-sm border-l-2">
+        <div class="p-4 bg-gray-50 rounded-md shadow-sm border-l-2">
           <div class="flex items-center mb-2">
 
             <!-- areas with plot directly (without specific elements) -->

@@ -6,7 +6,7 @@
     <title>Send Data with File</title>
     <script>
       token = null
-      AREA = [{ area: "Česko", plot: true, group: 0, width: 0.5 }]
+      AREA = [{ area: "Horní vilémovice, Česko", plot: true, group: 0, width: 0.5 }]
       // AREA = [{'area':[[15.8096936,48.6459956], [15.8232333, 48.6460311], [15.8232550, 48.6397219], [15.8097686, 48.6397503]], "plot": true }]
       FIT_PAPER = {fit: true, plot: true, width:8 }
       PAPER_DIM = { height: 297, width: 210 }
@@ -501,7 +501,7 @@
   </body>
 
   <script>
-    // // transforming to send data (in 3 arrays - nodes, ways, areas)
+    // // // transforming to send data (in 3 arrays - nodes, ways, areas)
     // function transformStructure(data, keep_key, scale_keys) {
     //   const result = {}
 
@@ -568,22 +568,20 @@
     //   return result
     // }
 
-    // // Example usage:
-    // // const data = {
-    // //   highway: {
-    // //     motorway: { plot: false },
-    // //     primary: { plot: false }
-    // //   },
-    // //   railway: {
-    // //     rail: { plot: true, width_scale: "1", text_scale: 3 }
-    // //   },
-    // //   route: { plot: true, width_scale: 2 },
-    // //   barrier: { plot: true }
-    // // }
+    // const data = {
+    //   highway: {
+    //     motorway: { plot: false },
+    //     primary: { plot: false }
+    //   },
+    //   railway: {
+    //     rail: { plot: true, width_scale: "1", text_scale: 3 }
+    //   },
+    //   route: { plot: true, width_scale: 2 },
+    //   barrier: { plot: true }
+    // }
 
-    // // const transformed = transformStructure(data, "plot", { width_scale: 1, text_scale: 1 })
-    // // console.log(JSON.stringify(transformed, null, 2))
-    // // Expected output: {"railway":{"rail":{"text_scale":3}},"route":{"width_scale":2}}
+    // const transformed = transformStructure(data, "plot", { width_scale: 1, text_scale: 1 })
+    // console.log(JSON.stringify(transformed, null, 2))
 
 
     
@@ -592,8 +590,7 @@
     //   // main keys to update (like highway, railway...)
     //   for (const categoryKey in updateRules) {
     //     const category = updateRules[categoryKey]
-
-    //     if (category.length === 0) {
+    //     if (typeof category  === 'boolean' && category) {
     //       if (dataToUpdate[categoryKey]) {
     //         // If it has plot property directly (e.g. building: {plot: true})
     //         if (typeof dataToUpdate[categoryKey] === "object" && dataToUpdate[categoryKey].hasOwnProperty(updateKey)) {
@@ -610,7 +607,7 @@
     //           }
     //         }
     //       }
-    //     } else {
+    //     } else if (Array.isArray(category)) {
     //       // Specific parent categories are listed
     //       for (const parentCategory of category) {
     //         // check if the parent category exists in dataToUpdate
@@ -645,23 +642,16 @@
     // const updateRules = {
     //   areas: {
     //     highway: ["motorway"],
-    //     railway: [],
+    //     railway: false,
     //     route: []
     //   }
     // }
 
-    // const updateRules2 = {
-    //   areas: {
-    //     highway: ["motorway", "primary"],
-    //     railway: [],
-    //     barrier: []
-    //   }
-    // }
+
 
     // // Test
     // updatePlotSettings(data, updateRules["areas"], "plot")
 
-    // updatePlotSettings(data, updateRules2["areas"], "plot")
     // console.log(JSON.stringify(data, null, 2))
     // const transformed = transformStructure(data, "plot", { width_scale: 1, text_scale: 1 })
     // console.log(JSON.stringify(transformed, null, 2))

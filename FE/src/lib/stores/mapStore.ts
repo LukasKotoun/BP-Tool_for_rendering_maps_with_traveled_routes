@@ -1,5 +1,6 @@
 import { writable } from "svelte/store";
-import { nodesMapElements, waysMapElements, areasMapElements } from "$lib/constants";
+import { nodesMapElements, waysMapElements, areasMapElements, gpxGeneralDefault } from "$lib/constants";
+import { createUniqueFileName } from "$lib/utils/gpxFilesUtils";
 
 export const wantedAreas = writable<AreaItemStored[]>([]);
 export const fitPaperSize = writable<FitPaperSize>({
@@ -15,21 +16,60 @@ export const paperDimensionRequest = writable<PaperDimensionRequest>({
 });
 
 export const automaticZoomLevel = writable<number>(undefined);
-
 export const wantPlotTunnels = writable<boolean>(true);
-
 export const wantPlotBridges = writable<boolean>(false);
-
 export const peaksFilterSensitivity = writable<number>(2.5);
-
 export const minPopulationFilter = writable<number>(0);
 
+//custom store for gpx file storing
+function createGpxFileStore(){
+  const { subscribe, update, set } = writable<GPXFile[]>([]);
+  let counter = 0;
+  return {
+    subscribe,
+    addFiles: (newFiles: File[]) => {
+      update(existingFiles => {
+        let changedFiles = []
+        const filesToAdd = newFiles
+          .filter(file => file.name.toLowerCase().endsWith('.gpx'))
+          .map(file => {
+            newFiles = newFiles.filter(f => f !== file)
+            const allFiles = [
+              ...existingFiles.map(gpxFile => gpxFile.file), // fully stored files
+              ...newFiles, // unprocessed files
+              ...changedFiles // processed files
+            ];
+            const uniqueFile = createUniqueFileName(allFiles, file)
+            changedFiles.push(uniqueFile)
+            return {
+              id: counter++,
+              file: uniqueFile
+            };
+          });
+        
+        return [...existingFiles, ...filesToAdd];
+      });
+    },
+    removeFile: (id: number) => {
+      update(files => files.filter(file => file.id !== id));
+    },
+    reset: () => set([]),
+  };
+}
+export const gpxFileGroups = writable<GPXFileGroups>({});
 
-export const mapNodesElements = writable<MapElementCategory>(nodesMapElements)
+export const gpxFiles = createGpxFileStore()
 
-export const mapWaysElements = writable<MapElementCategory>(waysMapElements)
+export const gpxStyles = writable<GpxStyles>({
+  general: JSON.parse(JSON.stringify(gpxGeneralDefault)),
+  group: {},
+})
 
-export const mapAreasElements = writable<MapElementCategory>(areasMapElements)
+export const mapNodesElements = writable<MapElementCategory>(JSON.parse(JSON.stringify(nodesMapElements)))
+
+export const mapWaysElements = writable<MapElementCategory>(JSON.parse(JSON.stringify(waysMapElements)))
+
+export const mapAreasElements = writable<MapElementCategory>(JSON.parse(JSON.stringify(areasMapElements)))
 
 // default always available theme
 export const wantedMapTheme = writable<string>("mapycz")

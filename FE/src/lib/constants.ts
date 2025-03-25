@@ -12,6 +12,38 @@ export const paperSizes = [
 
 export const numberOfZoomLevels = 10
 
+export const gpxGeneralDefault: GpxStyleAttributes = {
+  color: '#FF0000',
+  width: 0.5,
+  alpha: 0.7,
+  zindex: 0,
+  linestyle: '-',
+  line_capstyle: 'round',
+  edge_color: null,
+  edge_alpha: 0,
+  edge_width_ratio: 0,
+  edge_linestyle: '-',
+  edge_capstyle: 'round',
+  gpx_above_text: false,
+  start_marker: null,
+  start_marker_width: 1.7,
+  start_marker_edge_ratio: 0.1,
+  start_marker_color: '#18ac0d',
+  start_marker_alpha: 1,
+  start_marker_edge_color: '#FFFFFF',
+  finish_marker: null,
+  finish_marker_width: 1.7,
+  finish_marker_edge_ratio: 0.1,
+  finish_marker_color: '#000000',
+  finish_marker_alpha: 1,
+  finish_marker_edge_color: '#FFFFFF',
+  marker_layer_position: 'under_text'
+};
+
+
+
+
+
 export const wantedNodesUpdatesZooms = {
   1: { place: ["city"] },
   2: { place: ["town"], natural: ["peak"] },

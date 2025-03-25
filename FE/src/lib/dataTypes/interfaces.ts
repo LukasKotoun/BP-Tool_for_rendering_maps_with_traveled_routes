@@ -54,6 +54,40 @@ interface MapElementCategory {
   [key: string]: MapElementAttributes | MapElementCategory;
 }
 
+interface GpxStyleAttributes {
+  color?: string | null;
+  width?: number;
+  alpha?: number;
+  zindex?: number;
+  linestyle?: string;
+  line_capstyle?: string;
+  edge_color?: string | null ;
+  edge_alpha?: number;
+  edge_width_ratio?: number;
+  edge_linestyle?: string;
+  edge_capstyle?: string;
+  gpx_above_text?: boolean;
+  start_marker?: string | null;
+  start_marker_width?: number;
+  start_marker_edge_ratio?: number;
+  start_marker_color?: string;
+  start_marker_alpha?: number;
+  start_marker_edge_color?: string;
+  finish_marker?: string | null;
+  finish_marker_width?: number;
+  finish_marker_edge_ratio?: number;
+  finish_marker_color?: string;
+  finish_marker_alpha?: number;
+  finish_marker_edge_color?: string;
+  marker_layer_position?: string;
+}
+interface GPXFileGroups {
+  [groupName: string]: string[];
+}
+interface GpxStyles {
+  general: GpxStyleAttributes;
+  group: {[groupName: string]: GpxStyleAttributes};
+}
 
 interface MapElementAttributesSend  {
   width_scale?: number;
@@ -71,6 +105,11 @@ interface MapElementUpdateRules {
 type Dictionary = {
   [key: string]: string; // Define the dictionary as an object with string keys and string values
 };
+
+interface GPXFile {
+  id: number;
+  file: File;
+}
 
 interface NominatimResult {
   place_id: number;
