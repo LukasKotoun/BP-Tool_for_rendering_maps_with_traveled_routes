@@ -11,7 +11,7 @@ export const paperSizes = [
 ]
 
 export const numberOfZoomLevels = 10
-
+export const defaultGpxGroupName = "default"
 export const gpxGeneralDefault: GpxStyleAttributes = {
   color: '#FF0000',
   width: 0.5,

@@ -1,19 +1,19 @@
 <script lang="ts">
     import { gpxFiles, gpxStyles, gpxFileGroups} from '$lib/stores/mapStore';
     import { createUniqueName } from '$lib/utils/gpxFilesUtils';
-    import { fromStore, get } from 'svelte/store';
-
 
 
     // State for new group input
     let newGroupName = '';
+
     let selectedFiles: string[] = []; // Tracked file names for the current group
 
     function addNewGroup() {
+        console.log($gpxFileGroups)
         let groupName = newGroupName.trim();
         
         if (!groupName) {
-            groupName = 'Untitled_Group';
+            groupName = 'Nepojmenovaná skupina';
         }
 
         if ($gpxStyles.group[groupName]) {
@@ -23,6 +23,16 @@
         $gpxStyles = {...$gpxStyles, group: {...$gpxStyles.group, [groupName]: {}}};
         $gpxFileGroups = {...$gpxFileGroups, [groupName]: []};
         newGroupName = '';
+        console.log()
+    }
+    
+    function getUngrupedFiles(): string[]{
+        const groupedFiles = Object.values($gpxFileGroups).flat();
+        return $gpxFiles
+            .filter(gpxFile => 
+                !groupedFiles.includes(gpxFile.file.name)
+            )
+            .map(gpxFile => gpxFile.file.name);
     }
 
     // Function to remove a group
@@ -98,10 +108,32 @@
 </script>
 
 <div class="p-4 space-y-4">
-    <!-- Group Creation Section -->
     <div class="bg-gray-100 p-4 rounded-lg">
-        <h2 class="text-xl font-bold mb-4">Vytvořit novou skupinu</h2>
-        
+        <h2 class="text-xl font-bold mb-4">Nezařazené</h2>
+        <div class="bg-white p-3 rounded shadow mb-2 flex flex-col">
+            <!-- Existing Group Files -->
+            
+                <div class="mt-2">
+                     {#if getUngrupedFiles().length > 0}
+                    <div class="space-y-1">
+                        {#each getUngrupedFiles() as fileName}
+                            <div class="flex justify-between items-center bg-gray-100 p-2 rounded">
+                                <span>{fileName}</span>
+                            </div>
+                        {/each}
+                    </div>
+                    {:else}
+                        <div class="space-y-1 p-4">
+                            <p>Žádné nezařazené soubory </p>
+                        </div>
+                    {/if}
+                </div>
+           
+
+        </div>
+    </div>
+    <div class="bg-gray-100 p-4 rounded-lg">
+        <h2 class="text-xl font-bold mb-4">Vytvořit vlastní skupinu</h2>
         <div class="flex space-x-2 mb-4">
             <input 
                 type="text" 
@@ -122,8 +154,9 @@
     <div class="bg-gray-100 p-4 rounded-lg">
         <h2 class="text-xl font-bold mb-4">Group Management</h2>
         
-        {#each Object.entries($gpxStyles.group) as [groupName, groupStyle]}
+        {#each Object.entries($gpxFileGroups) as [groupName, files]}
             <div class="bg-white p-3 rounded shadow mb-2 flex flex-col">
+              
                 <div class="flex justify-between items-center mb-2">
                     <span class="font-semibold">{groupName}</span>
                     <button 
@@ -133,6 +166,8 @@
                         Odstranit skupinu
                     </button>
                 </div>
+             
+               
 
                 <!-- File Selection for Group -->
                 <div class="mt-2">

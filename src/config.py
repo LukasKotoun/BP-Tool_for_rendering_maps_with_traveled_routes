@@ -266,6 +266,7 @@ MIN_TEXT_WIDTH = 0.1
 MM_TO_INCH = 25.4
 MATPLOTLIB_POINTS_PER_INCH = 72
 FUNC_MM_TO_POINTS_CONVERSION = lambda v: max(v / MM_TO_INCH * MATPLOTLIB_POINTS_PER_INCH, MIN_WIDTH_POINTS)
+# todo add also alpha and zoom map
 
 # is validated and not mapped
 FIT_PAPER_VALIDATION = {"fit": (bool, True, None), "plot": (bool, True, None),
@@ -280,9 +281,9 @@ REQ_AREA_DICT_KEYS = {"area": (str | list, True, None), "plot": (bool, True, Non
 REQ_AREAS_MAPPING_DICT = {"width": (Style.WIDTH.value, FUNC_MM_TO_POINTS_CONVERSION)}
 
 FE_EDIT_STYLES_VALIDATION = {'width_scale': (float | int, False),
-                             "text_scale": (float | int, False, lambda v: MIN_TEXT_WIDTH <= v)}
-FE_EDIT_STYLES_MAPPING = {"width_scale": (Style.FE_WIDTH_SCALE.value, None),
-                          "text_scale": (Style.FE_TEXT_FONT_SIZE_SCALE.value, None)}
+                             "text_scale": (float | int, False)}
+FE_EDIT_STYLES_MAPPING = {"width_scale": (Style.FE_WIDTH_SCALE.value, FUNC_MM_TO_POINTS_CONVERSION),
+                          "text_scale": (Style.FE_TEXT_FONT_SIZE_SCALE.value, FUNC_MM_TO_POINTS_CONVERSION)}
 FE_STYLES_ALLOWED_ELEMENTS = ['nodes', 'ways', 'areas']
 
 ZOOM_STYLE_LEVELS_VALIDATION = {"nodes": (int, True, lambda v: 1 <= v <= 10), "ways": (
@@ -292,7 +293,7 @@ GPX_STYLES_VALIDATION = {
     "color": (str, False, lambda v: is_color_like(v)),
     "width": (int | float, False),
     "alpha": (float|int, False, lambda v: 0 <= v <= 1),
-    "zindex": (int, False, lambda v: 0 <= v),
+    "zindex": (int, False),
     "linestyle": (str, False, lambda v: v in ['-', '--', '- -']),
     "line_capstyle": (str, False, lambda v: v in ['round', 'butt', 'projecting']),
     "edge_alpha": (float|int, False, lambda v: 0 <= v <= 1),

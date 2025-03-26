@@ -1,5 +1,5 @@
 import { writable } from "svelte/store";
-import { nodesMapElements, waysMapElements, areasMapElements, gpxGeneralDefault } from "$lib/constants";
+import { nodesMapElements, waysMapElements, areasMapElements, gpxGeneralDefault, defaultGpxGroupName } from "$lib/constants";
 import { createUniqueFileName } from "$lib/utils/gpxFilesUtils";
 
 export const wantedAreas = writable<AreaItemStored[]>([]);
@@ -22,6 +22,11 @@ export const peaksFilterSensitivity = writable<number>(2.5);
 export const minPopulationFilter = writable<number>(0);
 
 //custom store for gpx file storing
+
+
+
+
+
 function createGpxFileStore(){
   const { subscribe, update, set } = writable<GPXFile[]>([]);
   let counter = 0;
@@ -46,7 +51,7 @@ function createGpxFileStore(){
               file: uniqueFile
             };
           });
-        
+
         return [...existingFiles, ...filesToAdd];
       });
     },
@@ -55,14 +60,15 @@ function createGpxFileStore(){
     },
     reset: () => set([]),
   };
-}
-export const gpxFileGroups = writable<GPXFileGroups>({});
+}export const gpxFileGroups = writable<GPXFileGroups>({});
 
 export const gpxFiles = createGpxFileStore()
 
 export const gpxStyles = writable<GpxStyles>({
-  general: JSON.parse(JSON.stringify(gpxGeneralDefault)),
-  group: {},
+  general: {},
+  group: {
+    "default": JSON.parse(JSON.stringify(gpxGeneralDefault))
+  },
 })
 
 export const mapNodesElements = writable<MapElementCategory>(JSON.parse(JSON.stringify(nodesMapElements)))
