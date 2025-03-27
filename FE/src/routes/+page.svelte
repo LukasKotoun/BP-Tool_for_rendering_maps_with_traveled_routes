@@ -6,6 +6,6 @@
 </script>
 
 
-<GpxManager/>
-<!-- <AreaPaperManager/> -->
+<!-- <GpxManager/> -->
+<AreaPaperManager/>
  <!-- <MapElementsManager/> -->

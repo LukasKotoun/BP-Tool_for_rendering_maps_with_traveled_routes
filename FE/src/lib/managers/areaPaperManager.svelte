@@ -2,15 +2,15 @@
   import { onMount } from 'svelte';
   import { wantedAreas, fitPaperSize, paperDimension, paperDimensionRequest, automaticZoomLevel, areasId } from '$lib/stores/mapStore';
   import api from '$lib/axios.config';
-  import { checkMapCordinatesFormat, checkFitPaper, parseWantedAreas, numberOfAreaPlots } from '$lib/utils/areaUtils';
-  import axios from 'axios'
+  import { checkMapCordinatesFormat, checkFitPaper, parseWantedAreas, numberOfAreaPlots,
+    searchAreaWhisper
+   } from '$lib/utils/areaUtils';
   import { paperSizes } from '$lib/constants';
 
   let areaSuggestions: string[][] = [];
   const defaultWidth = 0.5;
   let settingArea = false;
   let gettingMapBorders = false;
-  let gettingSuggestions = false;
 
   let debounceTimeout: ReturnType<typeof setTimeout> | null = null;
 
@@ -209,49 +209,16 @@ async function getMapBorders() {
 
 }
 
-const searchAreaWhisper = async (query: string, id: number): Promise<void> => {
-  if (!query || query.length < 1) {
-    areaSuggestions[id] = [];
-    return;
-  }
 
-  gettingSuggestions = true;
-  //todo do env
-    axios.get(import.meta.env.VITE_API_NOMINATIM_URL,{
-      params: {
-      format: 'json',
-      featureType: 'country, state, city, settlement',  
-      q: query,
-      namedetails: 0,
-      limit: 5,
-    },     
-      headers: {
-          'Accept-Language': 'cs-CZ'
-        }
-    }).then(response => {
-      if (response.status === 200) {
 
-        const polygonResults = response.data.filter((result: any) => {
-            return result.osm_type && 
-                  (result.osm_type === 'relation');
-          });
-        const data: NominatimResult[] = polygonResults;
-        
-        areaSuggestions[id] = data.map(item => item.display_name);
-      }
-      gettingSuggestions = false;
-    }).catch(e => {
-      gettingSuggestions = false;
-      alert("Chyba při získávání nápovědy")
-      console.log(e);
-      areaSuggestions[id] = [];
-    });
-}
-
-let debounceSearchArea = (query: string, id: number) => {
+function debounceSearchArea(query: string, id: number){
     clearTimeout(debounceTimeout);
-    debounceTimeout = setTimeout(() => {
-      searchAreaWhisper(query, id)
+    debounceTimeout = setTimeout(async () => {
+      searchAreaWhisper(query).then(areas => {
+        areaSuggestions[id] = areas;
+      }).catch(e => {
+        console.error(e);
+      });
     }, 200);
    }
 
@@ -296,7 +263,7 @@ const selectAreaSuggestion = (newAreaValue: string, id: number): void => {
                       on:keydown={(e) => {
                               if (e.key === 'Enter' || e.key === ' ') {
                                 e.preventDefault();
-                                searchAreaWhisper(area.area, area.id);
+                                selectAreaSuggestion(displayName, area.id)
                               }
                             }}
                         class="p-2 hover:bg-gray-100 cursor-pointer"

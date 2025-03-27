@@ -1,3 +1,5 @@
+import axios from "axios";
+
 export function checkMapCordinatesFormat(input: string): string {
     if(!input.includes(';')){
       return ""
@@ -93,7 +95,7 @@ export function parseWantedAreas(areas: AreaItemStored[]): AreaItemSend[]
     return areasParsed;
 }
 
-   // Get maximum groups for an area
+// Get maximum groups for an area
 export function numberOfAreaPlots(areas: AreaItemStored[]): number {
     let count: number = 0;
     areas.forEach(area => {
@@ -102,4 +104,37 @@ export function numberOfAreaPlots(areas: AreaItemStored[]): number {
       }
     }); 
     return count;
+  }
+
+export async function searchAreaWhisper(query: string): Promise<string[]> {
+  return new Promise((resolve, reject) => {
+    if (!query || query.length < 1) {
+      return resolve([]);
+    }
+
+    axios.get(import.meta.env.VITE_API_NOMINATIM_URL,{
+      params: {
+      format: 'json',
+      featureType: 'country, state, city, settlement',  
+      q: query,
+      namedetails: 0,
+      limit: 5,
+    },     
+      headers: {
+          'Accept-Language': 'cs-CZ'
+        }
+    }).then(response => {
+      if (response.status === 200) {
+
+        const polygonResults = response.data.filter((result: any) => {
+            return result.osm_type && 
+                  (result.osm_type === 'relation');
+          });
+        const data: NominatimResult[] = polygonResults;
+        resolve(data.map(item => item.display_name) as string[]);
+      }
+    }).catch(e => {
+      return reject(e);
+    });
+  });
   }
