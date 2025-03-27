@@ -1,11 +1,11 @@
 <script lang="ts">
   import MapElementsManager from "$lib/managers/mapElementsManager.svelte"
   import AreaPaperManager from "$lib/managers/areaPaperManager.svelte";
-  import GpxFilesManager from "$lib/managers/gpxFilesManager.svelte";
+  import GpxManager from "$lib/managers/gpxManager.svelte";
   
 </script>
 
 
-<GpxFilesManager/>
+<GpxManager/>
 <!-- <AreaPaperManager/> -->
  <!-- <MapElementsManager/> -->

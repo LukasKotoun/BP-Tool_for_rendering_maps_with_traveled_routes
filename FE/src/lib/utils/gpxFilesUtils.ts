@@ -28,3 +28,21 @@ export function createUniqueFileName(files: File[], originalFile: File): File {
     // Create a new File with the unique name
     return uniqueName;
   }
+
+export function getUngrupedFiles(gpxFileGroups: GPXFileGroups, gpxFiles: File[]): string[]{
+    const groupedFiles = Object.values(gpxFileGroups).flat();
+    return gpxFiles
+        .filter(gpxFile => 
+            !groupedFiles.includes(gpxFile.name)
+        )
+        .map(gpxFile => gpxFile.name);
+}
+
+export function checkGroupMembership(gpxFileGroups: GPXFileGroups, fileName: string): boolean {
+  for (const group in gpxFileGroups) {
+      if (gpxFileGroups[group].includes(fileName)) {
+          return true;
+      }
+  }
+  return false
+}

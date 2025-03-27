@@ -1,4 +1,5 @@
 
+// paper and areas
 export const paperSizes = [
   { label: "Vlastní", value: JSON.stringify({ width: null, height: null }) },
   { label: "A0 (1189 × 841 mm)", value: JSON.stringify({ height: 841, width: 1189 }) },
@@ -11,8 +12,8 @@ export const paperSizes = [
 ]
 
 export const numberOfZoomLevels = 10
-export const defaultGpxGroupName = "default"
-export const gpxGeneralDefault: GpxStyleAttributes = {
+// gpx styles
+export const gpxDefaultStyles: GpxStyleAttributes = {
   color: '#FF0000',
   width: 0.5,
   alpha: 0.7,
@@ -40,10 +41,27 @@ export const gpxGeneralDefault: GpxStyleAttributes = {
   marker_layer_position: 'under_text'
 };
 
+export const LINESTYLES = ['-', '--', '- -'];
+export const CAPSTYLES = ['round', 'butt', 'projecting'];
+export const CAPSTYLE_MAPPING_CZ = {
+  round: 'Zaoblený ()',
+  butt: 'Useknutý []',
+  projecting: 'Prodloužený useknutý [ ]'
+};
 
+export const MARKER_LAYER_POSITIONS = ['above_text', 'under_text'];
+export const MARKER_LAYER_POSITION_MAPPING_CZ = {
+  above_text: 'Nad textem',
+  under_text: 'Pod textem'
+};
+export const MARKERS = ['finish', 'start', null];
+export const MARKER_MAPPING_CZ= {
+  null: 'Žádná',
+  start: 'Start - kolečko/bod', 
+  finish: 'Cíl - vlajka'
+};
 
-
-
+// map elements
 export const wantedNodesUpdatesZooms = {
   1: { place: ["city"] },
   2: { place: ["town"], natural: ["peak"] },

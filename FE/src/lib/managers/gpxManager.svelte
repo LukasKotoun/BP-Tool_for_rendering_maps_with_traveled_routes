@@ -1,13 +1,12 @@
 <script lang="ts">
-    import { gpxFiles, gpxStyles } from '$lib/stores/mapStore';
-    import { gpxGeneralDefault } from '$lib/constants';
+    import { gpxFiles, gpxFileGroups } from '$lib/stores/mapStore';
     import { FileX, FileText, FileUp } from '@lucide/svelte';
-    import GpxGeneralStylesManager from '$lib/managers/gpxGeneralStylesManager.svelte';
-    import GpxCategoryStylesManager from './gpxCategoryStylesManager.svelte';
+    import GpxStylesManager from '$lib/managers/gpxStylesManager.svelte';
+    import GpxGroupsManager from './gpxGroupsManager.svelte';
 
     let fileInput: HTMLInputElement;
     let dragOver = false;
-    let displayedTab = 'groupStyle'
+    let displayedTab = 'upload'
 
     function handleFileSelect(event: Event) {
       const input = event.target as HTMLInputElement;
@@ -35,33 +34,14 @@
         gpxFiles.addFiles(Array.from(event.dataTransfer.files));
       }
     }
+
+    function removeFile(fileName: string) {
+      gpxFiles.removeFile(fileName);
+      for (let groupName in $gpxFileGroups) {
+      $gpxFileGroups[groupName] = $gpxFileGroups[groupName].filter(file => file !== fileName);
+    }
+    }
   
-    function removeFile(id: number) {
-      gpxFiles.removeFile(id);
-    }
-
-    function resetGeneralToDefault() {
-      $gpxStyles.general = JSON.parse(JSON.stringify(gpxGeneralDefault));
-    }
-
-    const LINESTYLES = ['-', '--', '- -'];
-    const CAPSTYLES = ['round', 'butt', 'projecting'];
-    const CAPSTYLE_MAPPING_CZ = {
-      round: 'Zaoblený ()',
-      butt: 'Useknutý []',
-      projecting: 'Prodloužený useknutý [ ]'
-    };
-    const MARKER_LAYER_POSITIONS = ['above_text', 'under_text'];
-    const MARKER_LAYER_POSITION_MAPPING_CZ = {
-      above_text: 'Nad textem',
-      under_text: 'Pod textem'
-    };
-    const MARKERS = ['finish', 'start', null];
-    const MARKER_MAPPING_CZ= {
-      null: 'Žádná',
-      start: 'Start - kolečko/bod', 
-      finish: 'Cíl - vlajka'
-    };
 
   </script>
     <div class="container mx-auto p-4">
@@ -72,18 +52,20 @@
                class= { displayedTab == "upload" ? "inline-block p-4 text-black  border-b-2 border-blue-600 rounded-t-lg ":
                       "inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300 "}
                       on:click={() => displayedTab = "upload"}>
-                      Náhrání GPX souborů
+                      Nahrání gpx
               </button>
-              <button  class= { displayedTab == "globalStyle" ? "inline-block p-4 text-black  border-b-2 border-blue-600 rounded-t-lg":
+              <button 
+               class= { displayedTab == "group" ? "inline-block p-4 text-black  border-b-2 border-blue-600 rounded-t-lg ":
                       "inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300 "}
-                      on:click={() => displayedTab = "globalStyle"}>
-                      Obecný vzhled
-              </button>
-              <button class= { displayedTab == "groupStyle" ? "inline-block p-4 text-black  border-b-2 border-blue-600 rounded-t-lg":
-                      "inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300 "}
-                      on:click={() => displayedTab = "groupStyle"}>
+                      on:click={() => displayedTab = "group"}>
                       Skupiny
               </button>
+              <button  class= { displayedTab == "style" ? "inline-block p-4 text-black  border-b-2 border-blue-600 rounded-t-lg":
+                      "inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300 "}
+                      on:click={() => displayedTab = "style"}>
+                      Vzhled
+              </button>
+             
         </div>
       </div>
     {#if displayedTab == "upload"}
@@ -127,16 +109,16 @@
                 <div class="mt-6">
                   <h2 class="text-lg font-semibold mb-4">Nahrané soubory</h2>
                   <ul class="space-y-2">
-                    {#each $gpxFiles as file (file.id)}
+                    {#each $gpxFiles as file (file.name)}
                       <li 
                         class="flex items-center justify-between p-3 bg-gray-100 rounded-lg"
                       >
                         <div class="flex items-center space-x-3">
                           <FileText class="w-6 h-6 text-gray-500" />
-                          <span class="text-gray-700">{file.file.name}</span>
+                          <span class="text-gray-700">{file.name}</span>
                         </div>
                         <button 
-                          on:click={() => removeFile(file.id)}
+                          on:click={() => removeFile(file.name)}
                           class="text-red-500 hover:bg-red-100 p-2 rounded-full"
                           title="Remove file"
                         >
@@ -150,10 +132,10 @@
             </div>
         </div>
       </div>
-    {:else if displayedTab == "globalStyle"}
-    <GpxGeneralStylesManager />
-    {:else if displayedTab == "groupStyle"}
-    <GpxCategoryStylesManager />
+    {:else if displayedTab == "group"}
+    <GpxGroupsManager />
+    {:else if displayedTab == "style"}
+    <GpxStylesManager />
     {/if}
 
-    </div>
+</div>

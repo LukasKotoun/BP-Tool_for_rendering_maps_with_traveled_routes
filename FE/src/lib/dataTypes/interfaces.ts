@@ -85,7 +85,6 @@ interface GPXFileGroups {
   [groupName: string]: string[];
 }
 interface GpxStyles {
-  general: GpxStyleAttributes;
   group: {[groupName: string]: GpxStyleAttributes};
 }
 
@@ -105,11 +104,6 @@ interface MapElementUpdateRules {
 type Dictionary = {
   [key: string]: string; // Define the dictionary as an object with string keys and string values
 };
-
-interface GPXFile {
-  id: number;
-  file: File;
-}
 
 interface NominatimResult {
   place_id: number;
