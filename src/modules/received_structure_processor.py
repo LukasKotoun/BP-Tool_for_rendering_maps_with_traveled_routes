@@ -66,7 +66,7 @@ class ReceivedStructureProcessor:
     def check_dict_values_and_types(values_dict: dict, allowed_keys_and_types: dict[str, tuple[type, bool, Callable]]):
         allowed_keys = set(allowed_keys_and_types.keys())
         required_keys = {
-            k for k, (_, required, _) in allowed_keys_and_types.items() if required}
+            k for k, (_, required, *_) in allowed_keys_and_types.items() if required}
 
         # Extra keys not allowed.
         if set(values_dict.keys()) - allowed_keys:
@@ -77,7 +77,8 @@ class ReceivedStructureProcessor:
             return False
 
         # Check types.
-        for key, (expected_type, required, validation_func) in allowed_keys_and_types.items():
+        for key, (expected_type, required, *validation_func) in allowed_keys_and_types.items():
+            validation_func = validation_func[0] if validation_func else None
             if key in values_dict and expected_type is not None:
                 if(required and values_dict[key] is None):
                     return False
@@ -306,15 +307,18 @@ class ReceivedStructureProcessor:
         return orientation
 
     @staticmethod
-    def validate_zoom_levels(data: dict[str, int], level_validation: dict[str, tuple[type, bool, Callable]]) -> bool:
+    def validate_and_convert_zoom_levels(data: dict[str, int], level_validation: dict[str, tuple[type, bool, Callable]],
+                                          level_mapping: dict[str, tuple[str, Callable, bool]] ) ->  dict[str, int]:
         if (not ReceivedStructureProcessor.check_dict_values_and_types(data, level_validation)):
-            raise ValueError(f"Invalid zoom level")
-        return True
+            raise ValueError(f"Invalid zoom level (must be between 1 and 10)")
+        zooms = ReceivedStructureProcessor.map_dict(
+                    data, level_mapping)
+        return zooms
 
     @staticmethod
     def validate_fit_paper(data: FitPaperSizeModel, fit_paper_validation: dict[str, tuple[type, bool, Callable]]) -> bool:
-        if (not ReceivedStructureProcessor.check_dict_values_and_types(data.dict(), fit_paper_validation)):
-            raise ValueError(f"Invalid zoom level")
+        if (not ReceivedStructureProcessor.check_dict_values_and_types(data.model_dump(), fit_paper_validation)):
+            raise ValueError(f"Invalid fit paper size struct ")
         if(data.plot and data.width is None):
-            raise ValueError("Width must be provided if plot is True")
+            raise ValueError("Width must be provided if plot is True in fit paper size")
         return True

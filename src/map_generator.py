@@ -1,8 +1,8 @@
 import os
-import multiprocessing
+import asyncio
 import json
 import warnings
-from fastapi import FastAPI, File, UploadFile, Form, HTTPException, status, Depends
+from fastapi import FastAPI, File, UploadFile, Form, HTTPException, status, Depends, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from uuid_extensions import uuid7str
@@ -32,8 +32,17 @@ task_manager = TaskManager(max_normal_tasks=MAX_CONCURRENT_TASKS_NORMAL,
                                          gpx_tmp_folder=GPX_TMP_FOLDER)
 
 
-
 # endpoints helpers
+async def check_user_asked(task_id: str):
+    """ Check if user asked for a task info in 30s after task start (recived request to start task)
+     if not - task will be terminated (user in FE does not wait for token response and task will have no sense)"""
+    await asyncio.sleep(USER_ASKED_DELAY_SEC)  # Wait for 30 seconds
+    task_info = task_manager.get_task_info(task_id)
+    if (task_info is not None and task_info[SharedDictKeys.USER_CHECK_INFO.value] == False):
+        task_manager.delete_task(task_id)
+        print(f"Task {task_id} terminated - user did not ask for task info")
+
+
 def decode_task_id_from_JWT(token: str = Depends(OAUTH2_SCHEME)):
     payload = Utils.decode_jwt(token, JWT_ALGORITHM, SECRET_KEY)
     task_id = payload.get("task_id")
@@ -219,7 +228,7 @@ def generate_map_borders(config: MapBorderConfigModel):
 
 
 @server_app.post("/generate-map-normal", response_model=GeneratorResponseStatusModel)
-def generate_map_normal(gpxs: Optional[List[UploadFile]] = File(None),
+async def generate_map_normal(background_tasks: BackgroundTasks, gpxs: Optional[List[UploadFile]] = File(None),
                         config: str = Form(...)):
     if(task_manager.get_normal_queue_length() >= MAX_QUEUE_SIZE_NORMAL):
         raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="Server is busy, try again later")
@@ -230,9 +239,9 @@ def generate_map_normal(gpxs: Optional[List[UploadFile]] = File(None),
             **json.loads(config))
         osm_files = ReceivedStructureProcessor.validate_and_convert_osm_files(
             config.osm_files, OSM_AVAILABLE_FILES)
-        ReceivedStructureProcessor.validate_zoom_levels(
-            config.styles_zoom_levels.dict(), ZOOM_STYLE_LEVELS_VALIDATION)
-        styles_zoom_levels = config.styles_zoom_levels.dict()
+        styles_zoom_levels = ReceivedStructureProcessor.validate_and_convert_zoom_levels(
+            config.styles_zoom_levels.model_dump(), ZOOM_STYLE_LEVELS_VALIDATION, ZOOM_STYLE_LEVELS_MAPPING)
+
         paper_dimensions_mm = ReceivedStructureProcessor.convert_paper_dimension(
             config.paper_dimensions, False)
         ReceivedStructureProcessor.validate_wanted_elements_and_styles(
@@ -245,7 +254,7 @@ def generate_map_normal(gpxs: Optional[List[UploadFile]] = File(None),
             config.map_area, REQ_AREA_DICT_KEYS, REQ_AREAS_MAPPING_DICT, key_with_area=REQ_AREA_KEY_WITH_AREA)
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Error in config validation: {e}")
-    #find area
+    # #find area
     try:
         map_area_gdf, boundary_map_area_gdf = get_map_area_gdf(
             map_area, True)
@@ -282,7 +291,7 @@ def generate_map_normal(gpxs: Optional[List[UploadFile]] = File(None),
     peaks_filter_radius = map_scale * 10 * config.peaks_filter_sensitivity
 
     gpxs_gdf = GpxManager.load_to_gdf_from_memory(
-        gpxs, config.gpxs_categories, CRS_DISPLAY)
+        gpxs, config.gpxs_groups, CRS_DISPLAY)
 
     map_generator_config = {
         MapConfigKeys.OSM_FILES.value: osm_files,
@@ -309,11 +318,12 @@ def generate_map_normal(gpxs: Optional[List[UploadFile]] = File(None),
     access_token = Utils.create_access_token(
         data={"task_id": task_id}, expires_delta=JWT_EXPIRATION_TIME, algorithm=JWT_ALGORITHM, secret_key=SECRET_KEY
     )
+    background_tasks.add_task(check_user_asked, task_id)
     return {"message": "Map is generating", "token": access_token, "status": task_status}
 
 
 @server_app.post("/generate-map-preview", response_model=GeneratorResponseStatusModel)
-def generate_preview_map(gpxs: Optional[List[UploadFile]] = File(None),
+async def generate_preview_map(background_tasks: BackgroundTasks, gpxs: Optional[List[UploadFile]] = File(None),
                          config: str = Form(...)):
     if(task_manager.get_preview_queue_length() >= MAX_QUEUE_SIZE_PREVIEW):
             raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="Server is busy, try again later")
@@ -325,9 +335,8 @@ def generate_preview_map(gpxs: Optional[List[UploadFile]] = File(None),
         osm_files = ReceivedStructureProcessor.validate_and_convert_osm_files(
             config.osm_files, OSM_AVAILABLE_FILES)
 
-        ReceivedStructureProcessor.validate_zoom_levels(
-            config.styles_zoom_levels.dict(), ZOOM_STYLE_LEVELS_VALIDATION)
-        styles_zoom_levels = config.styles_zoom_levels.dict()
+        styles_zoom_levels = ReceivedStructureProcessor.validate_and_convert_zoom_levels(
+            config.styles_zoom_levels.model_dump(), ZOOM_STYLE_LEVELS_VALIDATION, ZOOM_STYLE_LEVELS_MAPPING)
 
         paper_dimensions_mm = ReceivedStructureProcessor.convert_paper_dimension(
             config.paper_dimensions, False)
@@ -342,7 +351,6 @@ def generate_preview_map(gpxs: Optional[List[UploadFile]] = File(None),
 
         map_area = ReceivedStructureProcessor.validate_and_convert_areas_strucutre(
             config.map_area, REQ_AREA_DICT_KEYS, REQ_AREAS_MAPPING_DICT, key_with_area=REQ_AREA_KEY_WITH_AREA)
-        
 
         if(config.map_preview_area is not None):
             map_preview_area = ReceivedStructureProcessor.validate_and_convert_areas_strucutre(
@@ -381,8 +389,7 @@ def generate_preview_map(gpxs: Optional[List[UploadFile]] = File(None),
     peaks_filter_radius = map_scale * 10 * config.peaks_filter_sensitivity
 
     gpxs_gdf = GpxManager.load_to_gdf_from_memory(
-        gpxs, config.gpxs_categories, CRS_DISPLAY)
-
+        gpxs, config.gpxs_groups, CRS_DISPLAY)
     # config for map generator
     map_generator_config = {
         MapConfigKeys.OSM_FILES.value: osm_files,
@@ -411,6 +418,7 @@ def generate_preview_map(gpxs: Optional[List[UploadFile]] = File(None),
         data={"task_id": task_id}, expires_delta=JWT_EXPIRATION_TIME, algorithm=JWT_ALGORITHM, secret_key=SECRET_KEY
     )
 
+    background_tasks.add_task(check_user_asked, task_id)
     return {"message": "Map preview is generating", "token": access_token, "status": task_status}
 
 @server_app.get("/task_status", response_model=StatusResponseModel)
@@ -418,7 +426,7 @@ def get_task_status(task_id: str = Depends(decode_task_id_from_JWT)):
     """
     Get the status of a specific task from id in token.
     """
-    task_info = task_manager.get_task_info(task_id)
+    task_info = task_manager.get_task_info(task_id, True)
     if (task_info is not None):
         return {"status": task_info[SharedDictKeys.STATUS.value]}
     else:

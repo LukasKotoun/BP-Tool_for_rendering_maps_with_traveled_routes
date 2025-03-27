@@ -8,29 +8,30 @@
       token = null
       AREA = [{ area: "Horní vilémovice, Česko", plot: true, group: 0, width: 0.5 }]
       // AREA = [{'area':[[15.8096936,48.6459956], [15.8232333, 48.6460311], [15.8232550, 48.6397219], [15.8097686, 48.6397503]], "plot": true }]
-      FIT_PAPER = {fit: true, plot: true, width:8 }
+      FIT_PAPER = { fit: true, plot: true, width:8 }
       PAPER_DIM = { height: 297, width: 210 }
       data = JSON.stringify({
-        osm_files: ["brno", "trebic", "cz"],
-        // "map_area":[{"area": "Třebíč, Česko",
-        //  "plot": false}, {"area": "Trnava, Česko", "plot":false},
-        //  {"area":"Horní vilémovice, Česko", "plot": false, 'category':0}],
-        map_area: AREA,
+        osm_files: ["cz"],
+        map_area:[{"area": "Třebíč, Česko",
+         "plot": false}, {"area": "Trnava, Česko", "plot":false},
+         {"area":"Horní vilémovice, Česko", "plot": false, 'group':-8}],
+        // map_area: AREA,
         // "map_preview_area":[{"area": "Třebísč, Česko",
-        //  "plot": true ,'category': 0, 'width': 1}],
+        //  "plot": true ,'group': 0, 'width': 1}],
         paper_dimensions: PAPER_DIM,
         paper_preview_dimensions: { width: 100, height: 100 },
         fit_paper_size: FIT_PAPER,
         plot_bridges: false,
         plot_tunnels: false,
-        gpxs_categories: {},
+        gpxs_groups: {"asd":["Z_Brna_"]},
         map_theme: "mapycz",
         min_place_population: 0,
         peaks_filter_sensitivity: 2.5,
         gpxs_styles: {
-          file_name: {},
-          group: {},
-          general: { color: "red", marker_layer_position: "under_text", start_marker: "mpl_start", finish_marker: "fa_finish" }
+          group: {"asd":{color:"blue"}},
+          // general: { color: "red", width: -8,
+          // edge_alpha:1,
+          // edge_color:"blue", edge_width_ratio: -8, finish_marker_edge_ratio:0, alpha: 1, marker_layer_position: "under_text", start_marker: "start", finish_marker: "finish" }
         },
         wanted_categories_and_styles_edit: {
           nodes: {
@@ -122,9 +123,9 @@
           }
         },
         styles_zoom_levels: {
-          nodes: 7,
-          ways: 7,
-          areas: 7,
+          nodes: 70,
+          ways: -7,
+          areas: 5,
           general: 7
         }
       })
@@ -157,8 +158,8 @@
           })
 
           // Parse the JSON response from FastAPI
-          const result = await response.json()
-          if (result["token"] != undefined && token == null) {
+            const result = await response.json()
+          if (result["token"] != undefined) {
             token = result["token"]
           }
           // Log the result to the console

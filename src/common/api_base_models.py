@@ -33,7 +33,7 @@ class MapGeneratorConfigModel(BaseModel):
     plot_tunnels: Optional[bool] = True
     wanted_categories_and_styles_edit: Any
     styles_zoom_levels: ZoomLevelsModel
-    gpxs_categories: Optional[Dict[str, str]] = {}
+    gpxs_groups: Optional[Dict[str, list[str]]] = {}
     gpxs_styles: Optional[Any] = []
 
 class MapGeneratorPreviewConfigModel(BaseModel):
@@ -51,7 +51,7 @@ class MapGeneratorPreviewConfigModel(BaseModel):
     plot_tunnels: Optional[bool] = True
     wanted_categories_and_styles_edit: Any
     styles_zoom_levels: ZoomLevelsModel
-    gpxs_categories: Optional[Dict[str, str]] = {}
+    gpxs_groups: Optional[Dict[str, list[str]]] = {}
     gpxs_styles: Optional[Any] = []
 
 

@@ -23,6 +23,7 @@ class SharedDictKeys(Enum):
     PROCESS_RUNNING = "process_running"
     PID = "pid"
     IS_PREVIEW = "is_preview"
+    USER_CHECK_INFO = "user_check_info"
     
 class TaskQueueKeys(Enum):
     CONFIG = "config"
@@ -30,14 +31,13 @@ class TaskQueueKeys(Enum):
     TASK_ID = "task_id"
     
 
-
 class QueueType(Enum):
     NORMAL = "normal"
     PREVIEW = "preview"
 
 class GpxColumns(Enum):
     FILE_NAME = "file_name"
-    CATEGORY = "category"
+    GROUP = "group"
 
 class ColorMode(Enum):
     DEFAULT = "DEFAULT"

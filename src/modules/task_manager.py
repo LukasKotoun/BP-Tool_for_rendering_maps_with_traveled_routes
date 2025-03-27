@@ -63,7 +63,8 @@ class TaskManager:
                         SharedDictKeys.FILES.value: [],
                         SharedDictKeys.PROCESS_RUNNING.value: True,
                         SharedDictKeys.PID.value: pid,
-                        SharedDictKeys.IS_PREVIEW.value: queue_type == QueueType.PREVIEW.value
+                        SharedDictKeys.IS_PREVIEW.value: queue_type == QueueType.PREVIEW.value,
+                        SharedDictKeys.USER_CHECK_INFO.value: False
                     }
                 return ProcessingStatus.STARTING.value, task_id
             else:
@@ -73,7 +74,8 @@ class TaskManager:
                         SharedDictKeys.FILES.value: [],
                         SharedDictKeys.PROCESS_RUNNING.value: False,
                         SharedDictKeys.PID.value: None,
-                        SharedDictKeys.IS_PREVIEW.value: queue_type == QueueType.PREVIEW.value
+                        SharedDictKeys.IS_PREVIEW.value: queue_type == QueueType.PREVIEW.value,
+                        SharedDictKeys.USER_CHECK_INFO.value: False
                     }
                 # Add to queue
                 if queue_type == QueueType.NORMAL.value:
@@ -227,13 +229,13 @@ class TaskManager:
                         next_task)
                     if (pid is not None):
                         with self.shared_tasks_lock:
+                          
                             self.shared_tasks[next_task[TaskQueueKeys.TASK_ID.value]] = {
+                                **self.shared_tasks[next_task[TaskQueueKeys.TASK_ID.value]],
                                 SharedDictKeys.STATUS.value: ProcessingStatus.STARTING.value,
-                                SharedDictKeys.FILES.value: [],
                                 SharedDictKeys.PROCESS_RUNNING.value: True,
                                 SharedDictKeys.PID.value: pid,
                                 # must be same as previous task
-                                SharedDictKeys.IS_PREVIEW.value: queue_type == QueueType.PREVIEW.value
                             }
         return True
 
@@ -270,10 +272,15 @@ class TaskManager:
             except Exception as e:
                 print(f"Error terminating task {task_id}: {e}")
 
-    def get_task_info(self, task_id: str) -> dict[str, Any] | None:
+    def get_task_info(self, task_id: str, user_asked: bool = False) -> dict[str, Any] | None:
         """Get info of specific task"""
         with self.shared_tasks_lock:
             if (task_id in self.shared_tasks):
+                if(user_asked):
+                    self.shared_tasks[task_id] = {
+                        **self.shared_tasks[task_id],
+                        SharedDictKeys.USER_CHECK_INFO.value: True
+                    }
                 return self.shared_tasks[task_id]
             else:
                 return None

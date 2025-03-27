@@ -217,7 +217,7 @@ MANDATORY_WAYS = {
 
 
 JWT_EXPIRATION_TIME = datetime.timedelta(days=2)
-
+USER_ASKED_DELAY_SEC = 30
 # --------------------------------------------------------------constants--------------------------------------------------------------# world 3857
 CRS_OSM = "EPSG:4326"  # WGS84 - World Geodetic System 1984 - unit - degrees
 CRS_DISPLAY = "EPSG:3857"  # WGS 84 / Pseudo-Mercator - unit - meters
@@ -265,20 +265,25 @@ MIN_WIDTH_POINTS = 0.1
 MIN_TEXT_WIDTH = 0.1
 MM_TO_INCH = 25.4
 MATPLOTLIB_POINTS_PER_INCH = 72
+
 FUNC_MM_TO_POINTS_CONVERSION = lambda v: max(v / MM_TO_INCH * MATPLOTLIB_POINTS_PER_INCH, MIN_WIDTH_POINTS)
-# todo add also alpha and zoom map
+ALPHA_CLAMP_VALUE = lambda v: min(1, max(v, 0))
+ICON_EDGE_RATIO_MAPPING = lambda v: max(v, 0)
+EDGE_RATIO_MAPPING = lambda v: max(v + 1, 0)
+ZOOM_LEVEL_CLAMP_VALUE = lambda v: min(10, max(v, 1))
 
 # is validated and not mapped
-FIT_PAPER_VALIDATION = {"fit": (bool, True, None), "plot": (bool, True, None),
+FIT_PAPER_VALIDATION = {"fit": (bool, True), "plot": (bool, True),
                         "width": (int | float, False)}
 
 REQ_AREA_KEY_WITH_AREA = "area"
 REQ_AREA_KEY_WITH_BOOLEAN_PLOT = "plot"
 REQ_AREA_KEY_TO_GROUP_BY = "group"
 # key, (types, required)
-REQ_AREA_DICT_KEYS = {"area": (str | list, True, None), "plot": (bool, True, None), "group": (
-    int, False, lambda v: 0 <= v), "width": (int | float, False)}
-REQ_AREAS_MAPPING_DICT = {"width": (Style.WIDTH.value, FUNC_MM_TO_POINTS_CONVERSION)}
+REQ_AREA_DICT_KEYS = {"area": (str | list, True), "plot": (bool, True), "group": (
+    int, False), "width": (int | float, False)}
+REQ_AREAS_MAPPING_DICT = {"width": (Style.WIDTH.value, FUNC_MM_TO_POINTS_CONVERSION),
+                          "group":("group", lambda v: max(v, 0))}
 
 FE_EDIT_STYLES_VALIDATION = {'width_scale': (float | int, False),
                              "text_scale": (float | int, False)}
@@ -286,62 +291,66 @@ FE_EDIT_STYLES_MAPPING = {"width_scale": (Style.FE_WIDTH_SCALE.value, FUNC_MM_TO
                           "text_scale": (Style.FE_TEXT_FONT_SIZE_SCALE.value, FUNC_MM_TO_POINTS_CONVERSION)}
 FE_STYLES_ALLOWED_ELEMENTS = ['nodes', 'ways', 'areas']
 
-ZOOM_STYLE_LEVELS_VALIDATION = {"nodes": (int, True, lambda v: 1 <= v <= 10), "ways": (
-    int, True, lambda v: 1 <= v <= 10), "areas": (int, True, lambda v: 1 <= v <= 10), "general": (int, True, lambda v: 1 <= v <= 10)}
+ZOOM_STYLE_LEVELS_VALIDATION = {"nodes": (int, True), "ways": (
+    int, True), "areas": (int, True), "general": (int, True)}
+
+ZOOM_STYLE_LEVELS_MAPPING = {"nodes": ("nodes", ZOOM_LEVEL_CLAMP_VALUE ), "ways": (
+    "ways", ZOOM_LEVEL_CLAMP_VALUE), "areas": ("areas", ZOOM_LEVEL_CLAMP_VALUE), "general": ("general", ZOOM_LEVEL_CLAMP_VALUE)}
+
 
 GPX_STYLES_VALIDATION = {
     "color": (str, False, lambda v: is_color_like(v)),
     "width": (int | float, False),
-    "alpha": (float|int, False, lambda v: 0 <= v <= 1),
+    "alpha": (float|int, False),
     "zindex": (int, False),
     "linestyle": (str, False, lambda v: v in ['-', '--', '- -']),
     "line_capstyle": (str, False, lambda v: v in ['round', 'butt', 'projecting']),
-    "edge_alpha": (float|int, False, lambda v: 0 <= v <= 1),
+    "edge_alpha": (float|int, False),
     "edge_color": (str, False, lambda v: is_color_like(v)),
-    "edge_width_ratio": (float|int, False, lambda v: 0 <= v),
+    "edge_width_ratio": (float|int, False),
     "edge_linestyle": (str, False, lambda v: v in ['-', '--', '- -']),
     "edge_capstyle": (str, False, lambda v: v in ['round', 'butt', 'projecting']),
-    "gpx_above_text": (bool, False, None),
+    "gpx_above_text": (bool, False),
     "start_marker": (str, False, lambda v: v in MARKERS_UCODE_MAPPING.keys()),
     "start_marker_width": (int|float, False),
-    "start_marker_edge_ratio": (int|float, False, lambda v: 0 <= v),
+    "start_marker_edge_ratio": (int|float, False),
     "start_marker_color": (str, False, lambda v: is_color_like(v)),
     "start_marker_edge_color": (str, False, lambda v: is_color_like(v)),
-    "start_marker_alpha": (int|float, False, lambda v: 0 <= v <= 1),
+    "start_marker_alpha": (int|float, False),
     "finish_marker": (str, False, lambda v: v in MARKERS_UCODE_MAPPING.keys()),
-    "finish_marker_width": (int|float, False),
-    "finish_marker_edge_ratio": (int|float, False, lambda v: 0 <= v),
+    "finish_marker_width": (int|float, False, None),
+    "finish_marker_edge_ratio": (int|float, False),
     "finish_marker_color": (str, False, lambda v: is_color_like(v)),
     "finish_marker_edge_color": (str, False, lambda v: is_color_like(v)),
-    "finish_marker_alpha": (int|float, False, lambda v: 0 <= v <= 1),
+    "finish_marker_alpha": (int|float, False),
     "marker_layer_position": (str, False, lambda v: v in ['above_text', 'under_text']),
 }
 
 GPX_STYLES_MAPPING = {
     'color': (Style.COLOR.value, None),
     "width": (Style.WIDTH.value, FUNC_MM_TO_POINTS_CONVERSION),
-    "alpha": (Style.ALPHA.value, None),
+    "alpha": (Style.ALPHA.value, ALPHA_CLAMP_VALUE),
     "zindex": (Style.ZINDEX.value, None),
     "linestyle": (Style.LINESTYLE.value, lambda v: (0, (5, 5)) if v == '- -' else v),
     "line_capstyle": (Style.LINE_CAPSTYLE.value, None),
-    "edge_alpha": (Style.EDGE_ALPHA.value, None),
+    "edge_alpha": (Style.EDGE_ALPHA.value, ALPHA_CLAMP_VALUE),
     "edge_color": (Style.EDGE_COLOR.value, None),
-    "edge_width_ratio": (Style.EDGE_WIDTH_RATIO.value, None),
+    "edge_width_ratio": (Style.EDGE_WIDTH_RATIO.value, EDGE_RATIO_MAPPING),
     "edge_linestyle": (Style.EDGE_LINESTYLE.value, lambda v: (0, (5, 5)) if v == '- -' else v),
     "edge_capstyle": (Style.EDGE_CAPSTYLE.value, None),
     "gpx_above_text": (Style.GPX_ABOVE_TEXT.value, None),
     "start_marker": (None, lambda v: MARKERS_UCODE_MAPPING[v], True),
     "start_marker_width": (Style.START_MARKER_WIDTH.value, FUNC_MM_TO_POINTS_CONVERSION),
-    "start_marker_edge_ratio": (Style.START_MARKER_EDGE_RATIO.value, None),
+    "start_marker_edge_ratio": (Style.START_MARKER_EDGE_RATIO.value, ICON_EDGE_RATIO_MAPPING),
     "start_marker_color": (Style.START_MARKER_COLOR.value, None),
     "start_marker_edge_color": (Style.START_MARKER_EDGE_COLOR.value, None),
-    "start_marker_alpha": (Style.START_MARKER_ALPHA.value, None),
+    "start_marker_alpha": (Style.START_MARKER_ALPHA.value, ALPHA_CLAMP_VALUE),
     "finish_marker": (None, lambda v: MARKERS_UCODE_MAPPING[v], True),
     "finish_marker_width": (Style.FINISH_MARKER_WIDTH.value, FUNC_MM_TO_POINTS_CONVERSION),
-    "finish_marker_edge_ratio": (Style.FINISH_MARKER_EDGE_RATIO.value, None),
+    "finish_marker_edge_ratio": (Style.FINISH_MARKER_EDGE_RATIO.value, ICON_EDGE_RATIO_MAPPING),
     "finish_marker_color": (Style.FINISH_MARKER_COLOR.value, None),
     "finish_marker_edge_color": (Style.FINISH_MARKER_EDGE_COLOR.value, None),
-    "finish_marker_alpha": (Style.FINISH_MARKER_ALPHA.value, None),
+    "finish_marker_alpha": (Style.FINISH_MARKER_ALPHA.value, ALPHA_CLAMP_VALUE),
     "marker_layer_position": (Style.MARKER_LAYER_POSITION.value, lambda v: MarkerPosition.UNDER_TEXT_OVERLAP.value if v == 'under_text' else MarkerPosition.ABOVE_ALL.value),
 }
 
