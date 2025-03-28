@@ -11,6 +11,31 @@ export const paperSizes = [
   { label: "A6 (148 × 105 mm)", value: JSON.stringify({ height: 105, width: 148 }) }
 ]
 
+export const mapDataNamesMappingCZ = {
+  "cz": "Česká republika",
+  "sk": "Slovensko",
+  "at": "Rakousko",
+  "de": "Německo",
+  "pl": "Polsko",
+  "hu": "Maďarsko",
+  "si": "Slovinsko",
+  "hr": "Chorvatsko",
+  "it": "Itálie",
+  "fr": "Francie",
+  "be": "Belgie",
+  "nl": "Nizozemsko",
+  "lu": "Lucembursko",
+  "gb": "Velká Británie",
+  "ie": "Irsko",
+  "dk": "Dánsko",
+  "se": "Švédsko",
+  "no": "Norsko",
+  "fi": "Finsko",
+  "ee": "Estonsko",
+}
+
+
+
 export const numberOfZoomLevels = 10
 // gpx styles
 export const gpxDefaultStyles: GpxStyleAttributes = {

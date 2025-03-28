@@ -45,14 +45,13 @@
 
   </script>
     <div class="container mx-auto p-4">
-      <h1 class="text-2xl font-bold mb-4">Náhrání tras a nastavení vzhledu</h1>
       <div class="text-md text-center text-gray-500 border-b border-gray-200 dark:text-gray-400 dark:border-gray-700">
         <div class="flex flex-wrap -mb-px">
               <button 
                class= { displayedTab == "upload" ? "inline-block p-4 text-black  border-b-2 border-blue-600 rounded-t-lg ":
                       "inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300 "}
                       on:click={() => displayedTab = "upload"}>
-                      Nahrání gpx
+                      Nahrání tras (gpx)
               </button>
               <button 
                class= { displayedTab == "group" ? "inline-block p-4 text-black  border-b-2 border-blue-600 rounded-t-lg ":

@@ -1,20 +1,39 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { wantedAreas, fitPaperSize, paperDimension, paperDimensionRequest, automaticZoomLevel, areasId } from '$lib/stores/mapStore';
+  import { wantedAreas, fitPaperSize, paperDimension, paperDimensionRequest, automaticZoomLevel, areasId, selectedMapFiles } from '$lib/stores/mapStore';
   import api from '$lib/axios.config';
   import { checkMapCordinatesFormat, checkFitPaper, parseWantedAreas, numberOfAreaPlots,
     searchAreaWhisper
    } from '$lib/utils/areaUtils';
-  import { paperSizes } from '$lib/constants';
+  import { paperSizes, mapDataNamesMappingCZ } from '$lib/constants';
+  import { mapValue } from '$lib/utils/mapElementsUtils';
 
   let areaSuggestions: string[][] = [];
   const defaultWidth = 0.5;
   let settingArea = false;
   let gettingMapBorders = false;
-
+  let displayedTab = "mapData";
   let debounceTimeout: ReturnType<typeof setTimeout> | null = null;
+  let mapFileSearchTerm = '';
 
- 
+    let avilableMapFiles: string[] = []
+    onMount(() => {
+      api.get('/available_osm_files').then((response) => {
+        avilableMapFiles = response.data.osm_files
+        if(avilableMapFiles.includes('cz') && $selectedMapFiles.length == 0){
+          $selectedMapFiles = ["cz"]
+        }else if($selectedMapFiles.length != 0){
+          $selectedMapFiles = $selectedMapFiles.filter(file => avilableMapFiles.includes(file))
+        }
+      }).catch((error) => {
+        alert('Nepodařilo se načíst dostupné mapové soubory - nastaven výchozí soubor pro českou republiku')
+        if($selectedMapFiles.length == 0){
+          $selectedMapFiles = ["cz"]
+        }
+        console.log(error)
+      })
+    })
+  
 
   onMount(() => {
     if($wantedAreas.length === 0){
@@ -209,7 +228,20 @@ async function getMapBorders() {
 
 }
 
+	$: filteredMapFiles = avilableMapFiles.filter(file => 
+    (file.toLowerCase().includes(mapFileSearchTerm.toLowerCase()) && 
+		!$selectedMapFiles.includes(file)) || 
+    (mapValue(mapDataNamesMappingCZ, file).toLowerCase().includes(mapFileSearchTerm.toLowerCase()) && 
+		!$selectedMapFiles.includes(file))
+	);
 
+	function addMapFile(file: string) {
+    $selectedMapFiles = [...$selectedMapFiles, file];
+	}
+
+	function removeMapFile(file: string) {
+		$selectedMapFiles = $selectedMapFiles.filter(item => item !== file)
+	}
 
 function debounceSearchArea(query: string, id: number){
     clearTimeout(debounceTimeout);
@@ -231,14 +263,92 @@ const selectAreaSuggestion = (newAreaValue: string, id: number): void => {
 };
 
 </script>
+
+
 <div class="container mx-auto p-4">
-  <h1 class="text-2xl font-bold mb-4">Mapové oblasti a nastavení papíru</h1>
-  <div class="space-y-4 rounded-lg bg-gray-100 ">
-    <h2 class="p-2 text-xl font-bold">Mapové oblasti</h2>
+  <div class="flex flex-wrap -mb-px">
+    <button 
+     class= { displayedTab == "mapData" ? "inline-block p-4 text-black  border-b-2 border-blue-600 rounded-t-lg ":
+            "inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300 "}
+            on:click={() => displayedTab = "mapData"}>
+            Mapová dat
+    </button>
+    <button 
+     class= { displayedTab == "area" ? "inline-block p-4 text-black  border-b-2 border-blue-600 rounded-t-lg ":
+            "inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300 "}
+            on:click={() => displayedTab = "area"}>
+            Oblasti
+    </button>
+    <button  class= { displayedTab == "paper" ? "inline-block p-4 text-black  border-b-2 border-blue-600 rounded-t-lg":
+            "inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300 "}
+            on:click={() => displayedTab = "paper"}>
+            Papír
+    </button>
+  </div>
+  {#if displayedTab == "mapData"}
+  <div class="space-y-4 p-4 rounded-lg bg-gray-100 ">
+    <div class="p-2 flex flex-wrap gap-4 items-start">
+      <h2 class="text-xl font-bold mb-2">Vybraná mapová data: </h2>
+      {#if $selectedMapFiles.length != 0}
+        {#each $selectedMapFiles as mapFile}
+          <p 
+            class="flex items-center bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm"
+          >
+            {mapValue(mapDataNamesMappingCZ, mapFile)}
+            <button 
+              on:click={() => removeMapFile(mapFile)}
+              class="ml-2 text-red-500 hover:text-red-700"
+            >
+              ×
+            </button>
+          </p>
+        {/each}
+      {:else} 
+        <p class="flex items-center mt-1 px-2 py-1 rounded text-sm text-gray-500">Žádná mapová data nebyla vybrána</p>
+      {/if}
+        
+      <input 
+        type="text" 
+        bind:value={mapFileSearchTerm}
+        placeholder="Vyhledat mapová data..."
+        class="w-full rounded p-2 mb-2"
+      />
+      <p>Dostupná data: </p>
+        <div class="w-full border rounded max-h-28 overflow-y-auto">
+        {#each filteredMapFiles as mapFile}
+          <div 
+          role="button"
+          tabindex="0"
+          on:keydown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    addMapFile(mapFile)
+                  }
+                }}
+            class="p-2 bg-white hover:bg-gray-100 cursor-pointer"
+            on:click={() => addMapFile(mapFile)}
+          >
+            {mapValue(mapDataNamesMappingCZ, mapFile)}
+          </div>
+        {:else}
+          <div class="bg-white p-2 text-gray-500">{mapFileSearchTerm == ""?"Žádné další dostupné data": "Žádné data neodpovídají vyhledávání"}</div>
+        {/each}
+      </div>
+    </div>
+  </div>
+
+  {:else if displayedTab == "area"}
+  <div class="space-y-4 p-4 rounded-lg bg-gray-100 ">
     {#each $wantedAreas as area (area.id)}
         <div class="p-4 flex flex-wrap gap-4 items-start">
           <!-- Area Input -->
-          <div class="flex flex-col">
+          <div class="flex flex-col"
+          tabindex="0" 
+          role="button"
+          on:blur={() => {
+            areaSuggestions[area.id] = [];
+            areaSuggestions = [...areaSuggestions];
+          }}>
             <p class="text-sm font-medium mb-1">Oblast</p>
             <input
               type="text" 
@@ -385,11 +495,9 @@ const selectAreaSuggestion = (newAreaValue: string, id: number): void => {
     </div>
   </div>
 
+  {:else if displayedTab == "paper"}
   <!-- fit paper  -->  
-  
-
-  <div class="space-y-4 mt-4 rounded-lg bg-gray-100 ">
-    <h2 class="p-2 text-xl font-bold">Nastavení papíru</h2>
+  <div class="p-4 space-y-4 mt-4 rounded-lg bg-gray-100 ">
     <div class="p-4 flex flex-wrap gap-4 items-end">
      <div class="flex flex-col">
       <p class="text-sm font-medium mb-1">Velikost papíru</p>
@@ -446,24 +554,24 @@ const selectAreaSuggestion = (newAreaValue: string, id: number): void => {
     {/if}
     
   </div>
-    <div class="p-4 flex justify-end">
-        <button 
-        class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-sm ml-4"
-        class:bg-gray-500={settingArea}
-        class:hover:bg-gray-600={settingArea}
-        on:click={getPaperAndZoom}
-        disabled = {settingArea}
-      >
-       Nastavit oblasti a papír
-      </button>
-</div>
+    
 
   <div class="p-4">
     <p class="text-md font-medium mb-1">
     Výsledná velikost papíru: {$paperDimension.width}mm x {$paperDimension.height}mm (šířka x výška)
       </p>
   </div>
-    
+  <div class="p-4 flex justify-end">
+    <button 
+    class="bg-blue-500  hover:bg-blue-600 text-white px-8 py-4 rounded-lg ml-4"
+    class:bg-gray-500={settingArea}
+    class:hover:bg-gray-600={settingArea}
+    on:click={getPaperAndZoom}
+    disabled = {settingArea}
+  >
+   Nastavit oblasti a papír
+  </button>
+</div>
     </div>
     <div class = "flex justify-end">
       {#if $paperDimension.width > 0 && $paperDimension.height > 0}
@@ -482,4 +590,5 @@ const selectAreaSuggestion = (newAreaValue: string, id: number): void => {
     
       
   </div>
-  </div>
+  {/if}
+</div>

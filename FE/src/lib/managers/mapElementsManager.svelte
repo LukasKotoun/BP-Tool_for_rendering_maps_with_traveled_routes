@@ -1,7 +1,7 @@
 <script lang="ts"> 
     import { mapNodesElements, mapWaysElements, mapAreasElements, automaticZoomLevel, mapElementsZoomDesign,
        mapElementsWantedZoom, peaksFilterSensitivity, minPopulationFilter, wantPlotBridges, wantPlotTunnels,
-       wantedMapTheme } from '$lib/stores/mapStore';
+       selectedMapTheme } from '$lib/stores/mapStore';
     import { mapValue, updateWantedElements, resetPlotSettings } from '$lib/utils/mapElementsUtils';
     import { nodesKeysNamesMappingCZ, nodesNamesMappingCZ, waysKeysNamesMappingCZ, waysNamesMappingCZ,
        areasKeysNamesMappingCZ, areasNamesMappingCZ, numberOfZoomLevels, wantedNodesUpdatesZooms,
@@ -11,17 +11,27 @@
     const multiplierMin = 0.1
     const multiplierMax = 4
     let displayedCategory = 'nodes'
+    let displayedTab = 'mapElements'
     function hasDirectPlot(obj: any): obj is MapElementAttributes {
       return obj && typeof obj === 'object' && 'plot' in obj;
     }
 
     //always available map theme is mapycz
-    let avilableMapThemes: string[] = ["mapycz"]
+    let avilableMapThemes: string[] = []
     onMount(() => {
       api.get('/available_map_themes').then((response) => {
         avilableMapThemes = response.data.map_themes
+        if($selectedMapTheme == "" && avilableMapThemes.includes('mapycz')){
+          $selectedMapTheme = "mapycz"
+        }else if($selectedMapTheme != "" && !avilableMapThemes.includes($selectedMapTheme)){
+          if(avilableMapThemes.length > 0){
+            $selectedMapTheme = avilableMapThemes[0]
+        }
+      }
       }).catch((error) => {
         alert('Nepodařilo se načíst dostupné mapové podklady - nastaven výchozí podklad mapycz')
+        $selectedMapTheme = "mapycz"
+        avilableMapThemes = ["mapycz"]
         console.log(error)
       })
     })
@@ -105,21 +115,41 @@
   </script>
 
    <div class="container mx-auto p-4">
-    <h1 class="text-2xl font-bold mb-4">Mapové prvky</h1>
+    <div class="flex flex-wrap -mb-px">
+      <button 
+      class= { displayedTab == "mapElements" ? "inline-block p-4 text-black  border-b-2 border-blue-600 rounded-t-lg ":
+             "inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300 "}
+             on:click={() => displayedTab = "mapElements"}>
+             Mapové prvky
+     </button>
+      <button 
+       class= { displayedTab == "style" ? "inline-block p-4 text-black  border-b-2 border-blue-600 rounded-t-lg ":
+              "inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300 "}
+              on:click={() => displayedTab = "style"}>
+              Vzhled na zakladě urovně přiblížení (detailu)
+      </button>
+     
+      
+    </div>
+    {#if displayedTab == "style"}
     <div class="space-y-4 rounded-lg bg-gray-100 ">
-      <h2 class="p-2 text-xl font-bold">Vzhled mapových prvků na základě úrovně přiblížení (detailu)</h2>
       <div class="p-4 flex flex-wrap gap-4 items-start">
 
         <div class="flex flex-col">
           <p class="text-md font-medium mb-1">Styly mapového podkladu</p>
-          <select
-          class="border rounded-sm p-2 w-40"
-          bind:value={$wantedMapTheme}
-        >
-          {#each avilableMapThemes as map_themes}
-            <option value={map_themes}>{map_themes}</option>
-          {/each}
+          {#if avilableMapThemes.length == 0}
+            <p>Žádné načtené mapového podklady</p>
+          {:else}
+            <select
+            class="border rounded-sm p-2 w-40"
+            bind:value={$selectedMapTheme}
+          >
+          
+            {#each avilableMapThemes as map_themes}
+              <option value={map_themes}>{map_themes}</option>
+            {/each}
         </select>
+        {/if}
         </div>    
         <div class="flex flex-col">
           <p class="text-md font-medium mb-1">Úroveň detailu bodů</p>
@@ -185,10 +215,10 @@
         </div>
       </div>
       </div>
-
+    {:else}
     <div class="space-y-4 rounded-lg bg-gray-100 mt-4">
-      <h2 class="p-2 text-xl font-bold">Automatické nastavení zobrazených mapových prvků na základě úrovně přiblížení</h2>
-        <div class="p-4 flex flex-wrap gap-4 items-end">
+      <h2 class="p-4 text-xl font-bold">Automatické nastavení zobrazených mapových prvků na základě úrovně přiblížení</h2>
+        <div class="p-6 flex flex-wrap gap-4 items-end">
           <div class="flex flex-col">
             <p class="text-md font-medium mb-1">Výchozí body pro detail</p>
             <select
@@ -669,5 +699,6 @@
         </div>
       {/each}
     </div>
+  {/if}
   {/if}
   </div>

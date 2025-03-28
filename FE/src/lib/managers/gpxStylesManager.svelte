@@ -33,17 +33,17 @@
         <div class="mx-auto bg-white shadow-md rounded-lg p-6">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <!-- Main Line Attributes -->
-                <div class="space-y-4 bg-gray-50 p-4 rounded">
+                <div class="space-y-6 bg-gray-50 p-4 rounded">
                     <h3 class="text-xl font-semibold border-b pb-2">Hlavní vzhled</h3>
                     <div class="flex items-center space-x-4">
-                    <p class="w-1/3">Vykreslit:</p>
-                    <input 
-                        type="checkbox" 
-                        checked={$gpxStyles.group[groupName].color != null}
-                        class="w-5 h-5 items-center rounded-lg"
-                        on:change={() => $gpxStyles.group[groupName].color = $gpxStyles.group[groupName].color ? null : defaultColor}
-                    />
-                </div>
+                        <p class="w-1/3">Vykreslit:</p>
+                        <input 
+                            type="checkbox" 
+                            checked={$gpxStyles.group[groupName].color != null}
+                            class="w-5 h-5 items-center rounded-lg"
+                            on:change={() => $gpxStyles.group[groupName].color = $gpxStyles.group[groupName].color ? null : defaultColor}
+                        />
+                    </div>
                     <div class="flex items-center space-x-4">
                         <p class="w-1/3">Barva:</p>
                         {#if $gpxStyles.group[groupName].color == null}
@@ -135,7 +135,7 @@
                 </div>
 
                 <!-- Edge Attributes -->
-                <div class="space-y-4 bg-gray-50 p-4 rounded">
+                <div class="space-y-6 bg-gray-50 p-4 rounded">
                     <h3 class="text-xl font-semibold border-b pb-2">Vzhled okrajů</h3>
                     <div class="flex items-center space-x-4">
                     <p class="w-1/3">Vykreslit:</p>
@@ -220,7 +220,7 @@
                 </div>
 
                 <!-- Marker Attributes -->
-                <div class="space-y-4 bg-gray-50 p-4 rounded ">
+                <div class="space-y-6 bg-gray-50 p-4 rounded ">
                     <h3 class="text-xl font-semibold border-b pb-2">Označení začátku a konce</h3>
                     
                     <div class="flex items-center space-x-4">
@@ -236,7 +236,7 @@
                     </div>
 
                     <!-- Start Marker Section -->
-                    <div class="border-t pt-4 mt-4">
+                    <div class="space-y-6 border-t pt-4 mt-4">
                         <h4 class="font-semibold mb-2">Označení začátku</h4>
                         
                         <div class="flex items-center space-x-4">
@@ -313,7 +313,7 @@
                     </div>
 
                     <!-- Finish Marker Section -->
-                    <div class="border-t pt-4 mt-4">
+                    <div class="border-t space-y-6 pt-4 mt-4">
                         <h4 class="font-semibold mb-2">Označení konce</h4>
                         
                         <div class="flex items-center space-x-4">

@@ -20,13 +20,10 @@ MAX_QUEUE_SIZE_NORMAL = 5
 MAX_QUEUE_SIZE_PREVIEW = 5
 FILE_DOWNLOAD_CHUNK_SIZE  = 1024 * 1024 # 1MB
 OSM_AVAILABLE_FILES = {
-    'cz': '../osm_files/cz.osm.pbf',
-    'brno': '../osm_files/brno.osm.pbf',
-    'trebic': '../osm_files/trebic.osm.pbf'
+    'cz': '../osm_files/cz.osm.pbf', # cz is default - should always be present
+    'at': '../osm_files/at.osm.pbf',
+    'sk': '../osm_files/sk.osm.pbf'
 }
-
-# set if want osm file cutting using osmium command line tool (need to be uinstalled), If not set to None
-# OSM_OUTPUT_FILE_NAME: None | str = '../osm_files/brnoPrevTest.osm.pbf'
 
 OSM_OUTPUT_FOLDER_FILE_NAME: None | str = None
 OSM_TMP_FILE_FOLDER = '../osm_files/tmp/'

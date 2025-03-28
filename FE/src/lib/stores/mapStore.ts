@@ -17,6 +17,7 @@ export const paperDimensionRequest = writable<PaperDimensionRequest>({
   orientation: "automatic",
   given_smaller_dimension: true,
 });
+
 // elements
 export const automaticZoomLevel = writable<number>(undefined);
 export const wantPlotTunnels = writable<boolean>(true);
@@ -31,8 +32,8 @@ export const mapWaysElements = writable<MapElementCategory>(JSON.parse(JSON.stri
 export const mapAreasElements = writable<MapElementCategory>(JSON.parse(JSON.stringify(areasMapElements)))
 
 // default always available theme
-export const wantedMapTheme = writable<string>("mapycz")
-
+export const selectedMapTheme = writable<string>()
+export const selectedMapFiles = writable<string[]>([])
 export const mapElementsZoomDesign = writable<MapElementsZoomDesign>({
   general: 1,
   nodes: 1,
