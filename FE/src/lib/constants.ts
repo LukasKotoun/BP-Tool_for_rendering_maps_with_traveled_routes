@@ -11,6 +11,24 @@ export const paperSizes = [
   { label: "A6 (148 × 105 mm)", value: JSON.stringify({ height: 105, width: 148 }) }
 ]
 
+export const mapGeneratingStatusMappingCZ = {
+  "failed": "Zpracování selhalo",
+  "in_queue": "Čekání ve frontě na zpracování",
+  "starting": "Začíná se zpracovávat 1/12",
+  "extracting": "Extrahování dat ze souboru 2/12",
+  "loading": "Načítání mapových dat ze souboru 3/12",
+  "filtering": "Filtrování mapových dat 4/12",
+  "styling": "Nastavování vzhledu mapových dat 5/12",
+  "preparing_for_plotting": "Příprava mapových dat k vykreslení 6/12",
+  "areas_plotting": "Vykreslování oblastí 7/12",
+  "ways_plotting": "Vykreslování cest 8/12",
+  "nodes_plotting": "Vykreslování bodů 9/12",
+  "gpxs_plotting": "Vykreslování GPX tras 10/12",
+  "file_saving": "Ukládání mapy do souboru 11/12",
+  "completed": "Generování mapy bylo úspěšně dokončeno, probíhá její stahování! 12/12",
+  "sending_data": "Odesílání dat na server"
+}
+
 export const mapDataNamesMappingCZ = {
   "cz": "Česká republika",
   "sk": "Slovensko",

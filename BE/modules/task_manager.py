@@ -33,7 +33,7 @@ class TaskManager:
         self.shared_tasks_lock: Lock = multiprocessing.Lock()
         self.queue_lock: Lock = multiprocessing.Lock()
 
-    def add_task(self, map_generator_config: dict[str, Any], queue_type: QueueType=QueueType.NORMAL.value):
+    def add_task(self, map_generator_config: dict[str, Any], queue_type: QueueType=QueueType.NORMAL.value) -> tuple[str, str | None]:
         """Add a task to the appropriate queue or start it if possible"""
         task_id = uuid7str()
         task_item = {
@@ -299,16 +299,18 @@ class TaskManager:
     def _wrapped_generate_map(config: dict[str, Any], task_id: str, shared_tasks: DictProxy[str, Any],
                               shared_tasks_lock: Lock, queue_lock: Lock, queue: ListProxy[Any],
                               running_process_count: ValueProxy[int], max_process_count: int):
-        try:
-            generate_map(config, task_id, shared_tasks, shared_tasks_lock)
 
-            with shared_tasks_lock:
-                shared_tasks[task_id] = {
-                    **shared_tasks[task_id],
-                    SharedDictKeys.STATUS.value: ProcessingStatus.COMPLETED.value,
-                    SharedDictKeys.PROCESS_RUNNING.value: False,
-                    SharedDictKeys.PID.value: None
-                }
+        try:
+            if(task_id in shared_tasks):
+                generate_map(config, task_id, shared_tasks, shared_tasks_lock)
+
+                with shared_tasks_lock:
+                    shared_tasks[task_id] = {
+                        **shared_tasks[task_id],
+                        SharedDictKeys.STATUS.value: ProcessingStatus.COMPLETED.value,
+                        SharedDictKeys.PROCESS_RUNNING.value: False,
+                        SharedDictKeys.PID.value: None
+                    }
         except Exception as e:
             warnings.warn(
                 f"Failed to process task (generate map) {task_id}: {str(e)}")

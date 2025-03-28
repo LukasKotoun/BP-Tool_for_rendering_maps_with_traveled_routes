@@ -2,7 +2,7 @@ import os
 import asyncio
 import json
 import warnings
-from fastapi import FastAPI, File, UploadFile, Form, HTTPException, status, Depends, BackgroundTasks
+from fastapi import FastAPI, File, UploadFile, Form, HTTPException, status, Depends, BackgroundTasks, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from uuid_extensions import uuid7str
@@ -17,8 +17,26 @@ from modules.utils import Utils
 from modules.gpx_manager import GpxManager
 from modules.received_structure_processor import ReceivedStructureProcessor
 from modules.task_manager import TaskManager
+from contextlib import asynccontextmanager
 
-server_app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """
+    Lifespan context manager for FastAPI application.
+    Handles startup and shutdown events.
+    """
+    print("Server starting up...")
+    try:
+        yield
+    finally:
+        # Shutdown cleanup
+        print("Shutting down server...")
+        task_manager.delete_all_tasks()
+        print("Server shutdown cleanup completed successfully.")
+     
+
+
+server_app = FastAPI(lifespan=lifespan)
 server_app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -43,7 +61,18 @@ async def check_user_asked(task_id: str):
         print(f"Task {task_id} terminated - user did not ask for task info")
 
 
-def decode_task_id_from_JWT(token: str = Depends(OAUTH2_SCHEME)):
+async def decode_task_id_from_JWT(request: Request, token: str = Depends(OAUTH2_SCHEME)):
+    if token is None:
+        try: # try to find token in body
+            body = await request.json()
+            token = body.get("token")
+        except ValueError:
+            token = None
+        # Body does not contain exist or is not JSON throw unauthorized
+        # if token is not found in body, throw unauthorized
+        if not token:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token not found in request body or header")
+    
     payload = Utils.decode_jwt(token, JWT_ALGORITHM, SECRET_KEY)
     task_id = payload.get("task_id")
     if task_id is None:
@@ -51,7 +80,6 @@ def decode_task_id_from_JWT(token: str = Depends(OAUTH2_SCHEME)):
     return task_id
 
 # endpoints
-
 @server_app.get("/available_osm_files", response_model=AvailableOsmFilesResponseModel)
 def available_osm_files():
     return {"osm_files": OSM_AVAILABLE_FILES.keys()}
@@ -431,8 +459,8 @@ def get_task_status(task_id: str = Depends(decode_task_id_from_JWT)):
     else:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
 
-@server_app.delete("/terminate_task", response_model=MessageResponseModel)
-def terminate_task(task_id: str = Depends(decode_task_id_from_JWT)):
+@server_app.post("/terminate_task", response_model=MessageResponseModel)
+def terminate_task1(task_id: str = Depends(decode_task_id_from_JWT)):
     """
     Terminate task from id in token.
     """
@@ -442,7 +470,8 @@ def terminate_task(task_id: str = Depends(decode_task_id_from_JWT)):
     else:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Cannot terminate task - task not found")
-   
+
+
 @server_app.get("/download_map")
 def get_map_file(task_id: str = Depends(decode_task_id_from_JWT)):
     task_info = task_manager.get_task_info(task_id)
@@ -479,11 +508,3 @@ def get_map_file(task_id: str = Depends(decode_task_id_from_JWT)):
     )
 
 
-
-@server_app.on_event("shutdown")
-def shutdown_cleanup():
-    """
-    Cleanup any running processes and tmp files on server shutdown.
-    """
-    print("Shutting down server...")
-    task_manager.delete_all_tasks()

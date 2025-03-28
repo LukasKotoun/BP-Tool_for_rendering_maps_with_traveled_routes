@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { wantedAreas, fitPaperSize, PaperDimensions, PaperDimensionsRequest, automaticZoomLevel, areasId, selectedMapFiles, avilableMapFiles } from '$lib/stores/mapStore';
+  import { wantedAreas, fitPaperSize, paperDimensions, paperDimensionsRequest, automaticZoomLevel, areasId, selectedMapFiles, avilableMapFiles } from '$lib/stores/mapStore';
   import api from '$lib/axios.config';
   import { checkMapCordinatesFormat, checkFitPaper, parseWantedAreas, numberOfAreaPlots,
     searchAreaWhisper, checkPaperDimensions
@@ -48,8 +48,8 @@
   function handleSelectedPaperSizeChange(event: Event) {
     const selectedValue = (event.target as HTMLSelectElement).value;
     const selectedSize = JSON.parse(selectedValue) as PaperDimensions; 
-    $PaperDimensionsRequest.width = selectedSize.width;
-    $PaperDimensionsRequest.height = selectedSize.height;
+    $paperDimensionsRequest.width = selectedSize.width;
+    $paperDimensionsRequest.height = selectedSize.height;
   }
 
 
@@ -88,7 +88,7 @@
   function getPaperAndZoom() {
     let parsedAreas
     try{
-      if(!checkPaperDimensions($PaperDimensionsRequest, true)){
+      if(!checkPaperDimensions($paperDimensionsRequest, true)){
         alert("Alespoň jede z rozměrů papíru musí být vyplněn");
         return;
       }
@@ -106,17 +106,17 @@
       settingArea = true
       api.post("/paper_and_zoom", {
         map_area: parsedAreas,
-        paper_dimensions: {width: $PaperDimensionsRequest.width === undefined ? null : $PaperDimensionsRequest.width,
-           height: $PaperDimensionsRequest.height === undefined ? null : $PaperDimensionsRequest.height}, 
-        given_smaller_paper_dimension: $PaperDimensionsRequest.given_smaller_dimension,
-        wanted_orientation: $PaperDimensionsRequest.orientation,
+        paper_dimensions: {width: $paperDimensionsRequest.width === undefined ? null : $paperDimensionsRequest.width,
+           height: $paperDimensionsRequest.height === undefined ? null : $paperDimensionsRequest.height}, 
+        given_smaller_paper_dimension: $paperDimensionsRequest.given_smaller_dimension,
+        wanted_orientation: $paperDimensionsRequest.orientation,
       }, {
         headers: {
           "Content-Type": "application/json"
         }
       }).then(response => {
-        $PaperDimensions.height = response.data.height;
-        $PaperDimensions.width = response.data.width;
+        $paperDimensions.height = response.data.height;
+        $paperDimensions.width = response.data.width;
         $automaticZoomLevel = response.data.zoom_level;
         settingArea = false
       }).catch(e => {
@@ -138,7 +138,7 @@
 async function getMapBorders() {
     let parsedAreas
     try{
-      if(!checkPaperDimensions($PaperDimensions, false)){
+      if(!checkPaperDimensions($paperDimensions, false)){
         alert("Alespoň jede z rozměrů papíru musí být vyplněn");
         return;
       }
@@ -159,46 +159,45 @@ async function getMapBorders() {
       return;
     }
     gettingMapBorders = true
-    
-      api.post("/generate_map_borders", {
-        map_area: parsedAreas,
-        paper_dimensions: $PaperDimensions, 
-        fit_paper_size: $fitPaperSize
-      }, {
-        responseType: 'blob',
-        headers: {
-          "Content-Type": "application/json"
-        }
-        
-      }).then(response => {
-        const blob = new Blob([response.data], { 
-          type: response.headers['content-type'] 
-        });
-        const url = window.URL.createObjectURL(blob);
-        
-        // Create a temporary link element to trigger the download
-        const link = document.createElement('a');
-        link.href = url;
-        link.setAttribute('download', "mapa_okraje.pdf");
-        document.body.appendChild(link);
-        link.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(link);
-        gettingMapBorders = false
-      }).catch(e => {
-        if(e.response?.status === 400){
-          alert("Některé zadané oblasti nemají správný formát")
-        }
-        else if(e.response?.status === 404){
-          alert("Některou se zadaných oblastí se nepodařilo nalézt")
-        }
-        else{
-          alert("Nastala chyba při zpracování požadavku, zkuste to znovu za chvíli")
-        }
-        console.error(e);
-        gettingMapBorders = false
+  
+    api.post("/generate_map_borders", {
+      map_area: parsedAreas,
+      paper_dimensions: $paperDimensions, 
+      fit_paper_size: $fitPaperSize
+    }, {
+      responseType: 'blob',
+      headers: {
+        "Content-Type": "application/json"
+      }
+      
+    }).then(response => {
+      const blob = new Blob([response.data], { 
+        type: response.headers['content-type'] 
       });
-
+      const url = window.URL.createObjectURL(blob);
+      
+      // Create a temporary link element to trigger the download
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', "mapa_okraje.pdf");
+      document.body.appendChild(link);
+      link.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(link);
+      gettingMapBorders = false
+    }).catch(e => {
+      if(e.response?.status === 400){
+        alert("Některé zadané oblasti nemají správný formát")
+      }
+      else if(e.response?.status === 404){
+        alert("Některou se zadaných oblastí se nepodařilo nalézt")
+      }
+      else{
+        alert("Nastala chyba při zpracování požadavku, zkuste to znovu za chvíli")
+      }
+      console.error(e);
+      gettingMapBorders = false
+    });
 }
 
 	$: filteredMapFiles = $avilableMapFiles.filter(file => 
@@ -234,10 +233,6 @@ function selectAreaSuggestion(newAreaValue: string, id: number): void{
   areaSuggestions[id] = [];
   areaSuggestions = [...areaSuggestions]; // Trigger reactivity
 };
-
-
-
-
 
 </script>
 
@@ -492,7 +487,7 @@ function selectAreaSuggestion(newAreaValue: string, id: number): void{
       <input
         type="number"
         class="border rounded-sm p-2 w-20"
-        bind:value={$PaperDimensionsRequest.width}
+        bind:value={$paperDimensionsRequest.width}
         min="10"
         step="10"
       />
@@ -502,7 +497,7 @@ function selectAreaSuggestion(newAreaValue: string, id: number): void{
         <input
         type="number"
         class="border rounded-sm p-2 w-20"
-        bind:value={$PaperDimensionsRequest.height}
+        bind:value={$paperDimensionsRequest.height}
         min="10"
         step="10"
       />
@@ -511,21 +506,21 @@ function selectAreaSuggestion(newAreaValue: string, id: number): void{
       <p class="text-sm font-medium mb-1">Orientace papíru</p>
       <select
         class="border rounded-sm p-2 w-40"
-        bind:value={$PaperDimensionsRequest.orientation}
+        bind:value={$paperDimensionsRequest.orientation}
       >
         <option value="automatic">Automatická</option>
         <option value="portrait">Na výšku</option>
         <option value="landscape">Na šířku</option>
       </select>
     </div>
-    {#if $PaperDimensionsRequest.width == null || $PaperDimensionsRequest.height == null}
+    {#if $paperDimensionsRequest.width == null || $paperDimensionsRequest.height == null}
     <div class="flex flex-col">
       <p class="text-sm font-medium mb-1">Zadán menší rozměr papíru</p>
         <div class="h-10 flex items-center">
           <input 
             type="checkbox" 
             class="h-5 w-5 items-center rounded-lg"
-            bind:checked={$PaperDimensionsRequest.given_smaller_dimension} 
+            bind:checked={$paperDimensionsRequest.given_smaller_dimension} 
           />
         </div>
     </div>
@@ -535,7 +530,7 @@ function selectAreaSuggestion(newAreaValue: string, id: number): void{
     
   <div class="p-4">
     <p class="text-md font-medium mb-1">
-      Výsledná velikost papíru: {$PaperDimensions.width}mm x {$PaperDimensions.height}mm (šířka x výška)
+      Výsledná velikost papíru: {$paperDimensions.width}mm x {$paperDimensions.height}mm (šířka x výška)
       </p>
   </div>
 
@@ -556,7 +551,7 @@ function selectAreaSuggestion(newAreaValue: string, id: number): void{
             Nastavit oblasti a papír
         </button>
       </div>
-      {#if $PaperDimensions.width > 0 && $PaperDimensions.height > 0}
+      {#if $paperDimensions.width > 0 && $paperDimensions.height > 0}
         <button 
           class="text-white px-4 py-2 rounded-lg ml-4 mt-4"
           class:bg-green-500={!gettingMapBorders}

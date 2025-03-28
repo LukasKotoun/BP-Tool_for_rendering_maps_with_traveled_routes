@@ -22,8 +22,8 @@ export const fitPaperSize = writable<FitPaperSize>({
   plot: false,
   width: 0.5,
 });
-export const PaperDimensions = writable<PaperDimensions>({ width: 0, height: 0 });
-export const PaperDimensionsRequest = writable<PaperDimensionsRequest>({
+export const paperDimensions = writable<PaperDimensions>({ width: 0, height: 0 });
+export const paperDimensionsRequest = writable<PaperDimensionsRequest>({
   orientation: "automatic",
   given_smaller_dimension: true,
 });

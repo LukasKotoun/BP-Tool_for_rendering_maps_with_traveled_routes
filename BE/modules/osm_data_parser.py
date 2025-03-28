@@ -45,7 +45,7 @@ class OsmDataParser():
         return False
 
 
-    @time_measurement("gdf creating")
+    # @time_measurement("gdf creating")
     def create_gdf(self, file_name: str, fromCrs: str, toCrs: str | None = None) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame, gpd.GeoDataFrame]:
         
         class ElementsFilter():
@@ -116,7 +116,7 @@ class OsmDataParser():
             ways_gdf, [key for key, _ in self.wanted_ways.items()])
         GdfUtils.change_columns_to_categorical(
             areas_gdf, [key for key, _ in self.wanted_areas.items()])
-        print(f"nodes: {nodes_gdf.memory_usage(deep=True).sum()}, ways: {ways_gdf.memory_usage(deep=True).sum()}, areas: {areas_gdf.memory_usage(deep=True).sum()}, combined: {nodes_gdf.memory_usage(deep=True).sum() + ways_gdf.memory_usage(deep=True).sum() + areas_gdf.memory_usage(deep=True).sum()}")
+        #print(f"nodes: {nodes_gdf.memory_usage(deep=True).sum()}, ways: {ways_gdf.memory_usage(deep=True).sum()}, areas: {areas_gdf.memory_usage(deep=True).sum()}, combined: {nodes_gdf.memory_usage(deep=True).sum() + ways_gdf.memory_usage(deep=True).sum() + areas_gdf.memory_usage(deep=True).sum()}")
 
         if (toCrs is None):
             return nodes_gdf, ways_gdf, areas_gdf

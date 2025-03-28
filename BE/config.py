@@ -11,7 +11,7 @@ from common.map_enums import Style, MapOrientation, MarkersCodes, BaseConfigKeys
 load_dotenv()
 
 SECRET_KEY = os.getenv("SECRET_KEY", "dev_key")
-OAUTH2_SCHEME = OAuth2PasswordBearer(tokenUrl="token")
+OAUTH2_SCHEME = OAuth2PasswordBearer(tokenUrl="token", auto_error=False)
 
 MAX_CONCURRENT_TASKS_NORMAL = 2
 MAX_CONCURRENT_TASKS_PREVIEW = 3

@@ -1,35 +1,43 @@
-
 <script lang="ts">
-    import { wantedAreas, areasPreviewId, wantedPreviewAreas, paperPreviewDimensions, fitPaperSize, PaperDimensions,
+    import { wantedAreas, areasPreviewId, wantedPreviewAreas, paperPreviewDimensions, fitPaperSize, paperDimensions,
         wantPlotBridges, wantPlotTunnels, peaksFilterSensitivity, minPopulationFilter, mapNodesElements, mapWaysElements, mapAreasElements,
         selectedMapTheme, selectedMapFiles, gpxFiles, gpxFileGroups, gpxStyles, mapElementsZoomDesign} from '$lib/stores/mapStore';
-    import { paperSizes, mapDataNamesMappingCZ } from '$lib/constants';
-    
-    import { checkMapCordinatesFormat, checkFitPaper, parseWantedAreas, searchAreaWhisper, 
-        checkPaperDimensions
-    } from '$lib/utils/areaUtils';
-    import { transformElementsStructure } from '$lib/utils/mapElementsUtils';
+    import { paperSizes, mapGeneratingStatusMappingCZ} from '$lib/constants';
+    import { checkMapCordinatesFormat, checkFitPaper, parseWantedAreas, searchAreaWhisper, checkPaperDimensions} from '$lib/utils/areaUtils';
+    import { getUngrupedFiles } from '$lib/utils/gpxFilesUtils';
+    import { transformElementsStructure, mapValue} from '$lib/utils/mapElementsUtils';
+    import { MapGeneratingStatus } from '$lib/enums/mapEnums';
     import { onMount } from 'svelte';
     import api from '$lib/axios.config';
-    import { json } from '@sveltejs/kit';
-    let pollingTime = 15000; // 15 seconds
+
+    let normalPollingTime = 5000; 
+    let previewPollingTime = 3000
     let pollingInterval: number | null = null;
     let debounceTimeout: ReturnType<typeof setTimeout> | null = null;
-    let displayedTab = "previewMap"
+    let displayedTab = "normalMap"
     let areaSuggestions: string[][] = [];
     let isGenerating = false
     let isPolling = false
-    let statusMessage = ""
     let status = ""
-    let generatingMessage = ""
     let jwtToken = ""
 
     onMount(() => {
         if($paperPreviewDimensions.width == 0 && $paperPreviewDimensions.height == 0){
             $paperPreviewDimensions = { width: 297, height: 210 }
         }
+        // on page close terminate running task
+        const handleBeforeUnload = (event) => {
+            if(jwtToken == null || jwtToken == "") return;
+            navigator.sendBeacon(`${import.meta.env.VITE_API_BASE_URL}/terminate_task`, JSON.stringify({token:jwtToken} ));
+        };
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        
+        return () => {
+            window.removeEventListener('beforeunload', handleBeforeUnload);
+        };
     });
         
+
     function addArea() {
         const newArea: AreaItemStored = {
         id: $areasPreviewId++,
@@ -74,63 +82,72 @@
     };
 
     function generateMap(preview: boolean = false){
-    let parsedAreas: AreaItemSend[] = []
-    let parsedPreviewAreas: AreaItemSend[] | null = []
-    let mapNodesElementsParsed: MapElementCategorySend = {}
-    let mapWaysElementsParsed: MapElementCategorySend = {}
-    let mapAreasElementsParsed: MapElementCategorySend = {}
-    try{
-        if(preview){
-            if(!checkPaperDimensions($paperPreviewDimensions, false)){
-                alert("Rozměry náhledového papíru musí být vyplněny");
+        let parsedAreas: AreaItemSend[] = []
+        let parsedPreviewAreas: AreaItemSend[] | null = null
+        let mapNodesElementsParsed: MapElementCategorySend = {}
+        let mapWaysElementsParsed: MapElementCategorySend = {}
+        let mapAreasElementsParsed: MapElementCategorySend = {}
+        let fileGroups: GPXFileGroups = {}
+        isGenerating = true
+        try{
+            if(preview){
+                if(!checkPaperDimensions($paperPreviewDimensions, false)){
+                    alert("Rozměry náhledového papíru musí být vyplněny");
+                    isGenerating = false
+                    return;
+                }
+                parsedPreviewAreas = parseWantedAreas($wantedPreviewAreas);
+                if(parsedPreviewAreas.length === 0){
+                    parsedPreviewAreas = null;
+                }
+
+            }
+            if(!checkPaperDimensions($paperDimensions, false)){
+                alert("Rozměry papíru musí být vyplněny");
+                isGenerating = false
                 return;
             }
-            parsedPreviewAreas = parseWantedAreas($wantedPreviewAreas);
-            if(parsedPreviewAreas.length === 0){
-                parsedPreviewAreas = null;
+
+            if(!checkFitPaper($fitPaperSize)){
+                alert("Šířka ohraničení vyplněné oblasti musí být vyplněna");
+                isGenerating = false
+                return;
             }
-
-        }
-        if(!checkPaperDimensions($PaperDimensions, false)){
-            alert("Rozměry papíru musí být vyplněny");
+            
+            parsedAreas = parseWantedAreas($wantedAreas);
+            if(parsedAreas.length === 0){
+                alert("Musí být zadána alespoň jedna oblast");
+                isGenerating = false
+                return;
+            }
+            if($selectedMapFiles.length === 0){
+                alert("Musí být vybrán alespoň jeden soubor s mapovými daty");
+                isGenerating = false
+                return;
+            }
+            
+            let ungrupedFiles = getUngrupedFiles($gpxFileGroups, $gpxFiles)
+            fileGroups = { ...$gpxFileGroups, default: ungrupedFiles }
+            mapNodesElementsParsed = transformElementsStructure($mapNodesElements, 'plot', { width_scale: 1, text_scale: 1 });
+            mapWaysElementsParsed = transformElementsStructure($mapWaysElements, 'plot', { width_scale: 1, text_scale: 1 });
+            mapAreasElementsParsed = transformElementsStructure($mapAreasElements, 'plot', { width_scale: 1, text_scale: 1 });
+        }catch(e){
+            console.error(e);
+            isGenerating = false
+            status = ""
+            alert("Chyba při zpracování dat");
             return;
         }
 
-        if(!checkFitPaper($fitPaperSize)){
-            alert("Šířka ohraničení vyplněné oblasti musí být vyplněna");
-            return;
-        }
-        
-        parsedAreas = parseWantedAreas($wantedAreas);
-        if(parsedAreas.length === 0){
-            alert("Musí být zadána alespoň jedna oblast");
-            return;
-        }
-        if($selectedMapFiles.length === 0){
-            alert("Musí být vybrán alespoň jeden soubor s mapovými daty");
-            return;
-        }
-
-        mapNodesElementsParsed = transformElementsStructure($mapNodesElements, 'plot', { width_scale: 1, text_scale: 1 });
-        mapWaysElementsParsed = transformElementsStructure($mapWaysElements, 'plot', { width_scale: 1, text_scale: 1 });
-        mapAreasElementsParsed = transformElementsStructure($mapAreasElements, 'plot', { width_scale: 1, text_scale: 1 });
-    }catch(e){
-      console.error(e);
-      alert("Chyba při zpracování dat");
-      return;
-    }
-        generatingMessage = preview ? "Generování náhledové mapy" : "Generování mapy";
-        isGenerating = true
-        status = ""
-        statusMessage = "Odesílání dat na server"
+        status = "sending_data"
         const formData = new FormData();
         const data = JSON.stringify({
             osm_files: $selectedMapFiles,
             map_area: parsedAreas,
-            map_preview_area: parsedPreviewAreas,
-            paper_dimensions: $PaperDimensions,
-            paper_preview_dimensions: $paperPreviewDimensions,
-            gpxs_groups: $gpxFileGroups,
+            map_preview_area: preview ? parsedPreviewAreas: null,
+            paper_dimensions: $paperDimensions,
+            paper_preview_dimensions: preview ? $paperPreviewDimensions : null,
+            gpxs_groups: fileGroups,
             map_theme: $selectedMapTheme,
             fit_paper_size: $fitPaperSize,
             plot_bridges: $wantPlotBridges,
@@ -145,9 +162,12 @@
             gpxs_styles: $gpxStyles,
             styles_zoom_levels: $mapElementsZoomDesign
         })
-        for (const file in $gpxFiles) {
-            formData.append('gpxs', file);
-        }
+
+        $gpxFiles.forEach(file => {
+            formData.append("gpxs", file); 
+            console.log(file);
+        });
+
         formData.append('config', data);
 
         api.post(preview? "/generate_map_preview" : "/generate_map_normal", formData, {
@@ -156,49 +176,27 @@
         }
         }).then((response) => {
             jwtToken = response.data.token
-            statusMessage = "Mapa byla úspěšně vygenerována"
-            pollTaskInfo()
+            status = response.data.status
+            startPollingTaskInfo()
         }).catch((error) => {
             alert("Chyba při odesílání dat na server")
-            statusMessage = ""
             status = ""
             isGenerating = false
             jwtToken = ""
             console.error(error)
         })
-
-
     }
 
-    async function pollTaskInfo() {
-        if (isPolling || jwtToken == null || jwtToken == "") return;
+    async function startPollingTaskInfo() {
+        if (isPolling || jwtToken == null) return;
         isPolling = true;
+        //first polling to keep generating alive - prevent task running if user close window before recieiving token
         api.get('/task_status', {
             headers: {
                 'Authorization': `Bearer ${jwtToken}`
             }
-        }).then((response) => {
-                status = response.data.status
-                statusMessage = response.data.message;
-                if (response.data.status === 'complete') {
-                    stopPolling();
-                }
-        }).catch((error) => {
-            if(error.response.status === 404){
-            stopPolling();
-            alert("Generování mapy bylo nečekaně přerušeno, zkuste to znovu později")
-            statusMessage = ""
-            status = ""
-            isGenerating = false
-            jwtToken = ""
-            return
-        }
-        console.error('Pooling error', error);
-            statusMessage = 'Error checking status. Retrying...';
-            console.error('Polling error:', error);
-        });
-
-
+            })
+            
         pollingInterval = window.setInterval(async () => {
             api.get('/task_status', {
             headers: {
@@ -206,73 +204,106 @@
             }
             }).then((response) => {
                 status = response.data.status
-                statusMessage = response.data.message || 'Processing...';
-                if (response.data.status === 'complete') {
-                    stopPolling();
+                if (response.data.status === 'completed') {
+                    stopPollingTaskInfo();
+                    downloadMap();
+                }else if (response.data.status === 'failed') {
+                    stopPollingTaskInfo();
+                    status = ""
+                    isGenerating = false
+                    jwtToken = ""
+                    alert("Generování mapy selhalo, zkuste to znovu později")
                 }
             }).catch((error) => {
-                if(error.response.status === 404){
-                stopPolling();
-                alert("Generování mapy bylo nečekaně přerušeno, zkuste to znovu později")
-                statusMessage = ""
                 status = ""
                 isGenerating = false
                 jwtToken = ""
-                return
-            }
-            console.error('Pooling error', error);
-                statusMessage = 'Error checking status. Retrying...';
+                stopPollingTaskInfo();
+                alert("Generování mapy bylo nečekaně přerušeno, zkuste to znovu později")
                 console.error('Polling error:', error);
             });
 
-        }, pollingTime); // 15 seconds
+        }, displayedTab == "normalMap" ? normalPollingTime : previewPollingTime );
     }
-    function stopPolling() {
-    // Clear the interval
-    if (pollingInterval) {
-      clearInterval(pollingInterval);
-      pollingInterval = null;
+    function stopPollingTaskInfo() {
+        if (pollingInterval) {
+            clearInterval(pollingInterval);
+            pollingInterval = null;
+        }
+        isPolling = false;
     }
-   
-    isPolling = false;
+
+    function downloadMap(){
+        if(jwtToken == null || jwtToken == ""){
+            alert("Chyba při stahování mapy")
+            return
+        }
+        api.get("/download_map",{
+        headers: {  
+            'Authorization': `Bearer ${jwtToken}`
+        },
+            responseType: 'blob',
+        }).then(response => {
+            const blob = new Blob([response.data], { 
+                type: response.headers['content-type'] 
+            });
+            const url = window.URL.createObjectURL(blob);
+                        const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `${displayedTab == "normalMap" ? "mapa" : "nahled_mapy"}.pdf`);
+            document.body.appendChild(link);
+            link.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(link);
+            jwtToken = ""
+            terminateTask()
+        }).catch(e => {
+            terminateTask()
+            alert("Chyba při stahování mapy")
+            console.error(e);
+        });
     }
 
     function terminateTask(){
-        const confirmed = window.confirm("Opravdu chcete ukončit generování mapy?");
-        if(!confirmed){
-            return
+        stopPollingTaskInfo();
+        if(jwtToken != "" && jwtToken != null){
+            api.post('/terminate_task', {token:jwtToken}, {
+                headers: {
+                    'Authorization': `Bearer ${jwtToken}`,
+                    "Content-Type": "application/json"
+                },
+            }).then((response) => {
+            }).catch((error) => {
+                console.error("Termination error: ", error)
+            })
         }
-        statusMessage = ""
         status = ""
         isGenerating = false
         jwtToken = ""
-        api.delete('/terminate_task', {
-            headers: {
-                'Authorization': `Bearer ${jwtToken}`
-            }
-        }).then((response) => {
-           
-        }).catch((error) => {
-                console.error(error)
-        })
     }
-
+    
 </script>
+
 {#if isGenerating}
 <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
     <div class="bg-white p-12 rounded-xl shadow-2xl text-center w-3/4 max-w-2xl space-y-6">
-        <h1 class="text-2xl font-bold mb-4">{generatingMessage}</h1>
-        <h2 class="text-2xl font-bold mb-4">{statusMessage}</h2>
-    {#if status == "success"}
-        <p>Stáhnout mapu</p>
-    {/if}
-
-      <button 
-        on:click={terminateTask}
-        class="mt-4 px-6 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
-      >
-        Ukončit generování
-      </button>
+        <h1 class="text-2xl font-bold mb-4">{displayedTab == "normalMap" ? "Generování mapy" : "Generování náhledové mapy" }</h1>
+        <h2 class="text-lg font-semibold mb-4">{mapValue(mapGeneratingStatusMappingCZ, status)}</h2>
+        <h3 class="text-md font-semibold mb-4">Dejte si kávičku a nevypínejte tuto záložku probíhá tvorba mapy.</h3>
+        {#if status != MapGeneratingStatus.SENDING_DATA && status != MapGeneratingStatus.COMPLETED}
+        <button 
+            on:click={() =>{
+                const confirmed = window.confirm("Opravdu chcete ukončit generování mapy?");
+                if(!confirmed){
+                    return;
+                }else{
+                    terminateTask()
+                }}}
+            class="mt-4 px-6 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+        >
+           Ukončit generování
+        </button>
+      {/if}
   </div>
 </div>
 {/if}
