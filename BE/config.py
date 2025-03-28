@@ -16,8 +16,9 @@ OAUTH2_SCHEME = OAuth2PasswordBearer(tokenUrl="token", auto_error=False)
 MAX_CONCURRENT_TASKS_NORMAL = 2
 MAX_CONCURRENT_TASKS_PREVIEW = 3
 
-MAX_QUEUE_SIZE_NORMAL = 5
-MAX_QUEUE_SIZE_PREVIEW = 5
+MAX_QUEUE_SIZE_NORMAL = 50
+MAX_QUEUE_SIZE_PREVIEW = 50
+
 FILE_DOWNLOAD_CHUNK_SIZE  = 1024 * 1024 # 1MB
 OSM_AVAILABLE_FILES = {
     'cz': '../osm_files/cz.osm.pbf', # cz is default - should always be present
@@ -282,10 +283,10 @@ REQ_AREA_DICT_KEYS = {"area": (str | list, True), "plot": (bool, True), "group":
 REQ_AREAS_MAPPING_DICT = {"width": (Style.WIDTH.value, FUNC_MM_TO_POINTS_CONVERSION),
                           "group":("group", lambda v: max(v, 0))}
 
-FE_EDIT_STYLES_VALIDATION = {'width_scale': (float | int, False),
-                             "text_scale": (float | int, False)}
-FE_EDIT_STYLES_MAPPING = {"width_scale": (Style.FE_WIDTH_SCALE.value, FUNC_MM_TO_POINTS_CONVERSION),
-                          "text_scale": (Style.FE_TEXT_FONT_SIZE_SCALE.value, FUNC_MM_TO_POINTS_CONVERSION)}
+FE_EDIT_STYLES_VALIDATION = {'width_scale': (float | int, False, lambda v: v >= 0),
+                             "text_scale": (float | int, False, lambda v: v >= 0)}
+FE_EDIT_STYLES_MAPPING = {"width_scale": (Style.FE_WIDTH_SCALE.value, None),
+                          "text_scale": (Style.FE_TEXT_FONT_SIZE_SCALE.value, None)}
 FE_STYLES_ALLOWED_ELEMENTS = ['nodes', 'ways', 'areas']
 
 ZOOM_STYLE_LEVELS_VALIDATION = {"nodes": (int, True), "ways": (
@@ -389,7 +390,8 @@ BASE_OSM_CONFIG = {
     }
 }
 
-
+# where to switch to more detailed zoom level
+ZOOM_LEVEL_THRESHOLD = 0.1
 # zooms: scaling values for center of each zoom level
 # zoom level: scaling value
 ZOOM_MAPPING: dict[int, float] = {
@@ -401,8 +403,8 @@ ZOOM_MAPPING: dict[int, float] = {
     5: 0.0061528,
     4: 0.0030862,
     3: 0.0015295,
-    2:  0.0007648,
-    1:  0.0003824,
+    2: 0.0007648,
+    1: 0.0003824,
 }
 
 # fmt: off

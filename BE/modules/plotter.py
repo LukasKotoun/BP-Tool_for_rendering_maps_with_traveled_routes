@@ -409,7 +409,7 @@ class Plotter:
             self.__marker_with_two_annotations(
                 row, store_bbox, text_zorder=text_zorder, marker_zorder=marker_zorder)
 
-    @time_measurement("nodePlot")
+    #@time_measurement("nodePlot")
     def nodes(self, nodes_gdf: GeoDataFrame):
         if (nodes_gdf.empty):
             return
@@ -709,7 +709,7 @@ class Plotter:
         for (layer, zindex), tunnel_layer_gdf in groups:
             self.__ways_normal(tunnel_layer_gdf, True, zorder=zorder)
 
-    @time_measurement("wayplot")
+    #@time_measurement("wayplot")
     def ways(self, ways_gdf: GeoDataFrame):
         if (ways_gdf.empty):
             return
@@ -735,7 +735,7 @@ class Plotter:
         # bridges
         self.__bridges(ways_bridge_gdf)
 
-    @time_measurement("areaPlot")
+    #@time_measurement("areaPlot")
     def areas(self, areas_gdf: GeoDataFrame, zorder_fill: int = 1, zorder_edge: int = 2, plot_fill: bool = True, plot_edge: bool = True):
         if (areas_gdf.empty):
             return
@@ -818,7 +818,7 @@ class Plotter:
                 row, Style.MARKER_LAYER_POSITION.value, marker_default_position)
             self.__marker(mapped_row, position=finish_marker_position)
 
-    @time_measurement("gpxsPlot")
+    #@time_measurement("gpxsPlot")
     def gpxs(self, gpxs_gdf: GeoDataFrame):
         if (gpxs_gdf.empty):
             return

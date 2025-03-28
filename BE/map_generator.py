@@ -162,7 +162,7 @@ def get_zoom_level_endpoint(config: ZoomLevelConfigModel):
     map_scaling_factor = Utils.calc_map_scaling_factor(expanded_map_area_dimensions,
                                                        paper_dimensions_mm)
     zoom_level = Utils.get_zoom_level(
-        map_scaling_factor, ZOOM_MAPPING, 0.2)
+        map_scaling_factor, ZOOM_MAPPING, ZOOM_LEVEL_THRESHOLD)
     return {"zoom_level": zoom_level}
 
 

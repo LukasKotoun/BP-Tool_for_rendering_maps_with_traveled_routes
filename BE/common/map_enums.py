@@ -15,7 +15,7 @@ class ProcessingStatus(Enum):
     NODES_PLOTTING = "nodes_plotting"
     GPXS_PLOTTING = "gpxs_plotting"
     FILE_SAVING = "file_saving"
-    COMPLETED = "COMPLETED"
+    COMPLETED = "completed"
 
 class SharedDictKeys(Enum):
     FILES = "files"

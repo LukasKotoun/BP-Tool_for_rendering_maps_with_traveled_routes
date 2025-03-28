@@ -499,9 +499,9 @@ highway_styles_special_and_paths: ElementStyles = [
 
 railway_remove_on_zoom: ElementStyles = [
     ({'railway': ['rail', 'disused', 'light_rail', "monorail", "subway"],
-      'service': ['crossover', 'siding', 'spur', 'yard']}, {
-    }, {}, {
-        "1-6": {Style.COLOR.value: None, Style.EDGE_COLOR.value: None}})
+      'service': ['crossover', 'siding', 'spur', 'yard']}, {}, {
+          "1-6":{Style.COLOR.value: None,  Style.EDGE_COLOR.value: None}
+      })
 ]
 
 railway_styles_bridges_overwrite: ElementStyles = [
