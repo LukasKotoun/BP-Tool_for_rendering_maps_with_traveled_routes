@@ -34,7 +34,7 @@ class MapGeneratorConfigModel(BaseModel):
     wanted_categories_and_styles_edit: Any
     styles_zoom_levels: ZoomLevelsModel
     gpxs_groups: Optional[Dict[str, list[str]]] = {}
-    gpxs_styles: Optional[Any] = []
+    gpxs_styles: Optional[Any] = {}
 
 class MapGeneratorPreviewConfigModel(BaseModel):
     osm_files: List[str]
@@ -52,7 +52,7 @@ class MapGeneratorPreviewConfigModel(BaseModel):
     wanted_categories_and_styles_edit: Any
     styles_zoom_levels: ZoomLevelsModel
     gpxs_groups: Optional[Dict[str, list[str]]] = {}
-    gpxs_styles: Optional[Any] = []
+    gpxs_styles: Optional[Any] = {}
 
 
 class AreaExistenceConfigModel(BaseModel):

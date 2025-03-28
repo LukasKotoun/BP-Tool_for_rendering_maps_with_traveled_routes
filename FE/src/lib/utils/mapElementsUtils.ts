@@ -70,24 +70,24 @@ export function updateWantedElements(originalData: MapElementCategory, updateRul
 }
 
 
-export function transformStructure(data: MapElementCategory, keep_key: string, scale_keys: Record<string, number>): MapElementCategorySend {
+export function transformElementsStructure(data: MapElementCategory, plot_key: string, scale_keys: Record<string, number>): MapElementCategorySend {
 
     const result: MapElementCategorySend = {}
     function isMapElementAttributes(obj: any): obj is MapElementAttributes {
-        return obj && typeof obj === 'object' && keep_key in obj;
+        return obj && typeof obj === 'object' && plot_key in obj;
       }
 
     // Each main category (highway, building...)
     for (const categoryKey in data) {
       const category = data[categoryKey]
 
-      // Check if the category has a keep_key property
+      // Check if the category has a plot_key property
       if (isMapElementAttributes(category)) {
         if (category.plot === true) {
             const newCategory: MapElementAttributesSend = {};
             
           for (const propKey in category) {
-            if (propKey === keep_key || !scale_keys.hasOwnProperty(propKey)) {
+            if (propKey === plot_key || !scale_keys.hasOwnProperty(propKey)) {
               continue
             }
             // Remove attributes with default value
@@ -109,13 +109,13 @@ export function transformStructure(data: MapElementCategory, keep_key: string, s
           const subcategory = category[subcategoryKey]
 
           // Check if subcategory has plot property
-          if (subcategory.hasOwnProperty(keep_key)) {
+          if (subcategory.hasOwnProperty(plot_key)) {
             if (subcategory.plot === true) {
               // keep this subcategory but remove plot property
               const newSubcategory: MapElementAttributesSend = {}
 
               for (const propKey in subcategory) {
-                if (propKey === keep_key || !scale_keys.hasOwnProperty(propKey)) {
+                if (propKey === plot_key || !scale_keys.hasOwnProperty(propKey)) {
                   continue
                 }
                 // Remove scale attributes with value same as default

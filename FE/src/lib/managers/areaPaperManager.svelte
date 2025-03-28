@@ -1,9 +1,9 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { wantedAreas, fitPaperSize, paperDimension, paperDimensionRequest, automaticZoomLevel, areasId, selectedMapFiles } from '$lib/stores/mapStore';
+  import { wantedAreas, fitPaperSize, PaperDimensions, PaperDimensionsRequest, automaticZoomLevel, areasId, selectedMapFiles, avilableMapFiles } from '$lib/stores/mapStore';
   import api from '$lib/axios.config';
   import { checkMapCordinatesFormat, checkFitPaper, parseWantedAreas, numberOfAreaPlots,
-    searchAreaWhisper
+    searchAreaWhisper, checkPaperDimensions
    } from '$lib/utils/areaUtils';
   import { paperSizes, mapDataNamesMappingCZ } from '$lib/constants';
   import { mapValue } from '$lib/utils/mapElementsUtils';
@@ -15,25 +15,6 @@
   let displayedTab = "mapData";
   let debounceTimeout: ReturnType<typeof setTimeout> | null = null;
   let mapFileSearchTerm = '';
-
-    let avilableMapFiles: string[] = []
-    onMount(() => {
-      api.get('/available_osm_files').then((response) => {
-        avilableMapFiles = response.data.osm_files
-        if(avilableMapFiles.includes('cz') && $selectedMapFiles.length == 0){
-          $selectedMapFiles = ["cz"]
-        }else if($selectedMapFiles.length != 0){
-          $selectedMapFiles = $selectedMapFiles.filter(file => avilableMapFiles.includes(file))
-        }
-      }).catch((error) => {
-        alert('Nepodařilo se načíst dostupné mapové soubory - nastaven výchozí soubor pro českou republiku')
-        if($selectedMapFiles.length == 0){
-          $selectedMapFiles = ["cz"]
-        }
-        console.log(error)
-      })
-    })
-  
 
   onMount(() => {
     if($wantedAreas.length === 0){
@@ -49,8 +30,7 @@
    
   });
   
- 
-  // Function to add a new area
+
   function addArea() {
     const newArea: AreaItemStored = {
       id: $areasId++,
@@ -61,25 +41,18 @@
     $wantedAreas = [...$wantedAreas, newArea];
   }
 
-  // Function to remove an area
   function removeArea(id: number) {
     $wantedAreas = $wantedAreas.filter(area => area.id !== id);
   }
 
   function handleSelectedPaperSizeChange(event: Event) {
     const selectedValue = (event.target as HTMLSelectElement).value;
-    const selectedSize = JSON.parse(selectedValue) as PaperDimension; 
-    $paperDimensionRequest.width = selectedSize.width;
-    $paperDimensionRequest.height = selectedSize.height;
+    const selectedSize = JSON.parse(selectedValue) as PaperDimensions; 
+    $PaperDimensionsRequest.width = selectedSize.width;
+    $PaperDimensionsRequest.height = selectedSize.height;
   }
 
-  function checkPaperDimensionRequest(request: PaperDimensionRequest): boolean {
-    if(request.width == null && request.height == null){
-      return false;
-    }
 
-    return true;
-  }
 
   function changeGroupWidth(group: number | undefined, width: number | undefined): void {
     if(group == null || group <= 0 || width == null){
@@ -115,7 +88,7 @@
   function getPaperAndZoom() {
     let parsedAreas
     try{
-      if(!checkPaperDimensionRequest($paperDimensionRequest)){
+      if(!checkPaperDimensions($PaperDimensionsRequest, true)){
         alert("Alespoň jede z rozměrů papíru musí být vyplněn");
         return;
       }
@@ -133,17 +106,17 @@
       settingArea = true
       api.post("/paper_and_zoom", {
         map_area: parsedAreas,
-        paper_dimensions: {width: $paperDimensionRequest.width === undefined ? null : $paperDimensionRequest.width,
-           height: $paperDimensionRequest.height === undefined ? null : $paperDimensionRequest.height}, 
-        given_smaller_paper_dimension: $paperDimensionRequest.given_smaller_dimension,
-        wanted_orientation: $paperDimensionRequest.orientation,
+        paper_dimensions: {width: $PaperDimensionsRequest.width === undefined ? null : $PaperDimensionsRequest.width,
+           height: $PaperDimensionsRequest.height === undefined ? null : $PaperDimensionsRequest.height}, 
+        given_smaller_paper_dimension: $PaperDimensionsRequest.given_smaller_dimension,
+        wanted_orientation: $PaperDimensionsRequest.orientation,
       }, {
         headers: {
           "Content-Type": "application/json"
         }
       }).then(response => {
-        $paperDimension.height = response.data.height;
-        $paperDimension.width = response.data.width;
+        $PaperDimensions.height = response.data.height;
+        $PaperDimensions.width = response.data.width;
         $automaticZoomLevel = response.data.zoom_level;
         settingArea = false
       }).catch(e => {
@@ -165,7 +138,7 @@
 async function getMapBorders() {
     let parsedAreas
     try{
-      if(!checkPaperDimensionRequest($paperDimensionRequest)){
+      if(!checkPaperDimensions($PaperDimensions, false)){
         alert("Alespoň jede z rozměrů papíru musí být vyplněn");
         return;
       }
@@ -189,7 +162,7 @@ async function getMapBorders() {
     
       api.post("/generate_map_borders", {
         map_area: parsedAreas,
-        paper_dimensions: $paperDimension, 
+        paper_dimensions: $PaperDimensions, 
         fit_paper_size: $fitPaperSize
       }, {
         responseType: 'blob',
@@ -228,7 +201,7 @@ async function getMapBorders() {
 
 }
 
-	$: filteredMapFiles = avilableMapFiles.filter(file => 
+	$: filteredMapFiles = $avilableMapFiles.filter(file => 
     (file.toLowerCase().includes(mapFileSearchTerm.toLowerCase()) && 
 		!$selectedMapFiles.includes(file)) || 
     (mapValue(mapDataNamesMappingCZ, file).toLowerCase().includes(mapFileSearchTerm.toLowerCase()) && 
@@ -254,7 +227,7 @@ function debounceSearchArea(query: string, id: number){
     }, 200);
    }
 
-const selectAreaSuggestion = (newAreaValue: string, id: number): void => {
+function selectAreaSuggestion(newAreaValue: string, id: number): void{
   $wantedAreas = $wantedAreas.map(area => 
     area.id === id ? { ...area, area: newAreaValue } : area
     );
@@ -262,7 +235,12 @@ const selectAreaSuggestion = (newAreaValue: string, id: number): void => {
   areaSuggestions = [...areaSuggestions]; // Trigger reactivity
 };
 
+
+
+
+
 </script>
+
 
 
 <div class="container mx-auto p-4">
@@ -482,13 +460,13 @@ const selectAreaSuggestion = (newAreaValue: string, id: number): void => {
       {#if $fitPaperSize.plot}
       <div class="flex flex-col">
         <p class="text-sm font-medium mb-1">Šířka ohraničení (v mm)</p>
-              <input 
-                type="number" 
-                class="border rounded-sm p-2 w-20"
-                min="0.05"
-                step="0.1"
-                bind:value={$fitPaperSize.width} 
-              />
+          <input
+            type="number" 
+            class="border rounded-sm p-2 w-20"
+            min="0.05"
+            step="0.1"
+            bind:value={$fitPaperSize.width} 
+          />
       </div>
       {/if}
       {/if}
@@ -496,7 +474,7 @@ const selectAreaSuggestion = (newAreaValue: string, id: number): void => {
   </div>
 
   {:else if displayedTab == "paper"}
-  <!-- fit paper  -->  
+  <!-- paper  -->  
   <div class="p-4 space-y-4 mt-4 rounded-lg bg-gray-100 ">
     <div class="p-4 flex flex-wrap gap-4 items-end">
      <div class="flex flex-col">
@@ -514,7 +492,7 @@ const selectAreaSuggestion = (newAreaValue: string, id: number): void => {
       <input
         type="number"
         class="border rounded-sm p-2 w-20"
-        bind:value={$paperDimensionRequest.width}
+        bind:value={$PaperDimensionsRequest.width}
         min="10"
         step="10"
       />
@@ -524,7 +502,7 @@ const selectAreaSuggestion = (newAreaValue: string, id: number): void => {
         <input
         type="number"
         class="border rounded-sm p-2 w-20"
-        bind:value={$paperDimensionRequest.height}
+        bind:value={$PaperDimensionsRequest.height}
         min="10"
         step="10"
       />
@@ -533,21 +511,21 @@ const selectAreaSuggestion = (newAreaValue: string, id: number): void => {
       <p class="text-sm font-medium mb-1">Orientace papíru</p>
       <select
         class="border rounded-sm p-2 w-40"
-        bind:value={$paperDimensionRequest.orientation}
+        bind:value={$PaperDimensionsRequest.orientation}
       >
         <option value="automatic">Automatická</option>
         <option value="portrait">Na výšku</option>
         <option value="landscape">Na šířku</option>
       </select>
     </div>
-    {#if $paperDimensionRequest.width == null || $paperDimensionRequest.height == null}
+    {#if $PaperDimensionsRequest.width == null || $PaperDimensionsRequest.height == null}
     <div class="flex flex-col">
       <p class="text-sm font-medium mb-1">Zadán menší rozměr papíru</p>
         <div class="h-10 flex items-center">
           <input 
             type="checkbox" 
             class="h-5 w-5 items-center rounded-lg"
-            bind:checked={$paperDimensionRequest.given_smaller_dimension} 
+            bind:checked={$PaperDimensionsRequest.given_smaller_dimension} 
           />
         </div>
     </div>
@@ -555,40 +533,42 @@ const selectAreaSuggestion = (newAreaValue: string, id: number): void => {
     
   </div>
     
-
   <div class="p-4">
     <p class="text-md font-medium mb-1">
-    Výsledná velikost papíru: {$paperDimension.width}mm x {$paperDimension.height}mm (šířka x výška)
+      Výsledná velikost papíru: {$PaperDimensions.width}mm x {$PaperDimensions.height}mm (šířka x výška)
       </p>
   </div>
-  <div class="p-4 flex justify-end">
-    <button 
-    class="bg-blue-500  hover:bg-blue-600 text-white px-8 py-4 rounded-lg ml-4"
-    class:bg-gray-500={settingArea}
-    class:hover:bg-gray-600={settingArea}
-    on:click={getPaperAndZoom}
-    disabled = {settingArea}
-  >
-   Nastavit oblasti a papír
-  </button>
-</div>
+
     </div>
-    <div class = "flex justify-end">
-      {#if $paperDimension.width > 0 && $paperDimension.height > 0}
-      <button 
-        class="text-white px-4 py-2 rounded-sm ml-4 mt-4"
-        class:bg-green-500={!gettingMapBorders}
-        class:hover:bg-green-600={!gettingMapBorders}
-        class:bg-gray-500={gettingMapBorders}
-        class:hover:bg-gray-600={gettingMapBorders}
-        on:click={getMapBorders}
-        disabled={gettingMapBorders}
-      >
-        Prohlédnou okraje oblastí <br>(vytvořit PDF)
-    </button>
-    {/if}
-    
-      
-  </div>
+  
   {/if}
+
+    <div class = "flex justify-end">
+      {#if displayedTab == "paper" || displayedTab == "area"}
+      <div class="p-4 flex justify-end">
+        <button 
+          class="bg-blue-500  hover:bg-blue-600 text-white px-8 py-4 rounded-lg ml-4"
+          class:bg-gray-500={settingArea}
+          class:hover:bg-gray-600={settingArea}
+          on:click={getPaperAndZoom}
+          disabled = {settingArea}
+          >
+            Nastavit oblasti a papír
+        </button>
+      </div>
+      {#if $PaperDimensions.width > 0 && $PaperDimensions.height > 0}
+        <button 
+          class="text-white px-4 py-2 rounded-lg ml-4 mt-4"
+          class:bg-green-500={!gettingMapBorders}
+          class:hover:bg-green-600={!gettingMapBorders}
+          class:bg-gray-500={gettingMapBorders}
+          class:hover:bg-gray-600={gettingMapBorders}
+          on:click={getMapBorders}
+          disabled={gettingMapBorders}
+        >
+          Prohlédnou okraje oblastí <br>(vytvořit PDF)
+      </button>
+    {/if}  
+    {/if}
+</div>
 </div>

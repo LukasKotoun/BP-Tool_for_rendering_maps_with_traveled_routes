@@ -151,7 +151,7 @@
         formData.append("config", data)
 
         try {
-          const response = await fetch("http://localhost:8000/generate-map-preview/", {
+          const response = await fetch("http://localhost:8000/generate_map_preview/", {
             method: "POST",
 
             body: formData
@@ -186,7 +186,7 @@
         formData.append("config", data)
 
         try {
-          const response = await fetch("http://localhost:8000/generate-map-normal/", {
+          const response = await fetch("http://localhost:8000/generate_map_normal/", {
             method: "POST",
 
             body: formData

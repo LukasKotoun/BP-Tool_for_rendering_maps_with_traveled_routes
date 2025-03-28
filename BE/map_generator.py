@@ -227,8 +227,8 @@ def generate_map_borders(config: MapBorderConfigModel):
     )
 
 
-@server_app.post("/generate-map-normal", response_model=GeneratorResponseStatusModel)
-async def generate_map_normal(background_tasks: BackgroundTasks, gpxs: Optional[List[UploadFile]] = File(None),
+@server_app.post("/generate_map_normal", response_model=GeneratorResponseStatusModel)
+async def generate_normal_map(background_tasks: BackgroundTasks, gpxs: Optional[List[UploadFile]] = File(None),
                         config: str = Form(...)):
     if(task_manager.get_normal_queue_length() >= MAX_QUEUE_SIZE_NORMAL):
         raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="Server is busy, try again later")
@@ -322,7 +322,7 @@ async def generate_map_normal(background_tasks: BackgroundTasks, gpxs: Optional[
     return {"message": "Map is generating", "token": access_token, "status": task_status}
 
 
-@server_app.post("/generate-map-preview", response_model=GeneratorResponseStatusModel)
+@server_app.post("/generate_map_preview", response_model=GeneratorResponseStatusModel)
 async def generate_preview_map(background_tasks: BackgroundTasks, gpxs: Optional[List[UploadFile]] = File(None),
                          config: str = Form(...)):
     if(task_manager.get_preview_queue_length() >= MAX_QUEUE_SIZE_PREVIEW):
@@ -345,10 +345,9 @@ async def generate_preview_map(background_tasks: BackgroundTasks, gpxs: Optional
         ReceivedStructureProcessor.validate_wanted_elements_and_styles(
             config.wanted_categories_and_styles_edit, ALLOWED_WANTED_ELEMENTS_STRUCTURE, FE_EDIT_STYLES_VALIDATION)
         ReceivedStructureProcessor.validate_fit_paper(config.fit_paper_size, FIT_PAPER_VALIDATION)
-        
         gpxs_styles = ReceivedStructureProcessor.validate_and_convert_gpx_styles(
             config.gpxs_styles, GPX_NORMAL_COLUMNS, GPX_GENERAL_KEYS, GPX_STYLES_VALIDATION, GPX_STYLES_MAPPING)
-
+    
         map_area = ReceivedStructureProcessor.validate_and_convert_areas_strucutre(
             config.map_area, REQ_AREA_DICT_KEYS, REQ_AREAS_MAPPING_DICT, key_with_area=REQ_AREA_KEY_WITH_AREA)
 

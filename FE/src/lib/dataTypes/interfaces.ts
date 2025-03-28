@@ -13,14 +13,14 @@ interface AreaItemSend {
   group?: number;
 }
 
-interface PaperDimensionRequest {
+interface PaperDimensionsRequest {
   width?: number;
   height?: number;
   orientation: "portrait" | "landscape" | "automatic";
   given_smaller_dimension?: boolean;
 }
 
-interface PaperDimension {
+interface PaperDimensions {
   width: number;
   height: number;
 }

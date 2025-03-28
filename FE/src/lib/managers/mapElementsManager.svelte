@@ -1,13 +1,11 @@
 <script lang="ts"> 
     import { mapNodesElements, mapWaysElements, mapAreasElements, automaticZoomLevel, mapElementsZoomDesign,
        mapElementsWantedZoom, peaksFilterSensitivity, minPopulationFilter, wantPlotBridges, wantPlotTunnels,
-       selectedMapTheme } from '$lib/stores/mapStore';
+       selectedMapTheme, avilableMapThemes } from '$lib/stores/mapStore';
     import { mapValue, updateWantedElements, resetPlotSettings } from '$lib/utils/mapElementsUtils';
     import { nodesKeysNamesMappingCZ, nodesNamesMappingCZ, waysKeysNamesMappingCZ, waysNamesMappingCZ,
        areasKeysNamesMappingCZ, areasNamesMappingCZ, numberOfZoomLevels, wantedNodesUpdatesZooms,
        wantedWaysUpdatesZooms, wantedAreasUpdatesZooms } from '$lib/constants';
-  import { onMount } from 'svelte'
-  import api from '$lib/axios.config'
     const multiplierMin = 0.1
     const multiplierMax = 4
     let displayedCategory = 'nodes'
@@ -15,26 +13,6 @@
     function hasDirectPlot(obj: any): obj is MapElementAttributes {
       return obj && typeof obj === 'object' && 'plot' in obj;
     }
-
-    //always available map theme is mapycz
-    let avilableMapThemes: string[] = []
-    onMount(() => {
-      api.get('/available_map_themes').then((response) => {
-        avilableMapThemes = response.data.map_themes
-        if($selectedMapTheme == "" && avilableMapThemes.includes('mapycz')){
-          $selectedMapTheme = "mapycz"
-        }else if($selectedMapTheme != "" && !avilableMapThemes.includes($selectedMapTheme)){
-          if(avilableMapThemes.length > 0){
-            $selectedMapTheme = avilableMapThemes[0]
-        }
-      }
-      }).catch((error) => {
-        alert('Nepodařilo se načíst dostupné mapové podklady - nastaven výchozí podklad mapycz')
-        $selectedMapTheme = "mapycz"
-        avilableMapThemes = ["mapycz"]
-        console.log(error)
-      })
-    })
 
     function setNodesForZoom(zoomLevel: number){
       let restartedData = resetPlotSettings($mapNodesElements, 'plot')
@@ -137,7 +115,7 @@
 
         <div class="flex flex-col">
           <p class="text-md font-medium mb-1">Styly mapového podkladu</p>
-          {#if avilableMapThemes.length == 0}
+          {#if $avilableMapThemes.length == 0}
             <p>Žádné načtené mapového podklady</p>
           {:else}
             <select
@@ -145,7 +123,7 @@
             bind:value={$selectedMapTheme}
           >
           
-            {#each avilableMapThemes as map_themes}
+            {#each $avilableMapThemes as map_themes}
               <option value={map_themes}>{map_themes}</option>
             {/each}
         </select>

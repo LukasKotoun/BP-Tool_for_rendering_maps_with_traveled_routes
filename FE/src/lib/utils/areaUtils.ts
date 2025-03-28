@@ -31,6 +31,20 @@ export function checkMapCordinatesFormat(input: string): string {
     }
   }
 
+export function checkPaperDimensions(request: PaperDimensionsRequest | PaperDimensions, allow_one_dimension_only: boolean = false): boolean {
+  if(allow_one_dimension_only){
+    if(request.width == null && request.height == null || request.width == 0 && request.height == 0){
+      return false;
+    }
+  }
+  else{
+    if(request.width == null || request.height == null || request.width == 0 || request.height == 0){
+      return false;
+    }
+  }
+  return true;
+}
+
 export function checkFitPaper(fitPaperSize: FitPaperSize): boolean {
     if(fitPaperSize.plot == true && fitPaperSize.width == null){
       return false;
