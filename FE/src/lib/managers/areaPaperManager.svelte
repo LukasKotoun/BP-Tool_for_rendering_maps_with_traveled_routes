@@ -17,9 +17,10 @@
   import { Trash2, CirclePlus } from '@lucide/svelte';
   import InfoToolTip from '$lib/components/infoToolTip.svelte';
   import LoadingSpinner from '$lib/components/loadingSpinner.svelte';
+
   let areaSuggestions: string[][] = [];
   const defaultWidth = 0.45;
-
+  let numberOfAreasPlotVar = 0;
 
   let debounceTimeout: ReturnType<typeof setTimeout> | null = null;
   let mapFileSearchTerm = '';
@@ -37,7 +38,6 @@
     }
   });
   
-
   function addArea() {
     const newArea: AreaItemStored = {
       id: $areasId++,
@@ -60,7 +60,6 @@
   }
 
 
-
   function changeGroupWidth(group: number | undefined, width: number | undefined): void {
     if(group == null || group <= 0 || width == null){
       return;
@@ -69,7 +68,6 @@
       area.group != null && area.group > 0 && area.group === group ? { ...area, width: width } : area
       );
   }
-
 
   function getJoinedGroupWidth(group: number | undefined, myWidth: number | undefined, myId: number): number {
     if(myWidth == null){
@@ -250,7 +248,6 @@ function selectAreaSuggestion(newAreaValue: string, id: number): void{
   areaSuggestions[id] = [];
   areaSuggestions = [...areaSuggestions]; // Trigger reactivity
 };
-let numberOfAreasPlotVar = 0;
 $:{
   numberOfAreasPlotVar = numberOfAreaPlots($wantedAreas);
 }
@@ -356,7 +353,10 @@ $:{
             areaSuggestions[area.id] = [];
             areaSuggestions = [...areaSuggestions];
           }}>
-            <p class="text-sm font-medium mb-1">Oblast</p>
+            <p class="text-sm font-medium mb-1">Oblast <InfoToolTip 
+              text="Zadajte názve oblasti, nebo souřadnice ve formátu 'zeměpisná šiřka,zeměpisná delka;šiřka,delka;šiřka,delka' (např. 14.4378,50.0755; 14.4379,50.0756)"
+              position="right"
+              size="sm"/></p>
             <input
               type="text" 
               class="border rounded-sm p-2 w-60"
@@ -614,10 +614,10 @@ $:{
             Nastavit oblasti a papír
         </button>
       </div>
-      {#if $paperDimensions.width > 0 && $paperDimensions.height > 0}
+      {#if checkPaperDimensions($paperDimensions, false) && checkFitPaper($fitPaperSize) && (parseWantedAreas($wantedAreas).length > 0)}
         <button 
           class="text-white px-4 py-2 rounded-lg ml-4 mt-4"
-          class:bg-green-500={!$gettingMapBorders}
+          class:bg-green-500={!$gettingMapBorders }
           class:hover:bg-green-600={!$gettingMapBorders}
           class:bg-gray-500={$gettingMapBorders}
           class:hover:bg-gray-600={$gettingMapBorders}
@@ -627,7 +627,7 @@ $:{
           <LoadingSpinner isVisible={$gettingMapBorders} />
           Prohlédnou okraje oblastí <br>(vytvořit PDF)
       </button>
-    {/if}  
+      {/if}
     {/if}
 </div>
 </div>

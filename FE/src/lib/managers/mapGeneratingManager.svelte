@@ -1,10 +1,9 @@
 <script lang="ts">
     import { wantedAreas, areasPreviewId, wantedPreviewAreas, paperPreviewDimensions, fitPaperSize, paperDimensions,
         wantPlotBridges, wantPlotTunnels, peaksFilterSensitivity, minPopulationFilter, mapNodesElements, mapWaysElements, mapAreasElements,
-        selectedMapTheme, selectedMapFiles, gpxFiles, gpxFileGroups, gpxStyles, mapElementsZoomDesign, } from '$lib/stores/mapStore';
+        selectedMapTheme, selectedMapFiles, gpxFiles, gpxFileGroups, gpxStyles, mapElementsZoomDesign } from '$lib/stores/mapStore';
     
     import { displayedTabMapGenerating } from '$lib/stores/frontendStore';
-
     import { paperSizes, mapGeneratingStatusMappingCZ } from '$lib/constants';
     import { checkMapCordinatesFormat, checkFitPaper, parseWantedAreas, searchAreaWhisper, checkPaperDimensions } from '$lib/utils/areaUtils';
     import { getUngrupedFiles } from '$lib/utils/gpxFilesUtils';
@@ -98,8 +97,8 @@
         try{
             if(preview){
                 if(!checkPaperDimensions($paperPreviewDimensions, false)){
-                    alert("Rozměry náhledového papíru musí být vyplněny");
                     isGenerating = false
+                    alert("Rozměry náhledového papíru musí být vyplněny");
                     return;
                 }
                 parsedPreviewAreas = parseWantedAreas($wantedPreviewAreas);
@@ -109,8 +108,8 @@
 
             }
             if(!checkPaperDimensions($paperDimensions, false)){
-                alert("Rozměry papíru musí být vyplněny");
                 isGenerating = false
+                alert("Rozměry papíru musí být vyplněny");
                 return;
             }
 
@@ -184,11 +183,16 @@
             status = response.data.status
             startPollingTaskInfo()
         }).catch((error) => {
-            alert("Chyba při odesílání dat na server")
             status = ""
             isGenerating = false
             jwtToken = ""
             console.error(error)
+            if(error.response && error.response.status === 429){
+                alert("Server je momentálně přetížen, zkuste to prosím později (jo ale šekej)")
+            }
+            else{
+                alert("Chyba při odesílání dat na server")
+            }
         })
     }
 

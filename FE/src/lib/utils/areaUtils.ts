@@ -33,12 +33,12 @@ export function checkMapCordinatesFormat(input: string): string {
 
 export function checkPaperDimensions(request: PaperDimensionsRequest | PaperDimensions, allow_one_dimension_only: boolean = false): boolean {
   if(allow_one_dimension_only){
-    if(request.width == null && request.height == null || request.width == 0 && request.height == 0){
+    if(request.width == null && request.height == null || request.width <= 0 && request.height <= 0){
       return false;
     }
   }
   else{
-    if(request.width == null || request.height == null || request.width == 0 || request.height == 0){
+    if(request.width == null || request.height == null || request.width <= 0 || request.height <= 0){
       return false;
     }
   }
@@ -54,58 +54,61 @@ export function checkFitPaper(fitPaperSize: FitPaperSize): boolean {
 
 // Function to parse coordinates string into array
 export function parseWantedArea(input: string): number[][] | string {
-if(!input.includes(';')){
-    return input
-}
+  if(!input.includes(';')){
+      return input
+  }
 
-const pairs = input.trim().split(';');
+  const pairs = input.trim().split(';');
 
-// Check if this might be a single coordinate without semicolons
-if (pairs.length === 1 && !pairs[0].includes(',')) {
-throw new Error("Invalid format: coordinates must be pairs of x,y values");
-}
+  // Check if this might be a single coordinate without semicolons
+  if (pairs.length === 1 && !pairs[0].includes(',')) {
+    throw new Error("Invalid format: coordinates must be pairs of x,y values");
+  }
 
-let coordinates = pairs.map(pair => {
-const values = pair.split(',');
+  let coordinates = pairs.map(pair => {
+  const values = pair.split(',');
 
-if (values.length !== 2) {
-    throw new Error(`Invalid coordinate pair: ${pair} - must have exactly two values separated by comma`);
-}
+  if (values.length !== 2) {
+      throw new Error(`Invalid coordinate pair: ${pair} - must have exactly two values separated by comma`);
+  }
 
-const x = parseFloat(values[0]);
-const y = parseFloat(values[1]);
+  const x = parseFloat(values[0]);
+  const y = parseFloat(values[1]);
 
-if (isNaN(x) || isNaN(y)) {
-    throw new Error(`Invalid numbers in pair: ${pair}`);
-}
+  if (isNaN(x) || isNaN(y)) {
+      throw new Error(`Invalid numbers in pair: ${pair}`);
+  }
 
-return [x, y];
-});
+  return [x, y];
+  });
 
-if(coordinates.length < 3){
-throw new Error("Area polygon must have at least 3 points");
-}
-return coordinates;
+  if(coordinates.length < 3){
+  throw new Error("Area polygon must have at least 3 points");
+  }
+  return coordinates;
 
 }
   
 // Function to get output without IDs
-export function parseWantedAreas(areas: AreaItemStored[]): AreaItemSend[] 
-    {
+export function parseWantedAreas(areas: AreaItemStored[]): AreaItemSend[]{
     // remove id and parse area if have cordinates
     let areasParsed = areas.map(area => {
-    if(area.area.trim() !== ""){
-        const {id, ...rest} = area
+      if(area.area.trim() !== ""){
+          const {id, ...rest} = area
 
-        let parsedArea = parseWantedArea(area.area);
-        return {
-        ...rest,
-        area: parsedArea
-        };
-    }else{
-        return null;
-    }}).filter(area => area !== null);
-
+          try{
+            let parsedArea = parseWantedArea(area.area);
+            return {
+              ...rest,
+              area: parsedArea
+            };
+          } catch (error) {
+            return null;
+          }
+      }else{
+          return null;
+      }
+  }).filter(area => area !== null);
     return areasParsed;
 }
 

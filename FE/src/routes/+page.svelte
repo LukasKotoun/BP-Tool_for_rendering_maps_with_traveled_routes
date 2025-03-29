@@ -3,6 +3,7 @@
   import AreaPaperManager from "$lib/managers/areaPaperManager.svelte";
   import GpxManager from "$lib/managers/gpxManager.svelte";
   import MapGeneratingManager from "$lib/managers/mapGeneratingManager.svelte";
+  import { checkFitPaper, parseWantedAreas, checkPaperDimensions } from '$lib/utils/areaUtils';
   import { onMount } from 'svelte';
   import api from '$lib/axios.config'
   import { Save, Upload, ChevronLeft, ChevronRight} from '@lucide/svelte';
@@ -36,6 +37,7 @@
     avilableMapThemes, avilableMapFiles} from '$lib/stores/frontendStore';
 
   let displayedTab = "areaPaper"
+  let canGoToNextPageBool = false
 
    onMount(() => {
       api.get('/available_map_themes').then((response) => {
@@ -168,6 +170,18 @@
     if(data.mapAreasElements != null){
       $mapAreasElements = data.mapAreasElements
     }
+    if(data.mapElementsZoomDesign != null){
+      $mapElementsZoomDesign = data.mapElementsZoomDesign
+    }
+    if(data.mapElementsWantedZoom != null){
+      $mapElementsWantedZoom = data.mapElementsWantedZoom
+    }
+    if(data.gpxFileGroups != null){
+      $gpxFileGroups = data.gpxFileGroups
+    }
+    if(data.gpxStyles != null){
+      $gpxStyles = data.gpxStyles
+    }
     if(data.selectedMapTheme != null){ 
       //check if selectedMapTheme is in available map themes
       if($avilableMapThemes.includes(data.selectedMapTheme)){
@@ -188,18 +202,6 @@
         }
       }
     }
-    if(data.mapElementsZoomDesign != null){
-      $mapElementsZoomDesign = data.mapElementsZoomDesign
-    }
-    if(data.mapElementsWantedZoom != null){
-      $mapElementsWantedZoom = data.mapElementsWantedZoom
-    }
-    if(data.gpxFileGroups != null){
-      $gpxFileGroups = data.gpxFileGroups
-    }
-    if(data.gpxStyles != null){
-      $gpxStyles = data.gpxStyles
-    }
   }
 
   function loadJsonObjectFromFile(event: Event) {
@@ -218,9 +220,9 @@
         } catch (error) {
           console.error("Json parsing error", error);
           alert("Nepodařilo se načíst nastavení ze souboru. Zkontrolujte formát JSON.");
-        } finally {
         }
       };
+      
       reader.onerror = () => {
         alert('Error reading file');
       };
@@ -231,7 +233,40 @@
     }
     input.value = '';
   }
-  function handleNext(){
+
+  $: {
+    displayedTab
+    $fitPaperSize
+    $paperDimensions
+    $wantedAreas
+    $selectedMapFiles
+    canGoToNextPageBool = canGoToNextPage() == ""
+  }
+
+  function canGoToNextPage(): string{
+    if(displayedTab == "areaPaper"){
+      if($selectedMapFiles.length === 0){
+        return "Musí být vybrány alespoň jedny mapové data";
+      }
+      if(parseWantedAreas($wantedAreas).length === 0){
+        return "Musí být zadána alespoň jedna oblast";
+      }
+      if(!checkFitPaper($fitPaperSize)){
+          return "Šířka ohraničení vyplněné oblasti musí být vyplněna";
+      }
+      if(!checkPaperDimensions($paperDimensions, false)){
+        return "Rozměry papíru musí být vyplněny (pomocí 'Nastavit oblasti a papíru')"
+      }
+    }
+    return ""
+  }
+
+  function handleNext(): void{
+    let alertMessage = canGoToNextPage()
+    if(alertMessage != ""){
+      alert(alertMessage)
+      return
+    }
     if(displayedTab == "areaPaper"){
       displayedTab = "gpx"
     }else if(displayedTab == "gpx"){
@@ -241,7 +276,7 @@
     }
   }
 
-  function handlePrevious(){
+  function handlePrevious(): void{
     if(displayedTab == "gpx"){
       displayedTab = "areaPaper"
     }else if(displayedTab == "mapElements"){
@@ -263,15 +298,16 @@
         Uložit nastavení
       </div>
     </button>
+  {#if displayedTab == "areaPaper"}
     <button 
-  class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-  on:click={() => document.getElementById('file-input').click()}>
-
-  <div class="flex items-center">
-    <Upload class="w-5 h-5 mr-2" />
-    Nahrát nastavení
-  </div>
-</button>
+    class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+    on:click={() => document.getElementById('file-input').click()}>
+      <div class="flex items-center">
+        <Upload class="w-5 h-5 mr-2" />
+        Nahrát nastavení
+    </div>
+    </button>
+  {/if}
 
 <input 
   id="file-input" 
@@ -311,7 +347,7 @@
               "inline-block p-4 border-b-2 border-transparent rounded-t-lg"}
                class:dark:text-gray-400={['areaPaper', 'gpx', 'mapElements'].includes(displayedTab)}
               on:click={() => displayedTab = "generating"}>
-              Vygenerování mapy
+                Vygenerování mapy
       </button>
     </div>   
   </div>
@@ -341,6 +377,8 @@
     {#if displayedTab != "generating"}
     <button 
       class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+      class:bg-gray-400={!canGoToNextPageBool}
+      class:hover:bg-gray-400={!canGoToNextPageBool}
       on:click={handleNext}
     >
       <div class="flex items-center">
