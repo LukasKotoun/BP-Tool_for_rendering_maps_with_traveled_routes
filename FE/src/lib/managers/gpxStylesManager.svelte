@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { gpxStyles } from '$lib/stores/mapStore';
+    import { gpxStyles, displayedTabGpxGroupsStyle } from '$lib/stores/mapStore';
     import { gpxDefaultStyles, LINESTYLES, CAPSTYLES, 
             MARKER_LAYER_POSITIONS, MARKERS, CAPSTYLE_MAPPING_CZ, MARKER_MAPPING_CZ, MARKER_LAYER_POSITION_MAPPING_CZ
      } from '$lib/constants';
@@ -10,7 +10,6 @@
     const maxRatio=5;
     const maxAlpha=1;
     
-    let selectedGroup = 'default';
     
     let defaultColor = JSON.parse(JSON.stringify(gpxDefaultStyles)).color
     function resetGroupToDefault(groupName: string) {
@@ -24,16 +23,16 @@
         <div class="flex flex-wrap -mb-px">
             {#each Object.entries($gpxStyles.group) as [groupName, styles]}
               <button 
-               class= {selectedGroup == groupName ? "inline-block p-4 text-black  border-b-2 border-blue-600 rounded-t-lg ":
+               class= {$displayedTabGpxGroupsStyle == groupName ? "inline-block p-4 text-black  border-b-2 border-blue-600 rounded-t-lg ":
                       "inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300 "}
-                      on:click={() => selectedGroup = groupName}>
+                      on:click={() => $displayedTabGpxGroupsStyle = groupName}>
                       {groupName != 'default' ? groupName : 'Nezařazené'}
               </button>
               {/each}
         </div>
       </div>
       {#each Object.entries($gpxStyles.group) as [groupName, styles]}
-        {#if selectedGroup == groupName}
+        {#if $displayedTabGpxGroupsStyle == groupName}
         <div class="mx-auto bg-white shadow-md rounded-lg p-6">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <!-- Main Line Attributes -->

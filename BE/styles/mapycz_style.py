@@ -72,27 +72,25 @@ SPECIAL_WAYS_CUMULATIVE_SIZE = Utils.cumulative_zoom_size_multiplier({
 
 GPXS_STYLES_SCALE = []
 gpxs_styles_default: ElementStyles = [
-    ([], {
-        Style.COLOR.value: 'Red', Style.WIDTH.value: 1.3,
-        Style.ALPHA.value: 0.7, Style.ZINDEX.value: 0, Style.EDGE_ALPHA.value: 0.7,
-        Style.EDGE_COLOR.value: None, Style.EDGE_WIDTH_RATIO.value: 0.15,
-        Style.EDGE_LINESTYLE.value: "-", Style.EDGE_CAPSTYLE.value: LineCupStyles.BUTT.value,
-        Style.LINESTYLE.value: "-", Style.LINE_CAPSTYLE.value: LineCupStyles.ROUND.value,
+    # ([], {
+    #     Style.COLOR.value: 'Red', Style.WIDTH.value: 1.3,
+    #     Style.ALPHA.value: 0.7, Style.ZINDEX.value: 0, Style.EDGE_ALPHA.value: 0.7,
+    #     Style.EDGE_COLOR.value: None, Style.EDGE_WIDTH_RATIO.value: 0.15,
+    #     Style.EDGE_LINESTYLE.value: "-", Style.EDGE_CAPSTYLE.value: LineCupStyles.BUTT.value,
+    #     Style.LINESTYLE.value: "-", Style.LINE_CAPSTYLE.value: LineCupStyles.ROUND.value,
 
-        Style.START_MARKER_WIDTH.value: 5, Style.START_MARKER_EDGE_RATIO.value: 0.1,
-        Style.START_MARKER_COLOR.value: "#18ac0d", Style.START_MARKER_EDGE_COLOR.value: "#FFFFFF", Style.START_MARKER_ALPHA.value: 1.0,
+    #     Style.START_MARKER_WIDTH.value: 5, Style.START_MARKER_EDGE_RATIO.value: 0.1,
+    #     Style.START_MARKER_COLOR.value: "#18ac0d", Style.START_MARKER_EDGE_COLOR.value: "#FFFFFF", Style.START_MARKER_ALPHA.value: 1.0,
 
-        Style.FINISH_MARKER_WIDTH.value: 5, Style.FINISH_MARKER_EDGE_RATIO.value: 0.1,
-        Style.FINISH_MARKER_COLOR.value: "#000000", Style.FINISH_MARKER_EDGE_COLOR.value: "#FFFFFF", Style.FINISH_MARKER_ALPHA.value: 1.0,
+    #     Style.FINISH_MARKER_WIDTH.value: 5, Style.FINISH_MARKER_EDGE_RATIO.value: 0.1,
+    #     Style.FINISH_MARKER_COLOR.value: "#000000", Style.FINISH_MARKER_EDGE_COLOR.value: "#FFFFFF", Style.FINISH_MARKER_ALPHA.value: 1.0,
         
-        Style.GPX_ABOVE_TEXT.value: False, Style.MARKER_LAYER_POSITION.value: MarkerPosition.UNDER_TEXT_OVERLAP.value
-    })
+    #     Style.GPX_ABOVE_TEXT.value: False, Style.MARKER_LAYER_POSITION.value: MarkerPosition.UNDER_TEXT_OVERLAP.value
+    # })
 ]
 
 GPXS_STYLES: ElementStyles = [
-    # *folders_styles,  # folder must be first - folder have only some byt file name have all - file name will have only some
-    # *root_files_styles,
-    *gpxs_styles_default,
+   # *gpxs_styles_default,
 ]
 
 

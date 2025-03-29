@@ -1,12 +1,11 @@
 <script lang="ts">
-    import { gpxFiles, gpxFileGroups } from '$lib/stores/mapStore';
+    import { gpxFiles, gpxFileGroups, displayedTabGpxFiles } from '$lib/stores/mapStore';
     import { FileX, FileText, FileUp } from '@lucide/svelte';
     import GpxStylesManager from '$lib/managers/gpxStylesManager.svelte';
     import GpxGroupsManager from './gpxGroupsManager.svelte';
 
     let fileInput: HTMLInputElement;
     let dragOver = false;
-    let displayedTab = 'upload'
 
     function handleFileSelect(event: Event) {
       const input = event.target as HTMLInputElement;
@@ -48,26 +47,26 @@
       <div class="text-md text-center text-gray-500 border-b border-gray-200 dark:text-gray-400 dark:border-gray-700">
         <div class="flex flex-wrap -mb-px">
               <button 
-               class= { displayedTab == "upload" ? "inline-block p-4 text-black  border-b-2 border-blue-600 rounded-t-lg ":
+               class= { $displayedTabGpxFiles == "upload" ? "inline-block p-4 text-black  border-b-2 border-blue-600 rounded-t-lg ":
                       "inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300 "}
-                      on:click={() => displayedTab = "upload"}>
+                      on:click={() => $displayedTabGpxFiles = "upload"}>
                       Nahrání tras (gpx)
               </button>
               <button 
-               class= { displayedTab == "group" ? "inline-block p-4 text-black  border-b-2 border-blue-600 rounded-t-lg ":
+               class= { $displayedTabGpxFiles == "group" ? "inline-block p-4 text-black  border-b-2 border-blue-600 rounded-t-lg ":
                       "inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300 "}
-                      on:click={() => displayedTab = "group"}>
+                      on:click={() => $displayedTabGpxFiles = "group"}>
                       Skupiny
               </button>
-              <button  class= { displayedTab == "style" ? "inline-block p-4 text-black  border-b-2 border-blue-600 rounded-t-lg":
+              <button  class= { $displayedTabGpxFiles == "style" ? "inline-block p-4 text-black  border-b-2 border-blue-600 rounded-t-lg":
                       "inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300 "}
-                      on:click={() => displayedTab = "style"}>
+                      on:click={() => $displayedTabGpxFiles = "style"}>
                       Vzhled
               </button>
              
         </div>
       </div>
-    {#if displayedTab == "upload"}
+    {#if $displayedTabGpxFiles == "upload"}
     <div class="space-y-4 rounded-lg bg-gray-100 ">
       <div class="p-4 flex flex-wrap gap-4 items-start">
             <div 
@@ -131,9 +130,9 @@
             </div>
         </div>
       </div>
-    {:else if displayedTab == "group"}
+    {:else if $displayedTabGpxFiles == "group"}
     <GpxGroupsManager />
-    {:else if displayedTab == "style"}
+    {:else if $displayedTabGpxFiles == "style"}
     <GpxStylesManager />
     {/if}
 

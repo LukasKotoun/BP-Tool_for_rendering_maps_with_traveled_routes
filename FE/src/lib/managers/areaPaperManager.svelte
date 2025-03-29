@@ -1,7 +1,8 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { wantedAreas, fitPaperSize, paperDimensions, paperDimensionsRequest, automaticZoomLevel, areasId, selectedMapFiles, avilableMapFiles,
-    mapElementsZoomDesign, mapElementsWantedZoom, automaticZoomLevelChangedElements
+    mapElementsZoomDesign, mapElementsWantedZoom, automaticZoomLevelChangedElements, displayedTabMapAreas,
+
    } from '$lib/stores/mapStore';
   import api from '$lib/axios.config';
   import { checkMapCordinatesFormat, checkFitPaper, parseWantedAreas, numberOfAreaPlots,
@@ -15,7 +16,6 @@
   const defaultWidth = 0.45;
   let settingArea = false;
   let gettingMapBorders = false;
-  let displayedTab = "mapData";
   let debounceTimeout: ReturnType<typeof setTimeout> | null = null;
   let mapFileSearchTerm = '';
 
@@ -258,24 +258,24 @@ $:{
 <div class="container mx-auto p-4">
   <div class="flex flex-wrap -mb-px">
     <button 
-     class= { displayedTab == "mapData" ? "inline-block p-4 text-black  border-b-2 border-blue-600 rounded-t-lg ":
+     class= { $displayedTabMapAreas == "mapData" ? "inline-block p-4 text-black  border-b-2 border-blue-600 rounded-t-lg ":
             "inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300 "}
-            on:click={() => displayedTab = "mapData"}>
+            on:click={() => $displayedTabMapAreas = "mapData"}>
             Mapová dat
     </button>
     <button 
-     class= { displayedTab == "area" ? "inline-block p-4 text-black  border-b-2 border-blue-600 rounded-t-lg ":
+     class= { $displayedTabMapAreas == "area" ? "inline-block p-4 text-black  border-b-2 border-blue-600 rounded-t-lg ":
             "inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300 "}
-            on:click={() => displayedTab = "area"}>
+            on:click={() => $displayedTabMapAreas = "area"}>
             Oblasti
     </button>
-    <button  class= { displayedTab == "paper" ? "inline-block p-4 text-black  border-b-2 border-blue-600 rounded-t-lg":
+    <button  class= { $displayedTabMapAreas == "paper" ? "inline-block p-4 text-black  border-b-2 border-blue-600 rounded-t-lg":
             "inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300 "}
-            on:click={() => displayedTab = "paper"}>
+            on:click={() => $displayedTabMapAreas = "paper"}>
             Papír
     </button>
   </div>
-  {#if displayedTab == "mapData"}
+  {#if $displayedTabMapAreas == "mapData"}
   <div class="space-y-4 p-4 rounded-lg bg-gray-100 ">
     <div class="p-2 flex flex-wrap gap-4 items-start">
       <h2 class="text-xl font-bold mb-2">Vybraná mapová data: </h2>
@@ -327,7 +327,7 @@ $:{
     </div>
   </div>
 
-  {:else if displayedTab == "area"}
+  {:else if $displayedTabMapAreas == "area"}
   <div class="space-y-4 p-4 rounded-lg bg-gray-100 ">
     {#each $wantedAreas as area (area.id)}
         <div class="p-4 flex flex-wrap gap-4 items-start">
@@ -487,7 +487,7 @@ $:{
     </div>
   </div>
 
-  {:else if displayedTab == "paper"}
+  {:else if $displayedTabMapAreas == "paper"}
   <!-- paper  -->  
   <div class="p-4 space-y-4 mt-4 rounded-lg bg-gray-100 ">
     <div class="p-4 flex flex-wrap gap-4 items-end">
@@ -561,7 +561,7 @@ $:{
   
   {/if}
     <div class = "flex justify-end">
-      {#if displayedTab == "paper" || displayedTab == "area"}
+      {#if $displayedTabMapAreas == "paper" || $displayedTabMapAreas == "area"}
       <div class="p-4 flex justify-end">
         <button 
           class="bg-blue-500  hover:bg-blue-600 text-white px-8 py-4 rounded-lg ml-4"

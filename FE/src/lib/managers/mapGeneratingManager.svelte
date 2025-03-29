@@ -1,7 +1,7 @@
 <script lang="ts">
     import { wantedAreas, areasPreviewId, wantedPreviewAreas, paperPreviewDimensions, fitPaperSize, paperDimensions,
         wantPlotBridges, wantPlotTunnels, peaksFilterSensitivity, minPopulationFilter, mapNodesElements, mapWaysElements, mapAreasElements,
-        selectedMapTheme, selectedMapFiles, gpxFiles, gpxFileGroups, gpxStyles, mapElementsZoomDesign } from '$lib/stores/mapStore';
+        selectedMapTheme, selectedMapFiles, gpxFiles, gpxFileGroups, gpxStyles, mapElementsZoomDesign, displayedTabMapGenerating} from '$lib/stores/mapStore';
     import { paperSizes, mapGeneratingStatusMappingCZ } from '$lib/constants';
     import { checkMapCordinatesFormat, checkFitPaper, parseWantedAreas, searchAreaWhisper, checkPaperDimensions } from '$lib/utils/areaUtils';
     import { getUngrupedFiles } from '$lib/utils/gpxFilesUtils';
@@ -15,7 +15,6 @@
     let previewPollingTime = 3000
     let pollingInterval: number | null = null;
     let debounceTimeout: ReturnType<typeof setTimeout> | null = null;
-    let displayedTab = "normalMap"
     let areaSuggestions: string[][] = [];
     let isGenerating = false
     let isPolling = false
@@ -224,7 +223,7 @@
                 console.error('Polling error:', error);
             });
 
-        }, displayedTab == "normalMap" ? normalPollingTime : previewPollingTime );
+        }, $displayedTabMapGenerating == "normalMap" ? normalPollingTime : previewPollingTime );
     }
     function stopPollingTaskInfo() {
         if (pollingInterval) {
@@ -251,7 +250,7 @@
             const url = window.URL.createObjectURL(blob);
                         const link = document.createElement('a');
             link.href = url;
-            link.setAttribute('download', `${displayedTab == "normalMap" ? "mapa" : "nahled_mapy"}.pdf`);
+            link.setAttribute('download', `${$displayedTabMapGenerating == "normalMap" ? "mapa" : "nahled_mapy"}.pdf`);
             document.body.appendChild(link);
             link.click();
             window.URL.revokeObjectURL(url);
@@ -288,7 +287,7 @@
 {#if isGenerating}
 <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
     <div class="bg-white p-12 rounded-xl shadow-2xl text-center w-3/4 max-w-2xl space-y-6">
-        <h1 class="text-2xl font-bold mb-4">{displayedTab == "normalMap" ? "Generování mapy" : "Generování náhledové mapy" }</h1>
+        <h1 class="text-2xl font-bold mb-4">{$displayedTabMapGenerating == "normalMap" ? "Generování mapy" : "Generování náhledové mapy" }</h1>
         <h2 class="text-lg font-semibold mb-4">{mapValue(mapGeneratingStatusMappingCZ, status)}</h2>
         <h3 class="text-md font-semibold mb-4">Dejte si kávičku a nevypínejte tuto záložku probíhá tvorba mapy.</h3>
         {#if status != MapGeneratingStatus.SENDING_DATA && status != MapGeneratingStatus.COMPLETED}
@@ -312,21 +311,21 @@
 <div class="container mx-auto p-4">
     <div class="flex flex-wrap -mb-px">
         <button 
-         class= { displayedTab == "normalMap" ? "inline-block p-4 text-black  border-b-2 border-blue-600 rounded-t-lg ":
+         class= { $displayedTabMapGenerating == "normalMap" ? "inline-block p-4 text-black  border-b-2 border-blue-600 rounded-t-lg ":
                 "inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300 "}
-                on:click={() => displayedTab = "normalMap"}>
+                on:click={() => $displayedTabMapGenerating = "normalMap"}>
                 Vytvoření celé mapy
         </button>
         <button 
-         class= { displayedTab == "previewMap" ? "inline-block p-4 text-black  border-b-2 border-blue-600 rounded-t-lg ":
+         class= { $displayedTabMapGenerating == "previewMap" ? "inline-block p-4 text-black  border-b-2 border-blue-600 rounded-t-lg ":
                 "inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300 "}
-                on:click={() => displayedTab = "previewMap"}>
+                on:click={() => $displayedTabMapGenerating = "previewMap"}>
                 Vytvoření náhledu mapy
         </button>
      
     </div>
 
-    {#if displayedTab == "normalMap"}
+    {#if $displayedTabMapGenerating == "normalMap"}
     <div class="space-y-4 rounded-lg bg-gray-100 ">
         <div class="space-y-4 rounded-lg bg-gray-100 flex justify-center items-center p-6">
             <button class="px-8 py-4 text-xl bg-green-500 text-white font-semibold rounded-lg shadow-lg hover:bg-green-600 transition"
@@ -336,7 +335,7 @@
             </button>
         </div>
     </div>
-    {:else if displayedTab == "previewMap"}
+    {:else if $displayedTabMapGenerating == "previewMap"}
    
     <div class="space-y-4 p-4 rounded-lg bg-gray-100 ">
         {#each $wantedPreviewAreas as area (area.id)}

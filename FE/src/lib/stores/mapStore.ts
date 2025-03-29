@@ -2,7 +2,12 @@ import { writable } from "svelte/store";
 import { nodesMapElements, waysMapElements, areasMapElements, gpxDefaultStyles } from "$lib/constants";
 import { createUniqueFileName } from "$lib/utils/gpxFilesUtils";
 
+// frontend variables
 export const automaticZoomLevelChangedElements = writable<boolean>(false);
+export const displayedTabMapAreas = writable<string>("mapData");
+export const displayedTabGpxFiles = writable<string>("upload");
+export const displayedTabGpxGroupsStyle = writable<string>("default");
+export const displayedTabMapGenerating = writable<string>("normalMap");
 
 //data from server
 export const avilableMapThemes = writable<string[]>([]);
