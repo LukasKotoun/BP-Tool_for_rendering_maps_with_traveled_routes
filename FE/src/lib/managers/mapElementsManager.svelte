@@ -1,7 +1,8 @@
 <script lang="ts"> 
     import { mapNodesElements, mapWaysElements, mapAreasElements, automaticZoomLevel, mapElementsZoomDesign,
        mapElementsWantedZoom, peaksFilterSensitivity, minPopulationFilter, wantPlotBridges, wantPlotTunnels,
-       selectedMapTheme, avilableMapThemes } from '$lib/stores/mapStore';
+       selectedMapTheme } from '$lib/stores/mapStore';
+    import { avilableMapThemes } from '$lib/stores/frontendStore';
     import { mapValue, updateWantedElements, resetPlotSettings } from '$lib/utils/mapElementsUtils';
     import { nodesKeysNamesMappingCZ, nodesNamesMappingCZ, waysKeysNamesMappingCZ, waysNamesMappingCZ,
        areasKeysNamesMappingCZ, areasNamesMappingCZ, numberOfZoomLevels, wantedNodesUpdatesZooms,

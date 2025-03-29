@@ -1,7 +1,10 @@
 <script lang="ts">
     import { wantedAreas, areasPreviewId, wantedPreviewAreas, paperPreviewDimensions, fitPaperSize, paperDimensions,
         wantPlotBridges, wantPlotTunnels, peaksFilterSensitivity, minPopulationFilter, mapNodesElements, mapWaysElements, mapAreasElements,
-        selectedMapTheme, selectedMapFiles, gpxFiles, gpxFileGroups, gpxStyles, mapElementsZoomDesign, displayedTabMapGenerating} from '$lib/stores/mapStore';
+        selectedMapTheme, selectedMapFiles, gpxFiles, gpxFileGroups, gpxStyles, mapElementsZoomDesign, } from '$lib/stores/mapStore';
+    
+    import { displayedTabMapGenerating } from '$lib/stores/frontendStore';
+
     import { paperSizes, mapGeneratingStatusMappingCZ } from '$lib/constants';
     import { checkMapCordinatesFormat, checkFitPaper, parseWantedAreas, searchAreaWhisper, checkPaperDimensions } from '$lib/utils/areaUtils';
     import { getUngrupedFiles } from '$lib/utils/gpxFilesUtils';
@@ -9,6 +12,8 @@
     import { MapGeneratingStatus } from '$lib/enums/mapEnums';
     import { onMount } from 'svelte';
     import { Trash2, CirclePlus } from '@lucide/svelte';
+    import LoadingSpinner from '$lib/components/loadingSpinner.svelte';
+
     import api from '$lib/axios.config';
 
     let normalPollingTime = 5000; 
@@ -289,7 +294,8 @@
     <div class="bg-white p-12 rounded-xl shadow-2xl text-center w-3/4 max-w-2xl space-y-6">
         <h1 class="text-2xl font-bold mb-4">{$displayedTabMapGenerating == "normalMap" ? "Generování mapy" : "Generování náhledové mapy" }</h1>
         <h2 class="text-lg font-semibold mb-4">{mapValue(mapGeneratingStatusMappingCZ, status)}</h2>
-        <h3 class="text-md font-semibold mb-4">Dejte si kávičku a nevypínejte tuto záložku probíhá tvorba mapy.</h3>
+        <h3 class="text-md font-semibold mb-4">Dejte si kávičku a nevypínejte tuto záložku probíhá tvorba mapy.</h3>        
+        <LoadingSpinner isVisible={isGenerating} speed ="slow"/>
         {#if status != MapGeneratingStatus.SENDING_DATA && status != MapGeneratingStatus.COMPLETED}
         <button 
             on:click={() =>{
@@ -309,6 +315,7 @@
 {/if}
 
 <div class="container mx-auto p-4">
+    <div class="border-b dark:text-gray-400 border-gray-200 dark:border-gray-700">
     <div class="flex flex-wrap -mb-px">
         <button 
          class= { $displayedTabMapGenerating == "normalMap" ? "inline-block p-4 text-black  border-b-2 border-blue-600 rounded-t-lg ":
@@ -322,7 +329,7 @@
                 on:click={() => $displayedTabMapGenerating = "previewMap"}>
                 Vytvoření náhledu mapy
         </button>
-     
+    </div>
     </div>
 
     {#if $displayedTabMapGenerating == "normalMap"}

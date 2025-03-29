@@ -1,9 +1,13 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { wantedAreas, fitPaperSize, paperDimensions, paperDimensionsRequest, automaticZoomLevel, areasId, selectedMapFiles, avilableMapFiles,
-    mapElementsZoomDesign, mapElementsWantedZoom, automaticZoomLevelChangedElements, displayedTabMapAreas,
-
+  import { wantedAreas, fitPaperSize, paperDimensions, paperDimensionsRequest, automaticZoomLevel, areasId, selectedMapFiles,
+    mapElementsZoomDesign, mapElementsWantedZoom, 
    } from '$lib/stores/mapStore';
+   
+  import {automaticZoomLevelChangedElements, displayedTabMapAreas,
+    settingAreaAndPaper, gettingMapBorders, avilableMapFiles
+   } from '$lib/stores/frontendStore';
+
   import api from '$lib/axios.config';
   import { checkMapCordinatesFormat, checkFitPaper, parseWantedAreas, numberOfAreaPlots,
     searchAreaWhisper, checkPaperDimensions
@@ -11,11 +15,12 @@
   import { paperSizes, mapDataNamesMappingCZ } from '$lib/constants';
   import { mapValue } from '$lib/utils/mapElementsUtils';
   import { Trash2, CirclePlus } from '@lucide/svelte';
-
+  import InfoToolTip from '$lib/components/infoToolTip.svelte';
+  import LoadingSpinner from '$lib/components/loadingSpinner.svelte';
   let areaSuggestions: string[][] = [];
   const defaultWidth = 0.45;
-  let settingArea = false;
-  let gettingMapBorders = false;
+
+
   let debounceTimeout: ReturnType<typeof setTimeout> | null = null;
   let mapFileSearchTerm = '';
 
@@ -105,7 +110,7 @@
       alert("Chyba při zpracování souřadnic oblastí");
       return;
     }
-      settingArea = true
+      $settingAreaAndPaper = true
       api.post("/paper_and_zoom", {
         map_area: parsedAreas,
         paper_dimensions: {width: $paperDimensionsRequest.width === undefined ? null : $paperDimensionsRequest.width,
@@ -131,7 +136,7 @@
           $automaticZoomLevelChangedElements = true
         }
 
-        settingArea = false
+        $settingAreaAndPaper = false
       }).catch(e => {
         console.error(e)
         if(e.response?.status === 400){
@@ -143,7 +148,7 @@
         else{
           alert("Nastala chyba při zpracování požadavku, zkuste to znovu za chvíli")
         }
-        settingArea = false
+        $settingAreaAndPaper = false
       });
 }
 
@@ -171,7 +176,7 @@ async function getMapBorders() {
       alert("Chyba při zpracování oblasti a papíru");
       return;
     }
-    gettingMapBorders = true
+    $gettingMapBorders = true
   
     api.post("/generate_map_borders", {
       map_area: parsedAreas,
@@ -197,7 +202,7 @@ async function getMapBorders() {
       link.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(link);
-      gettingMapBorders = false
+      $gettingMapBorders = false
     }).catch(e => {
       if(e.response?.status === 400){
         alert("Některé zadané oblasti nemají správný formát")
@@ -209,7 +214,7 @@ async function getMapBorders() {
         alert("Nastala chyba při zpracování požadavku, zkuste to znovu za chvíli")
       }
       console.error(e);
-      gettingMapBorders = false
+      $gettingMapBorders = false
     });
 }
 
@@ -256,29 +261,45 @@ $:{
 
 
 <div class="container mx-auto p-4">
+  <div class="border-b dark:text-gray-400 border-gray-200 dark:border-gray-700">
   <div class="flex flex-wrap -mb-px">
     <button 
-     class= { $displayedTabMapAreas == "mapData" ? "inline-block p-4 text-black  border-b-2 border-blue-600 rounded-t-lg ":
-            "inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300 "}
+     class= { $displayedTabMapAreas == "mapData" ? "inline-block p-4 text-black border-b-2 border-blue-600 rounded-t-lg ":
+            "inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300"}
             on:click={() => $displayedTabMapAreas = "mapData"}>
-            Mapová dat
+            Mapová dat <InfoToolTip 
+            borderColor={$displayedTabMapAreas == "mapData" ? "border-gray-600" : "border-gray-300"}
+            text="" 
+            position="right"
+            size="md"/>
     </button>
     <button 
      class= { $displayedTabMapAreas == "area" ? "inline-block p-4 text-black  border-b-2 border-blue-600 rounded-t-lg ":
             "inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300 "}
             on:click={() => $displayedTabMapAreas = "area"}>
             Oblasti
+            <InfoToolTip 
+            borderColor={$displayedTabMapAreas == "area" ? "border-gray-600" : "border-gray-300"}
+            text="" 
+            position="right"
+            size="md"/>
     </button>
-    <button  class= { $displayedTabMapAreas == "paper" ? "inline-block p-4 text-black  border-b-2 border-blue-600 rounded-t-lg":
+    <button  class= { $displayedTabMapAreas == "paper" ? "inline-block p-4 text-black border-b-2 border-blue-600 rounded-t-lg":
             "inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300 "}
             on:click={() => $displayedTabMapAreas = "paper"}>
             Papír
+            <InfoToolTip 
+            borderColor={$displayedTabMapAreas == "paper" ? "border-gray-600" : "border-gray-300"}
+            text="" 
+            position="right"
+            size="md"/>
     </button>
+  </div>
   </div>
   {#if $displayedTabMapAreas == "mapData"}
   <div class="space-y-4 p-4 rounded-lg bg-gray-100 ">
     <div class="p-2 flex flex-wrap gap-4 items-start">
-      <h2 class="text-xl font-bold mb-2">Vybraná mapová data: </h2>
+      <h2 class="text-xl font-bold mb-2">Vybraná mapová data : </h2>
       {#if $selectedMapFiles.length != 0}
         {#each $selectedMapFiles as mapFile}
           <p 
@@ -538,7 +559,12 @@ $:{
     </div>
     {#if $paperDimensionsRequest.width == null || $paperDimensionsRequest.height == null}
     <div class="flex flex-col">
-      <p class="text-sm font-medium mb-1">Zadán menší rozměr papíru</p>
+      <p class="text-sm font-medium mb-1">Zadán menší rozměr papíru <InfoToolTip 
+        borderColor="border-gray-600"
+        text="" 
+        position="right"
+        size="sm"/>
+      </p>
         <div class="h-10 flex items-center">
           <input 
             type="checkbox" 
@@ -565,24 +591,26 @@ $:{
       <div class="p-4 flex justify-end">
         <button 
           class="bg-blue-500  hover:bg-blue-600 text-white px-8 py-4 rounded-lg ml-4"
-          class:bg-gray-500={settingArea}
-          class:hover:bg-gray-600={settingArea}
+          class:bg-gray-500={$settingAreaAndPaper}
+          class:hover:bg-gray-600={$settingAreaAndPaper}
           on:click={getPaperAndZoom}
-          disabled = {settingArea}
+          disabled = {$settingAreaAndPaper}
           >
+            <LoadingSpinner isVisible={$settingAreaAndPaper} speed = "fast" />
             Nastavit oblasti a papír
         </button>
       </div>
       {#if $paperDimensions.width > 0 && $paperDimensions.height > 0}
         <button 
           class="text-white px-4 py-2 rounded-lg ml-4 mt-4"
-          class:bg-green-500={!gettingMapBorders}
-          class:hover:bg-green-600={!gettingMapBorders}
-          class:bg-gray-500={gettingMapBorders}
-          class:hover:bg-gray-600={gettingMapBorders}
+          class:bg-green-500={!$gettingMapBorders}
+          class:hover:bg-green-600={!$gettingMapBorders}
+          class:bg-gray-500={$gettingMapBorders}
+          class:hover:bg-gray-600={$gettingMapBorders}
           on:click={getMapBorders}
-          disabled={gettingMapBorders}
+          disabled={$gettingMapBorders}
         >
+          <LoadingSpinner isVisible={$gettingMapBorders} />
           Prohlédnou okraje oblastí <br>(vytvořit PDF)
       </button>
     {/if}  

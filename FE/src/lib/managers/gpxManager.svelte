@@ -1,5 +1,6 @@
 <script lang="ts">
-    import { gpxFiles, gpxFileGroups, displayedTabGpxFiles } from '$lib/stores/mapStore';
+    import { gpxFiles, gpxFileGroups } from '$lib/stores/mapStore';
+    import { displayedTabGpxFiles } from '$lib/stores/frontendStore';
     import { FileX, FileText, FileUp } from '@lucide/svelte';
     import GpxStylesManager from '$lib/managers/gpxStylesManager.svelte';
     import GpxGroupsManager from './gpxGroupsManager.svelte';

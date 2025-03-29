@@ -1,5 +1,6 @@
 <script lang="ts">
-    import { gpxStyles, displayedTabGpxGroupsStyle } from '$lib/stores/mapStore';
+    import { gpxStyles } from '$lib/stores/mapStore';
+    import { displayedTabGpxGroupsStyle } from '$lib/stores/frontendStore';
     import { gpxDefaultStyles, LINESTYLES, CAPSTYLES, 
             MARKER_LAYER_POSITIONS, MARKERS, CAPSTYLE_MAPPING_CZ, MARKER_MAPPING_CZ, MARKER_LAYER_POSITION_MAPPING_CZ
      } from '$lib/constants';

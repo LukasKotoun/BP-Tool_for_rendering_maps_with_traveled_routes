@@ -8,10 +8,6 @@
   import { Save, Upload } from '@lucide/svelte';
 
   import {
-  avilableMapThemes,
-  avilableMapFiles,
-  automaticZoomLevelChangedElements,
-  //stores
   mapElementsZoomDesign,
   mapElementsWantedZoom,
   areasId,
@@ -35,6 +31,9 @@
   gpxFileGroups,
   gpxStyles
 } from '$lib/stores/mapStore';
+
+  import { automaticZoomLevelChangedElements, 
+    avilableMapThemes, avilableMapFiles} from '$lib/stores/frontendStore';
 
   let displayedTab = "areaPaper"
 
