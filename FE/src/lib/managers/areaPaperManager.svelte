@@ -1,15 +1,18 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { wantedAreas, fitPaperSize, paperDimensions, paperDimensionsRequest, automaticZoomLevel, areasId, selectedMapFiles, avilableMapFiles } from '$lib/stores/mapStore';
+  import { wantedAreas, fitPaperSize, paperDimensions, paperDimensionsRequest, automaticZoomLevel, areasId, selectedMapFiles, avilableMapFiles,
+    mapElementsZoomDesign, mapElementsWantedZoom, automaticZoomLevelChangedElements
+   } from '$lib/stores/mapStore';
   import api from '$lib/axios.config';
   import { checkMapCordinatesFormat, checkFitPaper, parseWantedAreas, numberOfAreaPlots,
     searchAreaWhisper, checkPaperDimensions
    } from '$lib/utils/areaUtils';
   import { paperSizes, mapDataNamesMappingCZ } from '$lib/constants';
   import { mapValue } from '$lib/utils/mapElementsUtils';
+  import { Trash2, CirclePlus } from '@lucide/svelte';
 
   let areaSuggestions: string[][] = [];
-  const defaultWidth = 0.5;
+  const defaultWidth = 0.45;
   let settingArea = false;
   let gettingMapBorders = false;
   let displayedTab = "mapData";
@@ -27,7 +30,6 @@
     };
     $wantedAreas = [newArea];
     }
-   
   });
   
 
@@ -118,6 +120,17 @@
         $paperDimensions.height = response.data.height;
         $paperDimensions.width = response.data.width;
         $automaticZoomLevel = response.data.zoom_level;
+        if($automaticZoomLevel != undefined){
+          $mapElementsZoomDesign.nodes = $automaticZoomLevel
+          $mapElementsZoomDesign.ways = $automaticZoomLevel
+          $mapElementsZoomDesign.areas = $automaticZoomLevel
+          $mapElementsZoomDesign.general = $automaticZoomLevel
+          $mapElementsWantedZoom.nodes = $automaticZoomLevel
+          $mapElementsWantedZoom.ways = $automaticZoomLevel
+          $mapElementsWantedZoom.areas = $automaticZoomLevel
+          $automaticZoomLevelChangedElements = true
+        }
+
         settingArea = false
       }).catch(e => {
         console.error(e)
@@ -233,6 +246,10 @@ function selectAreaSuggestion(newAreaValue: string, id: number): void{
   areaSuggestions[id] = [];
   areaSuggestions = [...areaSuggestions]; // Trigger reactivity
 };
+let numberOfAreasPlotVar = 0;
+$:{
+  numberOfAreasPlotVar = numberOfAreaPlots($wantedAreas);
+}
 
 </script>
 
@@ -387,7 +404,7 @@ function selectAreaSuggestion(newAreaValue: string, id: number): void{
               />
             </div>
             
-          {#if $wantedAreas.length > 1 && numberOfAreaPlots($wantedAreas) > 1}
+          {#if $wantedAreas.length > 1 && numberOfAreasPlotVar > 1}
             <!-- Group Select -->
             <div class="flex flex-col">
               <p class="text-sm font-medium mb-1">Skupina oblastí</p>
@@ -397,7 +414,7 @@ function selectAreaSuggestion(newAreaValue: string, id: number): void{
                 on:change={()=>  area.width = getJoinedGroupWidth(area?.group, area.width, area.id)}
               >
                 <option value={0}>Žádná</option>
-                {#each Array.from({length: numberOfAreaPlots($wantedAreas)}, (_, i) => i) as group}
+                {#each Array.from({length: numberOfAreasPlotVar}, (_, i) => i) as group}
                   {#if group > 0}
                     <option value={group}>Skupina {group}</option>
                   {/if}
@@ -412,11 +429,12 @@ function selectAreaSuggestion(newAreaValue: string, id: number): void{
           <div class="flex flex-col">
             <p class="text-sm font-medium mb-1">Odstranit oblast</p>
             <button 
-            class="h-10 w-10 text-red-500 hover:text-red-700"
+            class="h-10 text-red-500 hover:text-red-700 flex items-center"
             on:click={() => removeArea(area.id)}
               title="Odstranit oblast"
             >
-              Odstranit 
+            <Trash2 class="h-5 w-5 mr-2"/>
+            Odstranit 
             </button>
           </div>
           {/if}
@@ -424,9 +442,10 @@ function selectAreaSuggestion(newAreaValue: string, id: number): void{
     {/each}
     <div class="p-4">
       <button 
-      class="flex items-center bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-sm"
+      class="flex items-center bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-sm" 
         on:click={addArea}
       >
+      <CirclePlus class="h-5 w-5 mr-2"/>
         Přidat další oblast
       </button>
     </div>
@@ -476,7 +495,11 @@ function selectAreaSuggestion(newAreaValue: string, id: number): void{
       <p class="text-sm font-medium mb-1">Velikost papíru</p>
       <select on:change={handleSelectedPaperSizeChange}>
         {#each paperSizes as paper}
-          <option value={paper.value}>
+          <option value={paper.value} selected={
+            (JSON.parse(paper.value) as PaperDimensions).width == $paperDimensionsRequest.width &&
+             (JSON.parse(paper.value) as PaperDimensions).height == $paperDimensionsRequest.height ||
+             (JSON.parse(paper.value) as PaperDimensions).width == $paperDimensionsRequest.height &&
+             (JSON.parse(paper.value) as PaperDimensions).height == $paperDimensionsRequest.width}>
             {paper.label}
           </option>
         {/each}
@@ -537,7 +560,6 @@ function selectAreaSuggestion(newAreaValue: string, id: number): void{
     </div>
   
   {/if}
-
     <div class = "flex justify-end">
       {#if displayedTab == "paper" || displayedTab == "area"}
       <div class="p-4 flex justify-end">

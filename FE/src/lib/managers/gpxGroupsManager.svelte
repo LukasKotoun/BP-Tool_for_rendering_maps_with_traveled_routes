@@ -2,6 +2,7 @@
     import { gpxFiles, gpxStyles, gpxFileGroups} from '$lib/stores/mapStore';
     import { gpxDefaultStyles } from '$lib/constants';
     import { createUniqueName, getUngrupedFiles, checkGroupMembership } from '$lib/utils/gpxFilesUtils';
+    import { Trash2, FileX, CirclePlus } from '@lucide/svelte';
 
     let newGroupName = '';
     let selectedFiles:{[groupName: string]: string[]} = {};
@@ -85,8 +86,9 @@
             />
             <button 
                 on:click={createGroup} 
-                class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 flex items-center"
             >
+                <CirclePlus class="h-6 w-6 mr-2"/>
                 Přidat skupinu
             </button>
         </div>
@@ -103,9 +105,9 @@
                     <span class="font-semibold">{groupName}</span>
                     <button 
                         on:click={() => removeGroup(groupName)}
-                        class="text-red-500 hover:text-red-700"
+                        class="text-red-500 hover:text-red-700 flex items-center"
                     >
-                        Odstranit skupinu
+                    <Trash2 class="h-6 w-6 mr-2"/> 
                     </button>
                 </div>
              
@@ -144,7 +146,7 @@
                                         on:click={() => removeFileFromGroup(groupName, fileName)}
                                         class="text-red-500 hover:text-red-700"
                                     >
-                                        Odebrat
+                                        <FileX class="h-6 w-6 ml-1"/>
                                     </button>
                                 </div>
                             {/each}

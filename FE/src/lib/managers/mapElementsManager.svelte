@@ -9,7 +9,6 @@
     const multiplierMin = 0.1
     const multiplierMax = 4
     let displayedCategory = 'nodes'
-    let displayedTab = 'mapElements'
     function hasDirectPlot(obj: any): obj is MapElementAttributes {
       return obj && typeof obj === 'object' && 'plot' in obj;
     }
@@ -75,44 +74,12 @@
       displayedCategory = 'areas'
     }
 
-    $:{
-      $mapElementsZoomDesign
-     
-    }
-
-    $:{
-      $automaticZoomLevel
-      $mapElementsZoomDesign.nodes = $automaticZoomLevel
-      $mapElementsZoomDesign.ways = $automaticZoomLevel
-      $mapElementsZoomDesign.areas = $automaticZoomLevel
-      $mapElementsZoomDesign.general = $automaticZoomLevel
-      $mapElementsWantedZoom.nodes = $automaticZoomLevel
-      $mapElementsWantedZoom.ways = $automaticZoomLevel
-      $mapElementsWantedZoom.areas = $automaticZoomLevel
-    }
   </script>
 
    <div class="container mx-auto p-4">
-    <div class="flex flex-wrap -mb-px">
-      <button 
-      class= { displayedTab == "mapElements" ? "inline-block p-4 text-black  border-b-2 border-blue-600 rounded-t-lg ":
-             "inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300 "}
-             on:click={() => displayedTab = "mapElements"}>
-             Mapové prvky
-     </button>
-      <button 
-       class= { displayedTab == "style" ? "inline-block p-4 text-black  border-b-2 border-blue-600 rounded-t-lg ":
-              "inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300 "}
-              on:click={() => displayedTab = "style"}>
-              Vzhled na zakladě urovně přiblížení (detailu)
-      </button>
-     
-      
-    </div>
-    {#if displayedTab == "style"}
     <div class="space-y-4 rounded-lg bg-gray-100 ">
+      <h1 class="text-xl p-4 font-bold">Vzhled na základě úrovně přiblížení</h1>
       <div class="p-4 flex flex-wrap gap-4 items-start">
-
         <div class="flex flex-col">
           <p class="text-md font-medium mb-1">Styly mapového podkladu</p>
           {#if $avilableMapThemes.length == 0}
@@ -192,9 +159,7 @@
         </select>
         </div>
       </div>
-      </div>
-    {:else}
-    <div class="space-y-4 rounded-lg bg-gray-100 mt-4">
+      
       <h2 class="p-4 text-xl font-bold">Automatické nastavení zobrazených mapových prvků na základě úrovně přiblížení</h2>
         <div class="p-6 flex flex-wrap gap-4 items-end">
           <div class="flex flex-col">
@@ -677,6 +642,5 @@
         </div>
       {/each}
     </div>
-  {/if}
   {/if}
   </div>

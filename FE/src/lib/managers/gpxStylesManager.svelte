@@ -5,7 +5,11 @@
      } from '$lib/constants';
     import { mapValue } from '$lib/utils/mapElementsUtils';
 
-
+    const minMM=0.05;
+    const minRange=0;
+    const maxRatio=5;
+    const maxAlpha=1;
+    
     let selectedGroup = 'default';
     
     let defaultColor = JSON.parse(JSON.stringify(gpxDefaultStyles)).color
@@ -65,7 +69,7 @@
                         <p class="w-1/3">Šířka (v mm):</p>
                         <input 
                             type="number" 
-                            min="0.05" 
+                            min={minMM} 
                             step="0.1" 
                             bind:value={$gpxStyles.group[groupName].width} 
 
@@ -77,8 +81,8 @@
                         <p class="w-1/3">Viditelnost:</p>
                         <input 
                             type="range" 
-                            min="0" 
-                            max="1" 
+                            min={minRange} 
+                            max={maxAlpha} 
                             step="0.1" 
                             bind:value={$gpxStyles.group[groupName].alpha} 
                             class="w-full"
@@ -90,7 +94,7 @@
                         <p class="w-1/3">Z-index:</p>
                         <input 
                             type="number" 
-                            min="0" 
+                            min={minRange} 
                             step="1"
                             value={$gpxStyles.group[groupName].zindex} 
 
@@ -168,8 +172,8 @@
                         <p class="w-1/3">Viditelnost:</p>
                         <input 
                             type="range" 
-                            min="0" 
-                            max="1" 
+                            min={minRange} 
+                            max={maxAlpha} 
                             step="0.1" 
                             bind:value={$gpxStyles.group[groupName].edge_alpha} 
 
@@ -182,8 +186,8 @@
                         <p class="w-1/3">Poměr okraje k hlavní velikosti:</p>
                         <input 
                             type="range" 
-                            min="0"
-                            max="5"  
+                            min={minRange}
+                            max={maxRatio}  
                             step="0.1" 
                             bind:value={$gpxStyles.group[groupName].edge_width_ratio} 
 
@@ -256,7 +260,7 @@
                             <p class="w-1/3">Velikost (v mm):</p>
                             <input 
                                 type="number" 
-                                min="0.05"
+                                min={minMM}
                                 step="0.1" 
                                 bind:value={$gpxStyles.group[groupName].start_marker_width} 
 
@@ -278,8 +282,8 @@
                             <p class="">Viditelnost:</p>
                             <input 
                                 type="range" 
-                                min="0" 
-                                max="1" 
+                                min={minRange} 
+                                max={maxAlpha} 
                                 step="0.1" 
                                 bind:value={$gpxStyles.group[groupName].start_marker_alpha} 
 
@@ -301,7 +305,7 @@
                             <p class="w-1/3">Poměr okraje:</p>
                             <input 
                             type="range" 
-                            min="0"
+                            min={minRange}
                             max="10"  
                             step="0.1" 
                             bind:value={$gpxStyles.group[groupName].start_marker_edge_ratio} 
@@ -333,7 +337,7 @@
                             <p class="w-1/3">Velikost (v mm):</p>
                             <input 
                                 type="number" 
-                                min="0.05"
+                                min={minMM}
                                 step="0.1" 
                                 bind:value={$gpxStyles.group[groupName].finish_marker_width} 
 
@@ -355,8 +359,8 @@
                             <p class="">Viditlenost:</p>
                             <input 
                                 type="range" 
-                                min="0" 
-                                max="1" 
+                                min={minRange} 
+                                max={maxAlpha} 
                                 step="0.1" 
                                 bind:value={$gpxStyles.group[groupName].finish_marker_alpha} 
                                 class="w-full"
@@ -377,8 +381,8 @@
                         <p>Poměr okraje:</p>
                         <input 
                         type="range" 
-                        min="0"
-                        max="5"  
+                        min={minRange}
+                        max={maxRatio}  
                         step="0.1" 
                         bind:value={$gpxStyles.group[groupName].finish_marker_edge_ratio} 
                         class="w-full"

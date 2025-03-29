@@ -2,11 +2,11 @@ import { writable } from "svelte/store";
 import { nodesMapElements, waysMapElements, areasMapElements, gpxDefaultStyles } from "$lib/constants";
 import { createUniqueFileName } from "$lib/utils/gpxFilesUtils";
 
+export const automaticZoomLevelChangedElements = writable<boolean>(false);
 
 //data from server
 export const avilableMapThemes = writable<string[]>([]);
 export const avilableMapFiles = writable<string[]>([]);
-
 
 //areas
 export const areasId = writable<number>(0);
@@ -20,7 +20,7 @@ export const paperPreviewDimensions = writable<PaperDimensions>({ width: 0, heig
 export const fitPaperSize = writable<FitPaperSize>({
   fit: false,
   plot: false,
-  width: 0.5,
+  width: 0.4,
 });
 export const paperDimensions = writable<PaperDimensions>({ width: 0, height: 0 });
 export const paperDimensionsRequest = writable<PaperDimensionsRequest>({

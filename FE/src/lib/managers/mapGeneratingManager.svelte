@@ -1,13 +1,14 @@
 <script lang="ts">
     import { wantedAreas, areasPreviewId, wantedPreviewAreas, paperPreviewDimensions, fitPaperSize, paperDimensions,
         wantPlotBridges, wantPlotTunnels, peaksFilterSensitivity, minPopulationFilter, mapNodesElements, mapWaysElements, mapAreasElements,
-        selectedMapTheme, selectedMapFiles, gpxFiles, gpxFileGroups, gpxStyles, mapElementsZoomDesign} from '$lib/stores/mapStore';
-    import { paperSizes, mapGeneratingStatusMappingCZ} from '$lib/constants';
-    import { checkMapCordinatesFormat, checkFitPaper, parseWantedAreas, searchAreaWhisper, checkPaperDimensions} from '$lib/utils/areaUtils';
+        selectedMapTheme, selectedMapFiles, gpxFiles, gpxFileGroups, gpxStyles, mapElementsZoomDesign } from '$lib/stores/mapStore';
+    import { paperSizes, mapGeneratingStatusMappingCZ } from '$lib/constants';
+    import { checkMapCordinatesFormat, checkFitPaper, parseWantedAreas, searchAreaWhisper, checkPaperDimensions } from '$lib/utils/areaUtils';
     import { getUngrupedFiles } from '$lib/utils/gpxFilesUtils';
     import { transformElementsStructure, mapValue} from '$lib/utils/mapElementsUtils';
     import { MapGeneratingStatus } from '$lib/enums/mapEnums';
     import { onMount } from 'svelte';
+    import { Trash2, CirclePlus } from '@lucide/svelte';
     import api from '$lib/axios.config';
 
     let normalPollingTime = 5000; 
@@ -390,10 +391,11 @@
               <div class="flex flex-col">
                 <p class="text-sm font-medium mb-1">Odstranit oblast</p>
                 <button 
-                class="h-10 w-10 text-red-500 hover:text-red-700"
+                class="h-10 text-red-500 hover:text-red-700 flex items-center"
                 on:click={() => removeArea(area.id)}
                   title="Odstranit oblast"
                 >
+                <Trash2 class="h-5 w-5 mr-2"/>
                   Odstranit 
                 </button>
               </div>
@@ -404,6 +406,7 @@
           class="flex items-center bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-sm"
             on:click={addArea}
           >
+            <CirclePlus class="h-6 w-6 mr-2"/>
             Přidat náhledovou oblast
           </button>
         </div>

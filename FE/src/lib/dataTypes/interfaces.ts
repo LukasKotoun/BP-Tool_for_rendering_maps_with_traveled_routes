@@ -1,3 +1,28 @@
+interface StoreData {
+  areasId: number;
+  wantedAreas: AreaItemStored[] 
+  areasPreviewId: number;
+  wantedPreviewAreas: AreaItemStored[] ;
+  paperPreviewDimensions: PaperDimensions ;
+  fitPaperSize: FitPaperSize;
+  paperDimensions: PaperDimensions ;
+  paperDimensionsRequest: PaperDimensionsRequest ;
+  automaticZoomLevel: number | undefined;
+  wantPlotTunnels: boolean ;
+  wantPlotBridges: boolean ;
+  peaksFilterSensitivity: number;
+  minPopulationFilter: number;
+  mapNodesElements: MapElementCategory;
+  mapWaysElements: MapElementCategory;
+  mapAreasElements: MapElementCategory;
+  selectedMapTheme: string | undefined;
+  selectedMapFiles: string[];
+  mapElementsZoomDesign: MapElementsZoomDesign;
+  mapElementsWantedZoom: MapElementsWanted;
+  gpxFileGroups: GPXFileGroups; 
+  gpxStyles: GpxStyles; 
+}
+
 interface AreaItemStored {
   id: number;
   area: string;

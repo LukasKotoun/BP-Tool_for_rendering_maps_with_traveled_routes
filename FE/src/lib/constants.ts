@@ -58,7 +58,7 @@ export const numberOfZoomLevels = 10
 // gpx styles
 export const gpxDefaultStyles: GpxStyleAttributes = {
   color: '#FF0000',
-  width: 0.5,
+  width: 0.45,
   alpha: 0.7,
   zindex: 0,
   linestyle: '-',
