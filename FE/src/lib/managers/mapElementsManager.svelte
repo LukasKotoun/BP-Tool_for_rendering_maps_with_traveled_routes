@@ -2,14 +2,17 @@
     import { mapNodesElements, mapWaysElements, mapAreasElements, automaticZoomLevel, mapElementsZoomDesign,
        mapElementsWantedZoom, peaksFilterSensitivity, minPopulationFilter, wantPlotBridges, wantPlotTunnels,
        selectedMapTheme } from '$lib/stores/mapStore';
-    import { avilableMapThemes } from '$lib/stores/frontendStore';
+    import { avilableMapThemes, displayedElementsCategory } from '$lib/stores/frontendStore';
     import { mapValue, updateWantedElements, resetPlotSettings } from '$lib/utils/mapElementsUtils';
     import { nodesKeysNamesMappingCZ, nodesNamesMappingCZ, waysKeysNamesMappingCZ, waysNamesMappingCZ,
        areasKeysNamesMappingCZ, areasNamesMappingCZ, numberOfZoomLevels, wantedNodesUpdatesZooms,
        wantedWaysUpdatesZooms, wantedAreasUpdatesZooms } from '$lib/constants';
+    import InfoToolTip from '$lib/components/infoToolTip.svelte';
+
     const multiplierMin = 0.1
     const multiplierMax = 4
-    let displayedCategory = 'nodes'
+
+
     function hasDirectPlot(obj: any): obj is MapElementAttributes {
       return obj && typeof obj === 'object' && 'plot' in obj;
     }
@@ -40,7 +43,7 @@
         $minPopulationFilter = 0
           break
       }
-      displayedCategory = 'nodes' 
+      $displayedElementsCategory = 'nodes' 
     }
 
     function setWaysForZoom(zoomLevel: number){
@@ -63,7 +66,7 @@
           $wantPlotBridges = false
           break
       }
-      displayedCategory = 'ways'
+      $displayedElementsCategory = 'ways'
     }
    
     function setAreasForZoom(zoomLevel: number){
@@ -72,17 +75,24 @@
         restartedData = updateWantedElements(restartedData, wantedAreasUpdatesZooms[i], 'plot')
       }
       $mapAreasElements = restartedData
-      displayedCategory = 'areas'
+      $displayedElementsCategory = 'areas'
     }
 
   </script>
 
    <div class="container mx-auto p-4">
     <div class="space-y-4 rounded-lg bg-gray-100 ">
-      <h1 class="text-xl p-4 font-bold">Vzhled na základě úrovně přiblížení</h1>
+      <h1 class="text-xl p-4 font-bold">Vzhled na základě úrovně přiblížení <InfoToolTip 
+        text="Při nastavení jiné oblasti nebo jiného papíru se změní úroveň detailu zpět na automatické." 
+        position="right"
+        size="sm"/></h1>
       <div class="p-4 flex flex-wrap gap-4 items-start">
         <div class="flex flex-col">
-          <p class="text-md font-medium mb-1">Styly mapového podkladu</p>
+          <p class="text-md font-medium mb-1">Styly mapového podkladu <InfoToolTip 
+            text="Podklad (style) podle kterého bude mapa vypadat. 
+            Vzhledy se také upravují podle úrovně detailu." 
+            position="right"
+            size="sm"/></p>
           {#if $avilableMapThemes.length == 0}
             <p>Žádné načtené mapového podklady</p>
           {:else}
@@ -98,7 +108,11 @@
         {/if}
         </div>    
         <div class="flex flex-col">
-          <p class="text-md font-medium mb-1">Úroveň detailu bodů</p>
+          <p class="text-md font-medium mb-1">Úroveň detailu bodů <InfoToolTip
+            text="Úroveň podle které bude nastaven vzhled bodů, např. barvy, velikosti okrajů...
+            (Každá úroveň detailu má odpovídající vzhled)" 
+            position="right"
+            size="sm"/></p>
           <select
           class="border rounded-sm p-2 w-40"
           bind:value={$mapElementsZoomDesign.nodes}
@@ -114,7 +128,11 @@
         </div>
 
         <div class="flex flex-col">
-          <p class="text-md font-medium mb-1">Úroveň detailu cest</p>
+          <p class="text-md font-medium mb-1">Úroveň detailu cest <InfoToolTip 
+            text="Úroveň podle které bude nastaven vzhled cest, např. barvy, velikosti okrajů...
+            (Každá úroveň detailu má odpovídající vzhled)" 
+            position="right"
+            size="sm"/></p>
           <select
           class="border rounded-sm p-2 w-40"
           bind:value={$mapElementsZoomDesign.ways}
@@ -130,7 +148,11 @@
         </div>
 
         <div class="flex flex-col">
-          <p class="text-md font-medium mb-1">Úroveň detailu oblastí</p>
+          <p class="text-md font-medium mb-1">Úroveň detailu oblastí <InfoToolTip 
+            text="Úroveň podle které bude nastaven vzhled oblastí, např. barvy, velikosti okrajů...
+            (Každá úroveň detailu má odpovídající vzhled)" 
+            position="right"
+            size="sm"/></p>
           <select
           class="border rounded-sm p-2 w-40"
           bind:value={$mapElementsZoomDesign.areas}
@@ -145,7 +167,10 @@
         </select>
         </div>
         <div class="flex flex-col">
-          <p class="text-md font-medium mb-1">Úroveň detailu obecných prvků</p>
+          <p class="text-md font-medium mb-1">Úroveň detailu obecných prvků <InfoToolTip 
+            text="Úroveň podle které bude nastaven vzhled ostatních prvků, např. barva podkladu a oceanů..." 
+            position="right"
+            size="sm"/></p>
           <select
           class="border rounded-sm p-2 w-40"
           bind:value={$mapElementsZoomDesign.general}
@@ -160,105 +185,69 @@
         </select>
         </div>
       </div>
-      
-      <h2 class="p-4 text-xl font-bold">Automatické nastavení zobrazených mapových prvků na základě úrovně přiblížení</h2>
-        <div class="p-6 flex flex-wrap gap-4 items-end">
-          <div class="flex flex-col">
-            <p class="text-md font-medium mb-1">Výchozí body pro detail</p>
-            <select
-            class="border rounded-sm p-2 w-50"
-            bind:value={$mapElementsWantedZoom.nodes}
-            >
-              {#each Array.from({length: numberOfZoomLevels}, (_, i) => i+1) as zoomLevel}
-                {#if zoomLevel == $automaticZoomLevel}
-                  <option value={zoomLevel}>{zoomLevel} (Automaticky)</option>
-                {:else}
-                  <option value={zoomLevel}>{zoomLevel}</option>
-                {/if}
-              {/each}
-            </select>
-            <button 
-            class="flex mt-4 justify-center bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-sm"
-              on:click={() => setNodesForZoom($mapElementsWantedZoom.nodes)}
-            >
-            Nastavit výchozí body
-            </button>
-          </div>
-
-          <div class="flex flex-col">
-            <p class="text-md font-medium mb-1">Výchozí cesty pro detail</p>
-            <select
-            class="border rounded-sm p-2 w-50"
-            bind:value={$mapElementsWantedZoom.ways}
-            >
-              {#each Array.from({length: numberOfZoomLevels}, (_, i) => i+1) as zoomLevel}
-                {#if zoomLevel == $automaticZoomLevel}
-                  <option value={zoomLevel}>{zoomLevel} (Automaticky)</option>
-                {:else}
-                  <option value={zoomLevel}>{zoomLevel}</option>
-                {/if}
-              {/each}
-              </select>
-              <button 
-              class="flex mt-4 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-sm"
-                on:click={() => setWaysForZoom($mapElementsWantedZoom.ways)}
-              >
-              Nastavit výchozí cesty
-              </button>
-          </div>
-          <div class="flex flex-col">
-            <p class="text-md font-medium mb-1">Výchozí oblasti pro detail</p>
-            <select
-            class="border rounded-sm p-2 w-50"
-            bind:value={$mapElementsWantedZoom.areas}
-          >
-            {#each Array.from({length: numberOfZoomLevels}, (_, i) => i+1) as zoomLevel}
-              {#if zoomLevel == $automaticZoomLevel}
-                <option value={zoomLevel}>{zoomLevel} (Automaticky)</option>
-              {:else}
-                <option value={zoomLevel}>{zoomLevel}</option>
-              {/if}
-            {/each}
-          </select>
-          <button 
-          class="flex mt-4 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-sm"
-            on:click={() => setAreasForZoom($mapElementsWantedZoom.areas)}
-          >
-            Nastavit výchozí oblasti
-          </button>
-          </div> 
-          </div>
     </div>
     <div class="text-md text-center text-gray-500 border-b border-gray-200 dark:text-gray-400 dark:border-gray-700">
       <div class="flex flex-wrap -mb-px">
             <button 
-             class= { displayedCategory == "nodes" ? "inline-block p-4 text-black  border-b-2 border-blue-600 rounded-t-lg ":
+             class= { $displayedElementsCategory == "nodes" ? "inline-block p-4 text-black  border-b-2 border-blue-600 rounded-t-lg ":
                     "inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300 "}
-                    on:click={() => displayedCategory = "nodes"}>
+                    on:click={() => $displayedElementsCategory = "nodes"}>
                     Body (Ikony a texty)
             </button>
-            <button  class= { displayedCategory == "ways" ? "inline-block p-4 text-black  border-b-2 border-blue-600 rounded-t-lg":
+            <button  class= { $displayedElementsCategory == "ways" ? "inline-block p-4 text-black  border-b-2 border-blue-600 rounded-t-lg":
                     "inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300 "}
-                    on:click={() => displayedCategory = "ways"}>
+                    on:click={() => $displayedElementsCategory = "ways"}>
                     Cesty
             </button>
-            <button class= { displayedCategory == "areas" ? "inline-block p-4 text-black  border-b-2 border-blue-600 rounded-t-lg":
+            <button class= { $displayedElementsCategory == "areas" ? "inline-block p-4 text-black  border-b-2 border-blue-600 rounded-t-lg":
                     "inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300 "}
-                    on:click={() => displayedCategory = "areas"}>
+                    on:click={() => $displayedElementsCategory = "areas"}>
                      Oblasti (Polygony)
             </button>
       </div>
   </div>
-  {#if displayedCategory == "nodes"}
+  {#if $displayedElementsCategory == "nodes"}
+  <div class="space-y-4 rounded-lg bg-gray-100 ">
+    <div class="flex flex-col p-4">
+      <p class="text-md font-medium mb-1">Úroveň detailu bodů <InfoToolTip 
+        text="Nastaví body, které mají být zobrazeny na mapě pro zvolenou úrovně detailu." 
+        position="right"
+        size="sm"/></p>
+      <select
+      class="border rounded-sm p-2 w-50"
+      bind:value={$mapElementsWantedZoom.nodes}
+      >
+        {#each Array.from({length: numberOfZoomLevels}, (_, i) => i+1) as zoomLevel}
+          {#if zoomLevel == $automaticZoomLevel}
+            <option value={zoomLevel}>{zoomLevel} (Automaticky)</option>
+          {:else}
+            <option value={zoomLevel}>{zoomLevel}</option>
+          {/if}
+        {/each}
+      </select>
+      <button 
+      class="flex mt-4 justify-center bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-sm"
+      on:click={() => setNodesForZoom($mapElementsWantedZoom.nodes)}
+      >
+      Vybrat prvky k vykreslení dle vybraného detailu
+      </button>
+    </div> 
+  </div>
     <div class="space-y-4 rounded-lg p-4 bg-gray-100 mt-4 ">
       <div class="bg-gray-50 p-4 rounded-md shadow-sm border-l-2">
         <h3 class="text-lg font-medium mb-3 ml-3">Obecné nastavení (odstranění některých bodů dle podmínek)</h3>
         <div class="flex flex-wrap gap-2 ml-2 mb-3">
           <div class="bg-white items-center rounded-sm p-2 border border-gray-200 shadow-xs">
             <div class="flex flex-col space-y-1 ml-4">
-              <p class="text-sm mr-6">Minimální počet obyvatel vesnic, měst, velkoměst</p>
+              <p class="text-sm mr-6">Minimální počet obyvatel vesnic, měst, velkoměst <InfoToolTip 
+                text="Profiltruje zobrazované názvy obcí pro čistší vzhled mapy. 
+                Pokud je nezadáno nic nebo nula, tak se filtr neaplikuje." 
+                position="right"
+                size="sm"/></p>
               <div class="flex mr-6">
                 <input
+                min="0"
+                step="1"
                 type="number"
                 class="border rounded-sm p-2 w-40"
                 bind:value={$minPopulationFilter}/>
@@ -267,7 +256,11 @@
           </div>
           <div class="bg-white items-center rounded-sm p-2 border border-gray-200 shadow-xs">
             <div class="flex flex-col space-y-1 ml-4">
-              <p class="text-sm mr-6">Citlivost filtru na důležitost výškových bodů</p>
+              <p class="text-sm mr-6">Citlivost filtru na důležitost výškových bodů <InfoToolTip 
+                text="Zobrazí pouze duležité výškové body pro čistčí vzhled mapy. Čím větší citlivost, tím míň bodů.
+                Pokud je zadána nula, tak se filtr neaplikuje." 
+                position="right"
+                size="sm"/></p>
               <div class="flex  items-center mr-6">
                 <input
                 type="range"
@@ -393,10 +386,36 @@
         </div>
       {/each}
     </div>
-    {:else if displayedCategory == "ways"}
+    {:else if $displayedElementsCategory == "ways"}
     <!-- WAYS -->
-    <div class="space-y-4 p-4 rounded-lg bg-gray-100 mt-4 ">
-      <div class="bg-gray-50 p-4 rounded-md shadow-sm border-l-2">
+    <div class="space-y-4 rounded-lg bg-gray-100 ">
+      <div class="flex flex-col p-4">
+        <p class="text-md font-medium mb-1">Úroveň detailu cest <InfoToolTip 
+          text="Nastaví cesty, které mají být zobrazeny na mapě pro zvolenou úrovně detailu." 
+          position="right"
+          size="sm"/></p>
+          <select
+            class="border rounded-sm p-2 w-50"
+            bind:value={$mapElementsWantedZoom.ways}
+          >
+          {#each Array.from({length: numberOfZoomLevels}, (_, i) => i+1) as zoomLevel}
+          {#if zoomLevel == $automaticZoomLevel}
+          <option value={zoomLevel}>{zoomLevel} (Automaticky)</option>
+          {:else}
+          <option value={zoomLevel}>{zoomLevel}</option>
+          {/if}
+          {/each}
+        </select>
+        <button 
+        class="flex mt-4 justify-center  bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-sm"
+        on:click={() => setWaysForZoom($mapElementsWantedZoom.ways)}
+        >
+        Vybrat prvky k vykreslení dle vybraného detailu
+      </button>
+    </div>
+  </div>
+  <div class="space-y-4 p-4 rounded-lg bg-gray-100 mt-4 ">
+    <div class="bg-gray-50 p-4 rounded-md shadow-sm border-l-2">
         <h3 class="text-lg font-medium mb-3 ml-3">Obecné nastavení</h3>
         <div class="flex flex-wrap gap-2 ml-2 mb-3">
           <div class="bg-white items-center rounded-sm p-2 border border-gray-200 shadow-xs">
@@ -406,7 +425,11 @@
                 class="h-5 w-5 rounded-lg"
                 bind:checked={$wantPlotBridges}
               >
-            <p class="text-sm ml-2">Vyznačit mosty</p>
+            <p class="text-sm ml-2">Vyznačit mosty <InfoToolTip 
+              text="Vyznačí mosty pomocí okrajů a správného (reálného) vrstvení cest. 
+              Změna od automatického nastavení není doporučena a může výrazně zhoršit vzhled mapy!" 
+              position="right"
+              size="sm"/></p>
             </div> 
           </div>
           <div class="bg-white items-center rounded-sm p-2 border border-gray-200 shadow-xs">
@@ -416,7 +439,10 @@
                 class="h-5 w-5 rounded-lg"
                 bind:checked={$wantPlotTunnels}
               >
-            <p class="text-sm ml-2">Vyznačit tunely</p>
+            <p class="text-sm ml-2">Vyznačit tunely <InfoToolTip 
+              text="Pokud není zvoleno, tunely se budou vykreslovat jako normální cesty." 
+              position="right"
+              size="sm"/></p>
             </div> 
           </div>
         </div>
@@ -532,6 +558,32 @@
     </div>
     {:else}
     <!-- AREAS -->
+    <div class="space-y-4 rounded-lg bg-gray-100 ">
+      <div class="flex flex-col p-4">
+        <p class="text-md font-medium mb-1">Úroveň detailu oblastí <InfoToolTip 
+          text="Nastaví oblasti, které mají být zobrazeny na mapě pro zvolenou úrovně detailu." 
+          position="right"
+          size="sm"/></p>
+          <select
+          class="border rounded-sm p-2 w-50"
+          bind:value={$mapElementsWantedZoom.areas}
+        >
+          {#each Array.from({length: numberOfZoomLevels}, (_, i) => i+1) as zoomLevel}
+            {#if zoomLevel == $automaticZoomLevel}
+              <option value={zoomLevel}>{zoomLevel} (Automaticky)</option>
+            {:else}
+              <option value={zoomLevel}>{zoomLevel}</option>
+            {/if}
+          {/each}
+        </select>
+        <button 
+        class="flex mt-4 justify-center  bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-sm"
+          on:click={() => setAreasForZoom($mapElementsWantedZoom.areas)}
+        >
+        Vybrat prvky k vykreslení dle vybraného detailu
+        </button>
+      </div>
+    </div>
     <div class="space-y-4 p-4 rounded-lg bg-gray-100 mt-4 ">
       {#each Object.entries($mapAreasElements) as [categoryKey, categoryValue], index}
         <div class="p-4 bg-gray-50 rounded-md shadow-sm border-l-2">

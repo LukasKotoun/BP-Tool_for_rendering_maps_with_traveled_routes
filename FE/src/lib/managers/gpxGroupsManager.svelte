@@ -52,6 +52,24 @@
 
 <div class="p-4 space-y-4">
     <div class="bg-gray-100 p-4 rounded-lg">
+        <h2 class="text-xl font-bold mb-4">Vytvořit vlastní skupinu tras</h2>
+        <div class="flex space-x-2 mb-4">
+            <input 
+                type="text" 
+                bind:value={newGroupName} 
+                placeholder="Název skupiny" 
+                class="flex-grow p-2 border rounded"
+            />
+            <button 
+                on:click={createGroup} 
+                class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 flex items-center"
+            >
+                <CirclePlus class="h-6 w-6 mr-2"/>
+                Přidat skupinu
+            </button>
+        </div>
+    </div>
+    <div class="bg-gray-100 p-4 rounded-lg">
         <h2 class="text-xl font-bold mb-4">Nezařazené</h2>
         <div class="bg-white p-3 rounded shadow mb-2 flex flex-col">
             <!-- Existing Group Files -->
@@ -71,33 +89,9 @@
                         </div>
                     {/if}
                 </div>
-           
-
         </div>
-    </div>
-    <div class="bg-gray-100 p-4 rounded-lg">
-        <h2 class="text-xl font-bold mb-4">Vytvořit vlastní skupinu</h2>
-        <div class="flex space-x-2 mb-4">
-            <input 
-                type="text" 
-                bind:value={newGroupName} 
-                placeholder="Název skupiny" 
-                class="flex-grow p-2 border rounded"
-            />
-            <button 
-                on:click={createGroup} 
-                class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 flex items-center"
-            >
-                <CirclePlus class="h-6 w-6 mr-2"/>
-                Přidat skupinu
-            </button>
-        </div>
-    </div>
 
-    <!-- Group Management Section -->
-    <div class="bg-gray-100 p-4 rounded-lg">
-        <h2 class="text-xl font-bold mb-4">Vlastní skupiny</h2>
-        
+        <h2 class="text-xl font-bold mb-4 mt-4">Vlastní skupiny</h2>
         {#each Object.entries($gpxFileGroups) as [groupName, files]}
             <div class="bg-white p-3 rounded shadow mb-2 flex flex-col">
               
@@ -112,7 +106,7 @@
                 </div>
              
                 <div class="flex justify-between items-center mb-2">
-                    
+                    Dostupné soubory:
                     <select 
                         multiple 
                         bind:value={selectedFiles[groupName]}
@@ -128,13 +122,13 @@
                     </select>
                     <button 
                         on:click={() => updateGroupFiles(groupName)}
-                        class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+                        class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600  flex items-center"
                     >
+                        <CirclePlus class="h-7 w-7 mr-1"/>
                         Přidat vybrané soubory
                     </button>
                 </div>
 
-                <!-- Existing Group Files -->
                 <div class="mt-2">
                     <h3 class="font-medium mb-1">Soubory ve skupině:</h3>
                     {#if $gpxFileGroups[groupName] && $gpxFileGroups[groupName].length > 0}
@@ -144,7 +138,7 @@
                                     <span>{fileName}</span>
                                     <button 
                                         on:click={() => removeFileFromGroup(groupName, fileName)}
-                                        class="text-red-500 hover:text-red-700"
+                                        class="text-red-500 hover:text-red-70"
                                     >
                                         <FileX class="h-6 w-6 ml-1"/>
                                     </button>

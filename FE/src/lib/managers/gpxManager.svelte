@@ -57,12 +57,12 @@
                class= { $displayedTabGpxFiles == "group" ? "inline-block p-4 text-black  border-b-2 border-blue-600 rounded-t-lg ":
                       "inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300 "}
                       on:click={() => $displayedTabGpxFiles = "group"}>
-                      Skupiny
+                      Skupiny tras
               </button>
               <button  class= { $displayedTabGpxFiles == "style" ? "inline-block p-4 text-black  border-b-2 border-blue-600 rounded-t-lg":
                       "inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300 "}
                       on:click={() => $displayedTabGpxFiles = "style"}>
-                      Vzhled
+                      Vzhled skupin
               </button>
              
         </div>

@@ -5,6 +5,7 @@
             MARKER_LAYER_POSITIONS, MARKERS, CAPSTYLE_MAPPING_CZ, MARKER_MAPPING_CZ, MARKER_LAYER_POSITION_MAPPING_CZ
      } from '$lib/constants';
     import { mapValue } from '$lib/utils/mapElementsUtils';
+    import InfoToolTip from '$lib/components/infoToolTip.svelte';
 
     const minMM=0.05;
     const minRange=0;
@@ -91,7 +92,10 @@
                     </div>
                     
                     <div class="flex items-center space-x-4">
-                        <p class="w-1/3">Z-index:</p>
+                        <p class="w-1/3">Z-index: <InfoToolTip 
+                            text="Pozice vrstvy oproti ostatním skupinám. Čím vyšší číslo, tím výše je vrstva vykreslena (přes ostatní)." 
+                            position="right"
+                            size="sm"/></p>
                         <input 
                             type="number" 
                             min={minRange} 
@@ -183,7 +187,7 @@
                     </div>
                     
                     <div class="flex items-center space-x-4">
-                        <p class="w-1/3">Poměr okraje k hlavní velikosti:</p>
+                        <p class="w-1/3">Poměr okraje k hlavní velikosti: </p>
                         <input 
                             type="range" 
                             min={minRange}

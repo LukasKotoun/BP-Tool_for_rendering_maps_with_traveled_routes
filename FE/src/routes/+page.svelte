@@ -5,7 +5,7 @@
   import MapGeneratingManager from "$lib/managers/mapGeneratingManager.svelte";
   import { onMount } from 'svelte';
   import api from '$lib/axios.config'
-  import { Save, Upload } from '@lucide/svelte';
+  import { Save, Upload, ChevronLeft, ChevronRight} from '@lucide/svelte';
 
   import {
   mapElementsZoomDesign,
@@ -32,7 +32,7 @@
   gpxStyles
 } from '$lib/stores/mapStore';
 
-  import { automaticZoomLevelChangedElements, 
+  import { 
     avilableMapThemes, avilableMapFiles} from '$lib/stores/frontendStore';
 
   let displayedTab = "areaPaper"
@@ -51,7 +51,7 @@
         alert('Nepodařilo se načíst dostupné mapové podklady - nastaven výchozí podklad mapycz')
         $selectedMapTheme = "mapycz"
         $avilableMapThemes = ["mapycz"]
-        console.log(error)
+        console.error(error)
       })
 
       api.get('/available_osm_files').then((response) => {
@@ -67,7 +67,7 @@
         if($selectedMapFiles.length == 0){
           $selectedMapFiles = ["cz"]
         }
-        console.log("loading map files error", error)
+        console.error("loading map files error", error)
       })
     })
 
@@ -231,6 +231,25 @@
     }
     input.value = '';
   }
+  function handleNext(){
+    if(displayedTab == "areaPaper"){
+      displayedTab = "gpx"
+    }else if(displayedTab == "gpx"){
+      displayedTab = "mapElements"
+    }else if(displayedTab == "mapElements"){
+      displayedTab = "generating"
+    }
+  }
+
+  function handlePrevious(){
+    if(displayedTab == "gpx"){
+      displayedTab = "areaPaper"
+    }else if(displayedTab == "mapElements"){
+      displayedTab = "gpx"
+    }else if(displayedTab == "generating"){
+      displayedTab = "mapElements"
+    }
+  }
   
 </script>
 <div class="container mx-auto p-4">
@@ -246,8 +265,8 @@
     </button>
     <button 
   class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-  on:click={() => document.getElementById('file-input').click()}
->
+  on:click={() => document.getElementById('file-input').click()}>
+
   <div class="flex items-center">
     <Upload class="w-5 h-5 mr-2" />
     Nahrát nastavení
@@ -266,30 +285,31 @@
     <div class="flex flex-wrap -mb-px">
       <button 
         class= { displayedTab == "areaPaper" ? "inline-block p-4 text-black  border-b-2 border-blue-600 rounded-t-lg ":
-              "inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300"}
+              "inline-block p-4 border-b-2 border-transparent rounded-t-lg"}
               on:click={() => displayedTab = "areaPaper"}>
               Nastavení oblasti a papíru
       </button>
       <button 
+          disabled={['areaPaper'].includes(displayedTab)}
           class= { displayedTab == "gpx" ? "inline-block p-4 text-black  border-b-2 border-blue-600 rounded-t-lg ":
-                  "inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300"}
-          class:dark:text-gray-400={displayedTab == "areaPaper"}
+                  "inline-block p-4 border-b-2 border-transparent rounded-t-lg"}
+          class:dark:text-gray-400={['areaPaper'].includes(displayedTab)}
                   on:click={() => displayedTab = "gpx"}>
                   Nastavení a nahrání tras (gpx)
       </button>
-      <button  class= { displayedTab == "mapElements" ? "inline-block p-4 text-black  border-b-2 border-blue-600 rounded-t-lg":
-              "inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300 "}
-              class:dark:text-gray-400={displayedTab == "areaPaper" || displayedTab == "gpx"}
-              on:click={() => {displayedTab = "mapElements"; $automaticZoomLevelChangedElements = false}}>
-              {#if $automaticZoomLevelChangedElements}
-                <p>Nastavení mapových prvků <span class="text-red-500">(1)</span></p>
-              {:else}
+      <button  
+          disabled={['areaPaper', 'gpx'].includes(displayedTab)}
+          class= { displayedTab == "mapElements" ? "inline-block p-4 text-black  border-b-2 border-blue-600 rounded-t-lg":
+              "inline-block p-4 border-b-2 border-transparent rounded-t-lg"}
+              class:dark:text-gray-400={['areaPaper', 'gpx'].includes(displayedTab)}
+              on:click={() => {displayedTab = "mapElements"}}>
                 Nastavení mapových prvků
-              {/if}
       </button>
-      <button  class= { displayedTab == "generating" ? "inline-block p-4 text-black  border-b-2 border-blue-600 rounded-t-lg":
-              "inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300 "}
-               class:dark:text-gray-400={displayedTab == "areaPaper" || displayedTab == "gpx" || displayedTab == "mapElements"}
+      <button  
+            disabled={['areaPaper', 'gpx', 'mapElements'].includes(displayedTab)}
+            class= { displayedTab == "generating" ? "inline-block p-4 text-black  border-b-2 border-blue-600 rounded-t-lg":
+              "inline-block p-4 border-b-2 border-transparent rounded-t-lg"}
+               class:dark:text-gray-400={['areaPaper', 'gpx', 'mapElements'].includes(displayedTab)}
               on:click={() => displayedTab = "generating"}>
               Vygenerování mapy
       </button>
@@ -305,4 +325,29 @@
   {:else if displayedTab == "generating"}
     <MapGeneratingManager/>
   {/if}
+
+  <div class={`flex ${displayedTab=="areaPaper" ? "justify-end" : "justify-between" }  p-4`}>
+    {#if displayedTab != "areaPaper"}
+    <button 
+      class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+      on:click={handlePrevious}
+    >
+      <div class="flex items-center">
+        <ChevronLeft class="w-5 h-5 mr-2" />
+        Zpět
+      </div>
+    </button>
+    {/if}
+    {#if displayedTab != "generating"}
+    <button 
+      class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+      on:click={handleNext}
+    >
+      <div class="flex items-center">
+        Další
+        <ChevronRight class="w-5 h-5 ml-2" />
+      </div>
+    </button>
+    {/if}
+  </div>
 </div>

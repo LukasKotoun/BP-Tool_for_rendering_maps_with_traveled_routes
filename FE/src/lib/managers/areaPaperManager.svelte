@@ -4,7 +4,7 @@
     mapElementsZoomDesign, mapElementsWantedZoom, 
    } from '$lib/stores/mapStore';
    
-  import {automaticZoomLevelChangedElements, displayedTabMapAreas,
+  import {displayedTabMapAreas,
     settingAreaAndPaper, gettingMapBorders, avilableMapFiles
    } from '$lib/stores/frontendStore';
 
@@ -133,7 +133,6 @@
           $mapElementsWantedZoom.nodes = $automaticZoomLevel
           $mapElementsWantedZoom.ways = $automaticZoomLevel
           $mapElementsWantedZoom.areas = $automaticZoomLevel
-          $automaticZoomLevelChangedElements = true
         }
 
         $settingAreaAndPaper = false
@@ -267,11 +266,12 @@ $:{
      class= { $displayedTabMapAreas == "mapData" ? "inline-block p-4 text-black border-b-2 border-blue-600 rounded-t-lg ":
             "inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300"}
             on:click={() => $displayedTabMapAreas = "mapData"}>
-            Mapová dat <InfoToolTip 
+            Mapová data <InfoToolTip 
+            width="w-60"
             borderColor={$displayedTabMapAreas == "mapData" ? "border-gray-600" : "border-gray-300"}
-            text="" 
-            position="right"
-            size="md"/>
+            text="Vyberte mapová data, která budou použity pro vytvoření mapy.
+             Například pro Českou republiku s přizpůsobením na papír je potřeba vybrat mapová data pro ČR a okolní země, které se na papíru mohou zobrazit
+             tedy: Česko, Slovensko, Polsko, Rakousko a Německo." />
     </button>
     <button 
      class= { $displayedTabMapAreas == "area" ? "inline-block p-4 text-black  border-b-2 border-blue-600 rounded-t-lg ":
@@ -280,9 +280,7 @@ $:{
             Oblasti
             <InfoToolTip 
             borderColor={$displayedTabMapAreas == "area" ? "border-gray-600" : "border-gray-300"}
-            text="" 
-            position="right"
-            size="md"/>
+            text="Oblasti, které budou vykresleny na mapě"/>
     </button>
     <button  class= { $displayedTabMapAreas == "paper" ? "inline-block p-4 text-black border-b-2 border-blue-600 rounded-t-lg":
             "inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300 "}
@@ -290,9 +288,7 @@ $:{
             Papír
             <InfoToolTip 
             borderColor={$displayedTabMapAreas == "paper" ? "border-gray-600" : "border-gray-300"}
-            text="" 
-            position="right"
-            size="md"/>
+            text="Papír (Velikost papíru) na který bude mapa vykreslená"/>
     </button>
   </div>
   </div>
@@ -325,7 +321,7 @@ $:{
         class="w-full rounded p-2 mb-2"
       />
       <p>Dostupná data: </p>
-        <div class="w-full border rounded max-h-28 overflow-y-auto">
+        <div class="w-full border rounded max-h-100 overflow-y-auto">
         {#each filteredMapFiles as mapFile}
           <div 
           role="button"
@@ -342,7 +338,7 @@ $:{
             {mapValue(mapDataNamesMappingCZ, mapFile)}
           </div>
         {:else}
-          <div class="bg-white p-2 text-gray-500">{mapFileSearchTerm == ""?"Žádné další dostupné data": "Žádné data neodpovídají vyhledávání"}</div>
+          <div class="bg-white p-2 text-gray-500">{mapFileSearchTerm == ""?"Žádná další dostupná data": "Žádná data neodpovídají vyhledávání"}</div>
         {/each}
       </div>
     </div>
@@ -428,7 +424,10 @@ $:{
           {#if $wantedAreas.length > 1 && numberOfAreasPlotVar > 1}
             <!-- Group Select -->
             <div class="flex flex-col">
-              <p class="text-sm font-medium mb-1">Skupina oblastí</p>
+              <p class="text-sm font-medium mb-1">Skupina oblastí <InfoToolTip 
+                text="U oblastí ve stejné skupině nebudou vykresleny společné okraje oblastí."
+                position="right"
+                size="sm"/></p>
               <select
                 class="border rounded-sm p-2 w-40"
                 bind:value={area.group}
@@ -472,7 +471,10 @@ $:{
     </div>
     <div class="p-4 flex flex-wrap gap-4 items-end">
       <div class="flex flex-col">
-        <p class="text-sm font-medium mb-1">Vyplnit papír okolím oblastí</p>
+        <p class="text-sm font-medium mb-1">Vyplnit papír okolím oblastí <InfoToolTip 
+          text="Upraví (rozšíří) vybranout oblast tak, aby vyplnila celý papír." 
+          position="right"
+          size="sm"/></p>
           <div class="h-10 flex items-center">
             <input 
               type="checkbox" 
@@ -483,7 +485,10 @@ $:{
       </div>
       {#if $fitPaperSize.fit}
       <div class="flex flex-col">
-        <p class="text-sm font-medium mb-1">Vykreslit ohraničení vyplněné oblasti</p>
+        <p class="text-sm font-medium mb-1">Vykreslit ohraničení vyplněné oblasti <InfoToolTip 
+          text="Vykreslí okraje na obvodu papíru." 
+          position="right"
+          size="sm"/></p>
           <div class="h-10 flex items-center">
             <input 
               type="checkbox" 
@@ -513,7 +518,11 @@ $:{
   <div class="p-4 space-y-4 mt-4 rounded-lg bg-gray-100 ">
     <div class="p-4 flex flex-wrap gap-4 items-end">
      <div class="flex flex-col">
-      <p class="text-sm font-medium mb-1">Velikost papíru</p>
+      <p class="text-sm font-medium mb-1">Velikost papíru <InfoToolTip 
+        text="Pokud je u vlastního papíru vyplněn pouze jeden rozměr, druhý bude po stisknutí tlačítka 'Nastavit oblasti a papír' dopočítán,
+        na základě zvolené oblasti." 
+        position="right"
+        size="sm"/></p>
       <select on:change={handleSelectedPaperSizeChange}>
         {#each paperSizes as paper}
           <option value={paper.value} selected={
@@ -547,7 +556,10 @@ $:{
       />
     </div>
     <div class="flex flex-col">
-      <p class="text-sm font-medium mb-1">Orientace papíru</p>
+      <p class="text-sm font-medium mb-1">Orientace papíru <InfoToolTip 
+        text="Při automatické orientaci papíru bude zvolena orientace, která nejlépe odpovídá zadaným oblastem." 
+        position="right"
+        size="sm"/></p>
       <select
         class="border rounded-sm p-2 w-40"
         bind:value={$paperDimensionsRequest.orientation}
@@ -560,8 +572,7 @@ $:{
     {#if $paperDimensionsRequest.width == null || $paperDimensionsRequest.height == null}
     <div class="flex flex-col">
       <p class="text-sm font-medium mb-1">Zadán menší rozměr papíru <InfoToolTip 
-        borderColor="border-gray-600"
-        text="" 
+        text="Pokud je zvolena tato možnost, zadaný rozměr bude při dopočítávání brán jako minimální velikost papíru, jinak jako maximální." 
         position="right"
         size="sm"/>
       </p>
@@ -579,7 +590,10 @@ $:{
     
   <div class="p-4">
     <p class="text-md font-medium mb-1">
-      Výsledná velikost papíru: {$paperDimensions.width}mm x {$paperDimensions.height}mm (šířka x výška)
+      Výsledná velikost papíru : {$paperDimensions.width}mm x {$paperDimensions.height}mm (šířka x výška) <InfoToolTip 
+      text="Velikost papíru která bude použita pro generování, nastaví se po stisknutí tlačítka 'Nastavit oblasti a papír'." 
+      position="right"
+      size="sm"/>
       </p>
   </div>
 
@@ -596,7 +610,7 @@ $:{
           on:click={getPaperAndZoom}
           disabled = {$settingAreaAndPaper}
           >
-            <LoadingSpinner isVisible={$settingAreaAndPaper} speed = "fast" />
+            <LoadingSpinner isVisible={$settingAreaAndPaper} speed="fast" />
             Nastavit oblasti a papír
         </button>
       </div>

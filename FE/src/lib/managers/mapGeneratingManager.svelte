@@ -13,6 +13,7 @@
     import { onMount } from 'svelte';
     import { Trash2, CirclePlus } from '@lucide/svelte';
     import LoadingSpinner from '$lib/components/loadingSpinner.svelte';
+    import InfoToolTip from '$lib/components/infoToolTip.svelte';
 
     import api from '$lib/axios.config';
 
@@ -170,7 +171,6 @@
 
         $gpxFiles.forEach(file => {
             formData.append("gpxs", file); 
-            console.log(file);
         });
 
         formData.append('config', data);
@@ -355,7 +355,10 @@
                 areaSuggestions[area.id] = [];
                 areaSuggestions = [...areaSuggestions];
               }}>
-                <p class="text-sm font-medium mb-1">Oblast</p>
+                <p class="text-sm font-medium mb-1">Oblast <InfoToolTip 
+                    text="Oblast, která bude zobrazena na náhledu. Měla by být zvolena tak, aby byla uvnitř velké oblasti." 
+                    position="right"
+                    size="sm"/></p>
                 <input
                   type="text" 
                   class="border rounded-sm p-2 w-60"
@@ -419,7 +422,7 @@
 
         <div class="p-4 flex flex-wrap gap-4 items-end">
             <div class="flex flex-col">
-        <p class="text-sm font-medium mb-1">Velikost papíru</p>
+        <p class="text-sm font-medium mb-1">Velikost papíru náhledu</p>
             <select on:change={handleSelectedPaperSizeChange}>
               {#each paperSizes as paper}
                 {#if !((JSON.parse(paper.value) as PaperDimensions).width == null || (JSON.parse(paper.value) as PaperDimensions).height == null)}
