@@ -12,10 +12,9 @@ from modules.utils import Utils
 
 
 class TaskManager:
-    def __init__(self, max_normal_tasks: int, max_preview_tasks: int, gpx_tmp_folder: str):
+    def __init__(self, max_normal_tasks: int, max_preview_tasks: int):
         self.max_normal_tasks = max_normal_tasks
         self.max_preview_tasks = max_preview_tasks
-        self.gpx_tmp_folder = gpx_tmp_folder
 
         self.manager = multiprocessing.Manager()
         self.shared_tasks: DictProxy[str, Any] = self.manager.dict()

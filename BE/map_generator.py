@@ -39,15 +39,14 @@ async def lifespan(app: FastAPI):
 server_app = FastAPI(lifespan=lifespan)
 server_app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 task_manager = TaskManager(max_normal_tasks=MAX_CONCURRENT_TASKS_NORMAL,
-                                         max_preview_tasks=MAX_CONCURRENT_TASKS_PREVIEW,
-                                         gpx_tmp_folder=GPX_TMP_FOLDER)
+                                         max_preview_tasks=MAX_CONCURRENT_TASKS_PREVIEW)
 
 
 # endpoints helpers
