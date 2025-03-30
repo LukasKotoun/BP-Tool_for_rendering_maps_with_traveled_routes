@@ -1,17 +1,12 @@
 <script lang="ts">
-  import "../app.css"
-
-
+  import "../app.css";
 </script>
+
 <head>
-	<title>Mapovač 3000</title>
+  <title>Mapovač 3000</title>
 </head>
 <div class="app pt-10">
-  
-   <main>
-    
-  <slot></slot>
+  <main>
+    <slot></slot>
+  </main>
 </div>
-
-<style>
-</style>

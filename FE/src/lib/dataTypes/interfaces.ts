@@ -1,15 +1,15 @@
 interface StoreData {
   areasId: number;
-  wantedAreas: AreaItemStored[] 
+  wantedAreas: AreaItemStored[];
   areasPreviewId: number;
-  wantedPreviewAreas: AreaItemStored[] ;
-  paperPreviewDimensions: PaperDimensions ;
+  wantedPreviewAreas: AreaItemStored[];
+  paperPreviewDimensions: PaperDimensions;
   fitPaperSize: FitPaperSize;
-  paperDimensions: PaperDimensions ;
-  paperDimensionsRequest: PaperDimensionsRequest ;
+  paperDimensions: PaperDimensions;
+  paperDimensionsRequest: PaperDimensionsRequest;
   automaticZoomLevel: number | undefined;
-  wantPlotTunnels: boolean ;
-  wantPlotBridges: boolean ;
+  wantPlotTunnels: boolean;
+  wantPlotBridges: boolean;
   peaksFilterSensitivity: number;
   minPopulationFilter: number;
   mapNodesElements: MapElementCategory;
@@ -19,8 +19,8 @@ interface StoreData {
   selectedMapFiles: string[];
   mapElementsZoomDesign: MapElementsZoomDesign;
   mapElementsWantedZoom: MapElementsWanted;
-  gpxFileGroups: GPXFileGroups; 
-  gpxStyles: GpxStyles; 
+  gpxFileGroups: GPXFileGroups;
+  gpxStyles: GpxStyles;
 }
 
 interface AreaItemStored {
@@ -86,7 +86,7 @@ interface GpxStyleAttributes {
   zindex?: number;
   linestyle?: string;
   line_capstyle?: string;
-  edge_color?: string | null ;
+  edge_color?: string | null;
   edge_alpha?: number;
   edge_width_ratio?: number;
   edge_linestyle?: string;
@@ -110,10 +110,10 @@ interface GPXFileGroups {
   [groupName: string]: string[];
 }
 interface GpxStyles {
-  group: {[groupName: string]: GpxStyleAttributes};
+  group: { [groupName: string]: GpxStyleAttributes };
 }
 
-interface MapElementAttributesSend  {
+interface MapElementAttributesSend {
   width_scale?: number;
   text_scale?: number;
 }
