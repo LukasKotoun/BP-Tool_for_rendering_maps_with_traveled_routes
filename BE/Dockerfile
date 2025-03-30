@@ -1,21 +1,29 @@
-FROM python:3.13.2-slim
+FROM ubuntu:22.04
 
 RUN apt-get update && apt-get install -y \
-    gcc \
-    g++ \
-    libgdal-dev \
+    python3 \
+    python3-pip \
+    python3-venv \
+    libosmium2-dev \
     osmium-tool \
-    libosmium-dev \
-    && rm -rf /var/lib/apt/lists/*
-
+    build-essential \
+    gdal-bin \
+    libgdal-dev && \
+    apt-get clean
+    
+RUN python3 --version && pip3 --version && osmium --version
 
 WORKDIR /app
 
 COPY requirements .
 
-RUN pip install --no-cache-dir -r requirements
+RUN python3 -m venv /opt/venv
+RUN /opt/venv/bin/pip install --upgrade pip
+ENV PATH="/opt/venv/bin:$PATH"
+
+RUN pip3 install --no-cache-dir -r requirements
 
 COPY . .
 
 CMD ["fastapi", "run", "map_generator.py", "--host", "0.0.0.0", "--port", "8000"]
-EXPOSE 8000
+

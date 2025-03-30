@@ -1,3 +1,4 @@
+import multiprocessing
 import os
 import asyncio
 import json
@@ -19,6 +20,8 @@ from modules.received_structure_processor import ReceivedStructureProcessor
 from modules.task_manager import TaskManager
 from contextlib import asynccontextmanager
 
+osm_files_mapping: dict[str, str] = {}
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """
@@ -26,16 +29,19 @@ async def lifespan(app: FastAPI):
     Handles startup and shutdown events.
     """
     print("Server starting up...")
+    global osm_files_mapping
     try:
+        os.makedirs(OSM_FILES_FOLDER, exist_ok=True)
+        os.makedirs(OSM_TMP_FILE_FOLDER, exist_ok=True)
+        os.makedirs(OUTPUT_PDF_FOLDER, exist_ok=True)
+        osm_files_mapping = Utils.create_osm_files_mapping(OSM_FILES_FOLDER)
         yield
     finally:
         # Shutdown cleanup
         print("Shutting down server...")
         task_manager.delete_all_tasks()
         print("Server shutdown cleanup completed successfully.")
-     
-
-
+    
 server_app = FastAPI(lifespan=lifespan)
 server_app.add_middleware(
     CORSMiddleware,
@@ -45,9 +51,9 @@ server_app.add_middleware(
     allow_headers=["*"],
 )
 
+multiprocessing.set_start_method('spawn', force=True)
 task_manager = TaskManager(max_normal_tasks=MAX_CONCURRENT_TASKS_NORMAL,
                                          max_preview_tasks=MAX_CONCURRENT_TASKS_PREVIEW)
-
 
 # endpoints helpers
 async def check_user_asked(task_id: str):
@@ -81,7 +87,7 @@ async def decode_task_id_from_JWT(request: Request, token: str = Depends(OAUTH2_
 # endpoints
 @server_app.get("/available_osm_files", response_model=AvailableOsmFilesResponseModel)
 def available_osm_files():
-    return {"osm_files": OSM_AVAILABLE_FILES.keys()}
+    return {"osm_files": osm_files_mapping.keys()}
 
 
 @server_app.get("/available_map_themes", response_model=AvailableMapThemesResponseModel)
@@ -265,7 +271,7 @@ async def generate_normal_map(background_tasks: BackgroundTasks, gpxs: Optional[
         config: MapGeneratorConfigModel = MapGeneratorConfigModel(
             **json.loads(config))
         osm_files = ReceivedStructureProcessor.validate_and_convert_osm_files(
-            config.osm_files, OSM_AVAILABLE_FILES)
+            config.osm_files, osm_files_mapping)
         styles_zoom_levels = ReceivedStructureProcessor.validate_and_convert_zoom_levels(
             config.styles_zoom_levels.model_dump(), ZOOM_STYLE_LEVELS_VALIDATION, ZOOM_STYLE_LEVELS_MAPPING)
 
@@ -360,7 +366,7 @@ async def generate_preview_map(background_tasks: BackgroundTasks, gpxs: Optional
         config: MapGeneratorPreviewConfigModel = MapGeneratorPreviewConfigModel(
             **json.loads(config))
         osm_files = ReceivedStructureProcessor.validate_and_convert_osm_files(
-            config.osm_files, OSM_AVAILABLE_FILES)
+            config.osm_files, osm_files_mapping)
 
         styles_zoom_levels = ReceivedStructureProcessor.validate_and_convert_zoom_levels(
             config.styles_zoom_levels.model_dump(), ZOOM_STYLE_LEVELS_VALIDATION, ZOOM_STYLE_LEVELS_MAPPING)

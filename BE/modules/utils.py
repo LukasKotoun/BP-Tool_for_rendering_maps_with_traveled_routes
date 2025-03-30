@@ -1,4 +1,5 @@
 import os
+import glob
 import warnings
 import math
 import jwt
@@ -385,3 +386,27 @@ class Utils:
                 detail="Invalid token",
             )
 
+    @staticmethod
+    def create_osm_files_mapping(folder: str) -> dict[str, str]:
+        if not os.path.isdir(folder):
+            try:
+                os.makedirs(folder)
+            except OSError as e:
+                raise ValueError(f"Failed to create folder {folder}: {e}")
+        
+        osm_files_dict = {}
+        # Search for all .osm and .osm.pbf files in the specified folder
+        osm_pattern = os.path.join(folder, "*.osm")
+        osm_pbf_pattern = os.path.join(folder, "*.osm.pbf")
+        osm_files = glob.glob(osm_pbf_pattern) + glob.glob(osm_pattern)
+        
+        for file_path in osm_files:
+            file_name = os.path.basename(file_path).split('.')[0]
+            counter = 1
+            while file_name in osm_files_dict:
+                # If the file name already exists, append a counter to make it unique
+                file_name = f"{file_name}_{counter}"
+                counter += 1
+            osm_files_dict[file_name] = file_path
+        
+        return osm_files_dict

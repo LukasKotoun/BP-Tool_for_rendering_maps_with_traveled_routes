@@ -1,8 +1,11 @@
 import os
+import glob
 import sys
 import osmium
 import subprocess
 import tempfile
+from uuid_extensions import uuid7str
+ 
 from shapely import wkt
 from typing import Callable
 from osmium.osm.types import  Way, Area
@@ -83,30 +86,55 @@ def remove_ids(input_file_path: str, output_file_path: str, ways_ids: list[int],
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 3:
-        print(f"Error: Invalid number of arguments")
-        print("Output file will be created only if input file have invalid geometries")
+    """Usage: {osm_filter_invalid_geoms.py} <file_or_folder_to_check.osm.pbf> <file_or_folder_to_check.osm.pbf>.."""
+    osm_files = []
+
+    folder_or_file = sys.argv[1:]
+    for path in folder_or_file:
+        if os.path.isdir(path):
+            osm_pattern = os.path.join(path, "*.osm")
+            osm_pbf_pattern = os.path.join(path, "*.osm.pbf")
+            osm_files_from_path = glob.glob(osm_pattern) + glob.glob(osm_pbf_pattern)
+            osm_files.extend(osm_files_from_path)
+        elif(os.path.isfile(path) and (path.endswith(".osm.pbf") or path.endswith(".osm"))):
+            osm_files.append(path)
+            
+    # remove duplicates from osm_files
+    osm_files = list(set(osm_files))
+    if not osm_files:
+        print(f"No osm files found in {folder_or_file}")
+        exit(0)
+    else:
+        print(f"Files that will be filtered: {osm_files}")
+
+    for input_file in osm_files:
+        print(f"Checking file: {input_file}")
+        # Check if the file exists
+        if not os.path.isfile(input_file):
+            print(f"Error: File {input_file} does not exist")
+            continue
+        
+        # Generate a unique output file name
+        file_path, file_name = os.path.split(input_file)
+        output_file = f"{file_path}/{uuid7str()}_{file_name}"
+        while os.path.exists(output_file):
+            output_file = f"{file_path}/{uuid7str()}_{file_name}"
+
+        # find invalid geometries
+        handler = ValidGeometryFilter()
+        handler.apply_file(input_file)
+        print(f"Found {len(handler.invalid_ways_ids)} invalid ways")
+        print(handler.invalid_ways_ids)
+        print(f"Found {len(handler.invalid_relation_ids)} invalid relations")
+        print(handler.invalid_relation_ids)
+
+        # filter out invalid geometries to output file
+        remove_ids(input_file, output_file, handler.invalid_ways_ids,
+                handler.invalid_relation_ids)
+            # replace the input file with the output file if exits
+        if os.path.exists(output_file):
+            os.replace(output_file, input_file)
         print(
-            f"Usage: {sys.argv[0]} <file_to_check.osm.pbf> <output_file_with_valid_geometries.osm.pbf>")
-        sys.exit(1)
-
-    input_file = sys.argv[1]
-    output_file = sys.argv[2]
-    if (input_file == output_file):
-        print(f"Error: Input and output file cannot be the same")
-        sys.exit(1)
-
-    if not os.path.exists(input_file):
-        print(f"Error: Input file {input_file} does not exist")
-        sys.exit(1)
-    print(f"Checking file: {input_file}")
-    handler = ValidGeometryFilter()
-    handler.apply_file(input_file)
-    print(f"Found {len(handler.invalid_ways_ids)} invalid ways")
-    print(handler.invalid_ways_ids)
-    print(f"Found {len(handler.invalid_relation_ids)} invalid relations")
-    print(handler.invalid_relation_ids)
-    remove_ids(input_file, output_file, handler.invalid_ways_ids,
-               handler.invalid_relation_ids)
-    print(
-        f"Completed filtering invalid geoms from {input_file} to {output_file if (handler.invalid_ways_ids or handler.invalid_relation_ids) else input_file}")
+            f"Completed filtering invalid geoms for {input_file}")
+        
+    print("Completed filtering invalid geoms for all files")

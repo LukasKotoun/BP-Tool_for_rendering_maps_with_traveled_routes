@@ -10,20 +10,15 @@ from common.map_enums import Style, MapOrientation, MarkersCodes, BaseConfigKeys
 load_dotenv()
 
 # --------------------------------------------------------------base server config - for changing by user--------------------------------------------------------------
-# Recommended format: 'country code: path to osm file of that country'
-# for example: 'cz': '../osm_files/cz.osm.pbf'
-# But can use everything like: afrika: '../osm_files/afrika.osm.pbf' or brno: '../brno.osm.pbf' .. but this will not be maped to czech name on FE
+
 #!! all files should be prefilted using shell script on folder or osm_filter_invalid_geoms.py on files one by one 
-OSM_AVAILABLE_FILES = {
-    'cz': '../osm_files/cz.osm.pbf', # cz is default - should always be present
-    'at': '../osm_files/at.osm.pbf',
-    'sk': '../osm_files/sk.osm.pbf'
-}
+OSM_FILES_FOLDER = './osm_files/'
+
 # folder where to store tmp files used in generating
-OSM_TMP_FILE_FOLDER = '../osm_files/tmp/'
+OSM_TMP_FILE_FOLDER = './tmp/'
 
 # folder where to store final generated files before sending to user
-OUTPUT_PDF_FOLDER: str = '../pdfs/'
+OUTPUT_PDF_FOLDER: str = './pdfs/'
 
 # number of max concurrent tasks
 #min is 1

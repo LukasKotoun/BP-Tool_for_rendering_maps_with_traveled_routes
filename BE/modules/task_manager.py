@@ -1,6 +1,6 @@
 import warnings
 import multiprocessing
-from multiprocessing.managers import ListProxy, ValueProxy, DictProxy
+from multiprocessing.managers import ValueProxy
 from multiprocessing.synchronize import Lock
 from uuid_extensions import uuid7str
 from typing import Any
@@ -17,7 +17,7 @@ class TaskManager:
         self.max_preview_tasks = max_preview_tasks
 
         self.manager = multiprocessing.Manager()
-        self.shared_tasks: DictProxy[str, Any] = self.manager.dict()
+        self.shared_tasks = self.manager.dict()
 
         # always use with queue_lock
         self.running_normal_processes: ValueProxy[int] = self.manager.Value(
@@ -25,7 +25,7 @@ class TaskManager:
         self.running_preview_processes: ValueProxy[int] = self.manager.Value(
             'i', 0)
         # use list instead of queue for better deletion performance (will need to create new front in every termiantion)
-        self.normal_queue: ListProxy[Any] = self.manager.list()
+        self.normal_queue = self.manager.list()
         self.preview_queue = self.manager.list()
         # need to use multiprocessing.Lock() instead of manager.Lock()
         # manager.lock will not free lock after process that aquire it is terminated
@@ -295,8 +295,8 @@ class TaskManager:
             return len(self.preview_queue)
 
     @staticmethod
-    def _wrapped_generate_map(config: dict[str, Any], task_id: str, shared_tasks: DictProxy[str, Any],
-                              shared_tasks_lock: Lock, queue_lock: Lock, queue: ListProxy[Any],
+    def _wrapped_generate_map(config: dict[str, Any], task_id: str, shared_tasks: dict[str, Any],
+                              shared_tasks_lock: Lock, queue_lock: Lock, queue: list[Any],
                               running_process_count: ValueProxy[int], max_process_count: int):
 
         try:

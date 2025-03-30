@@ -1,6 +1,4 @@
-import tempfile
 import subprocess
-from multiprocessing.managers import DictProxy
 from multiprocessing.synchronize import Lock
 from typing import Any
 
@@ -11,7 +9,7 @@ from modules.utils import Utils
 
 
 class OsmDataPreprocessor:
-    def __init__(self, osm_input_files: list[str] | str, osm_tmp_folder: str, task_id: str, shared_dict: DictProxy[str, Any], lock: Lock, osm_output_file: str = None):
+    def __init__(self, osm_input_files: list[str] | str, osm_tmp_folder: str, task_id: str, shared_dict: dict[str, Any], lock: Lock, osm_output_file: str = None):
         # Can be a string (place name) or a list of coordinates
         self.osm_input_files: list[str] | str = osm_input_files
         self.task_id = task_id
@@ -27,9 +25,9 @@ class OsmDataPreprocessor:
 
     def __create_tmp_geojson(self, reqired_area_gdf: GeoDataFrame) -> str:
         # create tmp file with polygon representing reqired area for osmium extraction
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".geojson", dir=self.osm_tmp_folder) as temp_geojson:
-            reqired_area_gdf.to_file(temp_geojson.name, driver="GeoJSON")
-            return temp_geojson.name
+        name: str = f'{self.osm_tmp_folder}_geojson_polygon_{self.task_id}.geojson'
+        reqired_area_gdf.to_file(name, driver="GeoJSON")
+        return name
 
     def __merge_osm_files(self, input_tmp_files: list[str], osm_output_file):
         command = ['osmium', 'merge'] + input_tmp_files + \
@@ -58,8 +56,9 @@ class OsmDataPreprocessor:
                     **self.shared_dict[self.task_id],
                     SharedDictKeys.FILES.value: [file for file in self.shared_dict[self.task_id][SharedDictKeys.FILES.value] if file != temp_geojson_path],
                 }
+            
             raise Exception(
-                f"Cannot extract osm file, check if osmium command line tool is installed")
+                f"Cannot extract osm file: {e}")
         return osm_output_file
 
     def extract_areas(self, reqired_area_gdf: GeoDataFrame, crsTo: str):
