@@ -34,7 +34,12 @@ class OsmDataPreprocessor:
             ['--overwrite', 
              '--no-progress',
              '-o', osm_output_file]
-        subprocess.run(command, check=True)
+             
+        try:
+            subprocess.run(command, check=True)
+        except Exception as e:
+            raise Exception(
+                f"Cannot merge osm files: {e}")
 
     def __extract_area(self, osm_input_file: str, osm_output_file: str, temp_geojson_path: str) -> str:
         command = [
@@ -48,7 +53,7 @@ class OsmDataPreprocessor:
             '-o', osm_output_file
         ]
         try:
-            pd = subprocess.run(command, check=True)
+            subprocess.run(command, check=True)
         except Exception as e:
             Utils.remove_file(temp_geojson_path)
             with self.lock:
