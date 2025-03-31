@@ -55,18 +55,18 @@
     $mapNodesElements = restartedData;
     $peaksFilterSensitivity = 2.5;
     switch (zoomLevel) {
-      case 7:
+      case 5:
         $minPopulationFilter = 250;
         break;
-      case 6:
+      case 4:
         $minPopulationFilter = 500;
         break;
-      case 5:
-      case 4:
       case 3:
+        $minPopulationFilter = 750;
+        break;
       case 2:
       case 1:
-        $minPopulationFilter = 750;
+        $minPopulationFilter = 1000;
         break;
       default:
         $minPopulationFilter = 0;

@@ -148,7 +148,7 @@ FIT_PAPER_VALIDATION = {"fit": (bool, True), "plot": (bool, True),
 REQ_AREA_KEY_WITH_AREA = "area"
 REQ_AREA_KEY_WITH_BOOLEAN_PLOT = "plot"
 REQ_AREA_KEY_TO_GROUP_BY = "group"
-# key, (types, required)
+# key, (types, required) - area can be string or list of lists with cordinates x,y (lon, lat)
 REQ_AREA_DICT_KEYS = {"area": (str | list, True), "plot": (bool, True), "group": (
     int, False), "width": (int | float, False)}
 REQ_AREAS_MAPPING_DICT = {"width": (Style.WIDTH.value, FUNC_MM_TO_POINTS_CONVERSION),

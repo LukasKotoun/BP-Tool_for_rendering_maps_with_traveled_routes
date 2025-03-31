@@ -253,7 +253,7 @@
             "Nastala chyba při zpracování požadavku, zkuste to znovu za chvíli"
           );
         }
-        console.error(e);
+        console.error("Getting map areas borders: " + e);
         $gettingMapBorders = false;
       });
   }
@@ -425,7 +425,9 @@
           >
             <p class="text-sm font-medium mb-1">
               Oblast <InfoToolTip
-                text="Zadajte názve oblasti, nebo souřadnice ve formátu 'zeměpisná šiřka,zeměpisná delka;šiřka,delka;šiřka,delka' (např. 14.4378,50.0755; 14.4379,50.0756)"
+                text="Zadajte názve oblasti (např. Brno, Česko nebo Třebíč, Česká Republika), 
+                nebo minimálně 3 souřadnice tvořící polygon ve formátu 'zeměpisná delka,zeměpisná šiřka;delka,šiřka;delka,šiřka'
+                 (příklad souřadnic pro ČR. 16.3776, 49.31; 16.6, 49.3; 16.4,49.1)"
                 position="right"
                 size="sm"
               />
@@ -466,9 +468,16 @@
                 {/each}
               </div>
             {/if}
-            <p class="text-red-500 text-sm">
-              {checkMapCordinatesFormat(area.area)}
-            </p>
+            {#if checkMapCordinatesFormat(area.area) != ""}
+              <p class="text-red-500 text-sm">
+                {checkMapCordinatesFormat(area.area)} <InfoToolTip
+                text=" Pokud jsou souřadnice neplatné, považují se za oblast podle názvu. 
+                Pokud tedy zadáváte název oblasti nikoliv souřadnice, tuto chybu můžete ignorovat."
+                position="right"
+                size="sm"
+              />
+              </p>
+            {/if}
           </div>
 
           <!-- Plot Checkbox -->

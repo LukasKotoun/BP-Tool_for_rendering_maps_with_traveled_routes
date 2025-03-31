@@ -1,35 +1,5 @@
 import axios from "axios";
 
-export function checkMapCordinatesFormat(input: string): string {
-  if (!input.includes(";")) {
-    return "";
-  } else {
-    const pairs = input.trim().split(";");
-
-    if (pairs.length === 1 && !pairs[0].includes(",")) {
-      return "Souřadnice musí být pary x, y (E, N) hodnot";
-    }
-    for (let pair of pairs) {
-      const values = pair.split(",");
-
-      if (values.length !== 2) {
-        return "Souřadnice musí mít přesně 2 hodnoty oddělené středníkem (x,y; x,y; x,y)";
-      }
-
-      const x = parseFloat(values[0]);
-      const y = parseFloat(values[1]);
-
-      if (isNaN(x) || isNaN(y)) {
-        return "Nevalidní čísla v souřadnicích";
-      }
-    }
-
-    if (pairs.length < 3) {
-      return "Oblast se musí skládat alespoň ze 3 bodů";
-    }
-    return "";
-  }
-}
 
 export function checkPaperDimensions(
   request: PaperDimensionsRequest | PaperDimensions,
@@ -61,6 +31,39 @@ export function checkFitPaper(fitPaperSize: FitPaperSize): boolean {
   }
   return true;
 }
+
+// same check as parsing but with returning error string 
+export function checkMapCordinatesFormat(input: string): string {
+  if (!input.includes(";")) {
+    return "";
+  } else {
+    const pairs = input.trim().split(";");
+
+    if (pairs.length === 1 && !pairs[0].includes(",")) {
+      return "Souřadnice musí být pary x, y (E, N) hodnot";
+    }
+    for (let pair of pairs) {
+      const values = pair.split(",");
+
+      if (values.length !== 2) {
+        return "Souřadnice musí mít přesně 2 hodnoty oddělené středníkem (x,y; x,y; x,y)";
+      }
+
+      const x = parseFloat(values[0]);
+      const y = parseFloat(values[1]);
+
+      if (isNaN(x) || isNaN(y)) {
+        return "Nevalidní čísla v souřadnicích";
+      }
+    }
+
+    if (pairs.length < 3) {
+      return "Oblast se musí skládat alespoň ze 3 bodů";
+    }
+    return "";
+  }
+}
+
 
 // Function to parse coordinates string into array
 export function parseWantedArea(input: string): number[][] | string {
@@ -100,12 +103,12 @@ export function parseWantedArea(input: string): number[][] | string {
   return coordinates;
 }
 
-// Function to get output without IDs
+// Function to get output without IDs and parsed polygon cordinates
 export function parseWantedAreas(areas: AreaItemStored[]): AreaItemSend[] {
   // remove id and parse area if have cordinates
   let areasParsed = areas
     .map((area) => {
-      if (area.area.trim() !== "") {
+      if (area.area.trim() != "") {
         const { id, ...rest } = area;
 
         try {
@@ -115,13 +118,14 @@ export function parseWantedAreas(areas: AreaItemStored[]): AreaItemSend[] {
             area: parsedArea,
           };
         } catch (error) {
-          return null;
+          // If parsing fails, return the original area (as area string)
+          return rest
         }
       } else {
         return null;
       }
     })
-    .filter((area) => area !== null);
+    .filter((area) => area != null);
   return areasParsed;
 }
 

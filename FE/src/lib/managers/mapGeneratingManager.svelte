@@ -52,6 +52,7 @@
   let isPolling = false;
   let status = "";
   let jwtToken = "";
+  let poolingErrorCount = 0;
 
   onMount(() => {
     if (
@@ -62,7 +63,7 @@
     }
     // on page close terminate running task
     const handleBeforeUnload = (event) => {
-      if (jwtToken == null || jwtToken == "") return;
+      if (jwtToken == "") return;
       navigator.sendBeacon(
         `${import.meta.env.VITE_API_BASE_URL}/terminate_task`,
         JSON.stringify({ token: jwtToken })
@@ -131,6 +132,7 @@
     let mapAreasElementsParsed: MapElementCategorySend = {};
     let fileGroups: GPXFileGroups = {};
     isGenerating = true;
+    status = ""
     try {
       if (preview) {
         if (!checkPaperDimensions($paperPreviewDimensions, false)) {
@@ -187,7 +189,6 @@
     } catch (e) {
       console.error(e);
       isGenerating = false;
-      status = "";
       alert("Chyba při zpracování dat");
       return;
     }
@@ -238,24 +239,27 @@
         startPollingTaskInfo();
       })
       .catch((error) => {
-        status = "";
-        isGenerating = false;
-        jwtToken = "";
+        terminateTask();
         console.error(error);
-        if (error.response && error.response.status === 429) {
-          alert(
-            "Server je momentálně přetížen, zkuste to prosím později (jo ale šekej)"
-          );
+        if (error.response?.status == 429) {
+          alert( "Server je momentálně přetížen, zkuste to prosím později (jo ale šekej)");
+        }
+          else  if (error.response?.status == 400) {
+          alert("Některé zadané údaje nemají správný formát");
+        } else if (error.response?.status == 404) {
+          alert("Některou se zadaných oblastí se nepodařilo nalézt");
         } else {
-          alert("Chyba při odesílání dat na server");
+          alert(
+            "Nastala chyba při zpracování požadavku, zkuste to znovu za chvíli"
+          );
         }
       });
   }
 
   async function startPollingTaskInfo() {
-    if (isPolling || jwtToken == null) return;
+    if (isPolling || jwtToken == "") return;
     isPolling = true;
-    //first polling to keep generating alive - prevent task running if user close window before recieiving token
+    //first polling to keep generating alive - prevent task running if user close window before receiving token
     api.get("/task_status", {
       headers: {
         Authorization: `Bearer ${jwtToken}`,
@@ -271,26 +275,23 @@
             },
           })
           .then((response) => {
+            poolingErrorCount = 0;
             status = response.data.status;
             if (response.data.status === "completed") {
               stopPollingTaskInfo();
               downloadMap();
             } else if (response.data.status === "failed") {
-              stopPollingTaskInfo();
-              status = "";
-              isGenerating = false;
-              jwtToken = "";
+              terminateTask();
               alert("Generování mapy selhalo, zkuste to znovu později");
             }
           })
           .catch((error) => {
-            status = "";
-            isGenerating = false;
-            jwtToken = "";
-            stopPollingTaskInfo();
-            alert(
-              "Generování mapy bylo nečekaně přerušeno, zkuste to znovu později"
-            );
+            if(poolingErrorCount >= 2){
+              terminateTask();
+              alert("Generování mapy bylo nečekaně přerušeno, zkuste to znovu později");
+            }else{
+              poolingErrorCount++;
+            }
             console.error("Polling error:", error);
           });
       },
@@ -308,8 +309,8 @@
   }
 
   function downloadMap() {
-    if (jwtToken == null || jwtToken == "") {
-      alert("Chyba při stahování mapy");
+    if (jwtToken == "") {
+      alert("Chyba při stahování map - není platný token");
       return;
     }
     api
@@ -346,7 +347,7 @@
 
   function terminateTask() {
     stopPollingTaskInfo();
-    if (jwtToken != "" && jwtToken != null) {
+    if (jwtToken != "") {
       api
         .post(
           "/terminate_task",
@@ -366,6 +367,7 @@
     status = "";
     isGenerating = false;
     jwtToken = "";
+    poolingErrorCount = 0;
   }
 </script>
 

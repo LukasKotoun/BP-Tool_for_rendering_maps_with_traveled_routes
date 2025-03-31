@@ -388,11 +388,7 @@ class Utils:
 
     @staticmethod
     def create_osm_files_mapping(folder: str) -> dict[str, str]:
-        if not os.path.isdir(folder):
-            try:
-                os.makedirs(folder)
-            except OSError as e:
-                raise ValueError(f"Failed to create folder {folder}: {e}")
+        folder = Utils.ensure_dir_exists(folder)
         
         osm_files_dict = {}
         # Search for all .osm and .osm.pbf files in the specified folder
