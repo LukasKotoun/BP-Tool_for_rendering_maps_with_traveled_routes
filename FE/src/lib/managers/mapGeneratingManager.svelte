@@ -257,14 +257,20 @@
   }
 
   async function startPollingTaskInfo() {
-    if (isPolling || jwtToken == "") return;
+    if (isPolling) return;
     isPolling = true;
-    //first polling to keep generating alive - prevent task running if user close window before receiving token
+  
+    // first polling to keep generating alive - prevent task running if user close window before receiving token
+    // server close after 30 seconds of start without polling
     api.get("/task_status", {
       headers: {
         Authorization: `Bearer ${jwtToken}`,
       },
-    });
+    }).then((response) => {poolingErrorCount = 0;})
+      .catch((error) => {
+        poolingErrorCount++;
+        console.error("Polling error:", error);
+      });
 
     pollingInterval = window.setInterval(
       async () => {
@@ -306,6 +312,7 @@
       pollingInterval = null;
     }
     isPolling = false;
+    poolingErrorCount = 0;
   }
 
   function downloadMap() {
@@ -367,7 +374,6 @@
     status = "";
     isGenerating = false;
     jwtToken = "";
-    poolingErrorCount = 0;
   }
 </script>
 

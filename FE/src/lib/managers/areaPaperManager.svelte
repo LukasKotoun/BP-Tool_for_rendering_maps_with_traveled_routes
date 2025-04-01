@@ -713,7 +713,7 @@
     </div>
   {/if}
   <div class="flex justify-end">
-    {#if $displayedTabMapAreas == "paper" || $displayedTabMapAreas == "area"}
+    {#if $displayedTabMapAreas == "paper"}
       <div class="p-4 flex justify-end">
         <button
           class="bg-blue-500 hover:bg-blue-600 text-white px-8 py-4 rounded-lg ml-4"
