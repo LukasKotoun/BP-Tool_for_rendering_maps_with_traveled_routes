@@ -1,394 +1,660 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Send Data with File</title>
-  <script>
-    AREA = [{"area": "Horní vilémovice, Česko",
-    "plot": true, 'category': 0, 'width': 1}]
-    // AREA = [{'area':[[15.8096936,48.6459956], [15.8232333, 48.6460311], [15.8232550, 48.6397219], [15.8097686, 48.6397503]], "plot": false}]
-    FIT_PAPER = true
-    PAPER_DIM = {'height': 297, 'width': 210}
-    data =   JSON.stringify({
-        "osm_files": ['cz'],
-        // "map_area":[{"area": "Třebíč, Česko",
-        //  "plot": false}, {"area": "Trnava, Česko", "plot":false},
-        //  {"area":"Horní vilémovice, Česko", "plot": false, 'category':0}],
-        "map_area":AREA,
-        // "map_preview_area":[{"area": "Třebíč, Česko",
-        //  "plot": true ,'category': 0, 'width': 1}],
-         "paper_dimensions":PAPER_DIM,
-        "paper_preview_dimensions": {'width': 100, 'height': 100},
-        "fit_paper_size": FIT_PAPER,
-        "fit_paper_size_bounds_plot": false,
-        "plot_bridges": false,
-        "plot_tunnels": false,
-        "gpxs_categories": {},
-        "map_theme": "mapycz",
-        "min_place_population": 0,
-        "peaks_filter_sensitivity":2.5,
-        'gpxs_styles':{
-          'file_name':{},
-          'category':{},
-          'general':{'color': "red", 'marker_layer_position': "under_text",
-            'start_marker': "mpl_start", 'finish_marker':"fa_finish"
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Send Data with File</title>
+    <script>
+      token = null
+      AREA = [{ area: "Horní vilémovice, Česko", plot: true, group: 0, width: 0.5 }]
+      // AREA = [{'area':[[15.8096936,48.6459956], [15.8232333, 48.6460311], [15.8232550, 48.6397219], [15.8097686, 48.6397503]], "plot": true }]
+      FIT_PAPER = { fit: true, plot: true, width:8 }
+      PAPER_DIM = { height: 297, width: 210 }
+      data = JSON.stringify({
+        osm_files: ["sk"],
+        map_area:[{"area": "Třebíč, Česko",
+         "plot": false}, {"area": "Trnava, Česko", "plot":false},
+         {"area":"Horní vilémovice, Česko", "plot": false, 'group':-8}],
+        // map_area: AREA,
+        // "map_preview_area":[{"area": "Třebísč, Česko",
+        //  "plot": true ,'group': 0, 'width': 1}],
+        paper_dimensions: PAPER_DIM,
+        paper_preview_dimensions: { width: 100, height: 100 },
+        fit_paper_size: FIT_PAPER,
+        plot_bridges: false,
+        plot_tunnels: false,
+        gpxs_groups: {"asd":["Z_Brna_"]},
+        map_theme: "mapycz",
+        min_place_population: 0,
+        peaks_filter_sensitivity: 2.5,
+        gpxs_styles: {
+          group: {"asd":{color:"blue"}},
+          // general: { color: "red", width: -8,
+          // edge_alpha:1,
+          // edge_color:"blue", edge_width_ratio: -8, finish_marker_edge_ratio:0, alpha: 1, marker_layer_position: "under_text", start_marker: "start", finish_marker: "finish" }
+        },
+        wanted_categories_and_styles_edit: {
+          nodes: {
+            place: { city: {}, town: {}, village: {}, suburb: {}, neighbourhood: {}, locality: {} },
+            natural: { peak: {} },
+            man_made: { tower: {} },
+            historic: { castle: {} }
+          },
+          ways: {
+            highway: {
+              motorway: {},
+              trunk: {},
+              primary: {},
+              secondary: {},
+              tertiary: {},
+              motorway_link: {},
+              trunk_link: {},
+              primary_link: {},
+              secondary_link: {},
+              tertiary_link: {},
+              residential: {},
+              unclassified: {},
+              service: {},
+              pedestrian: {},
+              cycleway: {},
+              raceway: {},
+              steps: {},
+              footway: {},
+              track: {},
+              path: {}
+            },
+            railway: { rail: {}, light_rail: {}, monorail: {}, miniature: {}, subway: {}, funicular: {} },
+            aeroway: { runway: {}, taxiway: {} },
+            aerialway: {
+              cable_car: {},
+              gondola: {},
+              chair_lift: {},
+              mixed_lift: {},
+              "t-bar": {},
+              "j-bar": {},
+              platter: {},
+              rope_tow: {},
+              magic_carpet: {},
+              zip_line: {},
+              goods: {}
+            },
+            barrier: { city_wall: {}, wall: {}, cable_barrier: {} },
+            waterway: { river: {}, canal: {}, stream: {}, drain: {}, ditch: {} },
+            route: { ferry: {} }
+          },
+          areas: {
+            landuse: {
+              farmland: {},
+              forest: {},
+              residential: {},
+              commercial: {},
+              retail: {},
+              industrial: {},
+              allotments: {},
+              meadow: {},
+              grass: {},
+              landfill: {},
+              cemetery: {},
+              vineyard: {},
+              orchard: {},
+              garages: {},
+              quarry: {},
+              recreation_ground: {}
+            },
+            leisure: { park: {}, garden: {}, pitch: {}, golf_course: {}, playground: {}, sports_centre: {}, swimming_pool: {} },
+            natural: { wood: {}, water: {}, scrub: {}, heath: {}, grassland: {}, beach: {}, sand: {} },
+            amenity: {
+              motorcycle_parking: {},
+              parking: {},
+              grave_yard: {},
+              school: {},
+              university: {},
+              college: {},
+              kindergarten: {},
+              bus_station: {},
+              hospital: {},
+              clinic: {},
+              place_of_worship: {}
+            },
+            boundary: { national_park: {} },
+            building: {},
+            aeroway: { aerodrome: {} },
+            highway: { pedestrian: {}, footway: {} }
           }
         },
-        'wanted_categories_and_styles_edit':{
-          'nodes':{
-          'place': {'city':{}, 'town':{}, 'village':{}, 'suburb':{}, 'neighbourhood':{}, 'locality':{}},
-          'natural': {'peak':{}},
-          'man_made': {'tower':{}},
-          'historic': {'castle':{}},
-          },
-          'ways':{
-            'highway': {'motorway':{}, 'trunk':{}, 'primary':{}, 'secondary':{}, 'tertiary':{},
-             'motorway_link':{}, 'trunk_link':{}, 'primary_link':{}, 'secondary_link':{}, 'tertiary_link':{}, 'residential':{}, 'unclassified':{}, 'service':{},
-                    'pedestrian':{}, 'cycleway':{}, 'raceway':{}, 'steps':{}, 'footway':{}, 'track':{}, 'path':{}},
-              'railway': {'rail':{}, 'light_rail':{}, "monorail":{}, 'miniature':{}, 'subway':{}, 'funicular':{}},
-              'aeroway': {'runway':{}, 'taxiway':{}},
-              'aerialway': {'cable_car':{}, 'gondola':{}, 'chair_lift':{}, 'mixed_lift':{}, 't-bar':{}, 'j-bar':{}, 'platter':{}, 'rope_tow':{}, 'magic_carpet':{}, 'zip_line':{}, 'goods':{}},
-              'barrier': {'city_wall':{}, 'wall':{}, 'cable_barrier':{}},
-              'waterway': {'river':{}, 'canal':{}, 'stream':{}, 'drain':{}, 'ditch':{}},
-              'route': {'ferry':{}},
-          },
-          'areas':{
-              'landuse': {'farmland':{}, 'forest':{}, 'residential':{}, 'commercial':{}, 'retail':{}, 'industrial':{}, 'allotments':{}, 'meadow':{},
-                    'grass':{}, 'landfill':{}, 'cemetery':{}, 'vineyard':{}, 'orchard':{}, 'garages':{}, 'quarry':{}, 'recreation_ground':{}},
-              'leisure': {'park':{}, 'garden':{}, 'pitch':{}, 'golf_course':{}, 'playground':{}, 'sports_centre':{}, 'swimming_pool':{}},
-              'natural': {'wood':{}, 'water':{}, 'scrub':{}, 'heath':{}, 'grassland':{}, 'beach':{}, 'sand':{}},
-              'amenity': {'motorcycle_parking':{}, 'parking':{}, 'grave_yard':{}, 'school':{}, 'university':{}, 'college':{},
-               'kindergarten':{}, 'bus_station':{}, 'hospital':{}, 'clinic':{}, 'place_of_worship':{}},
-              'boundary': {'national_park':{}},
-              'building': {},
-              'aeroway': {'aerodrome':{}},
-              'highway': {'pedestrian':{}, 'footway':{}},
-          },
-        },
-        'styles_zoom_levels':{
-          "nodes": 7,
-          "ways": 7,
-          "areas": 7,
-          "general": 7
-        },
-     
+        styles_zoom_levels: {
+          nodes: 70,
+          ways: -7,
+          areas: 5,
+          general: 7
+        }
       })
-    // Function to send data with a file
-    async function sendDataPrev() {
-      // Create a FormData object to send data and file
-      const formData = new FormData();
+      // Function to send data with a file
+      async function sendDataPrev() {
+        // Create a FormData object to send data and file
+        const formData = new FormData()
 
-      // Create a JavaScript object for the data
-     
+        // Create a JavaScript object for the data
 
-      // Convert the data object to a JSON string and append it to FormData
+        // Convert the data object to a JSON string and append it to FormData
 
-      // Get the file input element and select the first file
-      const fileInput = document.getElementById("fileInput");
-      const file = fileInput.files[0];  // Get the first file selected
+        // Get the file input element and select the first file
+        const fileInput = document.getElementById("fileInput")
+        const file = fileInput.files[0] // Get the first file selected
 
-    // formData.append('gpxs', [file, file]);
-    if(file != null){
-        formData.append('gpxs', file);
-    }else{
-    }
- 
-      formData.append('config', 
-      data
-      );
- 
-      try {
-
-        const response = await fetch('http://localhost:8000/generate-map-preview/', {
-          method: 'POST',
-
-
-       body: formData,
-    
-        });
-
-        // Parse the JSON response from FastAPI
-        const result = await response.json();
-        if (result['token'] != undefined){
-          token = result['token']
+        // formData.append('gpxs', [file, file]);
+        if (file != null) {
+          formData.append("gpxs", file)
+        } else {
         }
-        // Log the result to the console
-        console.log('Response:', result);
-      } catch (error) {
-        console.error('Error:', error);
-      }
-    }
 
-    // Function to send data with a file
-    async function sendDataNormal() {
-      // Create a FormData object to send data and file
-      const formData = new FormData();
+        formData.append("config", data)
 
-      const fileInput = document.getElementById("fileInput");
-      const file = fileInput.files[0];  // Get the first file selected
+        try {
+          const response = await fetch("http://localhost:8000/generate_map_preview/", {
+            method: "POST",
 
-    // formData.append('gpxs', [file, file]);
-    if(file != null){
-        formData.append('gpxs', file);
-    }else{
-    }
- 
-      formData.append('config', 
-      data
-      );
+            body: formData
+          })
 
-      try {
-        const response = await fetch('http://localhost:8000/generate-map-normal/', {
-          method: 'POST',
-
-       body: formData,
-    
-        });
-
-        // Parse the JSON response from FastAPI
-        const result = await response.json();
-        if (result['token'] != undefined){
-          token = result['token']
+          // Parse the JSON response from FastAPI
+            const result = await response.json()
+          if (result["token"] != undefined) {
+            token = result["token"]
+          }
+          // Log the result to the console
+          console.log("Response:", result)
+        } catch (error) {
+          console.error("Error:", error)
         }
-        // Log the result to the console
-        console.log('Response:', result);
-      } catch (error) {
-        console.error('Error:', error);
       }
-    }
 
-    async function sendDataPaper() {
-      // Send the data using the fetch API to FastAPI endpoint
-      try {
-        const response = await fetch('http://localhost:8000/paper_dimensions/', {
-          method: 'POST',
-          
-          body: JSON.stringify({
-        "map_area":AREA,
-        "paper_dimensions": PAPER_DIM,
-        "given_smaller_paper_dimension": false,
-        "wanted_orientation": "automatic",
-      }),
+      // Function to send data with a file
+      async function sendDataNormal() {
+        // Create a FormData object to send data and file
+        const formData = new FormData()
+
+        const fileInput = document.getElementById("fileInput")
+        const file = fileInput.files[0] // Get the first file selected
+
+        // formData.append('gpxs', [file, file]);
+        if (file != null) {
+          formData.append("gpxs", file)
+        } else {
+        }
+
+        formData.append("config", data)
+
+        try {
+          const response = await fetch("http://localhost:8000/generate_map_normal/", {
+            method: "POST",
+
+            body: formData
+          })
+
+          // Parse the JSON response from FastAPI
+          const result = await response.json()
+          if (result["token"] != undefined) {
+            token = result["token"]
+          }
+          // Log the result to the console
+          console.log("Response:", result)
+        } catch (error) {
+          console.error("Error:", error)
+        }
+      }
+
+      async function sendDataPaper() {
+        // Send the data using the fetch API to FastAPI endpoint
+        try {
+          const response = await fetch("http://localhost:8000/paper_dimensions/", {
+            method: "POST",
+
+            body: JSON.stringify({
+              map_area: AREA,
+              paper_dimensions: {width: 2000, height: undefined},
+              given_smaller_paper_dimension: false,
+              wanted_orientation: "automatic"
+            }),
             headers: {
-        'Content-Type': 'application/json',
-      },
+              "Content-Type": "application/json"
+            }
+          })
+
+          // Parse the JSON response from FastAPI
+          const result = await response.json()
+          // Log the result to the console
+          console.log("Response:", result)
+        } catch (error) {
+          console.error("Error:", error)
+        }
+      }
+
+      async function sendDataZoom() {
+        try {
+          const response = await fetch("http://localhost:8000/zoom_level/", {
+            method: "POST",
+            //zoom
+            body: JSON.stringify({
+              map_area: AREA,
+              paper_dimensions: PAPER_DIM,
+              fit_paper_size: FIT_PAPER
+            }),
+            headers: {
+              "Content-Type": "application/json"
+            }
+            //paper
+          })
+
+          // Parse the JSON response from FastAPI
+          const result = await response.json()
+          // Log the result to the console
+          console.log("Response:", result)
+        } catch (error) {
+          console.error("Error:", error)
+        }
+      }
+
+      async function zoomAndPaper() {
+        try {
+          const response = await fetch("http://localhost:8000/paper_and_zoom/", {
+            method: "POST",
+            //zoom
+            body: JSON.stringify({
+              map_area: AREA,
+              paper_dimensions: PAPER_DIM,
+              given_smaller_paper_dimension: false,
+              wanted_orientation: "automatic"
+            }),
+            headers: {
+              "Content-Type": "application/json"
+            }
+            //paper
+          })
+
+          // Parse the JSON response from FastAPI
+          const result = await response.json()
+          // Log the result to the console
+          console.log("Response:", result)
+        } catch (error) {
+          console.error("Error:", error)
+        }
+      }
+
+      async function get() {
+        try {
+          const response = await fetch("http://localhost:8000/task_status/", {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json"
+            }
+          })
+
+          // Parse the JSON response from FastAPI
+          const result = await response.json()
+
+          // Log the result to the console
+          console.log("Response:", result)
+        } catch (error) {
+          console.error("Error:", error)
+        }
+      }
+      async function terminate() {
+        try {
+          const response = await fetch("http://localhost:8000/terminate_task/", {
+            method: "DELETE",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json"
+            }
+          })
+
+          // Parse the JSON response from FastAPI
+          const result = await response.json()
+
+          // Log the result to the console
+          console.log("Response:", result)
+        } catch (error) {
+          console.error("Error:", error)
+        }
+      }
+
+      async function download_map() {
+        try {
+          const response = await fetch("http://localhost:8000/download_map/", {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json"
+            }
+          })
+
+          // check for error response
+          if (!response.ok) {
+            console.log("Response:", result)
+            throw new Error(`HTTP error! status: ${response.status}`)
+          }
+          // Parse the JSON response from FastAPI
+          const blob = await response.blob()
+          // Create a URL for the blob
+          const url = window.URL.createObjectURL(blob)
+
+          // Create a temporary anchor element
+          const a = document.createElement("a")
+          a.style.display = "none"
+          a.href = url
+          a.download = "map.pdf"
+
+          // Add to the DOM and trigger the download
+          document.body.appendChild(a)
+          a.click()
+
+          // Clean up
+          window.URL.revokeObjectURL(url)
+          document.body.removeChild(a)
+
+          // Update status
+          if (statusElement) {
+            statusElement.textContent = "Download complete!"
+          }
+          // Log the result to the console
+          console.log("Response:", result)
+        } catch (error) {
+          console.error("Error:", error)
+        }
+      }
+
+      async function get_map_borders() {
+        try {
+          const response = await fetch("http://localhost:8000/generate_map_borders/", {
+            method: "POST",
+            body: JSON.stringify({
+              map_area: AREA,
+              paper_dimensions: { height: 400, width: 410 },
+              fit_paper_size: {fit:true, plot:true, width: 1.5},
+            }),
+            //   body: JSON.stringify({
+            //   "map_area":[{"area": "Česko",
+            //   "plot": true, 'category': 0, 'width': 1},
+            //   {"area": "Třebíč, Česko",
+            //   "plot": false, 'category': 0, 'width': 1}, {"area": "Brno, Česko", "plot":true, 'category': 0, 'width': 1}],
+            //   "paper_dimensions":{'height': 200, 'width': 350},
+            //   "fit_paper_size": false,
+            //   "fit_paper_size_bounds_plot": true,
+            // }),
+            headers: {
+              "Content-Type": "application/json"
+            }
+          })
+
+          // check for error response
+          if (!response.ok) {
+            console.log("Response:", result)
+
+            throw new Error(`HTTP error! status: ${response.status}`)
+          }
+          // Parse the JSON response from FastAPI
+          const blob = await response.blob()
+          // Create a URL for the blob
+          const url = window.URL.createObjectURL(blob)
+
+          // Create a temporary anchor element
+          const a = document.createElement("a")
+          a.style.display = "none"
+          a.href = url
+          a.download = "map.pdf"
+
+          // Add to the DOM and trigger the download
+          document.body.appendChild(a)
+          a.click()
+
+          // Clean up
+          window.URL.revokeObjectURL(url)
+          document.body.removeChild(a)
+
+          // Update status
+          if (statusElement) {
+            statusElement.textContent = "Download complete!"
+          }
+          // Log the result to the console
+          console.log("Response:", result)
+        } catch (error) {
+          console.error("Error:", error)
+        }
+      }
+      async function validate_area() {
+        try {
+          const response = await fetch("http://localhost:8000/validate_area/", {
+            method: "POST",
+            //zoom
+            body: JSON.stringify({
+              map_area: AREA
+            }),
+            headers: {
+              "Content-Type": "application/json"
+            }
+            //paper
+          })
+
+          // Parse the JSON response from FastAPI
+          const result = await response.json()
+          // Log the result to the console
+          console.log("Response:", result)
+        } catch (error) {
+          console.error("Error:", error)
+        }
+      }
+      async function get_themes() {
+        try {
+          const response = await fetch("http://localhost:8000/available_map_themes/", {
+            method: "GET"
+            //zoom
+
+            //paper
+          })
+
+          // Parse the JSON response from FastAPI
+          const result = await response.json()
+          // Log the result to the console
+          console.log("Response:", result)
+        } catch (error) {
+          console.error("Error:", error)
+        }
+      }
+      async function get_files() {
+        try {
+          const response = await fetch("http://localhost:8000/available_osm_files/", {
+            method: "GET"
+            //zoom
+
+            //paper
+          })
+
+          // Parse the JSON response from FastAPI
+          const result = await response.json()
+          // Log the result to the console
+          console.log("Response:", result)
+        } catch (error) {
+          console.error("Error:", error)
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <h1>Upload File and Data</h1>
+
+    <!-- File input for selecting the file -->
+    <input type="file" id="fileInput" />
+
+    <!-- Button to trigger the sendData function -->
+    <button onclick="sendDataNormal()">Generovat normal</button>
+    <button onclick="sendDataPrev()">Generovat nahled</button>
+    <button onclick="sendDataZoom()">zoom</button>
+    <button onclick="sendDataPaper()">papir</button>
+    <button onclick="zoomAndPaper()">papir a zoom</button>
+    <button onclick="get()">Status generování</button>
+    <button onclick="terminate()">Ukončit</button>
+    <button onclick="download_map()">Stáhnout</button>
+    <button onclick="get_map_borders()">okraje</button>
+    <button onclick="validate_area()">kontrola oblasti</button>
+    <button onclick="get_themes()">vzhledy</button>
+    <button onclick="get_files()">soubory</button>
+  </body>
+
+  <script>
+    // // // transforming to send data (in 3 arrays - nodes, ways, areas)
+    // function transformStructure(data, keep_key, scale_keys) {
+    //   const result = {}
+
+    //   // Each main category (highway, building...)
+    //   for (const categoryKey in data) {
+    //     const category = data[categoryKey]
+
+    //     // Check if the category has a keep_key property
+    //     if (category.hasOwnProperty(keep_key)) {
+    //       if (category.plot === true) {
+    //         const newCategory = {}
+    //         for (const propKey in category) {
+    //           if (propKey === keep_key || !scale_keys.hasOwnProperty(propKey)) {
+    //             continue
+    //           }
+    //           // Remove scale attributes with value 1
+    //           if (category[propKey] !== scale_keys[propKey]) {
+    //             newCategory[propKey] = category[propKey]
+    //           }
+    //         }
+
+    //         // add only if plot is true
+    //         result[categoryKey] = newCategory
+    //       }
+    //       // If plot is false, skip this subcategory
+    //     } else {
+    //       // Process subcategories (like motorway, primary inside main key highway)
+    //       const newCategory = {}
+    //       let hasValidSubcategories = false
+
+    //       for (const subcategoryKey in category) {
+    //         const subcategory = category[subcategoryKey]
+
+    //         // Check if subcategory has plot property
+    //         if (subcategory.hasOwnProperty(keep_key)) {
+    //           if (subcategory.plot === true) {
+    //             // keep this subcategory but remove plot property
+    //             const newSubcategory = {}
+
+    //             for (const propKey in subcategory) {
+    //               if (propKey === keep_key || !scale_keys.hasOwnProperty(propKey)) {
+    //                 continue
+    //               }
+    //               // Remove scale attributes with value same as default
+    //               if (subcategory[propKey] !== scale_keys[propKey]) {
+    //                 newSubcategory[propKey] = subcategory[propKey]
+    //               }
+    //             }
+    //             // at least one subcategory is valid
+    //             hasValidSubcategories = true
+    //             newCategory[subcategoryKey] = newSubcategory
+    //           }
+    //           // If plot is false, skip this subcategory
+    //         }
+    //       }
+
+    //       // Add category if has any valid subcategories
+    //       if (hasValidSubcategories) {
+    //         result[categoryKey] = newCategory
+    //       }
+    //     }
+    //   }
+
+    //   return result
+    // }
+
+    // const data = {
+    //   highway: {
+    //     motorway: { plot: false },
+    //     primary: { plot: false }
+    //   },
+    //   railway: {
+    //     rail: { plot: true, width_scale: "1", text_scale: 3 }
+    //   },
+    //   route: { plot: true, width_scale: 2 },
+    //   barrier: { plot: true }
+    // }
+
+    // const transformed = transformStructure(data, "plot", { width_scale: 1, text_scale: 1 })
+    // console.log(JSON.stringify(transformed, null, 2))
+
 
     
-        });
+    // // change false/true of updateKey for ploting in zoom
+    // function updatePlotSettings(dataToUpdate, updateRules, updateKey) {
+    //   // main keys to update (like highway, railway...)
+    //   for (const categoryKey in updateRules) {
+    //     const category = updateRules[categoryKey]
+    //     if (typeof category  === 'boolean' && category) {
+    //       if (dataToUpdate[categoryKey]) {
+    //         // If it has plot property directly (e.g. building: {plot: true})
+    //         if (typeof dataToUpdate[categoryKey] === "object" && dataToUpdate[categoryKey].hasOwnProperty(updateKey)) {
+    //           dataToUpdate[categoryKey][updateKey] = true
+    //         }
 
-        // Parse the JSON response from FastAPI
-        const result = await response.json();
-        // Log the result to the console
-        console.log('Response:', result);
-      } catch (error) {
-        console.error('Error:', error);
-      }
-    }
+    //         // For all its subcategories if have (e.g. highway: {motorway: {plot: true}})
+    //         for (const subKey in dataToUpdate[categoryKey]) {
+    //           if (
+    //             typeof dataToUpdate[categoryKey][subKey] === "object" &&
+    //             dataToUpdate[categoryKey][subKey].hasOwnProperty(updateKey)
+    //           ) {
+    //             dataToUpdate[categoryKey][subKey][updateKey] = true
+    //           }
+    //         }
+    //       }
+    //     } else if (Array.isArray(category)) {
+    //       // Specific parent categories are listed
+    //       for (const parentCategory of category) {
+    //         // check if the parent category exists in dataToUpdate
+    //         if (
+    //           dataToUpdate[categoryKey] &&
+    //           dataToUpdate[categoryKey][parentCategory] &&
+    //           typeof dataToUpdate[categoryKey][parentCategory] === "object" &&
+    //           dataToUpdate[categoryKey][parentCategory].hasOwnProperty(updateKey)
+    //         ) {
+    //           dataToUpdate[categoryKey][parentCategory][updateKey] = true
+    //         }
+    //       }
+    //     }
+    //   }
+    // }
 
-    async function sendDataZoom() {
-      try {
-        const response = await fetch('http://localhost:8000/zoom_level/', {
-          method: 'POST',
-    //zoom
-    body: JSON.stringify({
-        "map_area":AREA,
-        "paper_dimensions":PAPER_DIM,
-        "fit_paper_size": FIT_PAPER,
-      }),
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      //paper
-     
+    // // Your example data
+    // let data = {
+    //   highway: {
+    //     motorway: { plot: false, width_scale: 1 },
+    //     primary: { plot: false }
+    //   },
+    //   railway: {
+    //     rail: { plot: false, width_scale: "1", text_scale: 3 },
+    //     subway: { plot: false }
+    //   },
+    //   route: { plot: false, width_scale: 2 },
+    //   barrier: { plot: false }
+    // }
 
-    
-        });
-
-        // Parse the JSON response from FastAPI
-        const result = await response.json();
-        // Log the result to the console
-        console.log('Response:', result);
-      } catch (error) {
-        console.error('Error:', error);
-      }
-    }
-
-
-
-    async function get() {
-      try {
-        const response = await fetch('http://localhost:8000/task_status/', {
-          headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            },
-        });
-
-        // Parse the JSON response from FastAPI
-        const result = await response.json();
-
-        // Log the result to the console
-        console.log('Response:', result);
-      } catch (error) {
-        console.error('Error:', error);
-      }
-    }
-    async function terminate() {
-      try {
-        const response = await fetch('http://localhost:8000/terminate_task/', {
-          method: 'DELETE',
-          headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            },
-
-        });
-
-        // Parse the JSON response from FastAPI
-        const result = await response.json();
-        
-        // Log the result to the console
-        console.log('Response:', result);
-      } catch (error) {
-        console.error('Error:', error);
-      }
-    }
-
-    async function download_map() {
-      try {
-        const response = await fetch('http://localhost:8000/download_map/', {
-          method: 'GET',
-          headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            },
-
-        });
-
-        // check for error response
-        if (!response.ok) {
-          console.log('Response:', result);
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        // Parse the JSON response from FastAPI
-        const blob = await response.blob();
-        // Create a URL for the blob
-        const url = window.URL.createObjectURL(blob);
-        
-        // Create a temporary anchor element
-        const a = document.createElement('a');
-        a.style.display = 'none';
-        a.href = url;
-        a.download = "map.pdf";
-        
-        // Add to the DOM and trigger the download
-        document.body.appendChild(a);
-        a.click();
-        
-        // Clean up
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-        
-        // Update status
-        if (statusElement) {
-            statusElement.textContent = 'Download complete!';
-        }
-        // Log the result to the console
-        console.log('Response:', result);
-      } catch (error) {
-        console.error('Error:', error);
-      }
-    }
-
-    async function get_map_borders() {
-      
-
-     
-      try {
-        const response = await fetch('http://localhost:8000/generate_map_borders/', {
-          method: 'POST',
-          body: JSON.stringify({       
-          "map_area":[
-          //   {"area": "Česko",
-          // "plot": true, 'category': 0, 'width': 1},
-          // {"area": "Německo",
-          // "plot": false, 'category': 0, 'width': 1}, {"area": "Rakousko", "plot":true, 'category': 0, 'width': 1},
-          {"area": "Rusko", "plot":true, 'category': 0, 'width': 1}
-        ],
-          "paper_dimensions":{'height': 2000, 'width': 3050},
-          "fit_paper_size": false,
-          "fit_paper_size_bounds_plot": true,
-        }),
-        //   body: JSON.stringify({       
-        //   "map_area":[{"area": "Česko",
-        //   "plot": true, 'category': 0, 'width': 1},
-        //   {"area": "Třebíč, Česko",
-        //   "plot": false, 'category': 0, 'width': 1}, {"area": "Brno, Česko", "plot":true, 'category': 0, 'width': 1}],
-        //   "paper_dimensions":{'height': 200, 'width': 350},
-        //   "fit_paper_size": false,
-        //   "fit_paper_size_bounds_plot": true,
-        // }),
-          headers: {
-          'Content-Type': 'application/json',
-        },
-        });
-
-        // check for error response
-        if (!response.ok) {
-          console.log('Response:', result);
-
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        // Parse the JSON response from FastAPI
-        const blob = await response.blob();
-        // Create a URL for the blob
-        const url = window.URL.createObjectURL(blob);
-        
-        // Create a temporary anchor element
-        const a = document.createElement('a');
-        a.style.display = 'none';
-        a.href = url;
-        a.download = "map.pdf";
-        
-        // Add to the DOM and trigger the download
-        document.body.appendChild(a);
-        a.click();
-        
-        // Clean up
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-        
-        // Update status
-        if (statusElement) {
-            statusElement.textContent = 'Download complete!';
-        }
-        // Log the result to the console
-        console.log('Response:', result);
-      } catch (error) {
-        console.error('Error:', error);
-      }
-    }
+    // // Your example rules
+    // const updateRules = {
+    //   areas: {
+    //     highway: ["motorway"],
+    //     railway: false,
+    //     route: []
+    //   }
+    // }
 
 
+
+    // // Test
+    // updatePlotSettings(data, updateRules["areas"], "plot")
+
+    // console.log(JSON.stringify(data, null, 2))
+    // const transformed = transformStructure(data, "plot", { width_scale: 1, text_scale: 1 })
+    // console.log(JSON.stringify(transformed, null, 2))
   </script>
-</head>
-<body>
-
-  <h1>Upload File and Data</h1>
-
-  <!-- File input for selecting the file -->
-  <input type="file" id="fileInput" />
-    
-  <!-- Button to trigger the sendData function -->
-  <button onclick="sendDataNormal()">Generovat normal</button>
-  <button onclick="sendDataPrev()">Generovat nahled</button>
-  <button onclick="sendDataZoom()">zoom</button>
-  <button onclick="sendDataPaper()">papir</button>
-  <button onclick="get()"> Status generování</button>
-  <button onclick="terminate()"> Ukončit</button>
-  <button onclick="download_map()"> Stáhnout</button>
-  <button onclick="get_map_borders()"> okraje</button>
-
-</body>
 </html>
