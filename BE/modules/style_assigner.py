@@ -60,6 +60,8 @@ class StyleManager:
 
     @staticmethod
     def assign_styles(gdf: GeoDataFrame, conditons_styles: ElementStyles, dont_categorize: list[str] = []) -> None:
+        """
+        Assign styles to gdf rows based on conditions in styles using pandas filtres."""
         if (gdf.empty):
             return
         new_styles: Style = set()
@@ -86,7 +88,7 @@ class StyleManager:
     @staticmethod
     def scale_styles(all_styles: ElementStyles, styles_to_scale: list[str], map_scaling_factor: float):
         styles_to_scale = set(styles_to_scale)
-        if(not styles_to_scale):
+        if (not styles_to_scale):
             return
         for filter, styles_dict in all_styles:
             for key in styles_dict.keys() & styles_to_scale:

@@ -1,5 +1,12 @@
 <script lang="ts">
   import { onMount } from "svelte";
+  import api from "$lib/axios.config";
+
+  import { paperSizes, mapDataNamesMappingCZ } from "$lib/constants";
+  import { mapValue } from "$lib/utils/mapElementsUtils";
+  import { Trash2, CirclePlus } from "@lucide/svelte";
+  import InfoToolTip from "$lib/components/infoToolTip.svelte";
+  import LoadingSpinner from "$lib/components/loadingSpinner.svelte";
   import {
     wantedAreas,
     fitPaperSize,
@@ -19,7 +26,6 @@
     avilableMapFiles,
   } from "$lib/stores/frontendStore";
 
-  import api from "$lib/axios.config";
   import {
     checkMapCordinatesFormat,
     checkFitPaper,
@@ -28,17 +34,13 @@
     searchAreaWhisper,
     checkPaperDimensions,
   } from "$lib/utils/areaUtils";
-  import { paperSizes, mapDataNamesMappingCZ } from "$lib/constants";
-  import { mapValue } from "$lib/utils/mapElementsUtils";
-  import { Trash2, CirclePlus } from "@lucide/svelte";
-  import InfoToolTip from "$lib/components/infoToolTip.svelte";
-  import LoadingSpinner from "$lib/components/loadingSpinner.svelte";
 
   let areaSuggestions: string[][] = [];
   const defaultWidth = 0.45;
   let numberOfAreasPlotVar = 0;
 
   let debounceTimeout: ReturnType<typeof setTimeout> | null = null;
+  const debounceTime = 350;
   let mapFileSearchTerm = "";
 
   onMount(() => {
@@ -286,7 +288,7 @@
         .catch((e) => {
           console.error(e);
         });
-    }, 200);
+    }, debounceTime);
   }
 
   function selectAreaSuggestion(newAreaValue: string, id: number): void {
@@ -470,12 +472,13 @@
             {/if}
             {#if checkMapCordinatesFormat(area.area) != ""}
               <p class="text-red-500 text-sm">
-                {checkMapCordinatesFormat(area.area)} <InfoToolTip
-                text=" Pokud jsou souřadnice neplatné, považují se za oblast podle názvu. 
+                {checkMapCordinatesFormat(area.area)}
+                <InfoToolTip
+                  text=" Pokud jsou souřadnice neplatné, považují se za oblast podle názvu. 
                 Pokud tedy zadáváte název oblasti nikoliv souřadnice, tuto chybu můžete ignorovat."
-                position="right"
-                size="sm"
-              />
+                  position="right"
+                  size="sm"
+                />
               </p>
             {/if}
           </div>

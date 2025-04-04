@@ -4,7 +4,9 @@ from config import CRS_OSM, CRS_DISPLAY, OUTPUT_PDF_FOLDER, OSM_TMP_FILE_FOLDER,
 from config import STYLES, FE_EDIT_STYLES_VALIDATION, FE_STYLES_ALLOWED_ELEMENTS, FE_EDIT_STYLES_MAPPING, NODES_ALSO_FROM_AREA
 from config import PLACES_TO_FILTER_BY_POPULATION, REQ_AREA_KEY_WITH_AREA, REQ_AREA_KEY_TO_GROUP_BY, REQ_AREA_KEY_WITH_BOOLEAN_PLOT
 from common.map_enums import ProcessingStatus, SharedDictKeys, BaseConfigKeys, MapConfigKeys, MapThemeVariable, Style
+from common.custom_types import DimensionsTuple
 from modules.gdf_utils import GdfUtils
+from geopandas import GeoDataFrame
 from modules.utils import Utils
 from modules.osm_data_parser import OsmDataParser
 from modules.osm_data_preprocessor import OsmDataPreprocessor
@@ -13,7 +15,8 @@ from modules.plotter import Plotter
 from modules.received_structure_processor import ReceivedStructureProcessor
 
 
-def get_map_area_gdf(wanted_areas_to_display, boundary=False):
+def get_map_area_gdf(wanted_areas_to_display, boundary=False) -> tuple[GeoDataFrame, GeoDataFrame] | GeoDataFrame:
+    """Get gdf with map area from wanted areas structure received from FE. Optionally return also gdf with boundaries of areas."""
     map_area_gdf = GdfUtils.get_whole_area_gdf(
         wanted_areas_to_display, REQ_AREA_KEY_WITH_AREA, CRS_OSM, CRS_DISPLAY)
 
@@ -31,7 +34,9 @@ def get_map_area_gdf(wanted_areas_to_display, boundary=False):
     return map_area_gdf
 
 
-def process_bridges_and_tunnels(gdf, want_bridges: bool, want_tunnels: bool):
+def process_bridges_and_tunnels(gdf: GeoDataFrame, want_bridges: bool, want_tunnels: bool):
+    """Remove or keep bridges and tunnels in gdf. If not wanted any of it it will remove layer and both columns.
+    Else it will remove not wanted columns and first set layer for that column to 0."""
     GdfUtils.change_columns_to_numeric(gdf, ['layer'])
     GdfUtils.fill_nan_values(gdf, ['layer'], 0)
     gdf['layer'] = gdf.get('layer', 0)
@@ -62,7 +67,8 @@ def convert_loaded_columns(gdf, numeric_columns, round_columns):
     GdfUtils.convert_numeric_columns_int(gdf, round_columns)
 
 
-def prepare_styled_columns_gpxs(gpxs_gdf):
+def prepare_styled_columns_gpxs(gpxs_gdf: GeoDataFrame):
+    """Preparing styled columns like multipling and creating derivated columns and setting default values."""
     GdfUtils.fill_nan_values(gpxs_gdf, [Style.ZINDEX.value], 0)
     GdfUtils.create_derivated_columns(gpxs_gdf, Style.EDGE_WIDTH.value, Style.WIDTH.value, [
                                       Style.EDGE_WIDTH_RATIO.value])
@@ -75,7 +81,8 @@ def prepare_styled_columns_gpxs(gpxs_gdf):
                                        Style.EDGE_WIDTH_RATIO.value])
 
 
-def prepare_styled_columns_nodes(nodes_gdf, config):
+def prepare_styled_columns_nodes(nodes_gdf: GeoDataFrame, config):
+    """Prepareing styled columns like multipling and creating derivated columns and setting default values."""
     GdfUtils.fill_nan_values(nodes_gdf, [Style.ZINDEX.value], 0)
 
     GdfUtils.multiply_column_gdf(nodes_gdf, Style.WIDTH.value, [
@@ -99,7 +106,8 @@ def prepare_styled_columns_nodes(nodes_gdf, config):
                                         Style.EDGE_WIDTH_RATIO.value, Style.TEXT_OUTLINE_WIDTH_RATIO.value, *old_column_remove])
 
 
-def prepare_styled_columns_ways(ways_gdf, config):
+def prepare_styled_columns_ways(ways_gdf: GeoDataFrame, config):
+    """Preparing styled columns like multipling and creating derivated columns and setting default values."""
     GdfUtils.fill_nan_values(ways_gdf, [Style.ZINDEX.value], 0)
 
     GdfUtils.multiply_column_gdf(ways_gdf, Style.WIDTH.value, [
@@ -123,7 +131,8 @@ def prepare_styled_columns_ways(ways_gdf, config):
                                        Style.BRIDGE_WIDTH_RATIO.value, Style.BRIDGE_EDGE_WIDTH_RATIO.value, *old_column_remove])
 
 
-def prepare_styled_columns_areas(areas_gdf, config):
+def prepare_styled_columns_areas(areas_gdf: GeoDataFrame, config):
+    """Preparing styled columns like multipling and creating derivated columns and setting default values."""
     GdfUtils.fill_nan_values(areas_gdf, [Style.ZINDEX.value], 0)
 
     GdfUtils.multiply_column_gdf(areas_gdf, Style.WIDTH.value, [
@@ -141,7 +150,10 @@ def prepare_styled_columns_areas(areas_gdf, config):
                                         Style.EDGE_WIDTH_RATIO.value, *old_column_remove])
 
 
-def calc_preview(map_area_gdf, paper_dimensions_mm, fit_paper_size, preview_map_area_gdf, preview_paper_dimensions_mm):
+def calc_preview(map_area_gdf: GeoDataFrame, paper_dimensions_mm: DimensionsTuple, fit_paper_size: bool, preview_map_area_gdf: GeoDataFrame, preview_paper_dimensions_mm: DimensionsTuple) -> tuple[float, GeoDataFrame, GeoDataFrame, float]:
+    """Calculate data for createing preview of big area in small area and small paper. 
+    Create preview area gdf and from that area create preview that will fill whole paper and have same scale as normal map."""
+
     # calc scaling factor always from expanded are on paper - to get correct sizes of scaled objects
     if (fit_paper_size):
         map_area_gdf = GdfUtils.expand_gdf_area_fitPaperSize(
@@ -187,6 +199,7 @@ def plot_map_borders(file_id, map_area_gdf, boundary_map_area_gdf, paper_dimensi
 
 
 def generate_map(config: dict[MapConfigKeys, any], task_id: str, shared_dict: dict[str, Any], lock) -> None:
+    """Main function for generating map. It will create map from wanted areas and styles and save it to pdf file."""
     with lock:
         shared_dict[task_id] = {
             **shared_dict[task_id],
@@ -206,7 +219,7 @@ def generate_map(config: dict[MapConfigKeys, any], task_id: str, shared_dict: di
     osm_file = osm_data_preprocessor.extract_areas(
         config[MapConfigKeys.MAP_AREA.value], CRS_OSM)
     # prepare all structures
-    wanted_categories, styles_size_edits = ReceivedStructureProcessor.transform_to_backend_structures(
+    wanted_categories, styles_size_edits = ReceivedStructureProcessor.transform_wanted_elements_to_backend_structures(
         config[MapConfigKeys.WANTED_CATEGORIES_AND_STYLES_CHANGES.value], FE_EDIT_STYLES_VALIDATION.keys(),
         FE_STYLES_ALLOWED_ELEMENTS, FE_EDIT_STYLES_MAPPING)
 

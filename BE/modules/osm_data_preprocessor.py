@@ -30,11 +30,12 @@ class OsmDataPreprocessor:
         return name
 
     def __merge_osm_files(self, input_tmp_files: list[str], osm_output_file):
+        """Merge multiple osm files into one file."""
         command = ['osmium', 'merge'] + input_tmp_files + \
-            ['--overwrite', 
+            ['--overwrite',
              '--no-progress',
              '-o', osm_output_file]
-             
+
         try:
             subprocess.run(command, check=True)
         except Exception as e:
@@ -42,6 +43,7 @@ class OsmDataPreprocessor:
                 f"Cannot merge osm files: {e}")
 
     def __extract_area(self, osm_input_file: str, osm_output_file: str, temp_geojson_path: str) -> str:
+        """Extract wanted area from osm file using osmium tool. It will create a new osm file with the wanted area. That will be used to load data or in merging process."""
         command = [
             'osmium', 'extract',
             '--strategy', 'smart',
@@ -61,12 +63,13 @@ class OsmDataPreprocessor:
                     **self.shared_dict[self.task_id],
                     SharedDictKeys.FILES.value: [file for file in self.shared_dict[self.task_id][SharedDictKeys.FILES.value] if file != temp_geojson_path],
                 }
-            
+
             raise Exception(
                 f"Cannot extract osm file: {e}")
         return osm_output_file
 
     def extract_areas(self, reqired_area_gdf: GeoDataFrame, crsTo: str):
+        """Extract wanted area from osm files to new files and merge them if needed. That return name of that new osm file for data loading."""
         temp_geojson_path = self.__create_tmp_geojson(
             reqired_area_gdf.to_crs(crsTo))
         with self.lock:

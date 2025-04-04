@@ -1,6 +1,8 @@
 <script lang="ts">
   import { gpxStyles } from "$lib/stores/mapStore";
   import { displayedTabGpxGroupsStyle } from "$lib/stores/frontendStore";
+  import { mapValue } from "$lib/utils/mapElementsUtils";
+  import InfoToolTip from "$lib/components/infoToolTip.svelte";
   import {
     gpxDefaultStyles,
     LINESTYLES,
@@ -11,8 +13,7 @@
     MARKER_MAPPING_CZ,
     MARKER_LAYER_POSITION_MAPPING_CZ,
   } from "$lib/constants";
-  import { mapValue } from "$lib/utils/mapElementsUtils";
-  import InfoToolTip from "$lib/components/infoToolTip.svelte";
+
 
   const minMM = 0.05;
   const minRange = 0;

@@ -12,11 +12,11 @@
     const input = event.target as HTMLInputElement;
     if (input.files) {
       gpxFiles.addFiles(Array.from(input.files));
-      // Reset file input
       if (fileInput) fileInput.value = "";
     }
   }
 
+  // for drag and drop color highlighting
   function handleDragOver(event: DragEvent) {
     event.preventDefault();
     dragOver = true;

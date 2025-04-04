@@ -1,12 +1,12 @@
 <script lang="ts">
   import { gpxFiles, gpxStyles, gpxFileGroups } from "$lib/stores/mapStore";
   import { gpxDefaultStyles } from "$lib/constants";
+  import { Trash2, FileX, CirclePlus } from "@lucide/svelte";
   import {
     createUniqueName,
     getUngrupedFiles,
     checkGroupMembership,
   } from "$lib/utils/gpxFilesUtils";
-  import { Trash2, FileX, CirclePlus } from "@lucide/svelte";
 
   let newGroupName = "";
   let selectedFiles: { [groupName: string]: string[] } = {};

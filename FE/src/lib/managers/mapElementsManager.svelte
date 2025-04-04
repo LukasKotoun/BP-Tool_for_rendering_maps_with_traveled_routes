@@ -1,4 +1,14 @@
 <script lang="ts">
+  import InfoToolTip from "$lib/components/infoToolTip.svelte";
+  import {
+    avilableMapThemes,
+    displayedElementsCategory,
+  } from "$lib/stores/frontendStore";
+  import {
+    mapValue,
+    updateWantedElements,
+    resetPlotSettings,
+  } from "$lib/utils/mapElementsUtils";
   import {
     mapNodesElements,
     mapWaysElements,
@@ -13,15 +23,6 @@
     selectedMapTheme,
   } from "$lib/stores/mapStore";
   import {
-    avilableMapThemes,
-    displayedElementsCategory,
-  } from "$lib/stores/frontendStore";
-  import {
-    mapValue,
-    updateWantedElements,
-    resetPlotSettings,
-  } from "$lib/utils/mapElementsUtils";
-  import {
     nodesKeysNamesMappingCZ,
     nodesNamesMappingCZ,
     waysKeysNamesMappingCZ,
@@ -33,7 +34,6 @@
     wantedWaysUpdatesZooms,
     wantedAreasUpdatesZooms,
   } from "$lib/constants";
-  import InfoToolTip from "$lib/components/infoToolTip.svelte";
 
   const multiplierMin = 0.1;
   const multiplierMax = 4;
@@ -54,6 +54,7 @@
     }
     $mapNodesElements = restartedData;
     $peaksFilterSensitivity = 2.5;
+    // default values for zoom levels
     switch (zoomLevel) {
       case 5:
         $minPopulationFilter = 250;
@@ -87,6 +88,7 @@
     }
     $mapWaysElements = restartedData;
     $wantPlotTunnels = true;
+    // default values for zoom levels
     switch (zoomLevel) {
       case 10:
       case 9:
@@ -120,7 +122,7 @@
   <div class="space-y-4 rounded-lg bg-gray-100">
     <h1 class="text-xl p-4 font-bold">
       Vzhled na základě úrovně přiblížení <InfoToolTip
-        text="Při nastavení jiné oblasti nebo jiného papíru se změní úroveň detailu zpět na automatické."
+        text="Při nastavení jiné oblasti nebo jiného papíru se změní úroveň detailu zpět na automatickou."
         position="right"
         size="sm"
       />

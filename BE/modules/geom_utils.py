@@ -7,8 +7,10 @@ from pyproj import Geod
 
 from common.map_enums import WorldSides
 from common.custom_types import BoundsDict
+
+
 class GeomUtils:
-    
+
     @staticmethod
     def get_polygon_bounds(polygon: Polygon) -> BoundsDict:
         bounds: tuple[float] = polygon.bounds
@@ -20,16 +22,23 @@ class GeomUtils:
     @staticmethod
     def create_polygon_from_bounds(area_bounds: BoundsDict) -> Polygon:
         return Polygon([
-            (area_bounds[WorldSides.EAST.value], area_bounds[WorldSides.SOUTH.value]),
-            (area_bounds[WorldSides.EAST.value], area_bounds[WorldSides.NORTH.value]),
-            (area_bounds[WorldSides.WEST.value], area_bounds[WorldSides.NORTH.value]),
-            (area_bounds[WorldSides.WEST.value], area_bounds[WorldSides.SOUTH.value]),
+            (area_bounds[WorldSides.EAST.value],
+             area_bounds[WorldSides.SOUTH.value]),
+            (area_bounds[WorldSides.EAST.value],
+             area_bounds[WorldSides.NORTH.value]),
+            (area_bounds[WorldSides.WEST.value],
+             area_bounds[WorldSides.NORTH.value]),
+            (area_bounds[WorldSides.WEST.value],
+             area_bounds[WorldSides.SOUTH.value]),
             # Closing the polygon
-            (area_bounds[WorldSides.EAST.value], area_bounds[WorldSides.SOUTH.value])
+            (area_bounds[WorldSides.EAST.value],
+             area_bounds[WorldSides.SOUTH.value])
         ])
-        
+
     @staticmethod
     def merge_lines_safe(geoms: GeometryCollection):
+        """Merge lines in geometry collection to one line. 
+        If it is not possible, return the original geometry collection."""
         unioned = unary_union(geoms)
         if unioned.is_empty:
             return unioned
@@ -43,7 +52,7 @@ class GeomUtils:
                 return unioned
         if isinstance(unioned, GeometryCollection):
             lines = [geom for geom in unioned.geoms if
-                           isinstance(geom, (LineString, MultiLineString))]
+                     isinstance(geom, (LineString, MultiLineString))]
             if not lines:
                 return unioned
             elif len(lines) == 1:
@@ -60,12 +69,12 @@ class GeomUtils:
     @staticmethod
     def is_geometry_inside_geometry(inner: GeometryCollection, outer: GeometryCollection) -> bool:
         return outer.contains(inner)
-    
+
     @staticmethod
     def transform_geometry_to_display_coords(ax, geometry):
         """
-        Converts a Polygon or MultiPolygon to a new geometry in display (plot) coordinates
-        
+        Converts a Polygon or MultiPolygon to a new geometry that will have coordinates in display (plot) coordinates
+
         Args:
             ax: Matplotlib Axes object used for transformation.
             geometry: A Shapely Polygon or MultiPolygon in data coordinates.
@@ -78,22 +87,27 @@ class GeomUtils:
             coords = np.array(polygon.exterior.coords)
             transformed_coords = ax.transData.transform(coords)
             return Polygon(transformed_coords)
-        
+
         if isinstance(geometry, Polygon):
             return transform_polygon(geometry)
 
         elif isinstance(geometry, MultiPolygon):
-            transformed_polygons = [transform_polygon(p) for p in geometry.geoms]
+            transformed_polygons = [
+                transform_polygon(p) for p in geometry.geoms]
             return MultiPolygon(transformed_polygons)
 
         else:
-            raise ValueError("Unsupported geometry type: must be Polygon or MultiPolygon")
+            raise ValueError(
+                "Unsupported geometry type: must be Polygon or MultiPolygon")
 
     @staticmethod
     def is_geometry_inside_geometry_threshold(inner: GeometryCollection, outer: GeometryCollection, threshold: float = 0.95) -> bool:
+        """
+            Check if the threshold percentage of inner geometry is inside the outer geometry
+        """
         bbox_area: float = inner.area
         intersection_area: float = inner.intersection(outer).area
-        if(math.isclose(bbox_area, 0)):
+        if (math.isclose(bbox_area, 0)):
             return False
         percentage_inside: float = intersection_area / bbox_area
         return percentage_inside >= threshold
@@ -103,41 +117,44 @@ class GeomUtils:
         geod = Geod(ellps="WGS84")
         _, _, distance_m = geod.inv(point1[1], point1[0], point2[1], point2[0])
         return distance_m
-    
+
     @staticmethod
     def check_same_orientation(geom: Polygon | MultiPolygon, splitter: LineString | MultiLineString) -> bool:
-        if(geom.is_empty or splitter.is_empty):
+        """Check if polygon and line that have some intersection parts have same orientation.
+        Is detemined by checking creating intersection of geom by line and line by geom. That will create intersection with orientation of first geometry.
+        If they are same, it means that they have same orientation."""
+        if (geom.is_empty or splitter.is_empty):
             return None
         # get intersetion by orientation of geom
         inter_by_geom_orientation = geom.intersection(splitter)
-        if(not isinstance(inter_by_geom_orientation, LineString | MultiLineString) 
-        or inter_by_geom_orientation.is_empty):
+        if (not isinstance(inter_by_geom_orientation, LineString | MultiLineString)
+           or inter_by_geom_orientation.is_empty):
             return None
-        
+
         # get intersetion by orientation of splitter
         inter_by_splitter_orientation = splitter.intersection(geom)
-        if(not isinstance(inter_by_splitter_orientation, LineString | MultiLineString) 
-        or inter_by_splitter_orientation.is_empty):
+        if (not isinstance(inter_by_splitter_orientation, LineString | MultiLineString)
+           or inter_by_splitter_orientation.is_empty):
             return None
-        
+
         inter_by_geom_orientation = GeomUtils.merge_lines_safe(
             inter_by_geom_orientation)
         inter_by_splitter_orientation = GeomUtils.merge_lines_safe(
             inter_by_splitter_orientation)
-        
+
         # should be same as inter_by_geom_orientation
-        if(not isinstance(inter_by_splitter_orientation, LineString | MultiLineString)
-            or inter_by_splitter_orientation.is_empty):
+        if (not isinstance(inter_by_splitter_orientation, LineString | MultiLineString)
+                or inter_by_splitter_orientation.is_empty):
             return None
-    
+
         if (not inter_by_geom_orientation.equals(inter_by_splitter_orientation)):
             return None
-        
+
         # if both are linestring can compare
         if (isinstance(inter_by_geom_orientation, LineString) and isinstance(inter_by_splitter_orientation, LineString)):
             return np.allclose(inter_by_geom_orientation.coords, inter_by_splitter_orientation.coords)
 
-        # check if there is mulitlinestring or create list from linestring for for loop
+        # check if there is mulitlinestring or create list from linestring that will be used in for loop
         if isinstance(inter_by_geom_orientation, MultiLineString):
             geom_lines = list(inter_by_geom_orientation.geoms)
         else:
@@ -151,10 +168,11 @@ class GeomUtils:
         # if some is multilinestring find components that are equal and check if it is equal by direction
         for g_line in geom_lines:
             for s_line in split_lines:
-                if g_line.equals(s_line):  # Check if they are the same
-                    if(not isinstance(g_line, LineString | MultiLineString)):
+                # Check if they are the same (not considering orientation)
+                if g_line.equals(s_line):
+                    if (not isinstance(g_line, LineString | MultiLineString)):
                         continue
-                    # check if they are same by orientation
+                    # check if they are same also by orientation
                     return np.allclose(g_line.coords, s_line.coords)
 
         return None

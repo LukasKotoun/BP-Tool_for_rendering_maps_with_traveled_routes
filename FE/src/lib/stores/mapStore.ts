@@ -1,11 +1,11 @@
 import { writable } from "svelte/store";
+import { createUniqueFileName } from "$lib/utils/gpxFilesUtils";
 import {
   nodesMapElements,
   waysMapElements,
   areasMapElements,
   gpxDefaultStyles,
 } from "$lib/constants";
-import { createUniqueFileName } from "$lib/utils/gpxFilesUtils";
 
 //data from server
 
