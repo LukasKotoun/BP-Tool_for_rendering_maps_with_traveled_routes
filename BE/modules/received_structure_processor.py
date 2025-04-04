@@ -238,18 +238,18 @@ class ReceivedStructureProcessor:
                         if styles:
                             styles = ReceivedStructureProcessor.map_dict(
                                 styles, styles_mapping)
-                            condition: RowsConditionsAND = {element: tag}
                             styles_edits[element_category].append(
-                                (condition, styles))
+                                # style condition - {element: tag}
+                                ({element: tag}, styles))
                 else:
                     styles = {
                         k: v for k, v in data[element_category][element].items() if k in allowed_styles}
                     if styles:
                         styles = ReceivedStructureProcessor.map_dict(
                             styles, styles_mapping)
-                        condition: RowsConditionsAND = {element: ''}
                         styles_edits[element_category].append(
-                            (condition, styles))
+                            # style condittion - {element: ''}
+                            ({element: ''}, styles))
 
         return wanted_categories, styles_edits
 
@@ -282,7 +282,7 @@ class ReceivedStructureProcessor:
                 styles = ReceivedStructureProcessor.map_dict(
                     data[key], styles_mapping)
                 result.append(
-                    ([], styles))
+                    ([], styles))  # style condition [] means all rows in gdf
 
         return result
 

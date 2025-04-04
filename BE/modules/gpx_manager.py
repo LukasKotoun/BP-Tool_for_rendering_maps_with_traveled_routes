@@ -10,11 +10,6 @@ from common.map_enums import GpxColumns
 class GpxManager:
 
     @staticmethod
-    def get_empty_gpx_gdf() -> gpd.GeoDataFrame:
-        return GdfUtils.create_empty_gdf(
-            None, ['geometry', GpxColumns.FILE_NAME.value, GpxColumns.GROUP.value])
-
-    @staticmethod
     def find_group_name(file_name: str, groups: dict[str, list[str]]) -> str | None:
         for group_name, group_files in groups.items():
             if file_name in group_files:

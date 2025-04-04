@@ -17,8 +17,9 @@
 
   const minMM = 0.05;
   const minRange = 0;
-  const maxRatio = 5;
+  const maxRatio = 4;
   const maxAlpha = 1;
+  const smallStep = 0.05;
 
   let defaultColor = JSON.parse(JSON.stringify(gpxDefaultStyles)).color;
   function resetGroupToDefault(groupName: string) {
@@ -82,7 +83,7 @@
               <input
                 type="number"
                 min={minMM}
-                step="0.1"
+                step={smallStep}
                 bind:value={$gpxStyles.group[groupName].width}
                 class="w-full p-2 border rounded"
               />
@@ -94,7 +95,7 @@
                 type="range"
                 min={minRange}
                 max={maxAlpha}
-                step="0.1"
+                step={smallStep}
                 bind:value={$gpxStyles.group[groupName].alpha}
                 class="w-full"
               />
@@ -190,7 +191,7 @@
                 type="range"
                 min={minRange}
                 max={maxAlpha}
-                step="0.1"
+                step={smallStep}
                 bind:value={$gpxStyles.group[groupName].edge_alpha}
                 class="w-full"
               />
@@ -203,7 +204,7 @@
                 type="range"
                 min={minRange}
                 max={maxRatio}
-                step="0.1"
+                step={smallStep}
                 bind:value={$gpxStyles.group[groupName].edge_width_ratio}
                 class="w-full"
               />
@@ -285,7 +286,7 @@
                 <input
                   type="number"
                   min={minMM}
-                  step="0.1"
+                  step={smallStep}
                   bind:value={$gpxStyles.group[groupName].start_marker_width}
                   class="w-full p-2 border rounded"
                 />
@@ -306,7 +307,7 @@
                   type="range"
                   min={minRange}
                   max={maxAlpha}
-                  step="0.1"
+                  step={smallStep}
                   bind:value={$gpxStyles.group[groupName].start_marker_alpha}
                   class="w-full"
                 />
@@ -333,7 +334,7 @@
                   type="range"
                   min={minRange}
                   max="10"
-                  step="0.1"
+                  step={smallStep}
                   bind:value={
                     $gpxStyles.group[groupName].start_marker_edge_ratio
                   }
@@ -370,7 +371,7 @@
                 <input
                   type="number"
                   min={minMM}
-                  step="0.1"
+                  step={smallStep}
                   bind:value={$gpxStyles.group[groupName].finish_marker_width}
                   class="w-full p-2 border rounded"
                 />
@@ -391,7 +392,7 @@
                   type="range"
                   min={minRange}
                   max={maxAlpha}
-                  step="0.1"
+                  step={smallStep}
                   bind:value={$gpxStyles.group[groupName].finish_marker_alpha}
                   class="w-full"
                 />
@@ -419,7 +420,7 @@
                   type="range"
                   min={minRange}
                   max={maxRatio}
-                  step="0.1"
+                  step={smallStep}
                   bind:value={
                     $gpxStyles.group[groupName].finish_marker_edge_ratio
                   }

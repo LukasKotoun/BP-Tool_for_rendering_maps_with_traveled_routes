@@ -370,7 +370,7 @@ class Utils:
 
     @staticmethod
     def create_osm_files_mapping(folder: str) -> dict[str, str]:
-        """From filder with osm files create dict with key as file name without extension and value as file path"""
+        """From filder with osm files create dict with key as file name without extension  and value as file path"""
         folder = Utils.ensure_dir_exists(folder)
 
         osm_files_dict = {}
