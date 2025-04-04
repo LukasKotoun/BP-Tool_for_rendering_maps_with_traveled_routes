@@ -14,7 +14,6 @@
     MARKER_LAYER_POSITION_MAPPING_CZ,
   } from "$lib/constants";
 
-
   const minMM = 0.05;
   const minRange = 0;
   const maxRatio = 4;
@@ -99,7 +98,7 @@
                 bind:value={$gpxStyles.group[groupName].alpha}
                 class="w-full"
               />
-              <span>{$gpxStyles.group[groupName].alpha.toFixed(1)}</span>
+              <span>{$gpxStyles.group[groupName].alpha.toFixed(2)}</span>
             </div>
 
             <div class="flex items-center space-x-4">
@@ -195,7 +194,7 @@
                 bind:value={$gpxStyles.group[groupName].edge_alpha}
                 class="w-full"
               />
-              <span>{$gpxStyles.group[groupName].edge_alpha.toFixed(1)}</span>
+              <span>{$gpxStyles.group[groupName].edge_alpha.toFixed(2)}</span>
             </div>
 
             <div class="flex items-center space-x-4">
@@ -209,7 +208,7 @@
                 class="w-full"
               />
               <span
-                >{$gpxStyles.group[groupName].edge_width_ratio.toFixed(1)}</span
+                >{$gpxStyles.group[groupName].edge_width_ratio.toFixed(2)}</span
               >
             </div>
 
@@ -313,7 +312,7 @@
                 />
                 <span
                   >{$gpxStyles.group[groupName].start_marker_alpha.toFixed(
-                    1
+                    2
                   )}</span
                 >
               </div>
@@ -342,7 +341,7 @@
                 />
                 <span
                   >{$gpxStyles.group[groupName].start_marker_edge_ratio.toFixed(
-                    1
+                    2
                   )}</span
                 >
               </div>
@@ -398,7 +397,7 @@
                 />
                 <span
                   >{$gpxStyles.group[groupName].finish_marker_alpha.toFixed(
-                    1
+                    2
                   )}</span
                 >
               </div>
@@ -429,7 +428,7 @@
                 <span
                   >{$gpxStyles.group[
                     groupName
-                  ].finish_marker_edge_ratio.toFixed(1)}</span
+                  ].finish_marker_edge_ratio.toFixed(2)}</span
                 >
               </div>
             </div>

@@ -36,6 +36,7 @@
   } from "$lib/constants";
 
   const multiplierMin = 0.1;
+  const multiplierStep = 0.05;
   const multiplierMax = 4;
 
   function hasDirectPlot(obj: any): obj is MapElementAttributes {
@@ -322,7 +323,7 @@
               <div class="flex mr-6">
                 <input
                   min="0"
-                  step="1"
+                  step="25"
                   type="number"
                   class="border rounded-sm p-2 w-40"
                   bind:value={$minPopulationFilter}
@@ -346,8 +347,8 @@
                 <input
                   type="range"
                   min="0"
-                  max="7"
-                  step="0.1"
+                  max="10"
+                  step={multiplierStep}
                   bind:value={$peaksFilterSensitivity}
                   class="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 />
@@ -385,7 +386,7 @@
                         type="range"
                         min={multiplierMin}
                         max={multiplierMax}
-                        step="0.1"
+                        step={multiplierStep}
                         bind:value={$mapNodesElements[categoryKey].width_scale}
                         class="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                       />
@@ -402,7 +403,7 @@
                         type="range"
                         min={multiplierMin}
                         max={multiplierMax}
-                        step="0.1"
+                        step={multiplierStep}
                         bind:value={$mapNodesElements[categoryKey].text_scale}
                         class="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                       />
@@ -451,7 +452,7 @@
                               type="range"
                               min={multiplierMin}
                               max={multiplierMax}
-                              step="0.1"
+                              step={multiplierStep}
                               bind:value={
                                 $mapNodesElements[categoryKey][subKey]
                                   .width_scale
@@ -475,7 +476,7 @@
                               type="range"
                               min={multiplierMin}
                               max={multiplierMax}
-                              step="0.1"
+                              step={multiplierStep}
                               bind:value={
                                 $mapNodesElements[categoryKey][subKey]
                                   .text_scale
@@ -599,7 +600,7 @@
                         type="range"
                         min={multiplierMin}
                         max={multiplierMax}
-                        step="0.1"
+                        step={multiplierStep}
                         bind:value={$mapWaysElements[categoryKey].width_scale}
                         class="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                       />
@@ -616,7 +617,7 @@
                         type="range"
                         min={multiplierMin}
                         max={multiplierMax}
-                        step="0.1"
+                        step={multiplierStep}
                         bind:value={$mapWaysElements[categoryKey].text_scale}
                         class="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                       />
@@ -664,7 +665,7 @@
                               type="range"
                               min={multiplierMin}
                               max={multiplierMax}
-                              step="0.1"
+                              step={multiplierStep}
                               bind:value={
                                 $mapWaysElements[categoryKey][subKey]
                                   .width_scale
@@ -688,7 +689,7 @@
                               type="range"
                               min={multiplierMin}
                               max={multiplierMax}
-                              step="0.1"
+                              step={multiplierStep}
                               bind:value={
                                 $mapWaysElements[categoryKey][subKey].text_scale
                               }
@@ -768,7 +769,7 @@
                         type="range"
                         min={multiplierMin}
                         max={multiplierMax}
-                        step="0.1"
+                        step={multiplierStep}
                         bind:value={$mapAreasElements[categoryKey].width_scale}
                         class="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                       />
@@ -785,7 +786,7 @@
                         type="range"
                         min={multiplierMin}
                         max={multiplierMax}
-                        step="0.1"
+                        step={multiplierStep}
                         bind:value={$mapAreasElements[categoryKey].text_scale}
                         class="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                       />
@@ -834,7 +835,7 @@
                               type="range"
                               min={multiplierMin}
                               max={multiplierMax}
-                              step="0.1"
+                              step={multiplierStep}
                               bind:value={
                                 $mapAreasElements[categoryKey][subKey]
                                   .width_scale
@@ -858,7 +859,7 @@
                               type="range"
                               min={multiplierMin}
                               max={multiplierMax}
-                              step="0.1"
+                              step={multiplierStep}
                               bind:value={
                                 $mapAreasElements[categoryKey][subKey]
                                   .text_scale

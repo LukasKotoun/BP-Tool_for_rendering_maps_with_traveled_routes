@@ -3,6 +3,7 @@
   import AreaPaperManager from "$lib/managers/areaPaperManager.svelte";
   import GpxManager from "$lib/managers/gpxManager.svelte";
   import MapGeneratingManager from "$lib/managers/mapGeneratingManager.svelte";
+  import logo from '$lib/imgs/logo.webp';
   import {
     checkFitPaper,
     parseWantedAreas,
@@ -315,35 +316,44 @@
 </script>
 
 <div class="container mx-auto p-4">
-  <div class="flex space-x-2 justify-end mb-4">
-    <button
-      class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-      on:click={saveToFile}
-    >
-      <div class="flex items-center">
-        <Save class="w-5 h-5 mr-2" />
-        Uložit nastavení
-      </div>
-    </button>
-    {#if displayedTab == "areaPaper"}
+  <div class="flex flex-col sm:flex-row items-center justify-between w-full p-4 bg-white border-b gap-4">
+    <div class="flex items-center w-full sm:w-auto justify-center sm:justify-start">
+      <img
+        src={logo}
+        alt="Logo"
+        class="w-10 h-10 mr-2"/>
+      <h1 class="text-lg font-medium">GeoPrint</h1>
+    </div>
+    <div class="flex space-x-2 justify-center sm:justify-end w-full sm:w-auto">
       <button
-        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-        on:click={() => document.getElementById("file-input").click()}
+        class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+        on:click={saveToFile}
       >
         <div class="flex items-center">
-          <Upload class="w-5 h-5 mr-2" />
-          Nahrát nastavení
+          <Save class="w-5 h-5 mr-2" />
+          Uložit nastavení
         </div>
       </button>
-    {/if}
+      {#if displayedTab == "areaPaper"}
+        <button
+          class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          on:click={() => document.getElementById("file-input").click()}
+        >
+          <div class="flex items-center">
+            <Upload class="w-5 h-5 mr-2" />
+            Nahrát nastavení
+          </div>
+        </button>
+      {/if}
 
-    <input
-      id="file-input"
-      type="file"
-      accept=".json,application/json"
-      on:change={loadJsonObjectFromFile}
-      class="hidden"
-    />
+      <input
+        id="file-input"
+        type="file"
+        accept=".json,application/json"
+        on:change={loadJsonObjectFromFile}
+        class="hidden"
+      />
+    </div>
   </div>
   <div class="border-b border-gray-200 dark:border-gray-700">
     <div class="flex flex-wrap -mb-px">
