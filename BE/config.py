@@ -30,9 +30,8 @@ MAX_CONCURRENT_TASKS_PREVIEW = 3
 MAX_QUEUE_SIZE_NORMAL = 10
 MAX_QUEUE_SIZE_PREVIEW = 10
 
-# allowed requests from which origins/domains (* is all)
-ALLOWED_ORIGINS = ["*"]
-
+# allowed requests from which origins/domains (* is all) - change to frontend url from env
+ALLOWED_ORIGINS = os.getenv("FRONTEND_URL", "*").split(",")
 
 # --------------------------------------------------------------advance server config--------------------------------------------------------------
 SECRET_KEY = os.getenv("SECRET_KEY", "dev_key")

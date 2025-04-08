@@ -20,9 +20,9 @@ class TaskManager:
         self.shared_tasks = self.manager.dict()
 
         # always use with queue_lock
-        self.running_normal_processes: ValueProxy[int] = self.manager.Value(
+        self.running_normal_processes = self.manager.Value(
             'i', 0)
-        self.running_preview_processes: ValueProxy[int] = self.manager.Value(
+        self.running_preview_processes = self.manager.Value(
             'i', 0)
         # use list instead of queue for better deletion performance (will need to create new front in every termiantion)
         self.normal_queue = self.manager.list()
