@@ -20,9 +20,9 @@ class TaskManager:
         self.shared_tasks = self.manager.dict()
 
         # always use with queue_lock
-        self.running_normal_processes: ValueProxy[int] = self.manager.Value(
+        self.running_normal_processes = self.manager.Value(
             'i', 0)
-        self.running_preview_processes: ValueProxy[int] = self.manager.Value(
+        self.running_preview_processes = self.manager.Value(
             'i', 0)
         # use list instead of queue for better deletion performance (will need to create new front in every termiantion)
         self.normal_queue = self.manager.list()
@@ -32,7 +32,7 @@ class TaskManager:
         self.shared_tasks_lock: Lock = multiprocessing.Lock()
         self.queue_lock: Lock = multiprocessing.Lock()
 
-    def add_task(self, map_generator_config: dict[str, Any], queue_type: QueueType=QueueType.NORMAL.value) -> tuple[str, str | None]:
+    def add_task(self, map_generator_config: dict[str, Any], queue_type: QueueType = QueueType.NORMAL.value) -> tuple[str, str | None]:
         """Add a task to the appropriate queue or start it if possible"""
         task_id = uuid7str()
         task_item = {
@@ -107,7 +107,7 @@ class TaskManager:
         return process.pid
 
     def delete_task(self, task_id: str):
-        """Delete a task whether it's in queue, running in paralel process or completed and clean up files if needed"""
+        """Delete a task whether it is in queue, running in paralel process or completed and delete files"""
         with self.shared_tasks_lock:
             if (task_id is None or task_id == "" or task_id not in self.shared_tasks):
                 return False
@@ -228,7 +228,7 @@ class TaskManager:
                         next_task)
                     if (pid is not None):
                         with self.shared_tasks_lock:
-                          
+
                             self.shared_tasks[next_task[TaskQueueKeys.TASK_ID.value]] = {
                                 **self.shared_tasks[next_task[TaskQueueKeys.TASK_ID.value]],
                                 SharedDictKeys.STATUS.value: ProcessingStatus.STARTING.value,
@@ -275,7 +275,7 @@ class TaskManager:
         """Get info of specific task"""
         with self.shared_tasks_lock:
             if (task_id in self.shared_tasks):
-                if(user_asked):
+                if (user_asked):
                     self.shared_tasks[task_id] = {
                         **self.shared_tasks[task_id],
                         SharedDictKeys.USER_CHECK_INFO.value: True
@@ -298,9 +298,10 @@ class TaskManager:
     def _wrapped_generate_map(config: dict[str, Any], task_id: str, shared_tasks: dict[str, Any],
                               shared_tasks_lock: Lock, queue_lock: Lock, queue: list[Any],
                               running_process_count: ValueProxy[int], max_process_count: int):
+        """Wrapper for generate_map function to handle exceptions and process end management"""
 
         try:
-            if(task_id in shared_tasks):
+            if (task_id in shared_tasks):
                 generate_map(config, task_id, shared_tasks, shared_tasks_lock)
 
                 with shared_tasks_lock:
@@ -339,7 +340,7 @@ class TaskManager:
                               queue_lock, queue, running_process_count, max_process_count)
                     )
                     process.start()
-                    if(process.pid is not None):
+                    if (process.pid is not None):
                         with shared_tasks_lock:
                             shared_tasks[next_task_id] = {
                                 **shared_tasks[next_task_id],
@@ -347,5 +348,3 @@ class TaskManager:
                                 SharedDictKeys.PID.value: process.pid,
                                 SharedDictKeys.PROCESS_RUNNING.value: True
                             }
-
-

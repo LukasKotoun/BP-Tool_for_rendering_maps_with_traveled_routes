@@ -268,8 +268,8 @@ export const gpxDefaultStyles: GpxStyleAttributes = {
   linestyle: "-",
   line_capstyle: "round",
   edge_color: null,
-  edge_alpha: 0,
-  edge_width_ratio: 0,
+  edge_alpha: 0.7,
+  edge_width_ratio: 0.15,
   edge_linestyle: "-",
   edge_capstyle: "round",
   gpx_above_text: false,
@@ -308,7 +308,7 @@ export const MARKER_MAPPING_CZ = {
   finish: "Cíl - vlajka",
 };
 
-// map elements
+// map elements - each zoom level add elements
 export const wantedNodesUpdatesZooms = {
   1: { place: ["city"] },
   2: { place: ["town"], natural: ["peak"] },
@@ -410,6 +410,7 @@ export const wantedAreasUpdatesZooms = {
   10: {},
 };
 
+// cz mapping of elements
 export const nodesKeysNamesMappingCZ = {
   place: "Místa",
   natural: "Přírodní objekty",
@@ -475,7 +476,7 @@ export const waysNamesMappingCZ = {
     monorail: "Jednokolejná železnice",
     miniature: "Modelová železnice",
     subway: "Metro",
-    funicular: "Lanovka",
+    funicular: "Lanová dráha",
   },
   aeroway: {
     runway: "Vzletová dráha",
@@ -491,7 +492,7 @@ export const waysNamesMappingCZ = {
     platter: "Puma",
     rope_tow: "Lanovka",
     magic_carpet: "Kobercová lanovka",
-    zip_line: "zipline",
+    zip_line: "Zipline",
     goods: "Nákladní lanovka",
   },
   barrier: {
@@ -515,11 +516,11 @@ export const areasKeysNamesMappingCZ = {
   landuse: "Užitné pozemky",
   leisure: "Volný čas",
   natural: "Příroda",
-  amenity: "Vybavení",
+  amenity: "Občanské vybavení",
   boundary: "Ohraničení oblastí",
   building: "Budovy",
   aeroway: "Letiště",
-  highway: "Silnice (parkoviště a pěší zóny)",
+  highway: "Silnice jako oblasti (parkoviště a pěší zóny)",
 };
 
 export const areasNamesMappingCZ = {
@@ -585,6 +586,7 @@ export const areasNamesMappingCZ = {
   },
 };
 
+// all map elements with their attributes
 export const nodesMapElements = {
   place: {
     city: { plot: false, width_scale: 1, text_scale: 1 },

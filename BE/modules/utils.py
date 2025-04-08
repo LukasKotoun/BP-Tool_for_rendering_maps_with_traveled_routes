@@ -28,6 +28,7 @@ class Utils:
     @staticmethod
     def resolve_paper_dimensions(map_dimensions: DimensionsTuple, map_orientaion: MapOrientation,
                                  paper_dimensions: OptDimensionsTuple, given_paper_smaller_side=True):
+        """Calulate missing paper dimension based on map dimensions and wanted paper orientation."""
         if (given_paper_smaller_side):
             # given paper size is smaller get map smaller side (coresponding size)
             # if map orientation is landscape smaller size is height
@@ -55,29 +56,31 @@ class Utils:
                                 paper_dimensions: OptDimensionsTuple,
                                 given_smaller_paper_side: bool = True,
                                 wanted_orientation=MapOrientation.AUTOMATIC.value) -> DimensionsTuple:
-        
-        if(wanted_orientation == MapOrientation.AUTOMATIC.value):
+        """Edit paper dimensions based on map dimensions and wanted orientation.
+            If one of the paper dimensions is None it will be calculated based on map dimensions and wanted orientation."""
+
+        if (wanted_orientation == MapOrientation.AUTOMATIC.value):
             if map_dimensions[0] >= map_dimensions[1]:
                 map_orientaion: MapOrientation = MapOrientation.LANDSCAPE.value
             else:
                 map_orientaion: MapOrientation = MapOrientation.PORTRAIT.value
         else:
-              map_orientaion: MapOrientation = wanted_orientation
-              
+            map_orientaion: MapOrientation = wanted_orientation
+
         if (paper_dimensions.count(None) == 1):
             paper_dimensions = Utils.resolve_paper_dimensions(
                 map_dimensions, map_orientaion, paper_dimensions, given_smaller_paper_side)
         elif (paper_dimensions.count(None) > 1):
             raise ValueError("Only one paper dimension can be None")
-        
+
         # flip resolved orientation
-        if(wanted_orientation == MapOrientation.AUTOMATIC.value):
+        if (wanted_orientation == MapOrientation.AUTOMATIC.value):
             paper_dimensions = Utils.set_orientation(
                 paper_dimensions, map_orientaion)
         else:
-             paper_dimensions = Utils.set_orientation(
+            paper_dimensions = Utils.set_orientation(
                 paper_dimensions, wanted_orientation)
-             
+
         return paper_dimensions
 
     @staticmethod
@@ -98,12 +101,11 @@ class Utils:
     @staticmethod
     def calc_bounds_to_fill_paper_with_ratio(center_point: Point, pdf_dim: DimensionsTuple,
                                              bigger_area_dim: DimensionsTuple, bigger_pdf_dim: DimensionsTuple) -> BoundsDict:
-        """Calculate bounds of area to fill paper with ratio (bigger area/bigger pdf dimensions) for area preview. 
+        """Calculate bounds of area to fill paper with ratio (bigger area/bigger pdf dimensions) for area preview.
 
             Calc bounds that will have center in center_point and will fill whole paper.
             Function will first calculated new dimensions that will match bigger pdf ratios and one side will fill pdf side.
             This dimensions will be adjusted by function adjust_bounds_to_fill_paper to fill whole paper by expanding the remaining side to fill pdf paper.
-
 
         Args:
             center_point (Point): center points of final bounds (best in mercator projection)
@@ -168,15 +170,6 @@ class Utils:
 
     @staticmethod
     def calc_map_scaling_factor(map_dimensions_m, paper_dimensions_mm):
-        """_summary_
-
-        Args:
-            map_dimensions_m (_type_): _description_
-            paper_dimensions_mm (_type_): _description_
-
-        Returns:
-            _type_: _description_
-        """
 
         map_scaling_factor = (map_dimensions_m[0] + map_dimensions_m[1])
         paper_scaling_factor = (
@@ -190,10 +183,6 @@ class Utils:
         In unit of 1:scale, where 1 is mm on paper and scale is m irl. 
         For example scale 95 means 1mm on paper is 95m in real life.
         If paper have 200mm the map will have 
-
-        Args:
-            map_bounds (_type_): _description_
-            paper_dimensions_mm (_type_): _description_
 
         Returns:
             int: Scale as 1cm on paper is 'scale number' m in real life
@@ -225,7 +214,7 @@ class Utils:
             # Compute the threshold at threshold_above_lower from lower to higher value
             # so if is between to values it should be higher zoom
             threshold = lower_value + \
-                (higher_value - lower_value) * threshold_above_lower
+                ((higher_value - lower_value) * threshold_above_lower)
 
             if value >= threshold:
                 return higher_level
@@ -283,7 +272,7 @@ class Utils:
 
     @staticmethod
     def check_bbox_position(bbox_to_overlap: Bbox, bbox_to_overflow: Bbox, bbox_index: rtree.index.Index | None,
-                            ax, text_bounds_overflow_threshold, reqired_area_polygon) -> bool:
+                            text_bounds_overflow_threshold, reqired_area_polygon) -> bool:
         if (bbox_index is not None):
             try:
                 matches = list(bbox_index.intersection(
@@ -333,14 +322,14 @@ class Utils:
 
     @staticmethod
     def ensure_dir_exists(dir_path: str):
-        if(dir_path is None):
+        if (dir_path is None):
             return ""
-        if(dir_path[-1] != '/'):
+        if (dir_path[-1] != '/'):
             dir_path += '/'
         if not os.path.exists(dir_path):
             os.makedirs(dir_path, exist_ok=True)
         return dir_path
-    
+
     @staticmethod
     def remove_file(file_path: str):
         try:
@@ -348,22 +337,15 @@ class Utils:
                 os.remove(file_path)
         except Exception as e:
             warnings.warn(f"Error cleaning up file {file_path}: {str(e)}")
-            
+
     @staticmethod
     def remove_files(files_list: list[str]):
         """Delete files in list"""
         for file_path in files_list:
             Utils.remove_file(file_path)
-            
-    @staticmethod
-    def extract_original_name(file_name, task_id):  # -> Any:
-        prefix = task_id + '_'
-        if file_name.startswith(prefix):
-            return file_name[len(prefix):]
-        return file_name
 
     @staticmethod
-    def create_access_token(data: dict, expires_delta: datetime.timedelta, algorithm: str, secret_key: str):
+    def create_task_access_token(data: dict, expires_delta: datetime.timedelta, algorithm: str, secret_key: str):
         to_encode = data.copy()
         expire = datetime.datetime.utcnow() + expires_delta
         to_encode.update({"exp": expire})
@@ -388,14 +370,15 @@ class Utils:
 
     @staticmethod
     def create_osm_files_mapping(folder: str) -> dict[str, str]:
+        """From filder with osm files create dict with key as file name without extension  and value as file path"""
         folder = Utils.ensure_dir_exists(folder)
-        
+
         osm_files_dict = {}
         # Search for all .osm and .osm.pbf files in the specified folder
         osm_pattern = os.path.join(folder, "*.osm")
         osm_pbf_pattern = os.path.join(folder, "*.osm.pbf")
         osm_files = glob.glob(osm_pbf_pattern) + glob.glob(osm_pattern)
-        
+
         for file_path in osm_files:
             file_name = os.path.basename(file_path).split('.')[0]
             counter = 1
@@ -404,5 +387,5 @@ class Utils:
                 file_name = f"{file_name}_{counter}"
                 counter += 1
             osm_files_dict[file_name] = file_path
-        
+
         return osm_files_dict

@@ -1,6 +1,8 @@
 <script lang="ts">
   import { gpxStyles } from "$lib/stores/mapStore";
   import { displayedTabGpxGroupsStyle } from "$lib/stores/frontendStore";
+  import { mapValue } from "$lib/utils/mapElementsUtils";
+  import InfoToolTip from "$lib/components/infoToolTip.svelte";
   import {
     gpxDefaultStyles,
     LINESTYLES,
@@ -11,13 +13,12 @@
     MARKER_MAPPING_CZ,
     MARKER_LAYER_POSITION_MAPPING_CZ,
   } from "$lib/constants";
-  import { mapValue } from "$lib/utils/mapElementsUtils";
-  import InfoToolTip from "$lib/components/infoToolTip.svelte";
 
   const minMM = 0.05;
   const minRange = 0;
-  const maxRatio = 5;
+  const maxRatio = 4;
   const maxAlpha = 1;
+  const smallStep = 0.05;
 
   let defaultColor = JSON.parse(JSON.stringify(gpxDefaultStyles)).color;
   function resetGroupToDefault(groupName: string) {
@@ -81,7 +82,7 @@
               <input
                 type="number"
                 min={minMM}
-                step="0.1"
+                step={smallStep}
                 bind:value={$gpxStyles.group[groupName].width}
                 class="w-full p-2 border rounded"
               />
@@ -93,11 +94,11 @@
                 type="range"
                 min={minRange}
                 max={maxAlpha}
-                step="0.1"
+                step={smallStep}
                 bind:value={$gpxStyles.group[groupName].alpha}
                 class="w-full"
               />
-              <span>{$gpxStyles.group[groupName].alpha.toFixed(1)}</span>
+              <span>{$gpxStyles.group[groupName].alpha.toFixed(2)}</span>
             </div>
 
             <div class="flex items-center space-x-4">
@@ -189,11 +190,11 @@
                 type="range"
                 min={minRange}
                 max={maxAlpha}
-                step="0.1"
+                step={smallStep}
                 bind:value={$gpxStyles.group[groupName].edge_alpha}
                 class="w-full"
               />
-              <span>{$gpxStyles.group[groupName].edge_alpha.toFixed(1)}</span>
+              <span>{$gpxStyles.group[groupName].edge_alpha.toFixed(2)}</span>
             </div>
 
             <div class="flex items-center space-x-4">
@@ -202,12 +203,12 @@
                 type="range"
                 min={minRange}
                 max={maxRatio}
-                step="0.1"
+                step={smallStep}
                 bind:value={$gpxStyles.group[groupName].edge_width_ratio}
                 class="w-full"
               />
               <span
-                >{$gpxStyles.group[groupName].edge_width_ratio.toFixed(1)}</span
+                >{$gpxStyles.group[groupName].edge_width_ratio.toFixed(2)}</span
               >
             </div>
 
@@ -284,7 +285,7 @@
                 <input
                   type="number"
                   min={minMM}
-                  step="0.1"
+                  step={smallStep}
                   bind:value={$gpxStyles.group[groupName].start_marker_width}
                   class="w-full p-2 border rounded"
                 />
@@ -305,13 +306,13 @@
                   type="range"
                   min={minRange}
                   max={maxAlpha}
-                  step="0.1"
+                  step={smallStep}
                   bind:value={$gpxStyles.group[groupName].start_marker_alpha}
                   class="w-full"
                 />
                 <span
                   >{$gpxStyles.group[groupName].start_marker_alpha.toFixed(
-                    1
+                    2
                   )}</span
                 >
               </div>
@@ -332,7 +333,7 @@
                   type="range"
                   min={minRange}
                   max="10"
-                  step="0.1"
+                  step={smallStep}
                   bind:value={
                     $gpxStyles.group[groupName].start_marker_edge_ratio
                   }
@@ -340,7 +341,7 @@
                 />
                 <span
                   >{$gpxStyles.group[groupName].start_marker_edge_ratio.toFixed(
-                    1
+                    2
                   )}</span
                 >
               </div>
@@ -369,7 +370,7 @@
                 <input
                   type="number"
                   min={minMM}
-                  step="0.1"
+                  step={smallStep}
                   bind:value={$gpxStyles.group[groupName].finish_marker_width}
                   class="w-full p-2 border rounded"
                 />
@@ -390,13 +391,13 @@
                   type="range"
                   min={minRange}
                   max={maxAlpha}
-                  step="0.1"
+                  step={smallStep}
                   bind:value={$gpxStyles.group[groupName].finish_marker_alpha}
                   class="w-full"
                 />
                 <span
                   >{$gpxStyles.group[groupName].finish_marker_alpha.toFixed(
-                    1
+                    2
                   )}</span
                 >
               </div>
@@ -418,7 +419,7 @@
                   type="range"
                   min={minRange}
                   max={maxRatio}
-                  step="0.1"
+                  step={smallStep}
                   bind:value={
                     $gpxStyles.group[groupName].finish_marker_edge_ratio
                   }
@@ -427,7 +428,7 @@
                 <span
                   >{$gpxStyles.group[
                     groupName
-                  ].finish_marker_edge_ratio.toFixed(1)}</span
+                  ].finish_marker_edge_ratio.toFixed(2)}</span
                 >
               </div>
             </div>

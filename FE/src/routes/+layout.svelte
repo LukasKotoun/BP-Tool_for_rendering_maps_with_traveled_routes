@@ -3,7 +3,7 @@
 </script>
 
 <head>
-  <title>Mapovač 3000</title>
+  <title>GeoPrint</title>
 </head>
 <div class="app pt-10">
   <main>

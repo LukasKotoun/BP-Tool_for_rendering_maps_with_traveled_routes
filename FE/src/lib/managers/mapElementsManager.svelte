@@ -1,4 +1,14 @@
 <script lang="ts">
+  import InfoToolTip from "$lib/components/infoToolTip.svelte";
+  import {
+    avilableMapThemes,
+    displayedElementsCategory,
+  } from "$lib/stores/frontendStore";
+  import {
+    mapValue,
+    updateWantedElements,
+    resetPlotSettings,
+  } from "$lib/utils/mapElementsUtils";
   import {
     mapNodesElements,
     mapWaysElements,
@@ -13,15 +23,6 @@
     selectedMapTheme,
   } from "$lib/stores/mapStore";
   import {
-    avilableMapThemes,
-    displayedElementsCategory,
-  } from "$lib/stores/frontendStore";
-  import {
-    mapValue,
-    updateWantedElements,
-    resetPlotSettings,
-  } from "$lib/utils/mapElementsUtils";
-  import {
     nodesKeysNamesMappingCZ,
     nodesNamesMappingCZ,
     waysKeysNamesMappingCZ,
@@ -33,9 +34,9 @@
     wantedWaysUpdatesZooms,
     wantedAreasUpdatesZooms,
   } from "$lib/constants";
-  import InfoToolTip from "$lib/components/infoToolTip.svelte";
 
   const multiplierMin = 0.1;
+  const multiplierStep = 0.05;
   const multiplierMax = 4;
 
   function hasDirectPlot(obj: any): obj is MapElementAttributes {
@@ -54,6 +55,7 @@
     }
     $mapNodesElements = restartedData;
     $peaksFilterSensitivity = 2.5;
+    // default values for zoom levels
     switch (zoomLevel) {
       case 5:
         $minPopulationFilter = 250;
@@ -87,6 +89,7 @@
     }
     $mapWaysElements = restartedData;
     $wantPlotTunnels = true;
+    // default values for zoom levels
     switch (zoomLevel) {
       case 10:
       case 9:
@@ -120,7 +123,7 @@
   <div class="space-y-4 rounded-lg bg-gray-100">
     <h1 class="text-xl p-4 font-bold">
       Vzhled na základě úrovně přiblížení <InfoToolTip
-        text="Při nastavení jiné oblasti nebo jiného papíru se změní úroveň detailu zpět na automatické."
+        text="Při nastavení jiné oblasti nebo jiného papíru se změní úroveň detailu zpět na automatickou."
         position="right"
         size="sm"
       />
@@ -320,7 +323,7 @@
               <div class="flex mr-6">
                 <input
                   min="0"
-                  step="1"
+                  step="25"
                   type="number"
                   class="border rounded-sm p-2 w-40"
                   bind:value={$minPopulationFilter}
@@ -344,8 +347,8 @@
                 <input
                   type="range"
                   min="0"
-                  max="7"
-                  step="0.1"
+                  max="10"
+                  step={multiplierStep}
                   bind:value={$peaksFilterSensitivity}
                   class="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 />
@@ -383,7 +386,7 @@
                         type="range"
                         min={multiplierMin}
                         max={multiplierMax}
-                        step="0.1"
+                        step={multiplierStep}
                         bind:value={$mapNodesElements[categoryKey].width_scale}
                         class="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                       />
@@ -400,7 +403,7 @@
                         type="range"
                         min={multiplierMin}
                         max={multiplierMax}
-                        step="0.1"
+                        step={multiplierStep}
                         bind:value={$mapNodesElements[categoryKey].text_scale}
                         class="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                       />
@@ -449,7 +452,7 @@
                               type="range"
                               min={multiplierMin}
                               max={multiplierMax}
-                              step="0.1"
+                              step={multiplierStep}
                               bind:value={
                                 $mapNodesElements[categoryKey][subKey]
                                   .width_scale
@@ -473,7 +476,7 @@
                               type="range"
                               min={multiplierMin}
                               max={multiplierMax}
-                              step="0.1"
+                              step={multiplierStep}
                               bind:value={
                                 $mapNodesElements[categoryKey][subKey]
                                   .text_scale
@@ -597,7 +600,7 @@
                         type="range"
                         min={multiplierMin}
                         max={multiplierMax}
-                        step="0.1"
+                        step={multiplierStep}
                         bind:value={$mapWaysElements[categoryKey].width_scale}
                         class="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                       />
@@ -614,7 +617,7 @@
                         type="range"
                         min={multiplierMin}
                         max={multiplierMax}
-                        step="0.1"
+                        step={multiplierStep}
                         bind:value={$mapWaysElements[categoryKey].text_scale}
                         class="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                       />
@@ -662,7 +665,7 @@
                               type="range"
                               min={multiplierMin}
                               max={multiplierMax}
-                              step="0.1"
+                              step={multiplierStep}
                               bind:value={
                                 $mapWaysElements[categoryKey][subKey]
                                   .width_scale
@@ -686,7 +689,7 @@
                               type="range"
                               min={multiplierMin}
                               max={multiplierMax}
-                              step="0.1"
+                              step={multiplierStep}
                               bind:value={
                                 $mapWaysElements[categoryKey][subKey].text_scale
                               }
@@ -766,7 +769,7 @@
                         type="range"
                         min={multiplierMin}
                         max={multiplierMax}
-                        step="0.1"
+                        step={multiplierStep}
                         bind:value={$mapAreasElements[categoryKey].width_scale}
                         class="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                       />
@@ -783,7 +786,7 @@
                         type="range"
                         min={multiplierMin}
                         max={multiplierMax}
-                        step="0.1"
+                        step={multiplierStep}
                         bind:value={$mapAreasElements[categoryKey].text_scale}
                         class="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                       />
@@ -832,7 +835,7 @@
                               type="range"
                               min={multiplierMin}
                               max={multiplierMax}
-                              step="0.1"
+                              step={multiplierStep}
                               bind:value={
                                 $mapAreasElements[categoryKey][subKey]
                                   .width_scale
@@ -856,7 +859,7 @@
                               type="range"
                               min={multiplierMin}
                               max={multiplierMax}
-                              step="0.1"
+                              step={multiplierStep}
                               bind:value={
                                 $mapAreasElements[categoryKey][subKey]
                                   .text_scale

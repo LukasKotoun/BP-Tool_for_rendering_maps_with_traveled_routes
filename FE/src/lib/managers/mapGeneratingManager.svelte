@@ -1,4 +1,25 @@
 <script lang="ts">
+  import { onMount } from "svelte";
+  import api from "$lib/axios.config";
+  import { MapGeneratingStatus } from "$lib/enums/mapEnums";
+  import { Trash2, CirclePlus } from "@lucide/svelte";
+  import LoadingSpinner from "$lib/components/loadingSpinner.svelte";
+  import InfoToolTip from "$lib/components/infoToolTip.svelte";
+  import { displayedTabMapGenerating } from "$lib/stores/frontendStore";
+  import { paperSizes, mapGeneratingStatusMappingCZ } from "$lib/constants";
+  import { getUngrupedFiles } from "$lib/utils/gpxFilesUtils";
+  import {
+    transformElementsStructureForBE,
+    mapValue,
+  } from "$lib/utils/mapElementsUtils";
+  import {
+    checkMapCordinatesFormat,
+    checkFitPaper,
+    parseWantedAreas,
+    searchAreaWhisper,
+    checkPaperDimensions,
+  } from "$lib/utils/areaUtils";
+
   import {
     wantedAreas,
     areasPreviewId,
@@ -21,30 +42,10 @@
     mapElementsZoomDesign,
   } from "$lib/stores/mapStore";
 
-  import { displayedTabMapGenerating } from "$lib/stores/frontendStore";
-  import { paperSizes, mapGeneratingStatusMappingCZ } from "$lib/constants";
-  import {
-    checkMapCordinatesFormat,
-    checkFitPaper,
-    parseWantedAreas,
-    searchAreaWhisper,
-    checkPaperDimensions,
-  } from "$lib/utils/areaUtils";
-  import { getUngrupedFiles } from "$lib/utils/gpxFilesUtils";
-  import {
-    transformElementsStructure,
-    mapValue,
-  } from "$lib/utils/mapElementsUtils";
-  import { MapGeneratingStatus } from "$lib/enums/mapEnums";
-  import { onMount } from "svelte";
-  import { Trash2, CirclePlus } from "@lucide/svelte";
-  import LoadingSpinner from "$lib/components/loadingSpinner.svelte";
-  import InfoToolTip from "$lib/components/infoToolTip.svelte";
+  const normalPoolingTime = 5000;
+  const previewPoolingTime = 3000;
+  const debounceTime = 350;
 
-  import api from "$lib/axios.config";
-
-  let normalPollingTime = 5000;
-  let previewPollingTime = 3000;
   let pollingInterval: number | null = null;
   let debounceTimeout: ReturnType<typeof setTimeout> | null = null;
   let areaSuggestions: string[][] = [];
@@ -99,7 +100,7 @@
         .catch((e) => {
           console.error(e);
         });
-    }, 200);
+    }, debounceTime);
   }
 
   function handleSelectedPaperSizeChange(event: Event) {
@@ -109,7 +110,7 @@
     $paperPreviewDimensions.height = selectedSize.height;
   }
 
-  function flipPaper() {
+  function flipPaperDimension() {
     $paperPreviewDimensions = {
       width: $paperPreviewDimensions.height,
       height: $paperPreviewDimensions.width,
@@ -132,7 +133,7 @@
     let mapAreasElementsParsed: MapElementCategorySend = {};
     let fileGroups: GPXFileGroups = {};
     isGenerating = true;
-    status = ""
+    status = "";
     try {
       if (preview) {
         if (!checkPaperDimensions($paperPreviewDimensions, false)) {
@@ -171,17 +172,17 @@
 
       let ungrupedFiles = getUngrupedFiles($gpxFileGroups, $gpxFiles);
       fileGroups = { ...$gpxFileGroups, default: ungrupedFiles };
-      mapNodesElementsParsed = transformElementsStructure(
+      mapNodesElementsParsed = transformElementsStructureForBE(
         $mapNodesElements,
         "plot",
         { width_scale: 1, text_scale: 1 }
       );
-      mapWaysElementsParsed = transformElementsStructure(
+      mapWaysElementsParsed = transformElementsStructureForBE(
         $mapWaysElements,
         "plot",
         { width_scale: 1, text_scale: 1 }
       );
-      mapAreasElementsParsed = transformElementsStructure(
+      mapAreasElementsParsed = transformElementsStructureForBE(
         $mapAreasElements,
         "plot",
         { width_scale: 1, text_scale: 1 }
@@ -242,9 +243,10 @@
         terminateTask();
         console.error(error);
         if (error.response?.status == 429) {
-          alert( "Server je momentálně přetížen, zkuste to prosím později (jo ale šekej)");
-        }
-          else  if (error.response?.status == 400) {
+          alert(
+            "Server je momentálně přetížen, zkuste to prosím později (jo ale šekej)"
+          );
+        } else if (error.response?.status == 400) {
           alert("Některé zadané údaje nemají správný formát");
         } else if (error.response?.status == 404) {
           alert("Některou se zadaných oblastí se nepodařilo nalézt");
@@ -259,14 +261,18 @@
   async function startPollingTaskInfo() {
     if (isPolling) return;
     isPolling = true;
-  
+
     // first polling to keep generating alive - prevent task running if user close window before receiving token
     // server close after 30 seconds of start without polling
-    api.get("/task_status", {
-      headers: {
-        Authorization: `Bearer ${jwtToken}`,
-      },
-    }).then((response) => {poolingErrorCount = 0;})
+    api
+      .get("/task_status", {
+        headers: {
+          Authorization: `Bearer ${jwtToken}`,
+        },
+      })
+      .then((response) => {
+        poolingErrorCount = 0;
+      })
       .catch((error) => {
         poolingErrorCount++;
         console.error("Polling error:", error);
@@ -292,18 +298,20 @@
             }
           })
           .catch((error) => {
-            if(poolingErrorCount >= 2){
+            if (poolingErrorCount >= 2) {
               terminateTask();
-              alert("Generování mapy bylo nečekaně přerušeno, zkuste to znovu později");
-            }else{
+              alert(
+                "Generování mapy bylo nečekaně přerušeno, zkuste to znovu později"
+              );
+            } else {
               poolingErrorCount++;
             }
             console.error("Polling error:", error);
           });
       },
       $displayedTabMapGenerating == "normalMap"
-        ? normalPollingTime
-        : previewPollingTime
+        ? normalPoolingTime
+        : previewPoolingTime
     );
   }
   function stopPollingTaskInfo() {
@@ -344,6 +352,7 @@
         document.body.removeChild(link);
         jwtToken = "";
         terminateTask();
+        alert("Mapa byla úspěšně stažena");
       })
       .catch((e) => {
         terminateTask();
@@ -565,7 +574,7 @@
         <div class="flex flex-col">
           <button
             class="px-4 py-2 bg-blue-500 text-white rounded-sm shadow hover:bg-blue-600 transition"
-            on:click={flipPaper}
+            on:click={flipPaperDimension}
           >
             Otočit
           </button>

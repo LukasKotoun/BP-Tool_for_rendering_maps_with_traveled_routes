@@ -84,7 +84,7 @@ export function updateWantedElements(
   return dataToUpdate;
 }
 
-export function transformElementsStructure(
+export function transformElementsStructureForBE(
   data: MapElementCategory,
   plot_key: string,
   scale_keys: Record<string, number>

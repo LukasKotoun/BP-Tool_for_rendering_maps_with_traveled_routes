@@ -4,9 +4,9 @@ from common.map_enums import Style
 from common.custom_types import RowsConditionsAND
 from common.api_base_models import PaperDimensionsModel, FitPaperSizeModel
 
+
 class ReceivedStructureProcessor:
 
-    # def validate_and_convert_paper_dimensions
     @staticmethod
     def map_dict(input_dict: dict[str, any], mapping_dict: dict[str, tuple[str, Callable, bool]]):
         """Replace dictionary keys with new values in mapping_dict and map its values using transform function in mapping_dict
@@ -64,6 +64,12 @@ class ReceivedStructureProcessor:
 
     @staticmethod
     def check_dict_values_and_types(values_dict: dict, allowed_keys_and_types: dict[str, tuple[type, bool, Callable]]):
+        """Check if values in dict have allowed keys and types.
+        Alowed keys and types is: str: (type, required, validation_func)
+            str: name of key
+            type: type of value
+            required: if value is required
+            validation_func: function to validate value"""
         allowed_keys = set(allowed_keys_and_types.keys())
         required_keys = {
             k for k, (_, required, *_) in allowed_keys_and_types.items() if required}
@@ -80,9 +86,9 @@ class ReceivedStructureProcessor:
         for key, (expected_type, required, *validation_func) in allowed_keys_and_types.items():
             validation_func = validation_func[0] if validation_func else None
             if key in values_dict and expected_type is not None:
-                if(required and values_dict[key] is None):
+                if (required and values_dict[key] is None):
                     return False
-                if(not required and values_dict[key] is None):
+                if (not required and values_dict[key] is None):
                     continue
                 if (not required):
                     expected_type = Union[expected_type, type(None)]
@@ -107,7 +113,7 @@ class ReceivedStructureProcessor:
                 raise ValueError(
                     "some keys are not allowed or have wrong types")
             item = ReceivedStructureProcessor.map_dict(
-                                item, areas_mapping)
+                item, areas_mapping)
             new_item = item.copy()
 
             # Validate and convert the area.
@@ -199,9 +205,9 @@ class ReceivedStructureProcessor:
         return True
 
     @staticmethod
-    def transform_to_backend_structures(data: Dict[str, Any], allowed_styles: list, styles_allowed_primary_elements: list,
-                                        styles_mapping: dict[str,
-                                                             tuple[str, Callable, bool]] = {}) -> tuple[dict, dict]:
+    def transform_wanted_elements_to_backend_structures(data: Dict[str, Any], allowed_styles: list, styles_allowed_primary_elements: list,
+                                                        styles_mapping: dict[str,
+                                                                             tuple[str, Callable, bool]] = {}) -> tuple[dict, dict]:
         """
         Transform the validated frontend data into two backend structures.
 
@@ -232,18 +238,18 @@ class ReceivedStructureProcessor:
                         if styles:
                             styles = ReceivedStructureProcessor.map_dict(
                                 styles, styles_mapping)
-                            condition: RowsConditionsAND = {element: tag}
                             styles_edits[element_category].append(
-                                (condition, styles))
+                                # style condition - {element: tag}
+                                ({element: tag}, styles))
                 else:
                     styles = {
                         k: v for k, v in data[element_category][element].items() if k in allowed_styles}
                     if styles:
                         styles = ReceivedStructureProcessor.map_dict(
                             styles, styles_mapping)
-                        condition: RowsConditionsAND = {element: ''}
                         styles_edits[element_category].append(
-                            (condition, styles))
+                            # style condittion - {element: ''}
+                            ({element: ''}, styles))
 
         return wanted_categories, styles_edits
 
@@ -276,7 +282,7 @@ class ReceivedStructureProcessor:
                 styles = ReceivedStructureProcessor.map_dict(
                     data[key], styles_mapping)
                 result.append(
-                    ([], styles))
+                    ([], styles))  # style condition [] means all rows in gdf
 
         return result
 
@@ -297,7 +303,7 @@ class ReceivedStructureProcessor:
         else:
             if (paper_dimensions.width is None or paper_dimensions.height is None):
                 raise ValueError("Both paper dimensions must be provided")
-            
+
         return (paper_dimensions.width, paper_dimensions.height)
 
     @staticmethod
@@ -308,17 +314,18 @@ class ReceivedStructureProcessor:
 
     @staticmethod
     def validate_and_convert_zoom_levels(data: dict[str, int], level_validation: dict[str, tuple[type, bool, Callable]],
-                                          level_mapping: dict[str, tuple[str, Callable, bool]] ) ->  dict[str, int]:
+                                         level_mapping: dict[str, tuple[str, Callable, bool]]) -> dict[str, int]:
         if (not ReceivedStructureProcessor.check_dict_values_and_types(data, level_validation)):
             raise ValueError(f"Invalid zoom level (must be between 1 and 10)")
         zooms = ReceivedStructureProcessor.map_dict(
-                    data, level_mapping)
+            data, level_mapping)
         return zooms
 
     @staticmethod
     def validate_fit_paper(data: FitPaperSizeModel, fit_paper_validation: dict[str, tuple[type, bool, Callable]]) -> bool:
         if (not ReceivedStructureProcessor.check_dict_values_and_types(data.model_dump(), fit_paper_validation)):
             raise ValueError(f"Invalid fit paper size struct ")
-        if(data.plot and data.width is None):
-            raise ValueError("Width must be provided if plot is True in fit paper size")
+        if (data.plot and data.width is None):
+            raise ValueError(
+                "Width must be provided if plot is True in fit paper size")
         return True

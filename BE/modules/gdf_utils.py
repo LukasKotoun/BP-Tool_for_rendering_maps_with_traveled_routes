@@ -17,12 +17,13 @@ from common.map_enums import WorldSides, Style, MinPlot
 from common.custom_types import BoundsDict, DimensionsTuple, WantedAreas, RowsConditions, RowsConditionsAND
 
 
-
-
 class GdfUtils:
+
     # ------------getting informations------------
     @staticmethod
     def get_area_gdf(area: str | list[Point], fromCrs: str, toCrs: str | None = None) -> GeoDataFrame:
+        """Parse area from string or list of coordinates to gdf.
+        From string it will use osmnx with nominatim api"""
         if isinstance(area, str):
             try:
                 # need internet connection
@@ -30,7 +31,7 @@ class GdfUtils:
                     area)  # Get from place name
             except:
                 raise ValueError(
-                    "The requested location has not been found.")  
+                    "The requested location has not been found.")
             if (reqired_area_gdf.empty):
                 raise ValueError(
                     "The requested location has not been found.")
@@ -49,21 +50,8 @@ class GdfUtils:
             return reqired_area_gdf.to_crs(toCrs)
 
     @staticmethod
-    def map_gdf_column_names(gdf, mapping_dict):
-        """Replace GeoDataFrame column names with enums if in mapping, otherwise keep them unchanged."""
-        gdf.columns = [mapping_dict.get(col, col) for col in gdf.columns]
-        return gdf
-
-    #! unused
-    @staticmethod
-    def columns_to_upper(gdf, to_upper):
-        """Change GeoDataFrame column names to upper case."""
-        gdf.columns = [
-            col.upper() if col in to_upper else col for col in gdf.columns]
-        return gdf
-
-    @staticmethod
     def get_whole_area_gdf(wanted_areas: WantedAreas, key_with_area, fromCrs: str, toCrs: str | None = None) -> GeoDataFrame:
+        """Parse all wanted areas to gdf where each row in one area. Row will also have all aditional columns"""
         if (len(wanted_areas) == 1):
             wanted_area = wanted_areas[0].copy()
             if (key_with_area not in wanted_area):
@@ -95,7 +83,7 @@ class GdfUtils:
             gdf_dissolved = gdf_nonzero.dissolve(by=combine_by, as_index=False)
         else:
             gdf_dissolved = gdf_nonzero.copy()
-        
+
         # Combine the dissolved nonzero rows with the category 0 rows.
         return GdfUtils.combine_gdfs([gdf_dissolved, gdf_zero])
 
@@ -176,11 +164,22 @@ class GdfUtils:
 
     @staticmethod
     def create_background_gdf(map_area_gdf: GeoDataFrame, costline_gdf: GeoDataFrame, water_color: str, land_color: str) -> GeoDataFrame:
+        """From costline gdf and map area create gdf with rows of that represent water and land areas.
+
+        Water and land is determined by direction of costline. On left side of costline is land and on right side is water.
+        Water and land polygons are created by splitting map area with costline.
+
+        Args:
+            map_area_gdf (GeoDataFrame): gdf with area that will be displayed on paper
+            costline_gdf (GeoDataFrame): gdf with costlines
+            water_color (str): color of water
+            land_color (str): color of land    
+          """
         if (costline_gdf.empty):
             return GdfUtils.create_empty_gdf(map_area_gdf.crs)
         bg_data = []
         required_area_polygon = GdfUtils.create_polygon_from_gdf(map_area_gdf)
-        # split one by one
+        # Create splitters from costline gdf and split area by them one by one
         splitters = GeomUtils.merge_lines_safe(costline_gdf.geometry)
         splitters = list(splitters.geoms) if isinstance(
             splitters, MultiLineString) else [splitters]
@@ -189,7 +188,7 @@ class GdfUtils:
             # splitter does not split area
             if (len(geometry_collection.geoms) == 1):
                 continue
-            # check if geom is on right or left of splitter
+            # iterate throw each created polygon and check if geom is on right or left of splitter
             for geom in geometry_collection.geoms:
                 same_orientation = GeomUtils.check_same_orientation(
                     geom, splitter)
@@ -217,6 +216,7 @@ class GdfUtils:
     # centroid needs to be calc in display cordinates
     @staticmethod
     def create_points_from_polygons_gdf(gdf: GeoDataFrame):
+        """Create points from centers of polygons in given gdf."""
         if (gdf.empty):
             return gdf
         original_crs = gdf.crs
@@ -237,10 +237,12 @@ class GdfUtils:
             gdf.drop(columns=columns, inplace=True, errors='ignore')
 
     @staticmethod  # column and multipliers must be numeric otherwise it will throw error
-    def multiply_column_gdf(gdf, column: Style | str, multipliers: list[str | Style] = [], scaling=None, filter: RowsConditions = []):
+    def multiply_column_gdf(gdf: GeoDataFrame, column: Style | str, multipliers: list[str | Style] = [], scaling=None, filter: RowsConditions = []):
+        """For each row where given column in 'column' variable is not nan, multiply by miltipliers columns and scaling if given.
+        Aditonaly muliply only rows where filter is true."""
         if (column not in gdf):
             return
-        # multiply rows where column value is not empty
+        # multiply rows where column value is not nan
         rows_with_column = GdfUtils.get_rows_filter(gdf, {column: ""})
         if (filter):
             rows_with_column &= GdfUtils.get_rows_filter(gdf, filter)
@@ -259,8 +261,20 @@ class GdfUtils:
                     column] *= gdf.loc[rows_with_multipler, multiplier]
 
     @staticmethod  # column and multipliers must be numeric otherwise it will throw error
-    def create_derivated_columns(gdf, new_column: Style | str, base_column: Style | str, multipliers: list[str | Style] = [],
+    def create_derivated_columns(gdf: GeoDataFrame, new_column: Style | str, base_column: Style | str, multipliers: list[str | Style] = [],
                                  filter: RowsConditions | RowsConditionsAND = [], fill: any = 0, scaling=None):
+        """Create new column in gdf that is derived from base column. and multiply it by multipliers and scaling using multiply_column_gdf function.
+        Also create derivated column only for rows where filter is true, if given.
+
+        Args:   
+            gdf (GeoDataFrame): gdf to create new column in
+            new_column (str): column name
+            base_column (str): base column name
+            multipliers (list[str], optional): Columns in gdf to multipli new columns with. Defaults to [].
+            filter (RowsConditions, optional): Filter to filters rows for with to create new column. Defaults to [].
+            fill (any, optional): Fill new columns with if base not exists. Defaults to 0.
+            scaling (_type_, optional): Multiply new column by value. Defaults to None.
+        """
         # create new column with fill if base not exists
         if (base_column not in gdf):
             gdf[new_column] = gdf.get(new_column, fill)
@@ -315,18 +329,10 @@ class GdfUtils:
 
     @staticmethod
     def merge_lines_gdf(gdf: GeoDataFrame, columns_ignore: list[str | Style] = []) -> GeoDataFrame:
-        """Merge lines in GeoDataFrame to one line if they have same values in columns (except columns in columns_ignore).
-        If want_bridges is True, merge all lines with same values in columns. If False, merge all lines with same values but ignore bridges.
+        """Try to merge lines in GeoDataFrame to one line if they have same values in columns (except columns in columns_ignore).
+        From multiple lines that connect to each other, it will create one line.
         To merging geoms is used function merge_lines_safe that uses unary_union and linemerge from shapely.ops.
-        It should merge multiple lines that are one line and that should prevents creating artifacts in plot.
-
-        Args:
-            gdf (GeoDataFrame): _description_
-            want_bridges (bool): _description_
-            columns_ignore (list[str  |  Style], optional): _description_. Defaults to [].
-
-        Returns:
-            GeoDataFrame: _description_
+        It should merge multiple lines that are one line and that should prevents creating artefacts in plot.
         """
         if (gdf.empty):
             return gdf
@@ -348,7 +354,6 @@ class GdfUtils:
 
     @staticmethod
     def combine_gdfs(gdfs: list[GeoDataFrame]) -> GeoDataFrame:
-
         non_empty_gdfs = [gdf for gdf in gdfs if not gdf.empty]
         for gdf in non_empty_gdfs:
             GdfUtils.remove_na_columns(gdf)
@@ -391,6 +396,21 @@ class GdfUtils:
 
     @staticmethod
     def get_rows_filter_AND(gdf: GeoDataFrame, conditions: RowsConditionsAND) -> pd.Series:
+        """Get pandas Series with True for rows that match all conditions conditions in gdf.
+            For non string values can check only equality.
+        Args:
+            gdf (GeoDataFrame): gdf to filter
+            conditions (RowsConditionsAND): conditions to filter gdf. 
+            It can have this formats:
+            - {column_name: ''} - single condition - not NA
+            - {column_name: value} - single condition - equal to value
+            - {column_name: '~'} - single condition - NA
+            - {column_name: '~value'} - single condition - not equal to value
+            - {column_name: [value1, value2]} - multiple values for one column - can have value1 or value2
+            - {column_name: ('~value1', '~value2')} - multiple values for one column - cant have value1 and value2 
+            can have more conditions in dict where all must be true to mark row as true
+            - {column_name: [value1, value2], column_name2: [value3, value4]} - column_name1 must be value1 or value2 and column_name2 must be value3 or value4
+        """
         filter_mask = pd.Series(True, index=gdf.index)
         for column_name, column_value in conditions.items():
             if column_name not in gdf.columns:
@@ -480,6 +500,9 @@ class GdfUtils:
         return filter_mask
 
     def get_rows_filter(gdf: GeoDataFrame, conditions: RowsConditions | RowsConditionsAND) -> pd.Series:
+        """Create complex filter mask with OR and AND conditions. Where it use get_rows_filter_AND function to create AND conditions.
+        Conditions is in format of list [{cond: [val1, val2]}, {..}] where data in each dict area AND condition 
+        and between dicts is OR condition."""
         filter_mask = pd.Series(False, index=gdf.index)
         # if is not list
         if isinstance(conditions, dict):
@@ -494,6 +517,7 @@ class GdfUtils:
 
     def filter_rows(gdf: GeoDataFrame, conditions: RowsConditions | RowsConditionsAND,
                     neg: bool = False, compl: bool = False) -> GeoDataFrame:
+        """Return create gdf that area filtered using filter mask that is obtained from get_rows_filter function."""
         filter_mask = GdfUtils.get_rows_filter(gdf, conditions)
         return GdfUtils.return_filtered(gdf, filter_mask, neg, compl)
 
@@ -511,17 +535,18 @@ class GdfUtils:
             else:
                 return gdf[filter_mask].reset_index(drop=True)
 
-  
     @staticmethod
     def filter_areas(gdf: GeoDataFrame, compl: bool = False, neg: bool = False) -> GeoDataFrame | tuple[GeoDataFrame, GeoDataFrame]:
         return GdfUtils.return_filtered(gdf, gdf.geom_type.isin(["Polygon", "MultiPolygon"]), compl=compl, neg=neg)
 
     @staticmethod
     def filter_nodes_min_req(nodes_gdf: GeoDataFrame) -> GeoDataFrame:
+        """Filter minimum requirments for nodes markers and texts"""
+        # must have at least one of the columns
         nodes_gdf = GdfUtils.filter_rows(nodes_gdf, [{Style.MARKER.value: ''},
                                                      {Style.TEXT1.value: ''},
                                                      {Style.TEXT2.value: ''}])
-
+        # filter by min plot requirements - data that does not have that minimum will not be plotted
         nodes_gdf = GdfUtils.filter_rows(nodes_gdf, [{Style.MIN_PLOT_REQ.value: MinPlot.MARKER.value, Style.MARKER.value: '', Style.COLOR.value: ''},
                                                      {Style.MIN_PLOT_REQ.value: MinPlot.MARKER_TEXT1.value,
                                                          Style.MARKER.value: '', Style.TEXT1.value: ''},
@@ -548,6 +573,7 @@ class GdfUtils:
 
     @staticmethod
     def get_groups_by_columns(gdf: GeoDataFrame, group_cols: list, default_keys: list = [], dropna: bool = False, sort=True):
+        """Create from gdf groups by columns in group_cols. if columns does not exits fill it with default values"""
         # get missing columns and replace with default key if missing
         if len(group_cols) != len(default_keys):
             default_keys = [None] * len(group_cols)
@@ -608,6 +634,7 @@ class GdfUtils:
 
     @staticmethod
     def filter_place_by_population(nodes_gdf: GeoDataFrame, place_to_filter: list, min_population: int):
+        """FIlter places where populatino exceeds given value."""
         if (nodes_gdf.empty):
             return nodes_gdf
         if (min_population is None or min_population <= 0):
@@ -622,6 +649,8 @@ class GdfUtils:
 
     @staticmethod
     def get_common_borders(gdf1: GeoDataFrame, gdf2: GeoDataFrame):
+        """ Get common borders (lines) between two gdfs with lines.
+        """
         union1 = gdf1.union_all()
         union2 = gdf2.union_all()
         common_border = union1.boundary.intersection(union2.boundary)
