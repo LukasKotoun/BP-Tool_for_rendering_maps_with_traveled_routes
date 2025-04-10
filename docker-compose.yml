@@ -15,8 +15,13 @@ services:
     ports:
       - "8000:8000" 
     networks:
-      - app-network 
+      - app-network
+    volumes:
+      - backend-data:/app/osm_files
 
 networks:
   app-network:
     driver: bridge
+    
+volumes:
+  backend-data:
