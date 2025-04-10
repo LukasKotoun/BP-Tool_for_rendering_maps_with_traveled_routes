@@ -6,6 +6,7 @@ else
     DOCKER_COMPOSE="docker-compose"
 fi
 
+$DOCKER_COMPOSE down -v
 $DOCKER_COMPOSE build
 
 if [ $# -gt 0 ]; then
