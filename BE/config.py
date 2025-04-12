@@ -157,7 +157,6 @@ FE_EDIT_STYLES_VALIDATION = {'width_scale': (float | int, False),
                              "text_scale": (float | int, False)}
 FE_EDIT_STYLES_MAPPING = {"width_scale": (Style.FE_WIDTH_SCALE.value, lambda v: max(v, 0)),
                           "text_scale": (Style.FE_TEXT_FONT_SIZE_SCALE.value, lambda v: max(v, 0))}
-FE_ALLOWED_ELEMENTS = ['nodes', 'ways', 'areas']
 
 
 ZOOM_STYLE_LEVELS_VALIDATION = {"nodes": (int, True), "ways": (
