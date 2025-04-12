@@ -4,7 +4,6 @@ import pandas as pd
 from geopandas import GeoDataFrame
 from modules.gdf_utils import GdfUtils
 
-from modules.utils import Utils
 from common.map_enums import Style
 from common.custom_types import ElementStyles
 

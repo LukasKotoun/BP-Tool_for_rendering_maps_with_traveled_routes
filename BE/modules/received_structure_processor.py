@@ -1,7 +1,6 @@
 from typing import Dict, List, Union, Any, Callable
 
-from common.map_enums import Style
-from common.custom_types import RowsConditionsAND
+from common.custom_types import ElementStyles
 from common.api_base_models import PaperDimensionsModel, FitPaperSizeModel
 
 
@@ -147,7 +146,7 @@ class ReceivedStructureProcessor:
             ValueError: If validation fails
         """
 
-        # Validate top-level keys - must have all
+        # Validate top-level keys (nodes, ways, areas) - must have all
         if not all(key in data for key in allowed_structure):
             raise ValueError(
                 f"Invalid keys in wanted elements and styles: {set(data.keys()) - set(allowed_structure.keys())}")
@@ -172,23 +171,24 @@ class ReceivedStructureProcessor:
                 # Skip empty subcategories
                 if (not element_features and allowed_element == True):
                     continue
-                # Handle different validation rules based on allowed structure
-                # Case 1: element allowed all is false, must have at least one tag or be missing
+                # handle different validation rules based on allowed structure
+                # case 1: element allowed all is false, must have at least one tag or be missing
+                # case 1.1 - check not missing 
                 if (not element_features):
                     raise ValueError(
                         f"Empty element (will have all attributes but must have at least one tag or be missing): {element} in {element_category} (wanted elements and styles)")
-
+                # case 1.2 - check at leas one tag
                 elif (any(key in styles_validation for key in element_features.keys()) and allowed_element != True):
                     raise ValueError(
                         f"Empty element (will have all attributes but must have at least one tag or be missing): {element} in {element_category} (wanted elements and styles)")
-
+                # case 1.3 - check valid tags 
                 elif isinstance(allowed_element, list):
                     for tag in element_features:
                         if tag not in allowed_element:
                             raise ValueError(
                                 f"Invalid tag: {tag} in {element_category}.{element} (wanted elements and styles)")
 
-                        # Validate attributes
+                        # check attributes - styles 
                         tag_data = element_features[tag]
                         if tag_data and isinstance(tag_data, dict):
                             if (not ReceivedStructureProcessor.check_dict_values_and_types(tag_data, styles_validation)):
@@ -198,6 +198,7 @@ class ReceivedStructureProcessor:
                 # Case 2: element empty or missing allowed
                 elif allowed_element is True:
                     if isinstance(element_features, dict):
+                        # check attributes - styles
                         for attr in element_features:
                             if not ReceivedStructureProcessor.check_dict_values_and_types(element_features, styles_validation):
                                 raise ValueError(
@@ -205,7 +206,7 @@ class ReceivedStructureProcessor:
         return True
 
     @staticmethod
-    def transform_wanted_elements_to_backend_structures(data: Dict[str, Any], allowed_styles: list, styles_allowed_primary_elements: list,
+    def transform_wanted_elements_to_backend_structures(data: Dict[str, Any], allowed_styles: list, allowed_primary_elements: list,
                                                         styles_mapping: dict[str,
                                                                              tuple[str, Callable, bool]] = {}) -> tuple[dict, dict]:
         """
@@ -218,19 +219,19 @@ class ReceivedStructureProcessor:
             Dict containing the two transformed structures
         """
 
-        def has_subsections(dict, allowed_multiply_atributes):
-            return any(key not in allowed_multiply_atributes for key in dict)
+        def has_subsections(dict, allowed_atributes):
+            return any(key not in allowed_atributes for key in dict)
 
         wanted_categories = {}
-        styles_edits = {key: [] for key in styles_allowed_primary_elements}
+        styles_edits = {key: [] for key in allowed_primary_elements}
         for element_category in data:
             wanted_categories[element_category] = {}
             for element in data[element_category]:
-                # Extract tags without attributes
+                # extract tags without attributes - e.g. [ways][highway] = {'residential', 'motorway'}
                 wanted_categories[element_category][element] = set(
                     {tag for tag in data[element_category][element] if tag not in allowed_styles})
 
-                # create pandas filters for assing attributes from FE
+                # create pandas filters for assing attributes from FE if have subsections
                 if (has_subsections(data[element_category][element], allowed_styles)):
                     for tag, tag_data in data[element_category][element].items():
                         styles = {
@@ -241,6 +242,7 @@ class ReceivedStructureProcessor:
                             styles_edits[element_category].append(
                                 # style condition - {element: tag}
                                 ({element: tag}, styles))
+                # create pandas filters for assing attributes from FE if no subsections e.g. [ways][highway] have directly style attributes
                 else:
                     styles = {
                         k: v for k, v in data[element_category][element].items() if k in allowed_styles}
@@ -256,7 +258,7 @@ class ReceivedStructureProcessor:
     def validate_and_convert_gpx_styles(data: dict, normal_keys: list, general_keys: list,
                                         styles_validation: dict[str,
                                                                 tuple[type, bool, Callable]] = {},
-                                        styles_mapping: dict[str, tuple[str, Callable, bool]] = {}) -> bool:
+                                        styles_mapping: dict[str, tuple[str, Callable, bool]] = {}) -> list[ElementStyles]:
         result = []
         # check it there is key that is not in normal_keys or general_keys
         if (any(key not in normal_keys + general_keys for key in data)):

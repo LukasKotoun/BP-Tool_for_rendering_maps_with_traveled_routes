@@ -121,12 +121,10 @@ MARKERS_UCODE_MAPPING: dict[str, str] = {
                   Style.START_MARKER_VERTICAL_ALIGN.value: None,
                   Style.START_MARKER_HORIZONTAL_ALIGN.value: None}
 }
-# --------------------------------------------------------------validation config--------------------------------------------------------------
+# --------------------------------------------------------------API validation config--------------------------------------------------------------
 
-GPX_FILE_COLUMN = 'file_name'
-GPX_GROUP_COLUMN = 'group'
-GPX_NORMAL_COLUMNS = [GPX_FILE_COLUMN, GPX_GROUP_COLUMN]
-GPX_GENERAL_KEYS = ['general']
+GPX_NORMAL_STYLE_KEYS = ['file_name', 'group']
+GPX_GENERAL_STYLE_KEYS = ['general']
 
 ALLOWED_WANTED_PAPER_ORIENTATIONS = [MapOrientation.AUTOMATIC.value, MapOrientation.LANDSCAPE.value, MapOrientation.PORTRAIT.value]
 MIN_WIDTH_POINTS = 0.1
@@ -143,21 +141,24 @@ ZOOM_LEVEL_CLAMP_VALUE = lambda v: min(10, max(v, 1))
 # is validated and not mapped
 FIT_PAPER_VALIDATION = {"fit": (bool, True), "plot": (bool, True),
                         "width": (int | float, False)}
-
+# requred area settings
 REQ_AREA_KEY_WITH_AREA = "area"
 REQ_AREA_KEY_WITH_BOOLEAN_PLOT = "plot"
 REQ_AREA_KEY_TO_GROUP_BY = "group"
+
 # key, (types, required) - area can be string or list of lists with cordinates x,y (lon, lat)
 REQ_AREA_DICT_KEYS = {"area": (str | list, True), "plot": (bool, True), "group": (
     int, False), "width": (int | float, False)}
 REQ_AREAS_MAPPING_DICT = {"width": (Style.WIDTH.value, FUNC_MM_TO_POINTS_CONVERSION),
                           "group":("group", lambda v: max(v, 0))}
 
+
 FE_EDIT_STYLES_VALIDATION = {'width_scale': (float | int, False),
                              "text_scale": (float | int, False)}
 FE_EDIT_STYLES_MAPPING = {"width_scale": (Style.FE_WIDTH_SCALE.value, lambda v: max(v, 0)),
                           "text_scale": (Style.FE_TEXT_FONT_SIZE_SCALE.value, lambda v: max(v, 0))}
-FE_STYLES_ALLOWED_ELEMENTS = ['nodes', 'ways', 'areas']
+FE_ALLOWED_ELEMENTS = ['nodes', 'ways', 'areas']
+
 
 ZOOM_STYLE_LEVELS_VALIDATION = {"nodes": (int, True), "ways": (
     int, True), "areas": (int, True), "general": (int, True)}
@@ -222,6 +223,7 @@ GPX_STYLES_MAPPING = {
     "marker_layer_position": (Style.MARKER_LAYER_POSITION.value, lambda v: MarkerPosition.UNDER_TEXT_OVERLAP.value if v == 'under_text' else MarkerPosition.ABOVE_ALL.value),
 }
 
+
 # --------------------------------------------------------------styles and loading data config--------------------------------------------------------------
 
 BASE_OSM_CONFIG = {
@@ -263,7 +265,6 @@ BASE_OSM_CONFIG = {
 
 # where to switch to more detailed zoom level
 ZOOM_LEVEL_THRESHOLD = 0.1
-# zooms: scaling values for center of each zoom level
 # zoom level: scaling value
 ZOOM_MAPPING: dict[int, float] = {
     10: 0.1967345,

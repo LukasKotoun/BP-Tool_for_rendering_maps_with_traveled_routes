@@ -292,7 +292,7 @@ async def generate_normal_map(background_tasks: BackgroundTasks, gpxs: Optional[
         ReceivedStructureProcessor.validate_wanted_elements_and_styles(
             config.wanted_categories_and_styles_edit, ALLOWED_WANTED_ELEMENTS_STRUCTURE, FE_EDIT_STYLES_VALIDATION)
         gpxs_styles = ReceivedStructureProcessor.validate_and_convert_gpx_styles(
-            config.gpxs_styles, GPX_NORMAL_COLUMNS, GPX_GENERAL_KEYS, GPX_STYLES_VALIDATION, GPX_STYLES_MAPPING)
+            config.gpxs_styles, GPX_NORMAL_STYLE_KEYS, GPX_GENERAL_STYLE_KEYS, GPX_STYLES_VALIDATION, GPX_STYLES_MAPPING)
         ReceivedStructureProcessor.validate_fit_paper(
             config.fit_paper_size, FIT_PAPER_VALIDATION)
 
@@ -354,7 +354,7 @@ async def generate_normal_map(background_tasks: BackgroundTasks, gpxs: Optional[
         MapConfigKeys.MAP_THEME.value: config.map_theme,
         MapConfigKeys.PLOT_BRIDGES.value: config.plot_bridges,
         MapConfigKeys.PLOT_TUNNELS.value: config.plot_tunnels,
-        MapConfigKeys.WANTED_CATEGORIES_AND_STYLES_CHANGES.value: config.wanted_categories_and_styles_edit,
+        MapConfigKeys.WANTED_CATEGORIES_AND_STYLE_EDIT.value: config.wanted_categories_and_styles_edit,
         MapConfigKeys.STYLES_ZOOM_LEVELS.value: styles_zoom_levels,
         MapConfigKeys.GPXS_STYLES.value: gpxs_styles,
     }
@@ -397,7 +397,7 @@ async def generate_preview_map(background_tasks: BackgroundTasks, gpxs: Optional
         ReceivedStructureProcessor.validate_fit_paper(
             config.fit_paper_size, FIT_PAPER_VALIDATION)
         gpxs_styles = ReceivedStructureProcessor.validate_and_convert_gpx_styles(
-            config.gpxs_styles, GPX_NORMAL_COLUMNS, GPX_GENERAL_KEYS, GPX_STYLES_VALIDATION, GPX_STYLES_MAPPING)
+            config.gpxs_styles, GPX_NORMAL_STYLE_KEYS, GPX_GENERAL_STYLE_KEYS, GPX_STYLES_VALIDATION, GPX_STYLES_MAPPING)
 
         map_area = ReceivedStructureProcessor.validate_and_convert_areas_strucutre(
             config.map_area, REQ_AREA_DICT_KEYS, REQ_AREAS_MAPPING_DICT, key_with_area=REQ_AREA_KEY_WITH_AREA)
@@ -453,7 +453,7 @@ async def generate_preview_map(background_tasks: BackgroundTasks, gpxs: Optional
         MapConfigKeys.MAP_THEME.value: config.map_theme,
         MapConfigKeys.PLOT_BRIDGES.value: config.plot_bridges,
         MapConfigKeys.PLOT_TUNNELS.value: config.plot_tunnels,
-        MapConfigKeys.WANTED_CATEGORIES_AND_STYLES_CHANGES.value: config.wanted_categories_and_styles_edit,
+        MapConfigKeys.WANTED_CATEGORIES_AND_STYLE_EDIT.value: config.wanted_categories_and_styles_edit,
         MapConfigKeys.STYLES_ZOOM_LEVELS.value: styles_zoom_levels,
         MapConfigKeys.GPXS_STYLES.value: gpxs_styles,
         MapConfigKeys.GPXS.value: gpxs_gdf,

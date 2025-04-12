@@ -6,7 +6,7 @@ from geopandas import GeoDataFrame
 import numpy as np
 import osmnx as ox
 from osmium import FileProcessor
-from shapely.geometry import Polygon, MultiLineString, LineString, Point
+from shapely.geometry import Polygon, MultiLineString, Point
 from shapely.ops import split
 from scipy.spatial import cKDTree
 

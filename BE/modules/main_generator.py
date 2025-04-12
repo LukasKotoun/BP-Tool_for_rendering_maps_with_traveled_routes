@@ -1,7 +1,7 @@
 from typing import Any
 
 from config import CRS_OSM, CRS_DISPLAY, OUTPUT_PDF_FOLDER, OSM_TMP_FILE_FOLDER, DEFAULT_STYLE, MANDATORY_WAYS
-from config import STYLES, FE_EDIT_STYLES_VALIDATION, FE_STYLES_ALLOWED_ELEMENTS, FE_EDIT_STYLES_MAPPING, NODES_ALSO_FROM_AREA
+from config import STYLES, FE_EDIT_STYLES_VALIDATION, FE_ALLOWED_ELEMENTS, FE_EDIT_STYLES_MAPPING, NODES_ALSO_FROM_AREA
 from config import PLACES_TO_FILTER_BY_POPULATION, REQ_AREA_KEY_WITH_AREA, REQ_AREA_KEY_TO_GROUP_BY, REQ_AREA_KEY_WITH_BOOLEAN_PLOT
 from common.map_enums import ProcessingStatus, SharedDictKeys, BaseConfigKeys, MapConfigKeys, MapThemeVariable, Style
 from common.custom_types import DimensionsTuple
@@ -220,8 +220,8 @@ def generate_map(config: dict[MapConfigKeys, any], task_id: str, shared_dict: di
         config[MapConfigKeys.MAP_AREA.value], CRS_OSM)
     # prepare all structures
     wanted_categories, styles_size_edits = ReceivedStructureProcessor.transform_wanted_elements_to_backend_structures(
-        config[MapConfigKeys.WANTED_CATEGORIES_AND_STYLES_CHANGES.value], FE_EDIT_STYLES_VALIDATION.keys(),
-        FE_STYLES_ALLOWED_ELEMENTS, FE_EDIT_STYLES_MAPPING)
+        config[MapConfigKeys.WANTED_CATEGORIES_AND_STYLE_EDIT.value], FE_EDIT_STYLES_VALIDATION.keys(),
+        FE_ALLOWED_ELEMENTS, FE_EDIT_STYLES_MAPPING)
 
     map_theme, base_config = STYLES.get(
         config[MapConfigKeys.MAP_THEME.value], DEFAULT_STYLE)

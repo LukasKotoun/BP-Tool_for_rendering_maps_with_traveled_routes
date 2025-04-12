@@ -402,7 +402,8 @@
         {mapValue(mapGeneratingStatusMappingCZ, status)}
       </h2>
       <h3 class="text-md font-semibold mb-4">
-        Dejte si kávičku a nevypínejte tuto záložku, probíhá tvorba mapy.
+        Dejte si kávičku a nevypínejte tuto záložku, probíhá tvorba mapy. 
+        <br/> Tvroba velkých oblastí může trvat i několik hodin.
       </h3>
       <LoadingSpinner isVisible={isGenerating} speed="slow" />
       {#if status != MapGeneratingStatus.SENDING_DATA && status != MapGeneratingStatus.COMPLETED}
