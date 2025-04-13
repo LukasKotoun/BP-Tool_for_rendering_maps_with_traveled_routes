@@ -8,7 +8,6 @@ from shapely.geometry import MultiLineString, Polygon
 from shapely import MultiPolygon
 from geopandas import GeoDataFrame
 import pandas as pd
-from matplotlib.transforms import Bbox
 from matplotlib.text import Text, Annotation
 from matplotlib.lines import Line2D
 import matplotlib.patheffects as pe

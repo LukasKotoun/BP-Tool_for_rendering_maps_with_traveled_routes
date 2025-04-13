@@ -79,7 +79,6 @@ class MapBorderConfigModel(BaseModel):
     paper_dimensions: PaperDimensionsModel
     fit_paper_size: FitPaperSizeModel
 
-
 class GeneratorResponseStatusModel(BaseModel):
     token: str | None = None
     status: str = 'failed'  # started|queued|processing|completed|failed

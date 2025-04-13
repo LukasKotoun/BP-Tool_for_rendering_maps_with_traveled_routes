@@ -1,3 +1,4 @@
+// Set false to all plot properties in the data
 export function resetPlotSettings(
   originalData: MapElementCategory,
   bool_key_to_reset: string
@@ -28,6 +29,7 @@ export function mapValue(dict: Dictionary, value: string): string {
   return dict[value] ?? value; // If value is found in dict, return the mapped value, otherwise return the original value
 }
 
+// Set plot property to true for all elements that are in the updateRules
 export function updateWantedElements(
   originalData: MapElementCategory,
   updateRules: MapElementUpdateRules,
@@ -84,6 +86,7 @@ export function updateWantedElements(
   return dataToUpdate;
 }
 
+// Transform by removing plot property and keeping only element with true on that property and attributes that are different from the default values
 export function transformElementsStructureForBE(
   data: MapElementCategory,
   plot_key: string,

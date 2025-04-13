@@ -29,7 +29,6 @@ class TaskQueueKeys(Enum):
     CONFIG = "config"
     QUEUE_TYPE = "queue_type"
     TASK_ID = "task_id"
-    
 
 class QueueType(Enum):
     NORMAL = "normal"
@@ -38,12 +37,6 @@ class QueueType(Enum):
 class GpxColumns(Enum):
     FILE_NAME = "file_name"
     GROUP = "group"
-
-class ColorMode(Enum):
-    DEFAULT = "DEFAULT"
-    SINGLE = "SINGLE"
-    SHADE = "SHADE"
-    PALETTE = "PALETTE"
 
 class LineCupStyles(Enum):
     ROUND = "round"
@@ -72,13 +65,12 @@ class MapConfigKeys(Enum):
     PLOT_TUNNELS = "plot_tunnels"
     OSM_FILES = "osm_files" # checked
     PAPER_DIMENSION_MM = "paper_dimension_mm"
-    WANTED_CATEGORIES_AND_STYLES_CHANGES = "wanted_categories" # 'nodes', 'nodes_from_area, 'ways', 'areas'
+    WANTED_CATEGORIES_AND_STYLE_EDIT = "wanted_categires_and_style_edit" # 'nodes', 'nodes_from_area, 'ways', 'areas'
     UNWANTED_CATEGORIES = "unwanted_categories" # 'nodes', 'ways', 'areas'
     STYLES_ZOOM_LEVELS = "styles_zoom_levels" # 'nodes', 'ways', 'areas', 'general'
     MAP_THEME = "map_theme"
     GPXS = "gpxs"
     GPXS_STYLES = "gpxs_styles"
-
     PEAKS_FILTER_SENSITIVITY = "peaks_filter_sensitivity" # 0 is for no filter
     
     
@@ -98,8 +90,6 @@ class BaseConfigKeys(Enum):
     ROUND_COLUMNS = 'ROUND_COLUMNS'
     DERIVATE_COLUMNS = 'DERIVATE_COLUMNS'
     DONT_CATEGORIZE = 'DONT_CATEGORIZE'
-
-
 
 class MapThemeVariable(Enum):
     WATER_COLOR = "WATER_COLOR"
@@ -235,32 +225,6 @@ class WorldSides(Enum):
     EAST = 'EAST'
     NORTH = 'NORTH'
     SOUTH = 'SOUTH'
-
-
-class PaperSize(Enum):
-    A0: tuple[Literal[841], Literal[1189]] = (841, 1189)
-    A1: tuple[Literal[594], Literal[841]] = (594, 841)
-    A2: tuple[Literal[420], Literal[594]] = (420, 594)
-    A3: tuple[Literal[297], Literal[420]] = (297, 420)
-    A4: tuple[Literal[210], Literal[297]] = (210, 297)
-    A5: tuple[Literal[148], Literal[210]] = (148, 210)
-    A6: tuple[Literal[105], Literal[148]] = (105, 148)
-    A7: tuple[Literal[74], Literal[105]] = (74, 105)
-    A8: tuple[Literal[52], Literal[74]] = (52, 74)
-    A9: tuple[Literal[37], Literal[52]] = (37, 52)
-    A10: tuple[Literal[26], Literal[37]] = (26, 37)
-    A11: tuple[Literal[18], Literal[26]] = (18, 26)
-    A12: tuple[Literal[13], Literal[18]] = (13, 18)
-    A13: tuple[Literal[9], Literal[13]] = (9, 13)
-    A14: tuple[Literal[6], Literal[9]] = (6, 9)
-    A15: tuple[Literal[4], Literal[6]] = (4, 6)
-    A16: tuple[Literal[3], Literal[4]] = (3, 4)
-    A17: tuple[Literal[2], Literal[3]] = (2, 3)
-    A18: tuple[Literal[1], Literal[2]] = (1, 2)
-    @property
-    def dimensions(self) -> tuple[float, float]:
-        return self.value  # Returns the dimensions (width, height)
-
 
 class MapOrientation(Enum):
     AUTOMATIC = "automatic"
