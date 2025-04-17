@@ -288,14 +288,22 @@
           })
           .then((response) => {
             poolingErrorCount = 0;
-            status = response.data.status;
+
             if (response.data.status === "completed") {
               stopPollingTaskInfo();
               downloadMap();
             } else if (response.data.status === "failed") {
               terminateTask();
-              alert("Generování mapy selhalo, zkuste to znovu později");
+              // previouse status was extracting
+              if (status == MapGeneratingStatus.EXTRACTING) {
+                alert(
+                  "Generování mapy selhalo, zkontrolujte datové soubory, spojujete-li více souborů zkontroluje zdali pocházejí ze stejné verze OSM databáze nebo to zkuste znovu později"
+                );
+              } else {
+                alert("Generování mapy selhalo, zkuste to znovu později");
+              }
             }
+            status = response.data.status;
           })
           .catch((error) => {
             if (poolingErrorCount >= 2) {
@@ -402,8 +410,8 @@
         {mapValue(mapGeneratingStatusMappingCZ, status)}
       </h2>
       <h3 class="text-md font-semibold mb-4">
-        Dejte si kávičku a nevypínejte tuto záložku, probíhá tvorba mapy. 
-        <br/> Tvroba velkých oblastí může trvat i několik hodin.
+        Dejte si kávičku a nevypínejte tuto záložku, probíhá tvorba mapy.
+        <br /> Tvroba velkých oblastí může trvat i několik hodin.
       </h3>
       <LoadingSpinner isVisible={isGenerating} speed="slow" />
       {#if status != MapGeneratingStatus.SENDING_DATA && status != MapGeneratingStatus.COMPLETED}

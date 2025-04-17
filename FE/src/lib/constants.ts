@@ -35,7 +35,7 @@ export const mapGeneratingStatusMappingCZ = {
   failed: "Zpracování selhalo",
   in_queue: "Čekání ve frontě na zpracování",
   starting: "Začíná se zpracovávat 1/12",
-  extracting: "Extrahování dat ze souboru 2/12",
+  extracting: "Extrahování vybrané oblasti z datových souborů 2/12",
   loading: "Načítání mapových dat ze souboru 3/12",
   filtering: "Filtrování mapových dat 4/12",
   styling: "Nastavování vzhledu mapových dat 5/12",
