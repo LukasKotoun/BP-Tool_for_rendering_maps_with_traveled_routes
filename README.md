@@ -4,7 +4,7 @@ Nástroj umožnuje nastavení a vygenerování vektorové mapy ve formátu PDF, 
 # Spuštění
 1. Vytvořte `.env ` na zakladě `.env.example ` pro konfigurátor (složka FE) a server (složka BE)
 
-2. Stáhněte potřebné soubory OpenStreetMap dat ve formátu **.osm.pbf**, například ze stránky: https://download.geofabrik.de/   
+2. Stáhněte potřebné soubory OpenStreetMap dat ve formátu **.osm.pbf**, například ze stránky: https://download.geofabrik.de/. Pokud chcete soubory spojovat (používat data z více zemí najednou), měly by pocházet ze stejné verze OSM databáze, tedy měly by být staženy ve stejný čas.
    
 3. Stažené soubory přesuňte do složky BE/osm_files. Pokud stahujete soubory jednotlivých zemí a chcete je v konfigurátoru zobrazit s českými názvy, pojmenujte je podle [kódů zemí](https://asep-portal.lib.cas.cz/pro-zpracovatele/manual/kody-zemi/) (např. cz.osm.pbf)
    
