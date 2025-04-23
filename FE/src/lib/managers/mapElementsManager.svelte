@@ -399,16 +399,20 @@
           <div class="flex items-center mb-2">
             <!-- nodes with plot directly (without specific elements) -->
             {#if hasDirectPlot(categoryValue) && hasDirectPlot($mapNodesElements[categoryKey])}
-              <div class="inline-flex items-center cursor-pointer">
+              <div class="inline-flex items-center">
                 <input
+                  id="checkbox-nodes-direct-{categoryKey}"
                   type="checkbox"
-                  class="h-5 w-5 items-center rounded-lg"
+                  class="h-5 w-5 items-center rounded-lg cursor-pointer"
                   bind:checked={$mapNodesElements[categoryKey].plot}
                 />
+                <label
+                  class="text-lg font-medium text-gray-1000 mr-3 ml-3 cursor-pointer"
+                  for="checkbox-nodes-direct-{categoryKey}"
+                >
+                  {mapValue(nodesKeysNamesMappingCZ, categoryKey)}
+                </label>
               </div>
-              <h3 class="text-lg font-medium text-gray-1000 mr-3 ml-3">
-                {mapValue(nodesKeysNamesMappingCZ, categoryKey)}
-              </h3>
 
               {#if categoryValue.plot && ("width_scale" in categoryValue || "text_scale" in categoryValue)}
                 <div class="flex flex-wrap items-center ml-4">
@@ -463,15 +467,19 @@
                   >
                     <div class="flex justify-normal mb-1">
                       <input
+                        id="checkbox-nodes-nondirect-{categoryKey}-{subKey}"
                         type="checkbox"
-                        class="h-5 w-5 rounded-lg"
+                        class="h-5 w-5 rounded-lg cursor-pointer"
                         bind:checked={
                           $mapNodesElements[categoryKey][subKey].plot
                         }
                       />
-                      <p class="text-sm ml-2">
+                      <label
+                        class="text-sm ml-2 cursor-pointer"
+                        for="checkbox-nodes-nondirect-{categoryKey}-{subKey}"
+                      >
                         {mapValue(nodesNamesMappingCZ[categoryKey], subKey)}
-                      </p>
+                      </label>
                     </div>
 
                     {#if subValue.plot}
@@ -591,17 +599,21 @@
             <div class="flex justify-normal mb-1">
               <input
                 type="checkbox"
-                class="h-5 w-5 rounded-lg"
+                id="checkbox-ways-general-bridges"
+                class="h-5 w-5 rounded-lg cursor-pointer"
                 bind:checked={$wantPlotBridges}
               />
-              <p class="text-sm ml-2">
+              <label
+                for="checkbox-ways-general-bridges"
+                class="text-sm ml-2 cursor-pointer"
+              >
                 Vyznačit mosty <InfoToolTip
                   text="Vyznačí mosty pomocí okrajů a správného (reálného) vrstvení cest. 
-              Změna od automatického nastavení není doporučena a může výrazně zhoršit vzhled mapy!"
+            Změna od automatického nastavení není doporučena a může výrazně zhoršit vzhled mapy!"
                   position="right"
                   size="sm"
                 />
-              </p>
+              </label>
             </div>
           </div>
           <div
@@ -610,16 +622,20 @@
             <div class="flex justify-normal mb-1">
               <input
                 type="checkbox"
-                class="h-5 w-5 rounded-lg"
+                id="checkbox-ways-general-tunnels"
+                class="h-5 w-5 rounded-lg cursor-pointer"
                 bind:checked={$wantPlotTunnels}
               />
-              <p class="text-sm ml-2">
+              <label
+                for="checkbox-ways-general-tunnels"
+                class="text-sm ml-2 cursor-pointer"
+              >
                 Vyznačit tunely <InfoToolTip
                   text="Pokud není zvoleno, tunely se budou vykreslovat jako normální cesty."
                   position="right"
                   size="sm"
                 />
-              </p>
+              </label>
             </div>
           </div>
         </div>
@@ -630,16 +646,20 @@
           <div class="flex items-center mb-2">
             <!-- ways with plot directly (without specific elements) -->
             {#if hasDirectPlot(categoryValue) && hasDirectPlot($mapWaysElements[categoryKey])}
-              <div class="inline-flex items-center cursor-pointer">
+              <div class="inline-flex items-center">
                 <input
+                  id="checkbox-ways-direct-{categoryKey}"
                   type="checkbox"
-                  class="h-5 w-5 items-center rounded-lg"
+                  class="h-5 w-5 items-center rounded-lg cursor-pointer"
                   bind:checked={$mapWaysElements[categoryKey].plot}
                 />
               </div>
-              <h3 class="text-lg font-medium text-gray-1000 mr-3 ml-3">
+              <label
+                class="text-lg font-medium text-gray-1000 mr-3 ml-3 cursor-pointer"
+                for="checkbox-ways-direct-{categoryKey}"
+              >
                 {mapValue(waysKeysNamesMappingCZ, categoryKey)}
-              </h3>
+              </label>
 
               {#if categoryValue.plot && ("width_scale" in categoryValue || "text_scale" in categoryValue)}
                 <div class="flex flex-wrap items-center ml-4">
@@ -693,15 +713,19 @@
                   >
                     <div class="flex justify-normal mb-1">
                       <input
+                        id="checkbox-ways-nondirect-{categoryKey}-{subKey}"
                         type="checkbox"
-                        class="h-5 w-5 rounded-lg"
+                        class="h-5 w-5 rounded-lg cursor-pointer"
                         bind:checked={
                           $mapWaysElements[categoryKey][subKey].plot
                         }
                       />
-                      <p class="text-sm ml-2">
+                      <label
+                        class="text-sm ml-2 cursor-pointer"
+                        for="checkbox-ways-nondirect-{categoryKey}-{subKey}"
+                      >
                         {mapValue(waysNamesMappingCZ[categoryKey], subKey)}
-                      </p>
+                      </label>
                     </div>
 
                     {#if subValue.plot}
@@ -819,13 +843,17 @@
               <div class="inline-flex items-center cursor-pointer">
                 <input
                   type="checkbox"
-                  class="h-5 w-5 items-center rounded-lg"
+                  id="checkbox-areas-direct-{categoryKey}"
+                  class="h-5 w-5 items-center rounded-lg cursor-pointer"
                   bind:checked={$mapAreasElements[categoryKey].plot}
                 />
+                <label
+                  class="text-lg font-medium text-gray-1000 mr-3 ml-3 cursor-pointer"
+                  for="checkbox-areas-direct-{categoryKey}"
+                >
+                  {mapValue(areasKeysNamesMappingCZ, categoryKey)}
+                </label>
               </div>
-              <h3 class="text-lg font-medium text-gray-1000 mr-3 ml-3">
-                {mapValue(areasKeysNamesMappingCZ, categoryKey)}
-              </h3>
 
               {#if categoryValue.plot && ("width_scale" in categoryValue || "text_scale" in categoryValue)}
                 <div class="flex flex-wrap items-center ml-4">
@@ -880,15 +908,19 @@
                   >
                     <div class="flex justify-normal mb-1">
                       <input
+                        id="checkbox-areas-nondirect-{categoryKey}-{subKey}"
                         type="checkbox"
-                        class="h-5 w-5 rounded-lg"
+                        class="h-5 w-5 rounded-lg cursor-pointer"
                         bind:checked={
                           $mapAreasElements[categoryKey][subKey].plot
                         }
                       />
-                      <p class="text-sm ml-2">
+                      <label
+                        class="text-sm ml-2 cursor-pointer"
+                        for="checkbox-areas-nondirect-{categoryKey}-{subKey}"
+                      >
                         {mapValue(areasNamesMappingCZ[categoryKey], subKey)}
-                      </p>
+                      </label>
                     </div>
 
                     {#if subValue.plot}
