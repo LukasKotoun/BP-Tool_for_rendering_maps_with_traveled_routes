@@ -174,17 +174,14 @@
       fileGroups = { ...$gpxFileGroups, default: ungrupedFiles };
       mapNodesElementsParsed = transformElementsStructureForBE(
         $mapNodesElements,
-        "plot",
         { width_scale: 1, text_scale: 1 }
       );
       mapWaysElementsParsed = transformElementsStructureForBE(
         $mapWaysElements,
-        "plot",
         { width_scale: 1, text_scale: 1 }
       );
       mapAreasElementsParsed = transformElementsStructureForBE(
         $mapAreasElements,
-        "plot",
         { width_scale: 1, text_scale: 1 }
       );
     } catch (e) {
@@ -193,7 +190,7 @@
       alert("Chyba při zpracování dat");
       return;
     }
-
+    
     status = "sending_data";
     const formData = new FormData();
     const data = JSON.stringify({

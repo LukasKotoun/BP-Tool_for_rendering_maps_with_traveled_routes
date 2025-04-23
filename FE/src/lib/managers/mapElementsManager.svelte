@@ -33,6 +33,9 @@
     wantedNodesUpdatesZooms,
     wantedWaysUpdatesZooms,
     wantedAreasUpdatesZooms,
+    nodesMapElements,
+    waysMapElements,
+    areasMapElements,
   } from "$lib/constants";
 
   const multiplierMin = 0.1;
@@ -42,15 +45,30 @@
   function hasDirectPlot(obj: any): obj is MapElementAttributes {
     return obj && typeof obj === "object" && "plot" in obj;
   }
+  function resetNodesToDefault() {
+    // Reset the nodes to their original state with all changed sizes
+    $mapNodesElements = JSON.parse(JSON.stringify(nodesMapElements));
+    $minPopulationFilter = 0;
+    $peaksFilterSensitivity = 2.5;
+  }
+  function resetWaysToDefault() {
+    // Reset the ways to their original state with all changed sizes
+    $mapWaysElements = JSON.parse(JSON.stringify(waysMapElements));
+    $wantPlotBridges = false;
+    $wantPlotTunnels = true;
+  }
+  function resetAreasToDefault() {
+    // Reset the areas to their original state with all changed sizes
+    $mapAreasElements = JSON.parse(JSON.stringify(areasMapElements));
+  }
 
   function setNodesForZoom(zoomLevel: number) {
-    let restartedData = resetPlotSettings($mapNodesElements, "plot");
+    let restartedData = resetPlotSettings($mapNodesElements);
     //set to false and iteratativ add default while using
     for (let i = 0; i <= zoomLevel; i++) {
       restartedData = updateWantedElements(
         restartedData,
-        wantedNodesUpdatesZooms[i],
-        "plot"
+        wantedNodesUpdatesZooms[i]
       );
     }
     $mapNodesElements = restartedData;
@@ -78,13 +96,12 @@
   }
 
   function setWaysForZoom(zoomLevel: number) {
-    let restartedData = resetPlotSettings($mapWaysElements, "plot");
+    let restartedData = resetPlotSettings($mapWaysElements);
 
     for (let i = 0; i <= zoomLevel; i++) {
       restartedData = updateWantedElements(
         restartedData,
-        wantedWaysUpdatesZooms[i],
-        "plot"
+        wantedWaysUpdatesZooms[i]
       );
     }
     $mapWaysElements = restartedData;
@@ -106,12 +123,11 @@
   }
 
   function setAreasForZoom(zoomLevel: number) {
-    let restartedData = resetPlotSettings($mapAreasElements, "plot");
+    let restartedData = resetPlotSettings($mapAreasElements);
     for (let i = 0; i <= zoomLevel; i++) {
       restartedData = updateWantedElements(
         restartedData,
-        wantedAreasUpdatesZooms[i],
-        "plot"
+        wantedAreasUpdatesZooms[i]
       );
     }
     $mapAreasElements = restartedData;
@@ -303,6 +319,23 @@
       </div>
     </div>
     <div class="space-y-4 rounded-lg p-4 bg-gray-100 mt-4">
+      <div class="flex justify-end">
+        <button
+          class="bg-red-500 text-white rounded hover:bg-red-600 transition-colors px-4 py-2"
+          on:click={() => {
+            const confirmed = window.confirm(
+              "Opravdu chcete obnovit vykreslované body a jejich velikosti na původní nastavení?"
+            );
+            if (!confirmed) {
+              return;
+            } else {
+              resetNodesToDefault();
+            }
+          }}
+        >
+          Obnovit body na výchozí nastavení
+        </button>
+      </div>
       <div class="bg-gray-50 p-4 rounded-md shadow-sm border-l-2">
         <h3 class="text-lg font-medium mb-3 ml-3">
           Obecné nastavení (odstranění některých bodů dle podmínek)
@@ -532,6 +565,23 @@
       </div>
     </div>
     <div class="space-y-4 p-4 rounded-lg bg-gray-100 mt-4">
+      <div class="flex justify-end">
+        <button
+          class="bg-red-500 text-white rounded hover:bg-red-600 transition-colors px-4 py-2"
+          on:click={() => {
+            const confirmed = window.confirm(
+              "Opravdu chcete obnovit vykreslované cesty a jejich velikosti na původní nastavení?"
+            );
+            if (!confirmed) {
+              return;
+            } else {
+              resetWaysToDefault();
+            }
+          }}
+        >
+          Obnovit cesty na výchozí nastavení
+        </button>
+      </div>
       <div class="bg-gray-50 p-4 rounded-md shadow-sm border-l-2">
         <h3 class="text-lg font-medium mb-3 ml-3">Obecné nastavení</h3>
         <div class="flex flex-wrap gap-2 ml-2 mb-3">
@@ -744,6 +794,23 @@
       </div>
     </div>
     <div class="space-y-4 p-4 rounded-lg bg-gray-100 mt-4">
+      <div class="flex justify-end">
+        <button
+          class="bg-red-500 text-white rounded hover:bg-red-600 transition-colors px-4 py-2"
+          on:click={() => {
+            const confirmed = window.confirm(
+              "Opravdu chcete obnovit vykreslované oblasti a jejich velikosti na původní nastavení?"
+            );
+            if (!confirmed) {
+              return;
+            } else {
+              resetAreasToDefault();
+            }
+          }}
+        >
+          Obnovit oblasti na výchozí nastavení
+        </button>
+      </div>
       {#each Object.entries($mapAreasElements) as [categoryKey, categoryValue], index}
         <div class="p-4 bg-gray-50 rounded-md shadow-sm border-l-2">
           <div class="flex items-center mb-2">
