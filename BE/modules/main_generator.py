@@ -185,7 +185,7 @@ def plot_map_borders(file_id, map_area_gdf, boundary_map_area_gdf, paper_dimensi
     plotter = Plotter(map_area_gdf, paper_dimension_mm,
                       0, 0, None, 0, 0)
 
-    plotter.init(area_color, None, convert_polygons=False)
+    plotter.init(area_color, None, False)
 
     plotter.area_boundary(boundary_map_area_gdf,
                           color="black")
