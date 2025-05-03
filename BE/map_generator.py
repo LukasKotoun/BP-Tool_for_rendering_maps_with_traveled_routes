@@ -336,6 +336,8 @@ async def generate_normal_map(background_tasks: BackgroundTasks, gpxs: Optional[
     map_area_gdf = GdfUtils.change_crs(map_area_gdf, CRS_DISPLAY)
     boundary_map_area_gdf = GdfUtils.change_crs(
         boundary_map_area_gdf, CRS_DISPLAY)
+    # map scale is the number of meters to approximately one mm on page 
+    # default filter radius is 1cm on paper multiplied by the sensitivity (default 2.5)
     peaks_filter_radius = map_scale * 10 * config.peaks_filter_sensitivity
 
     gpxs_gdf = GpxManager.load_to_gdf_from_memory(
@@ -435,7 +437,9 @@ async def generate_preview_map(background_tasks: BackgroundTasks, gpxs: Optional
         map_preview_area_gdf, CRS_DISPLAY)
     boundary_map_area_gdf = GdfUtils.change_crs(
         boundary_map_area_gdf, CRS_DISPLAY)
-
+    
+    # map scale is the number of meters to approximately one mm on page 
+    # default filter radius is 1cm on paper multiplied by the sensitivity (default 2.5)
     peaks_filter_radius = map_scale * 10 * config.peaks_filter_sensitivity
 
     gpxs_gdf = GpxManager.load_to_gdf_from_memory(

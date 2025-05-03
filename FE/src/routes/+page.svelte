@@ -355,7 +355,7 @@
       />
     </div>
   </div>
-  <div class="border-b border-gray-200 dark:border-gray-700">
+  <div class="border-b border-gray-700">
     <div class="flex flex-wrap -mb-px">
       <button
         class={displayedTab == "areaPaper"
@@ -370,7 +370,7 @@
         class={displayedTab == "gpx"
           ? "inline-block p-4 text-black  border-b-2 border-blue-600 rounded-t-lg "
           : "inline-block p-4 border-b-2 border-transparent rounded-t-lg"}
-        class:dark:text-gray-400={["areaPaper"].includes(displayedTab)}
+        class:text-gray-400={["areaPaper"].includes(displayedTab)}
         on:click={() => (displayedTab = "gpx")}
       >
         Nastavení a nahrání tras (gpx)
@@ -380,7 +380,7 @@
         class={displayedTab == "mapElements"
           ? "inline-block p-4 text-black  border-b-2 border-blue-600 rounded-t-lg"
           : "inline-block p-4 border-b-2 border-transparent rounded-t-lg"}
-        class:dark:text-gray-400={["areaPaper", "gpx"].includes(displayedTab)}
+        class:text-gray-400={["areaPaper", "gpx"].includes(displayedTab)}
         on:click={() => {
           displayedTab = "mapElements";
         }}
@@ -392,7 +392,7 @@
         class={displayedTab == "generating"
           ? "inline-block p-4 text-black  border-b-2 border-blue-600 rounded-t-lg"
           : "inline-block p-4 border-b-2 border-transparent rounded-t-lg"}
-        class:dark:text-gray-400={["areaPaper", "gpx", "mapElements"].includes(
+        class:text-gray-400={["areaPaper", "gpx", "mapElements"].includes(
           displayedTab
         )}
         on:click={() => (displayedTab = "generating")}

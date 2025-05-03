@@ -185,7 +185,7 @@ def plot_map_borders(file_id, map_area_gdf, boundary_map_area_gdf, paper_dimensi
     plotter = Plotter(map_area_gdf, paper_dimension_mm,
                       0, 0, None, 0, 0)
 
-    plotter.init(area_color, None, convert_polygons=False)
+    plotter.init(area_color, None, False)
 
     plotter.area_boundary(boundary_map_area_gdf,
                           color="black")
@@ -364,7 +364,7 @@ def generate_map(config: dict[MapConfigKeys, any], task_id: str, shared_dict: di
 
     # sort by population and ele - main sort is by zindex in plotter
     GdfUtils.sort_gdf_by_columns(
-        nodes_gdf, ['population', 'prominence', 'ele'], ascending=False, na_position='last')
+        nodes_gdf, ['population', 'ele'], ascending=False, na_position='last')
 
     # first by area (from biggest to smallest) and then by zindex smallest to biggest
     GdfUtils.sort_gdf_by_columns(

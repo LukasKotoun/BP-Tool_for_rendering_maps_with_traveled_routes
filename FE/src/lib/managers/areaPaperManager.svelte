@@ -304,7 +304,7 @@
 </script>
 
 <div class="container mx-auto p-4">
-  <div class="border-b dark:text-gray-400 border-gray-200 dark:border-gray-700">
+  <div class="border-b text-gray-400 border-gray-700">
     <div class="flex flex-wrap -mb-px">
       <button
         class={$displayedTabMapAreas == "mapData"

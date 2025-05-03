@@ -598,7 +598,7 @@ class GdfUtils:
         - radius (float): search radius (in units of peaks - e.g. meters) to look for competing peaks.
 
         Returns:
-        - GeoDataFrame: a filtered GeoDataFrame containing only the peaks meeting the prominence threshold.
+        - GeoDataFrame: a filtered GeoDataFrame containing only the significat peaks.
         """
         if (nodes_gdf.empty):
             return nodes_gdf

@@ -1,13 +1,12 @@
 // Set false to all plot properties in the data
 export function resetPlotSettings(
   originalData: MapElementCategory,
-  bool_key_to_reset: string
 ): MapElementCategory {
   const result: MapElementCategory = JSON.parse(JSON.stringify(originalData));
 
   function processElement(element: MapElementCategory | MapElementAttributes) {
-    if (bool_key_to_reset in element) {
-      (element as MapElementAttributes)[bool_key_to_reset] = false;
+    if ("plot" in element) {
+      (element as MapElementAttributes)["plot"] = false;
     }
 
     // Recursively process nested elements
@@ -32,8 +31,7 @@ export function mapValue(dict: Dictionary, value: string): string {
 // Set plot property to true for all elements that are in the updateRules
 export function updateWantedElements(
   originalData: MapElementCategory,
-  updateRules: MapElementUpdateRules,
-  keep_key: string
+  updateRules: MapElementUpdateRules
 ): MapElementCategory {
   let dataToUpdate = JSON.parse(
     JSON.stringify(originalData)
@@ -46,7 +44,7 @@ export function updateWantedElements(
         // If it has plot property directly (e.g. building: {plot: true})
         if (
           typeof dataToUpdate[categoryKey] === "object" &&
-          dataToUpdate[categoryKey].hasOwnProperty(keep_key)
+          dataToUpdate[categoryKey].hasOwnProperty("plot")
         ) {
           (dataToUpdate[categoryKey] as MapElementAttributes).plot = true;
         }
@@ -58,7 +56,7 @@ export function updateWantedElements(
           ] as MapElementCategory;
           if (
             typeof dataToUpdate[categoryKey][subKey] === "object" &&
-            dataToUpdate[categoryKey][subKey].hasOwnProperty(keep_key)
+            dataToUpdate[categoryKey][subKey].hasOwnProperty("plot")
           ) {
             dataToUpdate[categoryKey][subKey].plot = true;
           }
@@ -75,7 +73,7 @@ export function updateWantedElements(
           if (
             (dataToUpdate[categoryKey] as MapElementCategory)[parentCategory] &&
             typeof dataToUpdate[categoryKey][parentCategory] === "object" &&
-            dataToUpdate[categoryKey][parentCategory].hasOwnProperty(keep_key)
+            dataToUpdate[categoryKey][parentCategory].hasOwnProperty("plot")
           ) {
             dataToUpdate[categoryKey][parentCategory].plot = true;
           }
@@ -89,25 +87,24 @@ export function updateWantedElements(
 // Transform by removing plot property and keeping only element with true on that property and attributes that are different from the default values
 export function transformElementsStructureForBE(
   data: MapElementCategory,
-  plot_key: string,
   scale_keys: Record<string, number>
 ): MapElementCategorySend {
   const result: MapElementCategorySend = {};
   function isMapElementAttributes(obj: any): obj is MapElementAttributes {
-    return obj && typeof obj === "object" && plot_key in obj;
+    return obj && typeof obj === "object" && "plot" in obj;
   }
 
   // Each main category (highway, building...)
   for (const categoryKey in data) {
     const category = data[categoryKey];
 
-    // Check if the category has a plot_key property
+    // Check if the category has a "plot" property
     if (isMapElementAttributes(category)) {
       if (category.plot === true) {
         const newCategory: MapElementAttributesSend = {};
 
         for (const propKey in category) {
-          if (propKey === plot_key || !scale_keys.hasOwnProperty(propKey)) {
+          if (propKey === "plot" || !scale_keys.hasOwnProperty(propKey)) {
             continue;
           }
           // Remove attributes with default value
@@ -129,13 +126,13 @@ export function transformElementsStructureForBE(
         const subcategory = category[subcategoryKey];
 
         // Check if subcategory has plot property
-        if (subcategory.hasOwnProperty(plot_key)) {
+        if (subcategory.hasOwnProperty("plot")) {
           if (subcategory.plot === true) {
             // keep this subcategory but remove plot property
             const newSubcategory: MapElementAttributesSend = {};
 
             for (const propKey in subcategory) {
-              if (propKey === plot_key || !scale_keys.hasOwnProperty(propKey)) {
+              if (propKey === "plot" || !scale_keys.hasOwnProperty(propKey)) {
                 continue;
               }
               // Remove scale attributes with value same as default

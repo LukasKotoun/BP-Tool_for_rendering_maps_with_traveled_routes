@@ -33,6 +33,9 @@
     wantedNodesUpdatesZooms,
     wantedWaysUpdatesZooms,
     wantedAreasUpdatesZooms,
+    nodesMapElements,
+    waysMapElements,
+    areasMapElements,
   } from "$lib/constants";
 
   const multiplierMin = 0.1;
@@ -42,15 +45,30 @@
   function hasDirectPlot(obj: any): obj is MapElementAttributes {
     return obj && typeof obj === "object" && "plot" in obj;
   }
+  function resetNodesToDefault() {
+    // Reset the nodes to their original state with all changed sizes
+    $mapNodesElements = JSON.parse(JSON.stringify(nodesMapElements));
+    $minPopulationFilter = 0;
+    $peaksFilterSensitivity = 2.5;
+  }
+  function resetWaysToDefault() {
+    // Reset the ways to their original state with all changed sizes
+    $mapWaysElements = JSON.parse(JSON.stringify(waysMapElements));
+    $wantPlotBridges = false;
+    $wantPlotTunnels = true;
+  }
+  function resetAreasToDefault() {
+    // Reset the areas to their original state with all changed sizes
+    $mapAreasElements = JSON.parse(JSON.stringify(areasMapElements));
+  }
 
   function setNodesForZoom(zoomLevel: number) {
-    let restartedData = resetPlotSettings($mapNodesElements, "plot");
+    let restartedData = resetPlotSettings($mapNodesElements);
     //set to false and iteratativ add default while using
     for (let i = 0; i <= zoomLevel; i++) {
       restartedData = updateWantedElements(
         restartedData,
-        wantedNodesUpdatesZooms[i],
-        "plot"
+        wantedNodesUpdatesZooms[i]
       );
     }
     $mapNodesElements = restartedData;
@@ -78,13 +96,12 @@
   }
 
   function setWaysForZoom(zoomLevel: number) {
-    let restartedData = resetPlotSettings($mapWaysElements, "plot");
+    let restartedData = resetPlotSettings($mapWaysElements);
 
     for (let i = 0; i <= zoomLevel; i++) {
       restartedData = updateWantedElements(
         restartedData,
-        wantedWaysUpdatesZooms[i],
-        "plot"
+        wantedWaysUpdatesZooms[i]
       );
     }
     $mapWaysElements = restartedData;
@@ -106,12 +123,11 @@
   }
 
   function setAreasForZoom(zoomLevel: number) {
-    let restartedData = resetPlotSettings($mapAreasElements, "plot");
+    let restartedData = resetPlotSettings($mapAreasElements);
     for (let i = 0; i <= zoomLevel; i++) {
       restartedData = updateWantedElements(
         restartedData,
-        wantedAreasUpdatesZooms[i],
-        "plot"
+        wantedAreasUpdatesZooms[i]
       );
     }
     $mapAreasElements = restartedData;
@@ -243,7 +259,7 @@
     </div>
   </div>
   <div
-    class="text-md text-center text-gray-500 border-b border-gray-200 dark:text-gray-400 dark:border-gray-700"
+    class="text-md text-center text-gray-400 border-b border-gray-700"
   >
     <div class="flex flex-wrap -mb-px">
       <button
@@ -303,6 +319,23 @@
       </div>
     </div>
     <div class="space-y-4 rounded-lg p-4 bg-gray-100 mt-4">
+      <div class="flex justify-end">
+        <button
+          class="bg-red-500 text-white rounded hover:bg-red-600 transition-colors px-4 py-2"
+          on:click={() => {
+            const confirmed = window.confirm(
+              "Opravdu chcete obnovit vykreslované body a jejich velikosti na původní nastavení?"
+            );
+            if (!confirmed) {
+              return;
+            } else {
+              resetNodesToDefault();
+            }
+          }}
+        >
+          Obnovit body na výchozí nastavení
+        </button>
+      </div>
       <div class="bg-gray-50 p-4 rounded-md shadow-sm border-l-2">
         <h3 class="text-lg font-medium mb-3 ml-3">
           Obecné nastavení (odstranění některých bodů dle podmínek)
@@ -366,16 +399,20 @@
           <div class="flex items-center mb-2">
             <!-- nodes with plot directly (without specific elements) -->
             {#if hasDirectPlot(categoryValue) && hasDirectPlot($mapNodesElements[categoryKey])}
-              <div class="inline-flex items-center cursor-pointer">
+              <div class="inline-flex items-center">
                 <input
+                  id="checkbox-nodes-direct-{categoryKey}"
                   type="checkbox"
-                  class="h-5 w-5 items-center rounded-lg"
+                  class="h-5 w-5 items-center rounded-lg cursor-pointer"
                   bind:checked={$mapNodesElements[categoryKey].plot}
                 />
+                <label
+                  class="text-lg font-medium text-gray-1000 mr-3 ml-3 cursor-pointer"
+                  for="checkbox-nodes-direct-{categoryKey}"
+                >
+                  {mapValue(nodesKeysNamesMappingCZ, categoryKey)}
+                </label>
               </div>
-              <h3 class="text-lg font-medium text-gray-1000 mr-3 ml-3">
-                {mapValue(nodesKeysNamesMappingCZ, categoryKey)}
-              </h3>
 
               {#if categoryValue.plot && ("width_scale" in categoryValue || "text_scale" in categoryValue)}
                 <div class="flex flex-wrap items-center ml-4">
@@ -430,15 +467,19 @@
                   >
                     <div class="flex justify-normal mb-1">
                       <input
+                        id="checkbox-nodes-nondirect-{categoryKey}-{subKey}"
                         type="checkbox"
-                        class="h-5 w-5 rounded-lg"
+                        class="h-5 w-5 rounded-lg cursor-pointer"
                         bind:checked={
                           $mapNodesElements[categoryKey][subKey].plot
                         }
                       />
-                      <p class="text-sm ml-2">
+                      <label
+                        class="text-sm ml-2 cursor-pointer"
+                        for="checkbox-nodes-nondirect-{categoryKey}-{subKey}"
+                      >
                         {mapValue(nodesNamesMappingCZ[categoryKey], subKey)}
-                      </p>
+                      </label>
                     </div>
 
                     {#if subValue.plot}
@@ -532,6 +573,23 @@
       </div>
     </div>
     <div class="space-y-4 p-4 rounded-lg bg-gray-100 mt-4">
+      <div class="flex justify-end">
+        <button
+          class="bg-red-500 text-white rounded hover:bg-red-600 transition-colors px-4 py-2"
+          on:click={() => {
+            const confirmed = window.confirm(
+              "Opravdu chcete obnovit vykreslované cesty a jejich velikosti na původní nastavení?"
+            );
+            if (!confirmed) {
+              return;
+            } else {
+              resetWaysToDefault();
+            }
+          }}
+        >
+          Obnovit cesty na výchozí nastavení
+        </button>
+      </div>
       <div class="bg-gray-50 p-4 rounded-md shadow-sm border-l-2">
         <h3 class="text-lg font-medium mb-3 ml-3">Obecné nastavení</h3>
         <div class="flex flex-wrap gap-2 ml-2 mb-3">
@@ -541,17 +599,21 @@
             <div class="flex justify-normal mb-1">
               <input
                 type="checkbox"
-                class="h-5 w-5 rounded-lg"
+                id="checkbox-ways-general-bridges"
+                class="h-5 w-5 rounded-lg cursor-pointer"
                 bind:checked={$wantPlotBridges}
               />
-              <p class="text-sm ml-2">
+              <label
+                for="checkbox-ways-general-bridges"
+                class="text-sm ml-2 cursor-pointer"
+              >
                 Vyznačit mosty <InfoToolTip
                   text="Vyznačí mosty pomocí okrajů a správného (reálného) vrstvení cest. 
-              Změna od automatického nastavení není doporučena a může výrazně zhoršit vzhled mapy!"
+            Změna od automatického nastavení není doporučena a může výrazně zhoršit vzhled mapy!"
                   position="right"
                   size="sm"
                 />
-              </p>
+              </label>
             </div>
           </div>
           <div
@@ -560,16 +622,20 @@
             <div class="flex justify-normal mb-1">
               <input
                 type="checkbox"
-                class="h-5 w-5 rounded-lg"
+                id="checkbox-ways-general-tunnels"
+                class="h-5 w-5 rounded-lg cursor-pointer"
                 bind:checked={$wantPlotTunnels}
               />
-              <p class="text-sm ml-2">
+              <label
+                for="checkbox-ways-general-tunnels"
+                class="text-sm ml-2 cursor-pointer"
+              >
                 Vyznačit tunely <InfoToolTip
                   text="Pokud není zvoleno, tunely se budou vykreslovat jako normální cesty."
                   position="right"
                   size="sm"
                 />
-              </p>
+              </label>
             </div>
           </div>
         </div>
@@ -580,16 +646,20 @@
           <div class="flex items-center mb-2">
             <!-- ways with plot directly (without specific elements) -->
             {#if hasDirectPlot(categoryValue) && hasDirectPlot($mapWaysElements[categoryKey])}
-              <div class="inline-flex items-center cursor-pointer">
+              <div class="inline-flex items-center">
                 <input
+                  id="checkbox-ways-direct-{categoryKey}"
                   type="checkbox"
-                  class="h-5 w-5 items-center rounded-lg"
+                  class="h-5 w-5 items-center rounded-lg cursor-pointer"
                   bind:checked={$mapWaysElements[categoryKey].plot}
                 />
               </div>
-              <h3 class="text-lg font-medium text-gray-1000 mr-3 ml-3">
+              <label
+                class="text-lg font-medium text-gray-1000 mr-3 ml-3 cursor-pointer"
+                for="checkbox-ways-direct-{categoryKey}"
+              >
                 {mapValue(waysKeysNamesMappingCZ, categoryKey)}
-              </h3>
+              </label>
 
               {#if categoryValue.plot && ("width_scale" in categoryValue || "text_scale" in categoryValue)}
                 <div class="flex flex-wrap items-center ml-4">
@@ -643,15 +713,19 @@
                   >
                     <div class="flex justify-normal mb-1">
                       <input
+                        id="checkbox-ways-nondirect-{categoryKey}-{subKey}"
                         type="checkbox"
-                        class="h-5 w-5 rounded-lg"
+                        class="h-5 w-5 rounded-lg cursor-pointer"
                         bind:checked={
                           $mapWaysElements[categoryKey][subKey].plot
                         }
                       />
-                      <p class="text-sm ml-2">
+                      <label
+                        class="text-sm ml-2 cursor-pointer"
+                        for="checkbox-ways-nondirect-{categoryKey}-{subKey}"
+                      >
                         {mapValue(waysNamesMappingCZ[categoryKey], subKey)}
-                      </p>
+                      </label>
                     </div>
 
                     {#if subValue.plot}
@@ -744,6 +818,23 @@
       </div>
     </div>
     <div class="space-y-4 p-4 rounded-lg bg-gray-100 mt-4">
+      <div class="flex justify-end">
+        <button
+          class="bg-red-500 text-white rounded hover:bg-red-600 transition-colors px-4 py-2"
+          on:click={() => {
+            const confirmed = window.confirm(
+              "Opravdu chcete obnovit vykreslované oblasti a jejich velikosti na původní nastavení?"
+            );
+            if (!confirmed) {
+              return;
+            } else {
+              resetAreasToDefault();
+            }
+          }}
+        >
+          Obnovit oblasti na výchozí nastavení
+        </button>
+      </div>
       {#each Object.entries($mapAreasElements) as [categoryKey, categoryValue], index}
         <div class="p-4 bg-gray-50 rounded-md shadow-sm border-l-2">
           <div class="flex items-center mb-2">
@@ -752,13 +843,17 @@
               <div class="inline-flex items-center cursor-pointer">
                 <input
                   type="checkbox"
-                  class="h-5 w-5 items-center rounded-lg"
+                  id="checkbox-areas-direct-{categoryKey}"
+                  class="h-5 w-5 items-center rounded-lg cursor-pointer"
                   bind:checked={$mapAreasElements[categoryKey].plot}
                 />
+                <label
+                  class="text-lg font-medium text-gray-1000 mr-3 ml-3 cursor-pointer"
+                  for="checkbox-areas-direct-{categoryKey}"
+                >
+                  {mapValue(areasKeysNamesMappingCZ, categoryKey)}
+                </label>
               </div>
-              <h3 class="text-lg font-medium text-gray-1000 mr-3 ml-3">
-                {mapValue(areasKeysNamesMappingCZ, categoryKey)}
-              </h3>
 
               {#if categoryValue.plot && ("width_scale" in categoryValue || "text_scale" in categoryValue)}
                 <div class="flex flex-wrap items-center ml-4">
@@ -813,15 +908,19 @@
                   >
                     <div class="flex justify-normal mb-1">
                       <input
+                        id="checkbox-areas-nondirect-{categoryKey}-{subKey}"
                         type="checkbox"
-                        class="h-5 w-5 rounded-lg"
+                        class="h-5 w-5 rounded-lg cursor-pointer"
                         bind:checked={
                           $mapAreasElements[categoryKey][subKey].plot
                         }
                       />
-                      <p class="text-sm ml-2">
+                      <label
+                        class="text-sm ml-2 cursor-pointer"
+                        for="checkbox-areas-nondirect-{categoryKey}-{subKey}"
+                      >
                         {mapValue(areasNamesMappingCZ[categoryKey], subKey)}
-                      </p>
+                      </label>
                     </div>
 
                     {#if subValue.plot}

@@ -28,7 +28,7 @@
 
 <div class="p-6 bg-gray-100">
   <div
-    class="text-md text-center text-gray-500 border-b border-gray-200 dark:text-gray-400 dark:border-gray-700"
+    class="text-md text-center text-gray-400 border-b border-gray-700"
   >
     <div class="flex flex-wrap -mb-px">
       {#each Object.entries($gpxStyles.group) as [groupName, styles]}

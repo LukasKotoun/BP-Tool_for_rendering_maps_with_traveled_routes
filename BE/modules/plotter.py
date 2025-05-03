@@ -49,7 +49,7 @@ class Plotter:
         self.markers_above_bbox_idx = rtree.index.Index()
         self.markers_and_texts_bbox_idx = rtree.index.Index()
 
-    def init(self, map_bg_color: str, bg_gdf: GeoDataFrame | None, area_zoom_preview: None | DimensionsTuple = None, convert_polygons=True):
+    def init(self, map_bg_color: str, bg_gdf: GeoDataFrame | None, convert_polygons=True):
         self.fig, self.ax = plt.subplots(figsize=(self.paper_dimensions_mm[0]/self.MM_TO_INCH,
                                                   # convert mm to inch
                                                   self.paper_dimensions_mm[1]/self.MM_TO_INCH), dpi=50)
