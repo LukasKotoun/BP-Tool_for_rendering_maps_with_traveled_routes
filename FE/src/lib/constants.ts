@@ -1,3 +1,7 @@
+/**
+ * Constants used in the application
+ * @author Lukáš Kotoun, xkotou08
+ */
 // paper and areas
 export const paperSizes = [
   { label: "Vlastní", value: JSON.stringify({ width: null, height: null }) },

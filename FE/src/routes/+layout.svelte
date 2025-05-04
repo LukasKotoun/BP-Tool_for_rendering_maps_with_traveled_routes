@@ -1,4 +1,8 @@
 <script lang="ts">
+  /**
+   * Main layout for the application.
+   * @author Lukáš Kotoun, xkotou08
+   */
   import "../app.css";
 </script>
 

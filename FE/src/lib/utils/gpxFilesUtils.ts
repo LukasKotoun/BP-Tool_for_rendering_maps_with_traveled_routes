@@ -1,3 +1,7 @@
+/**
+ * Utils for handling GPX files
+ * @author Lukáš Kotoun, xkotou08
+ */
 export function createUniqueFileName(files: File[], originalFile: File): File {
   const extension = originalFile.name.split(".").pop();
   const baseName = originalFile.name.replace(`.${extension}`, "");

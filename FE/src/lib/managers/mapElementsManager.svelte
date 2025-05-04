@@ -1,4 +1,8 @@
 <script lang="ts">
+  /**
+   * Map elements settings page.
+   * @author Lukáš Kotoun, xkotou08
+   */
   import InfoToolTip from "$lib/components/infoToolTip.svelte";
   import {
     avilableMapThemes,
@@ -258,9 +262,7 @@
       </div>
     </div>
   </div>
-  <div
-    class="text-md text-center text-gray-400 border-b border-gray-700"
-  >
+  <div class="text-md text-center text-gray-400 border-b border-gray-700">
     <div class="flex flex-wrap -mb-px">
       <button
         class={$displayedElementsCategory == "nodes"

@@ -1,9 +1,13 @@
 <script lang="ts">
+  /**
+   * Generation logic and UI for creating maps
+   * @author Lukáš Kotoun, xkotou08
+   */
   import MapElementsManager from "$lib/managers/mapElementsManager.svelte";
   import AreaPaperManager from "$lib/managers/areaPaperManager.svelte";
   import GpxManager from "$lib/managers/gpxManager.svelte";
   import MapGeneratingManager from "$lib/managers/mapGeneratingManager.svelte";
-  import logo from '$lib/imgs/logo.webp';
+  import logo from "$lib/imgs/logo.webp";
   import {
     checkFitPaper,
     parseWantedAreas,
@@ -316,12 +320,13 @@
 </script>
 
 <div class="container mx-auto p-4">
-  <div class="flex flex-col sm:flex-row items-center justify-between w-full p-4 bg-white border-b gap-4">
-    <div class="flex items-center w-full sm:w-auto justify-center sm:justify-start">
-      <img
-        src={logo}
-        alt="Logo"
-        class="w-10 h-10 mr-2"/>
+  <div
+    class="flex flex-col sm:flex-row items-center justify-between w-full p-4 bg-white border-b gap-4"
+  >
+    <div
+      class="flex items-center w-full sm:w-auto justify-center sm:justify-start"
+    >
+      <img src={logo} alt="Logo" class="w-10 h-10 mr-2" />
       <h1 class="text-lg font-medium">GeoPrint</h1>
     </div>
     <div class="flex space-x-2 justify-center sm:justify-end w-full sm:w-auto">

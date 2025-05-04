@@ -1,4 +1,8 @@
 <script lang="ts">
+  /**
+   * Gpx styles settings page.
+   * @author Lukáš Kotoun, xkotou08
+   */
   import { gpxStyles } from "$lib/stores/mapStore";
   import { displayedTabGpxGroupsStyle } from "$lib/stores/frontendStore";
   import { mapValue } from "$lib/utils/mapElementsUtils";
@@ -27,9 +31,7 @@
 </script>
 
 <div class="p-6 bg-gray-100">
-  <div
-    class="text-md text-center text-gray-400 border-b border-gray-700"
-  >
+  <div class="text-md text-center text-gray-400 border-b border-gray-700">
     <div class="flex flex-wrap -mb-px">
       {#each Object.entries($gpxStyles.group) as [groupName, styles]}
         <button

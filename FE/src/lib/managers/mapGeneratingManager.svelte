@@ -1,4 +1,8 @@
 <script lang="ts">
+  /**
+   * Map generating page and manager.
+   * @author Lukáš Kotoun, xkotou08
+   */
   import { onMount } from "svelte";
   import api from "$lib/axios.config";
   import { MapGeneratingStatus } from "$lib/enums/mapEnums";
@@ -190,7 +194,7 @@
       alert("Chyba při zpracování dat");
       return;
     }
-    
+
     status = "sending_data";
     const formData = new FormData();
     const data = JSON.stringify({

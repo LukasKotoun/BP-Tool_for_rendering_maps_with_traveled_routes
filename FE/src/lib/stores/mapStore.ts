@@ -1,3 +1,7 @@
+/**
+ * Stores for map settings and data.
+ * @author Lukáš Kotoun, xkotou08
+ */
 import { writable } from "svelte/store";
 import { createUniqueFileName } from "$lib/utils/gpxFilesUtils";
 import {

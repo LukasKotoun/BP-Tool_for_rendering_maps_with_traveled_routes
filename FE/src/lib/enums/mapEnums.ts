@@ -1,3 +1,7 @@
+/**
+ * Enums used for map generation status.
+ * @author Lukáš Kotoun, xkotou08
+ */
 export enum MapGeneratingStatus {
   FAILED = "failed",
   STARTING = "starting",

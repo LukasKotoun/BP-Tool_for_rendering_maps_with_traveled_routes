@@ -1,3 +1,7 @@
+/**
+ * Data types for the stores
+ * @author Lukáš Kotoun, xkotou08
+ */
 interface StoreData {
   areasId: number;
   wantedAreas: AreaItemStored[];

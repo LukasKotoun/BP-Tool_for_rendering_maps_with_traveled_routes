@@ -1,4 +1,8 @@
 <script lang="ts">
+  /**
+   * Loading spinner component.
+   * @author Lukáš Kotoun, xkotou08
+   */
   export let isVisible: boolean = true;
   export let size: "sm" | "md" | "lg" = "md";
   export let color: string = "border-blue-500";
