@@ -1,3 +1,7 @@
+"""
+Plotting map elements.
+Author: Lukáš Kotoun, xkotou08
+"""
 import rtree
 from modules.geom_utils import GeomUtils
 from modules.gdf_utils import GdfUtils

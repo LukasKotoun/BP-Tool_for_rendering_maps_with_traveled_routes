@@ -1,3 +1,7 @@
+"""
+Functions for handling GeoDataFrame realated tasks.
+Author: Lukáš Kotoun, xkotou08
+"""
 import warnings
 
 import pandas as pd

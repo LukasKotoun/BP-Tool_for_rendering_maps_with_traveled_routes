@@ -1,3 +1,7 @@
+"""
+Mapy.cz style for map plotting
+Author: Lukáš Kotoun, xkotou08
+"""
 from common.custom_types import ElementStyles
 from common.map_enums import Style, TextPositions, MinPlot, MarkerPosition, MarkersCodes, LineCupStyles, MapThemeVariable, BaseConfigKeys
 from config import font_awesome_prop, material_design_prop, BASE_OSM_CONFIG
@@ -72,11 +76,11 @@ SPECIAL_WAYS_CUMULATIVE_SIZE = Utils.cumulative_zoom_size_multiplier({
 
 GPXS_STYLES_SCALE = []
 gpxs_styles_default: ElementStyles = [
-   
+
 ]
 
 GPXS_STYLES: ElementStyles = [
-   # *gpxs_styles_default,
+    # *gpxs_styles_default,
 ]
 
 
@@ -484,8 +488,8 @@ highway_styles_special_and_paths: ElementStyles = [
 railway_remove_on_zoom: ElementStyles = [
     ({'railway': ['rail', 'disused', 'light_rail', "monorail", "subway"],
       'service': ['crossover', 'siding', 'spur', 'yard']}, {}, {
-          "1-6":{Style.COLOR.value: None,  Style.EDGE_COLOR.value: None}
-      })
+          "1-6": {Style.COLOR.value: None,  Style.EDGE_COLOR.value: None}
+    })
 ]
 
 railway_styles_bridges_overwrite: ElementStyles = [

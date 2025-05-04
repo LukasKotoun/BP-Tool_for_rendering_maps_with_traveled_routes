@@ -1,3 +1,7 @@
+"""
+Filters invalid geometries from OSM files.
+Author: Lukáš Kotoun, xkotou08
+"""
 import os
 import glob
 import sys

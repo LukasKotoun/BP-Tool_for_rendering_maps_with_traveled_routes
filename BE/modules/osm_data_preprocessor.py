@@ -1,3 +1,7 @@
+"""
+Preprocess OSM data files for extraction and merging.
+Author: Lukáš Kotoun, xkotou08
+"""
 import subprocess
 from multiprocessing.synchronize import Lock
 from typing import Any
@@ -28,7 +32,7 @@ class OsmDataPreprocessor:
         name: str = f'{self.osm_tmp_folder}_geojson_polygon_{self.task_id}.geojson'
         reqired_area_gdf.to_file(name, driver="GeoJSON")
         return name
-    
+
     def __sort_osm_file(self, osm_input_file: str, osm_output_file: str):
         """Sort osm file for merging"""
         command = [
@@ -44,7 +48,7 @@ class OsmDataPreprocessor:
         except Exception as e:
             raise Exception(
                 f"Cannot sort osm file: {e}")
-    
+
     def __merge_osm_files(self, input_tmp_files: list[str], osm_output_file):
         """Merge multiple osm files into one file."""
         command = ['osmium', 'merge'] + input_tmp_files + \
@@ -110,15 +114,15 @@ class OsmDataPreprocessor:
                     }
                 self.__extract_area(
                     osm_input_file, extract_file_name, temp_geojson_path)
-                
+
                 self.__sort_osm_file(
                     extract_file_name, sorted_extract_file_name)
-                
+
                 Utils.remove_file(extract_file_name)
                 with self.lock:
                     self.shared_dict[self.task_id] = {
                         **self.shared_dict[self.task_id],
-                    SharedDictKeys.FILES.value: [file for file in self.shared_dict[self.task_id][SharedDictKeys.FILES.value] if file != extract_file_name],
+                        SharedDictKeys.FILES.value: [file for file in self.shared_dict[self.task_id][SharedDictKeys.FILES.value] if file != extract_file_name],
                     }
                 sorted_extracted_files_names.append(sorted_extract_file_name)
 

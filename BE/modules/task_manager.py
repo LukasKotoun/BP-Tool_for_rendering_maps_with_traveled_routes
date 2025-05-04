@@ -1,3 +1,7 @@
+"""
+Managing tasks in the queue and running them in parallel processes.
+Author: Lukáš Kotoun, xkotou08
+"""
 import warnings
 import multiprocessing
 from multiprocessing.managers import ValueProxy

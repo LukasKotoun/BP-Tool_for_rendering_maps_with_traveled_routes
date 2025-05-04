@@ -1,3 +1,7 @@
+"""
+Load OSM data from file and parse it to GeoDataFrames.
+Author: Lukáš Kotoun, xkotou08
+"""
 import osmium
 import geopandas as gpd
 from osmium.osm.types import TagList, Node, Way, Area
@@ -44,7 +48,6 @@ class OsmDataParser():
                     return True
         # map feature is not in wanted features
         return False
-
 
     def create_gdf(self, file_name: str, fromCrs: str, toCrs: str | None = None) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame, gpd.GeoDataFrame]:
 

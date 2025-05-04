@@ -1,3 +1,7 @@
+"""
+Processing the received structure from the frontend.
+Author: Lukáš Kotoun, xkotou08
+"""
 from typing import Dict, List, Union, Any, Callable
 
 from common.custom_types import ElementStyles
@@ -173,7 +177,7 @@ class ReceivedStructureProcessor:
                     continue
                 # handle different validation rules based on allowed structure
                 # case 1: element allowed all is false, must have at least one tag or be missing
-                # case 1.1 - check not missing 
+                # case 1.1 - check not missing
                 if (not element_features):
                     raise ValueError(
                         f"Empty element (will have all attributes but must have at least one tag or be missing): {element} in {element_category} (wanted elements and styles)")
@@ -181,14 +185,14 @@ class ReceivedStructureProcessor:
                 elif (any(key in styles_validation for key in element_features.keys()) and allowed_element != True):
                     raise ValueError(
                         f"Empty element (will have all attributes but must have at least one tag or be missing): {element} in {element_category} (wanted elements and styles)")
-                # case 1.3 - check valid tags 
+                # case 1.3 - check valid tags
                 elif isinstance(allowed_element, list):
                     for tag in element_features:
                         if tag not in allowed_element:
                             raise ValueError(
                                 f"Invalid tag: {tag} in {element_category}.{element} (wanted elements and styles)")
 
-                        # check attributes - styles 
+                        # check attributes - styles
                         tag_data = element_features[tag]
                         if tag_data and isinstance(tag_data, dict):
                             if (not ReceivedStructureProcessor.check_dict_values_and_types(tag_data, styles_validation)):

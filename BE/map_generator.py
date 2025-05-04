@@ -1,3 +1,7 @@
+"""
+Map generator API
+Author: Lukáš Kotoun, xkotou08
+"""
 import multiprocessing
 import os
 import asyncio
@@ -255,7 +259,6 @@ def generate_map_borders(config: MapBorderConfigModel):
     def iterfile():
         # stream file and delete after completion
         try:
-            # https://stackoverflow.com/questions/73550398/how-to-download-a-large-file-using-fastapi
             with open(file_path, 'rb') as f:
                 while chunk := f.read(FILE_DOWNLOAD_CHUNK_SIZE):
                     yield chunk
@@ -336,7 +339,7 @@ async def generate_normal_map(background_tasks: BackgroundTasks, gpxs: Optional[
     map_area_gdf = GdfUtils.change_crs(map_area_gdf, CRS_DISPLAY)
     boundary_map_area_gdf = GdfUtils.change_crs(
         boundary_map_area_gdf, CRS_DISPLAY)
-    # map scale is the number of meters to approximately one mm on page 
+    # map scale is the number of meters to approximately one mm on page
     # default filter radius is 1cm on paper multiplied by the sensitivity (default 2.5)
     peaks_filter_radius = map_scale * 10 * config.peaks_filter_sensitivity
 
@@ -437,8 +440,8 @@ async def generate_preview_map(background_tasks: BackgroundTasks, gpxs: Optional
         map_preview_area_gdf, CRS_DISPLAY)
     boundary_map_area_gdf = GdfUtils.change_crs(
         boundary_map_area_gdf, CRS_DISPLAY)
-    
-    # map scale is the number of meters to approximately one mm on page 
+
+    # map scale is the number of meters to approximately one mm on page
     # default filter radius is 1cm on paper multiplied by the sensitivity (default 2.5)
     peaks_filter_radius = map_scale * 10 * config.peaks_filter_sensitivity
 
@@ -526,7 +529,6 @@ def get_map_file(task_id: str = Depends(decode_task_id_from_JWT)):
     def iterfile():
         # stream file and delete after completion
         try:
-            # https://stackoverflow.com/questions/73550398/how-to-download-a-large-file-using-fastapi
             with open(file_path, 'rb') as f:
                 while chunk := f.read(FILE_DOWNLOAD_CHUNK_SIZE):
                     yield chunk
