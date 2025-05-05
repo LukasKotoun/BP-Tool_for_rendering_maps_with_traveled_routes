@@ -1,3 +1,7 @@
+"""
+Loading GPX files into a GeoDataFrame.
+Author: Lukáš Kotoun, xkotou08
+"""
 import warnings
 
 import geopandas as gpd

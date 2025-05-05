@@ -1,5 +1,9 @@
+"""
+Enums used in map generating.
+Author: Lukáš Kotoun, xkotou08
+"""
 from enum import Enum
-from typing import Literal
+
 
 class ProcessingStatus(Enum):
     FAILED = "failed"
@@ -17,6 +21,7 @@ class ProcessingStatus(Enum):
     FILE_SAVING = "file_saving"
     COMPLETED = "completed"
 
+
 class SharedDictKeys(Enum):
     FILES = "files"
     STATUS = "status"
@@ -24,56 +29,62 @@ class SharedDictKeys(Enum):
     PID = "pid"
     IS_PREVIEW = "is_preview"
     USER_CHECK_INFO = "user_check_info"
-    
+
+
 class TaskQueueKeys(Enum):
     CONFIG = "config"
     QUEUE_TYPE = "queue_type"
     TASK_ID = "task_id"
 
+
 class QueueType(Enum):
     NORMAL = "normal"
     PREVIEW = "preview"
 
+
 class GpxColumns(Enum):
     FILE_NAME = "file_name"
     GROUP = "group"
+
 
 class LineCupStyles(Enum):
     ROUND = "round"
     BUTT = "butt"
     PROJECTING = "projecting"
 
+
 class MarkersCodes(Enum):
     FA_TOWER_OBSERVATION = "\ue586"
-    #gpx
+    # gpx
     FA_FINISH_ICON = '\uf11e'
-    
+
     MU_CASTLE = "\ueaad"
     MPL_TRIANGLE = '^'
-    #gpx
+    # gpx
     MPL_CIRCLE_MARKER = 'o'
 
-    
+
 class MapConfigKeys(Enum):
-    MAP_AREA = "map_area" 
+    MAP_AREA = "map_area"
     MAP_AREA_BOUNDARY = "map_area_boundary"
     MAP_OUTER_AREA = "map_outer_area"
-    PEAKS_FILTER_RADIUS = "peaks_filter_radius" # 0 is for no filter
-    MIN_PLACE_POPULATION = "min_place_population" # 0 is for no filter
+    PEAKS_FILTER_RADIUS = "peaks_filter_radius"  # 0 is for no filter
+    MIN_PLACE_POPULATION = "min_place_population"  # 0 is for no filter
     MAP_SCALING_FACTOR = "map_scaling_factor"
     PLOT_BRIDGES = "plot_bridges"
     PLOT_TUNNELS = "plot_tunnels"
-    OSM_FILES = "osm_files" # checked
+    OSM_FILES = "osm_files"  # checked
     PAPER_DIMENSION_MM = "paper_dimension_mm"
-    WANTED_CATEGORIES_AND_STYLE_EDIT = "wanted_categires_and_style_edit" # 'nodes', 'nodes_from_area, 'ways', 'areas'
-    UNWANTED_CATEGORIES = "unwanted_categories" # 'nodes', 'ways', 'areas'
-    STYLES_ZOOM_LEVELS = "styles_zoom_levels" # 'nodes', 'ways', 'areas', 'general'
+    # 'nodes', 'nodes_from_area, 'ways', 'areas'
+    WANTED_CATEGORIES_AND_STYLE_EDIT = "wanted_categires_and_style_edit"
+    UNWANTED_CATEGORIES = "unwanted_categories"  # 'nodes', 'ways', 'areas'
+    STYLES_ZOOM_LEVELS = "styles_zoom_levels"  # 'nodes', 'ways', 'areas', 'general'
     MAP_THEME = "map_theme"
     GPXS = "gpxs"
     GPXS_STYLES = "gpxs_styles"
-    PEAKS_FILTER_SENSITIVITY = "peaks_filter_sensitivity" # 0 is for no filter
-    
-    
+    PEAKS_FILTER_SENSITIVITY = "peaks_filter_sensitivity"  # 0 is for no filter
+
+
 class MinPlot(Enum):  # minimum parts that node must have. If not whole node object is removed
     MARKER_TEXT1_TEXT2 = "MARKER_TEXT1_TEXT2"
     MARKER_TEXT1_OR_TEXT2 = "MARKER_TEXT1_OR_TEXT2"
@@ -84,12 +95,14 @@ class MinPlot(Enum):  # minimum parts that node must have. If not whole node obj
     TEXT2 = "TEXT2"
     TEXT1_TEXT2 = "TEXT1_TEXT2"
 
+
 class BaseConfigKeys(Enum):
     ADDITIONAL_COLUMNS = 'ADDITIONAL_COLUMNS'
     NUMERIC_COLUMNS = 'NUMERIC_COLUMNS'
     ROUND_COLUMNS = 'ROUND_COLUMNS'
     DERIVATE_COLUMNS = 'DERIVATE_COLUMNS'
     DONT_CATEGORIZE = 'DONT_CATEGORIZE'
+
 
 class MapThemeVariable(Enum):
     WATER_COLOR = "WATER_COLOR"
@@ -105,7 +118,8 @@ class MapThemeVariable(Enum):
     TEXT_WRAP_NAMES_LENGTH = "TEXT_WRAP_NAMES_LENGTH"
     TEXT_BOUNDS_OVERFLOW_THRESHOLD = "TEXT_BOUNDS_OVERFLOW_THRESHOLD"
 
-class TextPositions(Enum):  
+
+class TextPositions(Enum):
     TOP = "TOP"
     BOTTOM = "BOTTOM"
     LEFT = "LEFT"
@@ -114,13 +128,15 @@ class TextPositions(Enum):
     TOP_RIGHT = "TOP_RIGHT"
     BOTTOM_LEFT = "BOTTOM_LEFT"
     BOTTOM_RIGHT = "BOTTOM_RIGHT"
-    
+
+
 class MarkerPosition(Enum):
     ABOVE_ALL = "ABOVE_ALL"
     ABOVE_NORMAL = "ABOVE_NORMAL"
     NORMAL = "NORMAL"
-    UNDER_TEXT_OVERLAP = "UNDER_TEXT_OVERLAP" # can be under text but also can be above/under normal markers, depends on the zindex (but will overlap)
-    
+    # can be under text but also can be above/under normal markers, depends on the zindex (but will overlap)
+    UNDER_TEXT_OVERLAP = "UNDER_TEXT_OVERLAP"
+
 
 class Style(Enum):
     # general
@@ -139,7 +155,7 @@ class Style(Enum):
     EDGE_LINESTYLE = "EDGE_LINESTYLE"
     PLOT_ON_BRIDGE = "PLOT_ON_BRIDGE"
     PLOT_WITHOUT_CROSSING = "PLOT_WITHOUT_CROSSING"
-    
+
     # bridges
     BRIDGE_COLOR = "BRIDGE_COLOR"
     BRIDGE_WIDTH_RATIO = "BRIDGE_WIDTH_RATIO"
@@ -147,17 +163,17 @@ class Style(Enum):
     BRIDGE_EDGE_WIDTH_RATIO = "BRIDGE_EDGE_WIDTH_RATIO"
     BRIDGE_LINESTYLE = "BRIDGE_LINESTYLE"
     BRIDGE_EDGE_LINESTYLE = "BRIDGE_EDGE_LINESTYLE"
-    
+
     # markers
     MARKER = "MARKER"
     MARKER_LAYER_POSITION = "MARKER_LAYER_POSITION"
     MARKER_FONT_PROPERTIES = "MARKER_FONT_PROPERTIES"
     MARKER_VERTICAL_ALIGN = "MARKER_VERTICAL_ALIGN"
     MARKER_HORIZONTAL_ALIGN = "MARKER_HORIZONTAL_ALIGN"
-    
-    # gpx - for 2 markers in gpx - used for mapping - same but only with prefix 
+
+    # gpx - for 2 markers in gpx - used for mapping - same but only with prefix
     GPX_ABOVE_TEXT = "GPX_ABOVE_TEXT"
-        #start
+    # start
     START_MARKER = "START_MARKER"
     START_MARKER_WIDTH = "START_MARKER_WIDTH"
     START_MARKER_EDGE_RATIO = "START_MARKER_EDGE_RATIO"
@@ -167,8 +183,8 @@ class Style(Enum):
     START_MARKER_FONT_PROPERTIES = "START_MARKER_FONT_PROPERTIES"
     START_MARKER_VERTICAL_ALIGN = "START_MARKER_VERTICAL_ALIGN"
     START_MARKER_HORIZONTAL_ALIGN = "START_MARKER_HORIZONTAL_ALIGN"
-    
-        #finish
+
+    # finish
     FINISH_MARKER = "FINISH_MARKER"
     FINISH_MARKER_WIDTH = "FINISH_MARKER_WIDTH"
     FINISH_MARKER_EDGE_RATIO = "FINISH_MARKER_EDGE_RATIO"
@@ -178,7 +194,7 @@ class Style(Enum):
     FINISH_MARKER_FONT_PROPERTIES = "FINISH_MARKER_FONT_PROPERTIES"
     FINISH_MARKER_VERTICAL_ALIGN = "FINISH_MARKER_VERTICAL_ALIGN"
     FINISH_MARKER_HORIZONTAL_ALIGN = "FINISH_MARKER_HORIZONTAL_ALIGN"
-    
+
     # texts
     TEXT_FONT_SIZE = "TEXT_FONT_SIZE"
     TEXT_OUTLINE_WIDTH_RATIO = "TEXT_OUTLINE_WIDTH_RATIO"
@@ -194,15 +210,15 @@ class Style(Enum):
     # nodes annotation requirements
     TEXT1_POSITIONS = "TEXT1_POSITIONS"
     TEXT2_POSITIONS = "TEXT2_POSITIONS"
-    
-    # nodes annotation requirements for ploting 
+
+    # nodes annotation requirements for ploting
     MIN_PLOT_REQ = "MIN_PLOT_REQ"
     # nodes min annotation requirements in loading
 
-    #scales
-    FE_WIDTH_SCALE = "FE_WIDTH_SCALE" # lines and icons
-    FE_TEXT_FONT_SIZE_SCALE = "FE_TEXT_FONT_SIZE_SCALE" # text
-    
+    # scales
+    FE_WIDTH_SCALE = "FE_WIDTH_SCALE"  # lines and icons
+    FE_TEXT_FONT_SIZE_SCALE = "FE_TEXT_FONT_SIZE_SCALE"  # text
+
     # calculated/derivated - cant be set by user
     # calculated like TEXT_FONT_SIZE * TEXT_OUTLINE_WIDTH_RATIO
     TEXT_OUTLINE_WIDTH = "TEXT_OUTLINE_WIDTH"
@@ -225,6 +241,7 @@ class WorldSides(Enum):
     EAST = 'EAST'
     NORTH = 'NORTH'
     SOUTH = 'SOUTH'
+
 
 class MapOrientation(Enum):
     AUTOMATIC = "automatic"

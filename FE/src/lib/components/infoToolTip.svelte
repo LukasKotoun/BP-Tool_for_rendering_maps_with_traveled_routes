@@ -1,4 +1,8 @@
 <script lang="ts">
+  /**
+   * Info tooltip component.
+   * @author Lukáš Kotoun, xkotou08
+   */
   export let text: string = "";
   export let position: "top" | "right" | "bottom" | "left" = "right";
   export let size: "sm" | "md" | "lg" = "md";

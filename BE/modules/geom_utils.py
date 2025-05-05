@@ -1,3 +1,7 @@
+"""
+Functions for handling geometric objects realated tasks.
+Author: Lukáš Kotoun, xkotou08
+"""
 import math
 
 import numpy as np

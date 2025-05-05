@@ -1,3 +1,7 @@
+"""
+Main generator. Generating map from wanted areas and styles.
+Author: Lukáš Kotoun, xkotou08
+"""
 from typing import Any
 
 from config import CRS_OSM, CRS_DISPLAY, OUTPUT_PDF_FOLDER, OSM_TMP_FILE_FOLDER, DEFAULT_STYLE, MANDATORY_WAYS

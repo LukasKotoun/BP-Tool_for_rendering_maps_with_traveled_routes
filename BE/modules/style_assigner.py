@@ -1,3 +1,7 @@
+"""
+Assigning styles to GeoDataFrame based on conditions.
+Author: Lukáš Kotoun, xkotou08
+"""
 import warnings
 
 import pandas as pd

@@ -1,3 +1,7 @@
+"""
+Functions for handling map realated tasks.
+Author: Lukáš Kotoun, xkotou08
+"""
 import os
 import glob
 import warnings

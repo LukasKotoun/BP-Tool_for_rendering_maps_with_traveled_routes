@@ -1,3 +1,5 @@
+# Dockerfile for the frontend
+# author: Lukáš Kotoun, xkotou08
 FROM node:lts-alpine
 RUN corepack enable
 WORKDIR /app

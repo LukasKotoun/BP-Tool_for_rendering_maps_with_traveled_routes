@@ -1,5 +1,8 @@
+/**
+ * Utils for working with areas
+ * @author Lukáš Kotoun, xkotou08
+ */
 import axios from "axios";
-
 
 export function checkPaperDimensions(
   request: PaperDimensionsRequest | PaperDimensions,
@@ -32,7 +35,7 @@ export function checkFitPaper(fitPaperSize: FitPaperSize): boolean {
   return true;
 }
 
-// same check as parsing but with returning error string 
+// same check as parsing but with returning error string
 export function checkMapCordinatesFormat(input: string): string {
   if (!input.includes(";")) {
     return "";
@@ -63,7 +66,6 @@ export function checkMapCordinatesFormat(input: string): string {
     return "";
   }
 }
-
 
 // Function to parse coordinates string into array
 export function parseWantedArea(input: string): number[][] | string {
@@ -119,7 +121,7 @@ export function parseWantedAreas(areas: AreaItemStored[]): AreaItemSend[] {
           };
         } catch (error) {
           // If parsing fails, return the original area (as area string)
-          return rest
+          return rest;
         }
       } else {
         return null;

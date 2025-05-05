@@ -1,4 +1,8 @@
 <script lang="ts">
+  /**
+   * GPX file upload page.
+   * @author Lukáš Kotoun, xkotou08
+   */
   import { gpxFiles, gpxFileGroups } from "$lib/stores/mapStore";
   import { displayedTabGpxFiles } from "$lib/stores/frontendStore";
   import { FileX, FileText, FileUp } from "@lucide/svelte";
@@ -46,9 +50,7 @@
 </script>
 
 <div class="container mx-auto p-4">
-  <div
-    class="text-md text-center text-gray-400 border-b border-gray-700"
-  >
+  <div class="text-md text-center text-gray-400 border-b border-gray-700">
     <div class="flex flex-wrap -mb-px">
       <button
         class={$displayedTabGpxFiles == "upload"

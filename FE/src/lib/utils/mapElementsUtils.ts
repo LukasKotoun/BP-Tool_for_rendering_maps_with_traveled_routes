@@ -1,6 +1,10 @@
+/**
+ * Utils for map elements selection and transformation
+ * @author Lukáš Kotoun, xkotou08
+ */
 // Set false to all plot properties in the data
 export function resetPlotSettings(
-  originalData: MapElementCategory,
+  originalData: MapElementCategory
 ): MapElementCategory {
   const result: MapElementCategory = JSON.parse(JSON.stringify(originalData));
 

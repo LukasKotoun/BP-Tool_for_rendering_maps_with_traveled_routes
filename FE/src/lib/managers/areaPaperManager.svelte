@@ -1,4 +1,8 @@
 <script lang="ts">
+  /**
+   * Data files, area and paper settings page.
+   * @author Lukáš Kotoun, xkotou08
+   */
   import { onMount } from "svelte";
   import api from "$lib/axios.config";
 

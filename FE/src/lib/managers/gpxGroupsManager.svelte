@@ -1,4 +1,8 @@
 <script lang="ts">
+  /**
+   * GPX file groups settings page.
+   * @author Lukáš Kotoun, xkotou08
+   */
   import { gpxFiles, gpxStyles, gpxFileGroups } from "$lib/stores/mapStore";
   import { gpxDefaultStyles } from "$lib/constants";
   import { Trash2, FileX, CirclePlus } from "@lucide/svelte";

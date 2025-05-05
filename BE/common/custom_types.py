@@ -1,3 +1,7 @@
+"""
+Custom types for used in map generation.
+Author: Lukáš Kotoun, xkotou08
+"""
 from typing import NamedTuple, Optional
 from common.map_enums import WorldSides, Style, TextPositions, MinPlot, MarkerPosition
 
@@ -5,7 +9,7 @@ BoundsDict = dict[WorldSides, float]
 DimensionsTuple = tuple[float, float]
 Point = tuple[float, float]
 
-WantedAreas = list[dict[str, bool | int | list[list[float]|Point] | str]]
+WantedAreas = list[dict[str, bool | int | list[list[float] | Point] | str]]
 OptDimensionsTuple = tuple[float | None, float | None]
 WantedCategories = dict[str, set[str]]
 
@@ -14,10 +18,12 @@ StyleZooms = dict[str, Styles]
 RowsConditionsAND = dict[str, str | list[str] | tuple[str]]
 RowsConditions = list[RowsConditionsAND]
 ElementStyles = tuple[RowsConditions | RowsConditionsAND, Styles]
-ElementStylesDynamic = tuple[RowsConditions | RowsConditionsAND, Styles, StyleZooms | None]
+ElementStylesDynamic = tuple[RowsConditions |
+                             RowsConditionsAND, Styles, StyleZooms | None]
+
 
 class TextRow(NamedTuple):
-    geometry: Point           
+    geometry: Point
     TEXT_COLOR: str
     TEXT_FONT_SIZE: float
     TEXT_FONTFAMILY: str
@@ -31,7 +37,7 @@ class TextRow(NamedTuple):
 
 
 class MarkerRow(NamedTuple):
-    geometry: Point           
+    geometry: Point
     MARKER: any
     COLOR: float
     WIDTH: str
@@ -42,11 +48,12 @@ class MarkerRow(NamedTuple):
     MARKER_HORIZONTAL_ALIGN: Optional[str] = 'center'
     MARKER_FONT_PROPERTIES: Optional[any] = None
 
+
 class MarkerOneAnotationRow(NamedTuple):
     # text and marker
-    geometry: Point   
+    geometry: Point
     ALPHA: str
-       
+
     # text
     TEXT_COLOR: str
     TEXT_FONT_SIZE: float
@@ -57,21 +64,20 @@ class MarkerOneAnotationRow(NamedTuple):
     TEXT_OUTLINE_COLOR: str
     EDGE_ALPHA: float
     MIN_PLOT_REQ: MinPlot
-    
+
     # marker
     MARKER: any
     COLOR: float
     WIDTH: str
     EDGE_WIDTH: str
     EDGE_COLOR: str
-    
+
     # marker optional
     MARKER_VERTICAL_ALIGN: Optional[str] = 'center'
     MARKER_HORIZONTAL_ALIGN: Optional[str] = 'center'
     MARKER_LAYER_POSITION: Optional[MarkerPosition] = MarkerPosition.NORMAL
     MARKER_FONT_PROPERTIES: Optional[any] = None
-    
-    
+
     # text optional
     TEXT1_POSITIONS: Optional[list[TextPositions]] = []
     TEXT2_POSITIONS: Optional[list[TextPositions]] = []
@@ -79,12 +85,12 @@ class MarkerOneAnotationRow(NamedTuple):
     TEXT2: Optional[str] = None
     TEXT_FONT_PROPERTIES: Optional[any] = None
 
-    
+
 class MarkerTwoAnotationRow(NamedTuple):
     # text and marker
-    geometry: Point   
-    ALPHA: float   
-         
+    geometry: Point
+    ALPHA: float
+
     # text
     TEXT_COLOR: str
     TEXT_FONT_SIZE: float
@@ -93,21 +99,21 @@ class MarkerTwoAnotationRow(NamedTuple):
     TEXT_WEIGHT: str
     TEXT_OUTLINE_WIDTH: float
     TEXT_OUTLINE_COLOR: str
-    
+
     EDGE_ALPHA: float
     MIN_PLOT_REQ: MinPlot
     TEXT1_POSITIONS: list[TextPositions]
     TEXT2_POSITIONS: list[TextPositions]
     TEXT1: str
     TEXT2: str
-    
+
     # marker
     MARKER: any
     COLOR: float
     WIDTH: str
     EDGE_WIDTH: str
     EDGE_COLOR: str
-    
+
     # marker optional
     MARKER_VERTICAL_ALIGN: Optional[str] = 'center'
     MARKER_HORIZONTAL_ALIGN: Optional[str] = 'center'
