@@ -7,6 +7,7 @@
 **/*.pdf
 **/*.geojson
 /exports
-**/osm_files
+**/osm_files/.osm.pbf
+**/osm_files/.osm
 **/pdfs
 **/gpxs
