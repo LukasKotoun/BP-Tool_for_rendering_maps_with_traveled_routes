@@ -116,7 +116,8 @@ if __name__ == "__main__":
 
     for input_file in osm_files:
         # check every file in files
-        print(f"Checking file: {input_file}")
+        print(f"Filtering file: {input_file}")
+        print(f"It may take a few minutes...")
         # Check if the file exists
         if not os.path.isfile(input_file):
             print(f"Error: File {input_file} does not exist")
