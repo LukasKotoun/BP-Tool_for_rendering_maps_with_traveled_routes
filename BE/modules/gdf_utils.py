@@ -629,7 +629,7 @@ class GdfUtils:
             nearby_point_i.remove(point_i)
             # Check for any higher peak
             for nearby_point in nearby_point_i:
-                if elevations[nearby_point] > elev:
+                if elevations[nearby_point] >= elev:
                     is_important.at[point_i] = False
                     break
 

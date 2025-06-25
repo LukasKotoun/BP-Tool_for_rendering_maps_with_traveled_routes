@@ -313,7 +313,7 @@ export const MARKER_MAPPING_CZ = {
 };
 
 // map elements - each zoom level add elements
-export const wantedNodesUpdatesZooms = {
+export const wantedNodesUpdatesZoomsDefault = {
   1: { place: ["city"] },
   2: { place: ["town"], natural: ["peak"] },
   3: {},
@@ -330,7 +330,7 @@ export const wantedNodesUpdatesZooms = {
   10: {},
 };
 
-export const wantedWaysUpdatesZooms = {
+export const wantedWaysUpdatesZoomsDefault = {
   1: {
     highway: [
       "motorway",
@@ -384,7 +384,7 @@ export const wantedWaysUpdatesZooms = {
   10: {},
 };
 
-export const wantedAreasUpdatesZooms = {
+export const wantedAreasUpdatesZoomsDefault = {
   1: { landuse: true, leisure: ["park", "garden"], natural: true },
   2: { boundary: ["national_park"] },
   3: {
@@ -412,6 +412,17 @@ export const wantedAreasUpdatesZooms = {
   8: {},
   9: {},
   10: {},
+};
+
+// for automatic zoom based on map theme
+// if adding map theme add it here, if map theme is not in this object first maptheme in the list will be used
+//!! NOTE: must have at least one map theme in this object 
+export const mapThemesUpdatesZooms = {
+  mapycz:{
+    nodes: wantedNodesUpdatesZoomsDefault,
+    ways: wantedWaysUpdatesZoomsDefault,
+    areas: wantedAreasUpdatesZoomsDefault,
+  },
 };
 
 // cz mapping of elements

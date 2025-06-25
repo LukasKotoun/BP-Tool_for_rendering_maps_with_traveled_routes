@@ -34,12 +34,10 @@
     areasKeysNamesMappingCZ,
     areasNamesMappingCZ,
     numberOfZoomLevels,
-    wantedNodesUpdatesZooms,
-    wantedWaysUpdatesZooms,
-    wantedAreasUpdatesZooms,
     nodesMapElements,
     waysMapElements,
     areasMapElements,
+    mapThemesUpdatesZooms,
   } from "$lib/constants";
 
   const multiplierMin = 0.1;
@@ -68,11 +66,22 @@
 
   function setNodesForZoom(zoomLevel: number) {
     let restartedData = resetPlotSettings($mapNodesElements);
+    let wantedNodesUpdatesZoomsMapStyle;
+    if (
+      $selectedMapTheme != "" &&
+      mapThemesUpdatesZooms.hasOwnProperty($selectedMapTheme)
+    ) {
+      wantedNodesUpdatesZoomsMapStyle =
+        mapThemesUpdatesZooms[$selectedMapTheme].nodes;
+    } else {
+      // get ways of first object in mapThemesUpdatesZooms
+      wantedNodesUpdatesZoomsMapStyle = Object.values(mapThemesUpdatesZooms)[0].nodes;
+    }
     //set to false and iteratativ add default while using
     for (let i = 0; i <= zoomLevel; i++) {
       restartedData = updateWantedElements(
         restartedData,
-        wantedNodesUpdatesZooms[i]
+        wantedNodesUpdatesZoomsMapStyle[i]
       );
     }
     $mapNodesElements = restartedData;
@@ -101,11 +110,22 @@
 
   function setWaysForZoom(zoomLevel: number) {
     let restartedData = resetPlotSettings($mapWaysElements);
+    let wantedWaysUpdatesZoomsMapStyle;
+    if (
+      $selectedMapTheme != "" &&
+      mapThemesUpdatesZooms.hasOwnProperty($selectedMapTheme)
+    ) {
+      wantedWaysUpdatesZoomsMapStyle =
+        mapThemesUpdatesZooms[$selectedMapTheme].ways;
+    } else {
+      // get ways of first object in mapThemesUpdatesZooms
+      wantedWaysUpdatesZoomsMapStyle = Object.values(mapThemesUpdatesZooms)[0].ways;
+    }
 
     for (let i = 0; i <= zoomLevel; i++) {
       restartedData = updateWantedElements(
         restartedData,
-        wantedWaysUpdatesZooms[i]
+        wantedWaysUpdatesZoomsMapStyle[i]
       );
     }
     $mapWaysElements = restartedData;
@@ -128,10 +148,21 @@
 
   function setAreasForZoom(zoomLevel: number) {
     let restartedData = resetPlotSettings($mapAreasElements);
+    let wantedAreasUpdatesZoomsMapStyle;
+    if (
+      $selectedMapTheme != "" &&
+      mapThemesUpdatesZooms.hasOwnProperty($selectedMapTheme)
+    ) {
+      wantedAreasUpdatesZoomsMapStyle =
+        mapThemesUpdatesZooms[$selectedMapTheme].areas;
+    } else {
+      // get ways of first object in mapThemesUpdatesZooms
+      wantedAreasUpdatesZoomsMapStyle = Object.values(mapThemesUpdatesZooms)[0].areas;
+    }
     for (let i = 0; i <= zoomLevel; i++) {
       restartedData = updateWantedElements(
         restartedData,
-        wantedAreasUpdatesZooms[i]
+        wantedAreasUpdatesZoomsMapStyle[i]
       );
     }
     $mapAreasElements = restartedData;
