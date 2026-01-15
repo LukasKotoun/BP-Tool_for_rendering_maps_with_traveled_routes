@@ -13,6 +13,13 @@
     parseWantedAreas,
     checkPaperDimensions,
   } from "$lib/utils/areaUtils";
+  import { syncStoredMapElements } from "$lib/utils/defaultUtils";
+  import {
+    nodesMapElements,
+    waysMapElements,
+    areasMapElements,
+    mapThemesUpdatesZooms
+  } from "$lib/constants"
   import { onMount } from "svelte";
   import api from "$lib/axios.config";
   import { Save, Upload, ChevronLeft, ChevronRight } from "@lucide/svelte";
@@ -55,8 +62,8 @@
       .get("/available_map_themes")
       .then((response) => {
         $avilableMapThemes = response.data.map_themes;
-        if ($selectedMapTheme == "" && $avilableMapThemes.includes("mapycz")) {
-          $selectedMapTheme = "mapycz";
+        if ($selectedMapTheme == "" && $avilableMapThemes.includes(Object.keys(mapThemesUpdatesZooms)[0])) {
+          $selectedMapTheme = Object.keys(mapThemesUpdatesZooms)[0];
         } else if (
           $selectedMapTheme != "" &&
           !$avilableMapThemes.includes($selectedMapTheme)
@@ -186,13 +193,13 @@
       $minPopulationFilter = data.minPopulationFilter;
     }
     if (data.mapNodesElements != null) {
-      $mapNodesElements = data.mapNodesElements;
+      $mapNodesElements = syncStoredMapElements(data.mapNodesElements, nodesMapElements);
     }
     if (data.mapWaysElements != null) {
-      $mapWaysElements = data.mapWaysElements;
+      $mapWaysElements = syncStoredMapElements(data.mapWaysElements, waysMapElements);
     }
     if (data.mapAreasElements != null) {
-      $mapAreasElements = data.mapAreasElements;
+      $mapAreasElements = syncStoredMapElements(data.mapAreasElements, areasMapElements); 
     }
     if (data.mapElementsZoomDesign != null) {
       $mapElementsZoomDesign = data.mapElementsZoomDesign;

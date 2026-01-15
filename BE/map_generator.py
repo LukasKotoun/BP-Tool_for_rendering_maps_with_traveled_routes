@@ -11,7 +11,7 @@ from fastapi import FastAPI, File, UploadFile, Form, HTTPException, status, Depe
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from uuid_extensions import uuid7str
-from typing import List, Optional, Any
+from typing import List, Optional
 
 from config import *
 from common.api_base_models import *

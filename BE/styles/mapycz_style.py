@@ -46,6 +46,7 @@ RESIDENTAL_AREA_COLOR_ZOOM_1_6 = '#e2d5b7'
 CITY_POINT_COLOR = '#e4d6b7'
 CITY_POINT_EDGE_COLOR = '#b5ab8c'
 
+# how much to expand text and marker bounding box for collision detection
 TEXT_EXPAND_PERCENT = 7
 MARKER_EXPAND_PERCENT = 5
 
